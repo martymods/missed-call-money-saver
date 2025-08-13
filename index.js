@@ -19,6 +19,21 @@ const DIAL_TIMEOUT = parseInt(process.env.DIAL_TIMEOUT || '20', 10);
 // Health
 app.get('/health', (_, res) => res.json({ ok: true }));
 
+app.get('/', (req, res) => {
+  res.type('html').send(`
+    <h1>Missed-Call Money Saver</h1>
+    <p>Server is running. Endpoints:</p>
+    <ul>
+      <li>GET <code>/health</code></li>
+      <li>POST <code>/voice</code> (Twilio Voice webhook)</li>
+      <li>POST <code>/sms</code> (Twilio Messaging webhook)</li>
+      <li>POST <code>/calendly/webhook</code> (Calendly webhook)</li>
+      <li>GET <code>/simulate/missed-call?from=+1YOURNUMBER</code></li>
+    </ul>
+  `);
+});
+
+
 // ─────────────────────────────────────────────────────────────
 // Twilio Voice: initial webhook when call comes in
 // Responds with TwiML to forward call to real number, with timeout.
