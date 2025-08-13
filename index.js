@@ -71,7 +71,11 @@ app.post('/voice/after', async (req, res) => {
     // Start SMS flow
     setStep(from, 'ask_name');
     await upsertByPhone(from, { status: 'opened' });
-    await sendSMS(from, `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name?`);
+await sendSMS(from,
+  `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name? ` +
+  `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`
+);
+
   }
 });
 
@@ -217,7 +221,11 @@ app.get('/simulate/missed-call', async (req, res) => {
 
   setStep(from, 'ask_name');
   await upsertByPhone(from, { status: 'opened' });
-  await sendSMS(from, `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name?`);
+await sendSMS(from,
+  `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name? ` +
+  `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`
+);
+
   res.json({ ok: true });
 });
 
