@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const dayjs = require('dayjs');
 const cron = require('node-cron');
+const path = require('path'); // ✅ NEW
 const { sendSMS } = require('./services/twilioClient');
 const { upsertByPhone, findAll } = require('./services/sheets');
 const { subscribeCalendlyWebhook } = require('./services/calendly');
@@ -11,6 +12,9 @@ const app = express();
 app.use(express.urlencoded({ extended: true })); // Twilio posts form-url-encoded
 app.use(express.json());
 
+// ✅ NEW: serve the landing page (and any other assets) from /public at the site root
+app.use(express.static(path.join(__dirname, 'public')));
+
 const BUSINESS = process.env.BUSINESS_NAME || 'Our Team';
 const CAL_LINK = process.env.CALENDLY_SCHEDULING_LINK;
 const REVIEW_LINK = process.env.REVIEW_LINK;
@@ -19,78 +23,11 @@ const DIAL_TIMEOUT = parseInt(process.env.DIAL_TIMEOUT || '20', 10);
 // Health
 app.get('/health', (_, res) => res.json({ ok: true }));
 
-app.get('/', (req, res) => {
-  res.type('html').send(`<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Missed-Call Money Saver — Delaware County (HVAC & Plumbing)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>/* (keep your CSS exactly as you pasted) */</style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="hero">
-      <span class="tag">Delaware County Special</span>
-      <h1>Never lose an HVAC or plumbing job to a missed call.</h1>
-      <p class="sub">When you miss a call, we text back instantly, qualify the lead, book via Calendly, log it in Google Sheets, and request a review after the visit.</p>
-      <div class="cta">
-        <a class="btn" href="${CAL_LINK}" target="_blank" rel="noopener">Book a 15-min setup call</a>
-        <a class="btn alt" href="#how">See how it works</a>
-      </div>
-      <div class="kpis">
-        <div class="kpi">A2P-registered SMS</div>
-        <div class="kpi">Calendly + Google Sheets</div>
-        <div class="kpi">Review boost</div>
-      </div>
-    </div>
-
-    <div class="grid" id="how">
-      <div class="card">
-        <h3>How it works</h3>
-        <div class="how">
-          <div class="step"><b>1)</b> Missed call triggers instant SMS (“Sorry we missed you… What’s your name?”)</div>
-          <div class="step"><b>2)</b> We capture name & need, then drop your Calendly link.</div>
-          <div class="step"><b>3)</b> Lead books a time on your calendar—no back-and-forth.</div>
-          <div class="step"><b>4)</b> Every lead is logged in your Google Sheet automatically.</div>
-          <div class="step"><b>5)</b> After the job, we text a review link to grow your Google rating.</div>
-        </div>
-      </div>
-      <div class="card price">
-        <h3>Simple pricing</h3>
-        <ul class="list">
-          <li><b>$300</b> one-time setup</li>
-          <li><b>$150/mo</b> (support & updates)</li>
-          <li><b>First 3 Delco clients:</b> $149 setup</li>
-        </ul>
-        <p><b>Includes:</b> Twilio + Calendly + Google Sheet wiring, A2P compliance, copywriting, install, testing.</p>
-        <a class="btn" href="${CAL_LINK}" target="_blank" rel="noopener">Get started</a>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Why this beats free or cheap apps</h3>
-      <ul class="list">
-        <li><b>Delivery that lands:</b> A2P-registered texting with STOP/HELP compliance → fewer blocked messages.</li>
-        <li><b>End-to-end workflow:</b> missed-call → qualify → book → log → review (not just a notification).</li>
-        <li><b>Zero learning curve:</b> we install and wire it to what you already use.</li>
-      </ul>
-    </div>
-
-    <p class="foot">By calling or texting this number, you agree to receive SMS for scheduling and customer service. Msg&data rates may apply. Reply STOP to cancel, HELP for help.</p>
-  </div>
-</body>
-</html>`);
-});
-
-
-
 // ─────────────────────────────────────────────────────────────
 // Twilio Voice: initial webhook when call comes in
 // Responds with TwiML to forward call to real number, with timeout.
 // After <Dial>, Twilio posts to /voice/after with DialCallStatus.
 // ─────────────────────────────────────────────────────────────
-
 app.post('/voice', (req, res) => {
   const VoiceResponse = require('twilio').twiml.VoiceResponse;
   const twiml = new VoiceResponse();
@@ -122,11 +59,11 @@ app.post('/voice/after', async (req, res) => {
     // Start SMS flow
     setStep(from, 'ask_name');
     await upsertByPhone(from, { status: 'opened' });
-await sendSMS(from,
-  `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name? ` +
-  `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`
-);
-
+    await sendSMS(
+      from,
+      `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name? ` +
+      `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`
+    );
   }
 });
 
@@ -228,9 +165,8 @@ app.post('/calendly/webhook', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// Simple scheduler to send review SMS after appointments end
-// Runs every 5 minutes; if appt_end < now and status=booked -> send review, mark review_sent
-// ─────────────────────────────────────────────────────────────
+/* Simple scheduler to send review SMS after appointments end
+   Runs every 5 minutes; if appt_end < now and status=booked -> send review, mark review_sent */
 cron.schedule('*/5 * * * *', async () => {
   try {
     if (!REVIEW_LINK) return;
@@ -272,10 +208,11 @@ app.get('/simulate/missed-call', async (req, res) => {
 
   setStep(from, 'ask_name');
   await upsertByPhone(from, { status: 'opened' });
-await sendSMS(from,
-  `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name? ` +
-  `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`
-);
+  await sendSMS(
+    from,
+    `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name? ` +
+    `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`
+  );
 
   res.json({ ok: true });
 });
@@ -283,8 +220,9 @@ await sendSMS(from,
 // ─────────────────────────────────────────────────────────────
 // Boot
 // ─────────────────────────────────────────────────────────────
-app.listen(process.env.PORT || 3000, async () => {
-  console.log(`Missed-Call Money Saver running on :${process.env.PORT || 3000}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, async () => {
+  console.log(`Missed-Call Money Saver running on :${PORT}`);
 
   // Try to auto-subscribe Calendly webhook if configured
   if (process.env.CALENDLY_TOKEN && process.env.APP_BASE_URL) {
