@@ -54,10 +54,11 @@ app.post('/api/create-checkout-session', async (req, res) => {
     });
     res.json({ id: session.id });
   } catch (e) {
-    console.error('Stripe session error:', e);
+    console.error('Stripe error:', e?.type || e?.name, e?.message);
     res.status(500).json({ error: 'stripe_error' });
   }
 });
+
 
 // Optional pretty routes for static pages
 app.get('/checkout', (_, res) =>
