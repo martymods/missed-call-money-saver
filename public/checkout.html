@@ -37,14 +37,21 @@
     </div>
 
     <div class="grid">
+      <!-- Stripe / Apple Pay -->
       <div class="card">
         <span class="brand">Recommended</span>
         <h3>Pay with Card / Apple&nbsp;Pay (Stripe)</h3>
         <p class="tiny">Stripe Checkout supports Apple&nbsp;Pay on iPhone/Mac, plus all major cards. Fully secure.</p>
+
+        <label class="tiny" for="promo">Have a promo code?</label>
+        <input id="promo" placeholder="e.g. DELCO150"
+               style="width:100%;padding:10px;border:1px solid #e0e6ff;border-radius:10px;margin:6px 0 10px"/>
+
         <button id="stripeBtn" class="btn">Pay with Apple&nbsp;Pay / Card</button>
         <div class="secure">Payments are processed by Stripe. We never see your card details.</div>
       </div>
 
+      <!-- PayPal -->
       <div class="card">
         <span class="brand">Alternative</span>
         <h3>Pay with PayPal</h3>
@@ -60,13 +67,27 @@
   <script>
     (async () => {
       const cfg = await fetch('/config').then(r=>r.json());
-
-      // Stripe – create Checkout Session then redirect
       const stripe = Stripe(cfg.stripePk);
+
+      // Prefill promo from ?promo=DELCO150
+      const urlPromo = new URLSearchParams(location.search).get('promo') || '';
+      const promoInput = document.getElementById('promo');
+      if (promoInput && urlPromo) promoInput.value = urlPromo;
+
+      // Create Stripe Checkout Session (send promo to backend)
       document.getElementById('stripeBtn').addEventListener('click', async () => {
-        const sess = await fetch('/api/create-checkout-session', { method:'POST' }).then(r=>r.json());
-        if (sess.id) await stripe.redirectToCheckout({ sessionId: sess.id });
-        else alert('Could not start Stripe checkout. Try PayPal or contact support.');
+        const promo = (promoInput?.value || '').trim();
+        const sess = await fetch('/api/create-checkout-session', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ promo })
+        }).then(r=>r.json());
+
+        if (sess.id) {
+          await stripe.redirectToCheckout({ sessionId: sess.id });
+        } else {
+          alert('Could not start Stripe checkout. Please try again or contact support.');
+        }
       });
 
       // PayPal – load SDK dynamically (subscription)
