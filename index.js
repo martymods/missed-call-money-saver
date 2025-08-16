@@ -2,61 +2,95 @@ require('dotenv').config();
 const express = require('express');
 const dayjs = require('dayjs');
 const cron = require('node-cron');
-const path = require('path'); // ✅ NEW
+const path = require('path');
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
+
 const { sendSMS } = require('./services/twilioClient');
 const { upsertByPhone, findAll } = require('./services/sheets');
 const { subscribeCalendlyWebhook } = require('./services/calendly');
-const { setStep, setField, get: getState, reset } = require('./lib/leadStore');
+const { setStep, setField, get: getState } = require('./lib/leadStore');
 
 const app = express();
 app.use(express.urlencoded({ extended: true })); // Twilio posts form-url-encoded
 app.use(express.json());
 
-// ✅ NEW: serve the landing page (and any other assets) from /public at the site root
+// 👉 Serve the landing page & assets from /public
 app.use(express.static(path.join(__dirname, 'public')));
 
 const BUSINESS = process.env.BUSINESS_NAME || 'Our Team';
-const CAL_LINK = process.env.CALENDLY_SCHEDULING_LINK;
-const REVIEW_LINK = process.env.REVIEW_LINK;
+const CAL_LINK = process.env.CALENDLY_SCHEDULING_LINK || '#';
+const REVIEW_LINK = process.env.REVIEW_LINK || '';
 const DIAL_TIMEOUT = parseInt(process.env.DIAL_TIMEOUT || '20', 10);
 
 // Health
 app.get('/health', (_, res) => res.json({ ok: true }));
 
-// ─────────────────────────────────────────────────────────────
-// Twilio Voice: initial webhook when call comes in
-// Responds with TwiML to forward call to real number, with timeout.
-// After <Dial>, Twilio posts to /voice/after with DialCallStatus.
-// ─────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------
+// Front-end config (safe to expose PUBLISHABLE IDs only)
+// ---------------------------------------------------------------------
+app.get('/config', (_, res) => {
+  res.json({
+    stripePk: process.env.STRIPE_PUBLISHABLE_KEY || '',
+    paypalClientId: process.env.PAYPAL_CLIENT_ID || '',
+    paypalPlanId: process.env.PAYPAL_PLAN_ID || '',
+  });
+});
+
+// ---------------------------------------------------------------------
+// Stripe Checkout: subscription ($150/mo) + setup fee ($300 on first bill)
+// ---------------------------------------------------------------------
+app.post('/api/create-checkout-session', async (req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{ price: process.env.STRIPE_PRICE_SUB, quantity: 1 }],
+      subscription_data: {
+        add_invoice_items: [{ price: process.env.STRIPE_PRICE_SETUP, quantity: 1 }],
+      },
+      allow_promotion_codes: true,
+      success_url: `${process.env.APP_BASE_URL}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.APP_BASE_URL}/checkout?canceled=1`,
+    });
+    res.json({ id: session.id });
+  } catch (e) {
+    console.error('Stripe session error:', e);
+    res.status(500).json({ error: 'stripe_error' });
+  }
+});
+
+// Optional pretty routes for static pages
+app.get('/checkout', (_, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'checkout.html'))
+);
+app.get('/thank-you', (_, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'thank-you.html'))
+);
+
+// ---------------------------------------------------------------------
+// Twilio Voice: forward, then detect missed calls
+// ---------------------------------------------------------------------
 app.post('/voice', (req, res) => {
   const VoiceResponse = require('twilio').twiml.VoiceResponse;
   const twiml = new VoiceResponse();
 
-  const dial = twiml.dial({
-    action: '/voice/after',
-    timeout: DIAL_TIMEOUT
-  });
+  const dial = twiml.dial({ action: '/voice/after', timeout: DIAL_TIMEOUT });
   dial.number(process.env.FORWARD_TO_NUMBER);
 
-  // Backup message if forwarding fails entirely
   twiml.say('Sorry, we were unable to connect your call. We will text you shortly.');
-
   res.type('text/xml').send(twiml.toString());
 });
 
-// After Dial: decide missed vs answered
 app.post('/voice/after', async (req, res) => {
   const callStatus = req.body.DialCallStatus; // 'completed' | 'busy' | 'no-answer' | 'failed'
   const from = req.body.From;
 
-  // Always reply TwiML to close out
   const VoiceResponse = require('twilio').twiml.VoiceResponse;
   const twiml = new VoiceResponse();
   twiml.hangup();
   res.type('text/xml').send(twiml.toString());
 
-  if (['busy','no-answer','failed'].includes(callStatus)) {
-    // Start SMS flow
+  if (['busy', 'no-answer', 'failed'].includes(callStatus)) {
     setStep(from, 'ask_name');
     await upsertByPhone(from, { status: 'opened' });
     await sendSMS(
@@ -67,26 +101,23 @@ app.post('/voice/after', async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// Twilio SMS: conversation flow (name -> need -> calendly link)
-// ─────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------
+// Twilio SMS: name -> need -> Calendly link
+// ---------------------------------------------------------------------
 app.post('/sms', async (req, res) => {
   const MessagingResponse = require('twilio').twiml.MessagingResponse;
   const twiml = new MessagingResponse();
 
   const from = req.body.From;
   const body = (req.body.Body || '').trim();
-
   const s = getState(from);
 
-  // Handle STOP/HELP quickly
   if (/^help$/i.test(body)) {
     twiml.message(`Reply STOP to opt-out. To book directly: ${CAL_LINK}`);
     return res.type('text/xml').send(twiml.toString());
   }
 
   if (!s || !s.step) {
-    // Fresh conversation (eg they texted first)
     setStep(from, 'ask_name');
     await upsertByPhone(from, { status: 'opened' });
     twiml.message(`Hey, it's ${BUSINESS}. What's your name?`);
@@ -112,34 +143,25 @@ app.post('/sms', async (req, res) => {
     return res.type('text/xml').send(twiml.toString());
   }
 
-  if (s.step === 'book') {
-    // They might paste a time; just acknowledge and keep status
-    await upsertByPhone(from, { status: 'awaiting_booking' });
-    twiml.message(`Thanks! We’ll confirm shortly. You can also self-book anytime: ${CAL_LINK}`);
-    return res.type('text/xml').send(twiml.toString());
-  }
-
-  // fallback
-  twiml.message(`You can book here: ${CAL_LINK}`);
+  await upsertByPhone(from, { status: 'awaiting_booking' });
+  twiml.message(`Thanks! We’ll confirm shortly. You can also self-book anytime: ${CAL_LINK}`);
   return res.type('text/xml').send(twiml.toString());
 });
 
-// ─────────────────────────────────────────────────────────────
-// Calendly webhook (optional): mark bookings + schedule reviews
-// ─────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------
+// Calendly webhook → mark bookings / cancellations
+// ---------------------------------------------------------------------
 app.post('/calendly/webhook', async (req, res) => {
   try {
     const event = req.body?.event;
     const payload = req.body?.payload;
-
     if (!event || !payload) return res.status(400).json({ ok: false });
 
     if (event === 'invitee.created') {
-      const phone = payload?.invitee?.text_reminder_number || ''; // may be undefined
+      const phone = payload?.invitee?.text_reminder_number || '';
       const start = payload?.event?.start_time;
       const end = payload?.event?.end_time;
       const ev = payload?.event?.uri || '';
-
       if (phone) {
         await upsertByPhone(phone, {
           status: 'booked',
@@ -152,9 +174,7 @@ app.post('/calendly/webhook', async (req, res) => {
 
     if (event === 'invitee.canceled') {
       const phone = payload?.invitee?.text_reminder_number || '';
-      if (phone) {
-        await upsertByPhone(phone, { status: 'canceled' });
-      }
+      if (phone) await upsertByPhone(phone, { status: 'canceled' });
     }
 
     return res.json({ ok: true });
@@ -164,9 +184,9 @@ app.post('/calendly/webhook', async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-/* Simple scheduler to send review SMS after appointments end
-   Runs every 5 minutes; if appt_end < now and status=booked -> send review, mark review_sent */
+// ---------------------------------------------------------------------
+// Review request cron (every 5m, 2h after appt_end)
+// ---------------------------------------------------------------------
 cron.schedule('*/5 * * * *', async () => {
   try {
     if (!REVIEW_LINK) return;
@@ -181,12 +201,9 @@ cron.schedule('*/5 * * * *', async () => {
       const phone = r[idx('phone')];
       const status = r[idx('status')];
       const apptEnd = r[idx('appt_end')];
-      const calendlyEvent = r[idx('calendly_event')];
-
       if (!phone || !apptEnd) continue;
 
-      const end = dayjs(apptEnd);
-      const due = now.isAfter(end.add(2, 'hour')); // send 2h after
+      const due = now.isAfter(dayjs(apptEnd).add(2, 'hour'));
       const alreadySent = status && status.includes('review_sent');
 
       if (status === 'booked' && due && !alreadySent) {
@@ -199,9 +216,7 @@ cron.schedule('*/5 * * * *', async () => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// (Dev) Simulate a missed call
-// ─────────────────────────────────────────────────────────────
+// Dev: simulate a missed call
 app.get('/simulate/missed-call', async (req, res) => {
   const from = req.query.from;
   if (!from) return res.status(400).json({ ok: false, error: 'from required' });
@@ -217,18 +232,14 @@ app.get('/simulate/missed-call', async (req, res) => {
   res.json({ ok: true });
 });
 
-// ─────────────────────────────────────────────────────────────
 // Boot
-// ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   console.log(`Missed-Call Money Saver running on :${PORT}`);
 
-  // Try to auto-subscribe Calendly webhook if configured
   if (process.env.CALENDLY_TOKEN && process.env.APP_BASE_URL) {
     const cb = `${process.env.APP_BASE_URL}/calendly/webhook`;
     const r = await subscribeCalendlyWebhook(cb).catch(() => null);
-    if (r?.ok) console.log('Calendly webhook subscribed.');
-    else console.log('Calendly webhook not subscribed (optional).');
+    console.log(r?.ok ? 'Calendly webhook subscribed.' : 'Calendly webhook not subscribed (optional).');
   }
 });
