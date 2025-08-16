@@ -40,24 +40,27 @@ app.get('/config', (_, res) => {
 // ---------------------------------------------------------------------
 // Stripe Checkout: subscription ($150/mo) + setup fee ($300 on first bill)
 // ---------------------------------------------------------------------
+// Create Stripe Checkout Session: subscription ($150/mo) + setup fee ($300)
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      line_items: [{ price: process.env.STRIPE_PRICE_SUB, quantity: 1 }],
-      subscription_data: {
-        add_invoice_items: [{ price: process.env.STRIPE_PRICE_SETUP, quantity: 1 }],
-      },
+      // 👇 Add BOTH prices as line_items (recurring + one-time setup)
+      line_items: [
+        { price: process.env.STRIPE_PRICE_SUB, quantity: 1 },   // $150/mo (recurring price)
+        { price: process.env.STRIPE_PRICE_SETUP, quantity: 1 }, // $300 one-time
+      ],
       allow_promotion_codes: true,
       success_url: `${process.env.APP_BASE_URL}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.APP_BASE_URL}/checkout?canceled=1`,
     });
     res.json({ id: session.id });
   } catch (e) {
-    console.error('Stripe error:', e?.type || e?.name, e?.message);
-    res.status(500).json({ error: 'stripe_error' });
+    console.error('Stripe session error:', e?.raw?.message || e.message, e);
+    res.status(500).json({ error: 'stripe_error', message: e?.raw?.message || e.message });
   }
 });
+
 
 
 // Optional pretty routes for static pages
