@@ -7,9 +7,9 @@
   <meta name="description" content="Delco trades club for HVAC & Plumbing. Instantly text back missed calls, qualify, auto-book via Calendly, log to Google Sheets, and boost reviews.">
 
   <!-- Preload hero assets for snappy first paint -->
+  <link rel="preload" as="image" href="/A_promotional_digital_graphic_for_Delco_HVAC_%26_Plu.png">
   <link rel="preload" as="image" href="/A_2D_digital_illustration_in_this_graphic_design_p.png">
   <link rel="preload" as="image" href="/A_flat-style_digital_graphic_design_advertisement_.png">
-  <link rel="preload" as="image" href="/A_promotional_digital_graphic_for_Delco_HVAC_&amp;_Plu.png">
 
   <style>
     :root{
@@ -52,7 +52,7 @@
     }
     .hero::after{content:""; position:absolute; inset:-1px; border-radius:24px; pointer-events:none; box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);}
 
-    /* Visual: classy cross-fade slideshow using the 3 images you provided */
+    /* Visual: classy cross-fade slideshow using your 3 images */
     .hero-visual{
       position:relative; border-radius:16px; overflow:hidden; min-height:340px;
       box-shadow:0 30px 60px rgba(0,0,0,.25); background:#0d1228;
@@ -61,9 +61,10 @@
       position:absolute; inset:0; background-size:cover; background-position:center; opacity:0;
       animation:fade 18s infinite ease-in-out;
     }
-    .s1{ background-image:url('/A_2D_digital_illustration_in_this_graphic_design_p.png'); animation-delay:0s; }
-    .s2{ background-image:url('/A_flat-style_digital_graphic_design_advertisement_.png'); animation-delay:6s; }
-    .s3{ background-image:url('/A_promotional_digital_graphic_for_Delco_HVAC_&amp;_Plu.png'); animation-delay:12s; }
+    /* FIRST: Made for Delco trades */
+    .s1{ background-image:url('/A_promotional_digital_graphic_for_Delco_HVAC_%26_Plu.png'); animation-delay:0s; }
+    .s2{ background-image:url('/A_2D_digital_illustration_in_this_graphic_design_p.png'); animation-delay:6s; }
+    .s3{ background-image:url('/A_flat-style_digital_graphic_design_advertisement_.png'); animation-delay:12s; }
 
     @keyframes fade{
       0%{opacity:0}
@@ -73,7 +74,6 @@
       100%{opacity:0}
     }
 
-    /* small tag on the visual for polished feel */
     .shot-label{
       position:absolute; left:12px; bottom:12px; z-index:2;
       background:rgba(15,62,214,.85); border:1px solid rgba(255,255,255,.25);
@@ -184,16 +184,16 @@
     <!-- Quick photo strip (all images visible at once) -->
     <div class="strip" aria-label="Local photo strip">
       <figure>
+        <img src="/A_promotional_digital_graphic_for_Delco_HVAC_%26_Plu.png" alt="Promotional banner for Delco HVAC & Plumbing">
+        <figcaption>Made for Delco trades</figcaption>
+      </figure>
+      <figure>
         <img src="/A_2D_digital_illustration_in_this_graphic_design_p.png" alt="Illustration of Delco techs taking bookings after missed calls">
         <figcaption>Auto-book from missed calls</figcaption>
       </figure>
       <figure>
         <img src="/A_flat-style_digital_graphic_design_advertisement_.png" alt="Flat graphic showing more jobs from instant text backs">
         <figcaption>Fewer voicemails, more jobs</figcaption>
-      </figure>
-      <figure>
-        <img src="/A_promotional_digital_graphic_for_Delco_HVAC_&amp;_Plu.png" alt="Promotional banner for Delco HVAC & Plumbing">
-        <figcaption>Made for Delco trades</figcaption>
       </figure>
     </div>
 
@@ -274,5 +274,9 @@
       document.getElementById('meterFill').style.width = Math.max(5, pct) + '%';
     })();
   </script>
+
+  <noscript>
+    <style>.hero-visual{background:#0d1228 url('/A_promotional_digital_graphic_for_Delco_HVAC_%26_Plu.png') center/cover no-repeat}</style>
+  </noscript>
 </body>
 </html>
