@@ -18,6 +18,14 @@ app.use(express.json());
 // 👉 Serve the landing page & assets from /public
 app.use(express.static(path.join(__dirname, 'public')));
 
+// One canonical booking URL for the site + SMS
+app.get('/book', (req, res) => {
+  const url = process.env.CALENDLY_SCHEDULING_LINK || '';
+  if (url) return res.redirect(url);     // 302 → your Calendly event
+  return res.redirect('/checkout');      // fallback if env not set
+});
+
+
 const BUSINESS = process.env.BUSINESS_NAME || 'Our Team';
 const CAL_LINK = process.env.CALENDLY_SCHEDULING_LINK || '#';
 const REVIEW_LINK = process.env.REVIEW_LINK || '';
@@ -37,29 +45,55 @@ app.get('/config', (_, res) => {
   });
 });
 
-// ---------------------------------------------------------------------
-// Stripe Checkout: subscription ($150/mo) + setup fee ($300 on first bill)
-// ---------------------------------------------------------------------
-// Create Stripe Checkout Session: subscription ($150/mo) + setup fee ($300)
+// Create Stripe Checkout Session: subscription ($150/mo) + one-time setup ($300)
+// Supports optional promo codes (e.g., ?promo=DELCO150 or JSON body {promo:"..."})
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
+    const promoRaw =
+      (req.body && typeof req.body === 'object' && req.body.promo) ||
+      (req.query && req.query.promo);
+    let promoCodeId;
+
+    if (promoRaw) {
+      // Look up the promotion code ID by its code (must be Active in Stripe)
+      const list = await stripe.promotionCodes.list({
+        code: String(promoRaw).trim(),
+        active: true,
+        limit: 1,
+      });
+      if (list.data[0]) promoCodeId = list.data[0].id;
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      // 👇 Add BOTH prices as line_items (recurring + one-time setup)
+      customer_creation: 'always',
+
+      // line_items can include both recurring and one-time
       line_items: [
-        { price: process.env.STRIPE_PRICE_SUB, quantity: 1 },   // $150/mo (recurring price)
+        { price: process.env.STRIPE_PRICE_SUB, quantity: 1 },   // $150/mo
         { price: process.env.STRIPE_PRICE_SETUP, quantity: 1 }, // $300 one-time
       ],
+
+      // Make sure Stripe generates an invoice for the one-time item on the first bill
+      invoice_creation: { enabled: true },
+
+      // Show the “Have a promo code?” box in Stripe Checkout
       allow_promotion_codes: true,
+
+      // Optionally pre-apply a code if provided
+      ...(promoCodeId ? { discounts: [{ promotion_code: promoCodeId }] } : {}),
+
       success_url: `${process.env.APP_BASE_URL}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.APP_BASE_URL}/checkout?canceled=1`,
     });
+
     res.json({ id: session.id });
   } catch (e) {
-    console.error('Stripe session error:', e?.raw?.message || e.message, e);
-    res.status(500).json({ error: 'stripe_error', message: e?.raw?.message || e.message });
+    console.error('Stripe session error:', e);
+    res.status(500).json({ error: 'stripe_error' });
   }
 });
+
 
 
 
