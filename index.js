@@ -45,39 +45,32 @@ app.get('/config', (_, res) => {
   });
 });
 
-// Create Stripe Checkout Session: subscription ($150/mo) + setup fee ($300)
-// Supports promo "DELCO150" -> applies STRIPE_COUPON_DELCO150
+// Create Stripe Checkout Session: subscription ($150/mo) + one-time setup ($300)
+// Supports promo "DELCO150" via env STRIPE_COUPON_DELCO150
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
     const promo = (req.body?.promo || '').trim().toUpperCase();
 
-    // Build items: 1) recurring sub  2) one-time setup
-    const items = [
-      { price: process.env.STRIPE_PRICE_SUB, quantity: 1 },   // $150/mo
-      { price: process.env.STRIPE_PRICE_SETUP, quantity: 1 }, // $300 once
-    ];
-
-    const sessionParams = {
+    const params = {
       mode: 'subscription',
-      line_items: items,
-      // allow users to type a Stripe promo code if you ever enable those
+      line_items: [
+        { price: process.env.STRIPE_PRICE_SUB, quantity: 1 },   // $150/mo
+        { price: process.env.STRIPE_PRICE_SETUP, quantity: 1 }, // $300 once
+      ],
+      // Customers can also enter an official Stripe promotion code if you enable any later
       allow_promotion_codes: true,
       success_url: `${process.env.APP_BASE_URL}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.APP_BASE_URL}/checkout?canceled=1`,
     };
 
-    // Apply your coupon when promo matches
+    // ✅ Apply your coupon at the session level (correct for current API)
     if (promo === 'DELCO150' && process.env.STRIPE_COUPON_DELCO150) {
-      sessionParams.subscription_data = {
-        discounts: [{ coupon: process.env.STRIPE_COUPON_DELCO150 }],
-      };
+      params.discounts = [{ coupon: process.env.STRIPE_COUPON_DELCO150 }];
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    const session = await stripe.checkout.sessions.create(params);
     return res.json({ id: session.id });
-
   } catch (e) {
-    // Surface the real reason in Render logs so 500s are easy to debug
     console.error('Stripe session error:', e?.raw?.message || e?.message, e);
     return res.status(500).json({ error: 'stripe_error' });
   }
