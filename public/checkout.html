@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Get started — Missed-Call Money Saver</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    :root{ --brand:#1955ff; --ink:#101215; --muted:#6e6e6e; --ok:#20a055; --bg:#f7f9fc; }
+    *{ box-sizing:border-box }
+    body{ margin:0; font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif; color:var(--ink); background:#fff }
+    .wrap{ max-width:960px; margin:auto; padding:28px 20px }
+    .crumbs{ font-size:13px; color:var(--muted); }
+    h1{ font-size:32px; margin:8px 0 4px }
+    .sub{ color:var(--muted); margin-bottom:20px }
+    .steps{ display:grid; grid-template-columns:1fr; gap:14px; margin:18px 0 26px }
+    .step{ background:var(--bg); border:1px solid #e6ebf2; border-radius:14px; padding:14px }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
+    .card{ border:1px solid #e9e9e9; border-radius:14px; padding:18px }
+    .brand{ font-weight:800; color:#0f3ed6; font-size:13px; display:inline-block; padding:4px 8px; background:#eef3ff; border:1px solid #dbe6ff; border-radius:999px; margin-bottom:10px}
+    .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:10px; padding:12px 16px; font-weight:700; cursor:pointer; border:1px solid #d9e1ff; background:#1955ff; color:#fff; width:100%; }
+    .secure{ font-size:12px; color:var(--muted); margin-top:8px }
+    .badge{ display:inline-block; background:#f1fff6; color:#0a6c3a; border:1px solid #def7e6; border-radius:12px; padding:4px 8px; font-weight:700; font-size:12px; }
+    .tiny{ font-size:12px; color:var(--muted); }
+    @media (max-width:900px){ .grid{ grid-template-columns:1fr } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="crumbs">Step <b>1</b> of 3 • <span class="badge">Reserve your spot</span></div>
+    <h1>Lock in the setup + subscription</h1>
+    <p class="sub">Secure your account now. You’ll instantly get a receipt and a link to book onboarding (Step 2). We only open a few Delco spots at a time.</p>
+
+    <div class="steps">
+      <div class="step"><b>Step 1:</b> Pay the <b>setup + first month</b> (Apple Pay / card or PayPal).</div>
+      <div class="step"><b>Step 2:</b> Book your <b>15-min onboarding</b> to connect your number, Calendly, and Google Sheet.</div>
+      <div class="step"><b>Step 3:</b> We run a <b>live missed-call test</b> and you’re live.</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <span class="brand">Recommended</span>
+        <h3>Pay with Card / Apple&nbsp;Pay (Stripe)</h3>
+        <p class="tiny">Stripe Checkout supports Apple&nbsp;Pay on iPhone/Mac, plus all major cards. Fully secure.</p>
+        <button id="stripeBtn" class="btn">Pay with Apple&nbsp;Pay / Card</button>
+        <div class="secure">Payments are processed by Stripe. We never see your card details.</div>
+      </div>
+
+      <div class="card">
+        <span class="brand">Alternative</span>
+        <h3>Pay with PayPal</h3>
+        <div id="paypal-buttons" style="margin-top:10px"></div>
+        <div class="secure">You can use your PayPal balance or a saved card.</div>
+      </div>
+    </div>
+
+    <p class="tiny" style="margin-top:16px">By proceeding you agree to the standard STOP/HELP SMS terms used in the product.</p>
+  </div>
+
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    (async () => {
+      const cfg = await fetch('/config').then(r=>r.json());
+
+      // Stripe – create Checkout Session then redirect
+      const stripe = Stripe(cfg.stripePk);
+      document.getElementById('stripeBtn').addEventListener('click', async () => {
+        const sess = await fetch('/api/create-checkout-session', { method:'POST' }).then(r=>r.json());
+        if (sess.id) await stripe.redirectToCheckout({ sessionId: sess.id });
+        else alert('Could not start Stripe checkout. Try PayPal or contact support.');
+      });
+
+      // PayPal – load SDK dynamically (subscription)
+      if (cfg.paypalClientId && cfg.paypalPlanId) {
+        const s = document.createElement('script');
+        s.src = `https://www.paypal.com/sdk/js?client-id=${cfg.paypalClientId}&vault=true&intent=subscription`;
+        s.onload = () => {
+          paypal.Buttons({
+            style: { shape:'rect', color:'gold', label:'subscribe', height:45 },
+            createSubscription: (data, actions) => actions.subscription.create({ 'plan_id': cfg.paypalPlanId }),
+            onApprove: () => window.location.href = '/thank-you',
+            onError: () => alert('PayPal error. Please try again or use Stripe.')
+          }).render('#paypal-buttons');
+        };
+        document.head.appendChild(s);
+      } else {
+        document.getElementById('paypal-buttons').innerHTML = '<div class="tiny">PayPal is not enabled.</div>';
+      }
+    })();
+  </script>
+</body>
+</html>
