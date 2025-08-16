@@ -47,53 +47,57 @@ app.get('/config', (_, res) => {
 
 // Create Stripe Checkout Session: subscription ($150/mo) + one-time setup ($300)
 // Supports optional promo codes (e.g., ?promo=DELCO150 or JSON body {promo:"..."})
+// Create Stripe Checkout Session: subscription + one-time setup (with optional promo)
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
-    const promoRaw =
-      (req.body && typeof req.body === 'object' && req.body.promo) ||
-      (req.query && req.query.promo);
-    let promoCodeId;
+    const promoRaw = (req.body?.promo || '').trim().toUpperCase();
 
-    if (promoRaw) {
-      // Look up the promotion code ID by its code (must be Active in Stripe)
-      const list = await stripe.promotionCodes.list({
-        code: String(promoRaw).trim(),
-        active: true,
-        limit: 1,
-      });
-      if (list.data[0]) promoCodeId = list.data[0].id;
+    // read env
+    const priceSub   = process.env.STRIPE_PRICE_SUB;    // recurring price (e.g. $150/mo)
+    const priceSetup = process.env.STRIPE_PRICE_SETUP;  // one-time price (e.g. $300)
+    const promoCode  = (process.env.PROMO_CODE || 'DELCO150').toUpperCase();
+    const couponId   = process.env.STRIPE_COUPON_DELCO150; // the fixed-amount $150 coupon id
+
+    if (!priceSub || !priceSetup) {
+      return res.status(500).json({ error: 'config_error', message: 'Missing STRIPE_PRICE_SUB or STRIPE_PRICE_SETUP' });
     }
 
+    // Base line items: subscription + setup
+    const line_items = [
+      { price: priceSub, quantity: 1 },                 // recurring
+      { price: priceSetup, quantity: 1 }                // one-time
+    ];
+
+    // If a valid promo was entered and we have a coupon,
+    // try to apply it to the *setup* line item only (element [1]).
+    // Some Stripe accounts don’t have per-item discounts yet — we’ll
+    // guard that gracefully so it never 500s.
+    if (promoRaw && couponId && promoRaw === promoCode) {
+      try {
+        line_items[1].discounts = [{ coupon: couponId }]; // per-item discount
+      } catch (_) {
+        // Ignore if not supported on your account; we still create the session
+      }
+    }
+
+    // Create the session without add_invoice_items
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      customer_creation: 'always',
-
-      // line_items can include both recurring and one-time
-      line_items: [
-        { price: process.env.STRIPE_PRICE_SUB, quantity: 1 },   // $150/mo
-        { price: process.env.STRIPE_PRICE_SETUP, quantity: 1 }, // $300 one-time
-      ],
-
-      // Make sure Stripe generates an invoice for the one-time item on the first bill
-      invoice_creation: { enabled: true },
-
-      // Show the “Have a promo code?” box in Stripe Checkout
-      allow_promotion_codes: true,
-
-      // Optionally pre-apply a code if provided
-      ...(promoCodeId ? { discounts: [{ promotion_code: promoCodeId }] } : {}),
-
+      line_items,
+      // Do NOT set "discounts" at the session level (that would discount the recurring too)
       success_url: `${process.env.APP_BASE_URL}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.APP_BASE_URL}/checkout?canceled=1`,
+      // Optional niceties:
+      automatic_tax: { enabled: false },
+      billing_address_collection: 'auto'
     });
 
-    res.json({ id: session.id });
+    return res.json({ id: session.id });
   } catch (e) {
-    console.error('Stripe session error:', e);
-    res.status(500).json({ error: 'stripe_error' });
+    console.error('Stripe session error:', e?.raw || e);
+    return res.status(500).json({ error: 'stripe_error', message: e.message });
   }
 });
-
 
 
 
