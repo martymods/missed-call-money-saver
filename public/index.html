@@ -275,138 +275,178 @@
     })();
   </script>
 
-  <!-- DC Chat widget -->
-  <style>
-    /* Prevent iOS zoom-on-focus */
-    html { -webkit-text-size-adjust: 100%; }
-    .dc-chat input, .dc-chat textarea { font-size: 16px; line-height: 1.4; }
+<!-- DC Chat widget -->
+<style>
+  html{ -webkit-text-size-adjust:100% }                 /* stop iOS zoom jump */
+  .dc-chat input,.dc-chat textarea{ font-size:16px }
 
-    /* Launcher (chat bubble) */
-    #dc-chat-launcher{
-      position:fixed; right:20px; bottom:24px; z-index:9998;
-      width:56px; height:56px; border-radius:999px; border:none; cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
-      background:#1955ff; box-shadow:0 10px 30px rgba(16,40,120,.25);
-    }
-    #dc-chat-launcher svg{ width:26px; height:26px; color:#fff }
+  #dc-chat-launcher{
+    position:fixed; right:20px; bottom:24px; z-index:9998;
+    width:56px;height:56px;border-radius:999px;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    background:#1955ff; box-shadow:0 10px 30px rgba(16,40,120,.25);
+  }
+  #dc-chat-launcher svg{ width:26px;height:26px;color:#fff }
 
-    /* Chat window */
+  #dc-chat-window{
+    position:fixed; right:16px; bottom:120px;
+    width:min(380px,92vw); max-height:70vh; z-index:9999;
+    background:#fff; border:1px solid #e6e8f0; border-radius:14px; overflow:hidden;
+    box-shadow:0 20px 60px rgba(16,40,120,.16); display:none;
+  }
+  #dc-chat-window header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 12px; background:#0f1a3d; color:#fff; font-weight:700; font-size:14px;
+  }
+  #dc-chat-close{ background:transparent;border:none;color:#fff;font-size:18px;line-height:1;cursor:pointer }
+
+  #dc-chat-body{ padding:12px; max-height:calc(70vh - 46px); overflow:auto }
+  .dc-msg{ margin:10px 0; font-size:14px }
+  .dc-msg.you{ text-align:right }
+  .dc-bubble{ display:inline-block; padding:10px 12px; border-radius:12px; max-width:85% }
+  .dc-bubble.them{ background:#f3f6ff; color:#0f1a3d }
+  .dc-bubble.you{  background:#1955ff; color:#fff }
+  .dc-bubble a{ color:#1955ff; font-weight:800; text-decoration:underline } /* linkify */
+  .dc-input-row{ display:flex; gap:8px; margin-top:8px }
+  .dc-input-row input{ flex:1; padding:12px; border:1px solid #e0e6ff; border-radius:10px }
+  .dc-input-row button{ padding:12px 14px; border-radius:10px; border:1px solid #d9e1ff; background:#1955ff; color:#fff; font-weight:700; cursor:pointer }
+
+  @media (max-width:780px){
+    #dc-chat-launcher{ right:16px; bottom:calc(92px + env(safe-area-inset-bottom,0px)) }
     #dc-chat-window{
-      position:fixed; right:16px; bottom:120px; /* sits above sticky CTA on desktop */
-      width:min(380px, 92vw); max-height:70vh; z-index:9999;
-      background:#fff; border:1px solid #e6e8f0; border-radius:14px; overflow:hidden;
-      box-shadow:0 20px 60px rgba(16,40,120,.16); display:none;
+      right:16px; left:16px; width:auto;
+      bottom:calc(120px + env(safe-area-inset-bottom,0px));
+      max-height:60vh;
     }
-    #dc-chat-window header{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:10px 12px; background:#0f1a3d; color:#fff;
-      font-weight:700; font-size:14px;
-    }
-    #dc-chat-close{ background:transparent; border:none; color:#fff; font-size:18px; line-height:1; cursor:pointer }
+  }
+</style>
 
-    #dc-chat-body{ padding:12px; max-height:calc(70vh - 46px); overflow:auto }
-    .dc-msg{ margin:10px 0; font-size:14px }
-    .dc-msg.you{ text-align:right }
-    .dc-bubble{ display:inline-block; padding:10px 12px; border-radius:12px; max-width:85% }
-    .dc-bubble.them{ background:#f3f6ff; color:#0f1a3d }
-    .dc-bubble.you{ background:#1955ff; color:#fff }
-    .dc-input-row{ display:flex; gap:8px; margin-top:8px }
-    .dc-input-row input{ flex:1; padding:12px; border:1px solid #e0e6ff; border-radius:10px }
-    .dc-input-row button{ padding:12px 14px; border-radius:10px; border:1px solid #d9e1ff; background:#1955ff; color:#fff; font-weight:700; cursor:pointer }
+<button id="dc-chat-launcher" aria-controls="dc-chat-window" aria-expanded="false" title="Chat">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.3-4A4 4 0 0 1 4 15V7a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4v8z"/>
+  </svg>
+</button>
 
-    /* Mobile: raise bubble & window ABOVE sticky CTA, respect safe area */
-    @media (max-width: 780px){
-      #dc-chat-launcher{
-        right:16px;
-        bottom:calc(92px + env(safe-area-inset-bottom, 0px));
-      }
-      #dc-chat-window{
-        right:16px;
-        left:16px;  /* give it more room on small screens */
-        width:auto;
-        bottom:calc(120px + env(safe-area-inset-bottom, 0px));
-        max-height:60vh;
-      }
-    }
-  </style>
-
-  <button id="dc-chat-launcher" aria-controls="dc-chat-window" aria-expanded="false" title="Chat">
-    <!-- simple bubble icon -->
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.3-4A4 4 0 0 1 4 15V7a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4v8z"/>
-    </svg>
-  </button>
-
-  <div id="dc-chat-window" class="dc-chat" role="dialog" aria-label="Chat with Sam">
-    <header>
-      <span>Sam • Delaware County Tech</span>
-      <button id="dc-chat-close" aria-label="Close chat">×</button>
-    </header>
-    <div id="dc-chat-body">
-      <div class="dc-msg them"><span class="dc-bubble them">Hey — I’m Sam. We’re locals. Want me to set you up so missed calls book themselves?</span></div>
-    </div>
-    <div class="dc-input-row" style="padding:10px 12px 12px">
-      <input id="dc-chat-input" placeholder="Ask anything…" autocomplete="off" />
-      <button id="dc-chat-send">Send</button>
-    </div>
+<div id="dc-chat-window" class="dc-chat" role="dialog" aria-label="Chat with Sam">
+  <header>
+    <span>Sam • Delaware County Tech</span>
+    <button id="dc-chat-close" aria-label="Close chat">×</button>
+  </header>
+  <div id="dc-chat-body">
+    <div class="dc-msg them"><span class="dc-bubble them">Hey — I’m Sam. We’re locals. Want me to set you up so missed calls book themselves?</span></div>
   </div>
+  <div class="dc-input-row" style="padding:10px 12px 12px">
+    <input id="dc-chat-input" placeholder="Ask anything…" autocomplete="off" />
+    <button id="dc-chat-send">Send</button>
+  </div>
+</div>
 
-  <script>
-    (function(){
-      const launcher = document.getElementById('dc-chat-launcher');
-      const win = document.getElementById('dc-chat-window');
-      const closeBtn = document.getElementById('dc-chat-close');
-      const body = document.getElementById('dc-chat-body');
-      const input = document.getElementById('dc-chat-input');
-      const send = document.getElementById('dc-chat-send');
+<!-- Stripe loader for in-chat “Activate now” -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+(function(){
+  const launcher = document.getElementById('dc-chat-launcher');
+  const win = document.getElementById('dc-chat-window');
+  const closeBtn = document.getElementById('dc-chat-close');
+  const body = document.getElementById('dc-chat-body');
+  const input = document.getElementById('dc-chat-input');
+  const send = document.getElementById('dc-chat-send');
 
-      function openChat(){
-        win.style.display = 'block';
-        launcher.setAttribute('aria-expanded','true');
-        setTimeout(()=>input.focus({preventScroll:true}), 50);
-      }
-      function closeChat(){
-        win.style.display = 'none';
-        launcher.setAttribute('aria-expanded','false');
-      }
-      function appendMsg(who, text){
-        const wrap = document.createElement('div');
-        wrap.className = 'dc-msg ' + (who==='you'?'you':'them');
-        const b = document.createElement('span');
-        b.className = 'dc-bubble ' + (who==='you'?'you':'them');
-        b.textContent = text;
-        wrap.appendChild(b);
-        body.appendChild(wrap);
-        body.scrollTop = body.scrollHeight;
-      }
+  // persist a conversation id for logging
+  let convId = localStorage.getItem('dc_conv_id');
+  if(!convId){ convId = Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem('dc_conv_id', convId); }
+
+  // Stripe setup for one-click in chat
+  let stripe=null, cfg=null;
+  fetch('/config').then(r=>r.json()).then(c=>{ cfg=c; if (c.stripePk) stripe = Stripe(c.stripePk); });
+
+  function openChat(){
+    win.style.display='block';
+    launcher.setAttribute('aria-expanded','true');
+    setTimeout(()=>input.focus({preventScroll:true}), 50);
+  }
+  function closeChat(){
+    win.style.display='none';
+    launcher.setAttribute('aria-expanded','false');
+  }
+
+  // Safe linkify (URLs → anchors)
+  function linkify(text){
+    const esc = text.replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+    return esc.replace(/https?:\/\/[^\s)]+/g, u => `<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\//,'')}</a>`);
+  }
+
+  function appendHTML(who, html){
+    const wrap = document.createElement('div');
+    wrap.className = 'dc-msg ' + (who==='you'?'you':'them');
+    const b = document.createElement('span');
+    b.className = 'dc-bubble ' + (who==='you'?'you':'them');
+    b.innerHTML = html;
+    wrap.appendChild(b); body.appendChild(wrap); body.scrollTop = body.scrollHeight;
+  }
+  function appendMsg(who, text){ appendHTML(who, linkify(text)); }
+
+  // Show a mini checkout CTA inside chat
+  function showCheckoutCTA(){
+    const btnId = 'dc-activate-now-' + Math.random().toString(36).slice(2,7);
+    appendHTML('them', `
+      Ready to turn it on? <button id="${btnId}" style="margin-left:8px;padding:6px 10px;border-radius:10px;border:1px solid #d9e1ff;background:#1955ff;color:#fff;font-weight:800;cursor:pointer">Activate now</button>
+    `);
+    const btn = document.getElementById(btnId);
+    btn?.addEventListener('click', startStripeCheckout);
+  }
+
+  // Create Stripe session + redirect (fallback to /checkout)
+  async function startStripeCheckout(){
+    try{
+      if(!stripe){ window.location.href = '/checkout'; return; }
+      const r = await fetch('/api/create-checkout-session', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ promo: '' })
+      });
+      const j = await r.json();
+      if (j.id) await stripe.redirectToCheckout({ sessionId: j.id });
+      else window.location.href = '/checkout';
+    }catch(e){
+      window.location.href = '/checkout';
+    }
+  }
+
   async function ask(text){
     appendMsg('you', text);
     input.value='';
+    // If the user is clearly ready, drop a checkout CTA immediately
+    if (/\b(yes|ready|activate|buy|pay|sign\s*me\s*up|i'?m\s*in|im\s*in|let'?s\s*go|start)\b/i.test(text)) {
+      showCheckoutCTA();
+    }
     try{
       const r = await fetch('/api/chat', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ messages: [{ role:'user', content:text }] })
+        body: JSON.stringify({ convId, messages: [{ role:'user', content:text }] })
       });
       const j = await r.json();
-      appendMsg('them', j.reply || j.answer || 'All set.');
+      appendMsg('them', j.reply || 'All set.');
+      // If the model mentions /checkout, also provide a button
+      if ((j.reply||'').toLowerCase().includes('/checkout') || (j.reply||'').toLowerCase().includes('checkout')){
+        showCheckoutCTA();
+      }
     }catch(e){
       appendMsg('them','Hmm, had trouble reaching the server. Try again.');
     }
   }
 
-      launcher.addEventListener('click', ()=>{
-        if (win.style.display==='block') closeChat(); else openChat();
-      });
-      closeBtn.addEventListener('click', closeChat);
-      send.addEventListener('click', ()=>{ if(input.value.trim()) ask(input.value.trim()); });
-      input.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && input.value.trim()){ e.preventDefault(); ask(input.value.trim()); } });
+  launcher.addEventListener('click', ()=>{ (win.style.display==='block') ? closeChat() : openChat(); });
+  closeBtn.addEventListener('click', closeChat);
+  send.addEventListener('click', ()=>{ if(input.value.trim()) ask(input.value.trim()); });
+  input.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && input.value.trim()){ e.preventDefault(); ask(input.value.trim()); } });
 
-      // start minimized
-      closeChat();
-    })();
-  </script>
-  <!-- /DC Chat widget -->
+  closeChat(); // start minimized
+})();
+</script>
+<!-- /DC Chat widget -->
+
 
   <noscript>
     <style>.hero-visual{background:#0d1228 url('/A_promotional_digital_graphic_for_Delco_HVAC_%26_Plu.png') center/cover no-repeat}</style>
