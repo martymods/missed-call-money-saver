@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,21 +5,21 @@
   <title>Missed-Call Money Saver — Delaware County (HVAC & Plumbing)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Social preview / link unfurl -->
-<link rel="canonical" href="https://missed-call-money-saver.onrender.com/">
+  <link rel="canonical" href="https://missed-call-money-saver.onrender.com/">
 
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Missed-Call Money Saver">
-<meta property="og:url" content="https://missed-call-money-saver.onrender.com/">
-<meta property="og:title" content="Delco trades: stop losing jobs to voicemail.">
-<meta property="og:description" content="Missed call? We text back instantly, qualify the lead, drop your booking link, log it in Sheets, and ask for a review. Built for HVAC & Plumbing in Delaware County.">
-<meta property="og:image" content="https://missed-call-money-saver.onrender.com/og_delco_trades.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Missed-Call Money Saver">
+  <meta property="og:url" content="https://missed-call-money-saver.onrender.com/">
+  <meta property="og:title" content="Delco trades: stop losing jobs to voicemail.">
+  <meta property="og:description" content="Missed call? We text back instantly, qualify the lead, drop your booking link, log it in Sheets, and ask for a review. Built for HVAC & Plumbing in Delaware County.">
+  <meta property="og:image" content="https://missed-call-money-saver.onrender.com/og_delco_trades.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
 
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Delco trades: stop losing jobs to voicemail.">
-<meta name="twitter:description" content="Instant text-back → qualify → book → log → review. Gamified, local, A2P-registered SMS.">
-<meta name="twitter:image" content="https://missed-call-money-saver.onrender.com/og_delco_trades.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Delco trades: stop losing jobs to voicemail.">
+  <meta name="twitter:description" content="Instant text-back → qualify → book → log → review. Gamified, local, A2P-registered SMS.">
+  <meta name="twitter:image" content="https://missed-call-money-saver.onrender.com/og_delco_trades.png">
 
   <meta name="description" content="Delco trades club: instant text-back when you miss a call, qualify and book in minutes. Zero learning curve.">
 
@@ -148,121 +147,6 @@
     }
   </style>
 </head>
-
-<!-- Delco Chat: Mikey from Delco Tech -->
-<style>
-  .delco-chat-launcher{
-    position:fixed;right:18px;bottom:18px;z-index:9999;
-    width:58px;height:58px;border-radius:50%;
-    background:#1955ff;color:#fff;display:flex;align-items:center;justify-content:center;
-    box-shadow:0 10px 26px rgba(10,30,70,.25);cursor:pointer;font-weight:800
-  }
-  .delco-chat-panel{
-    position:fixed;right:18px;bottom:86px;z-index:9999;width:320px;max-height:70vh;
-    background:#fff;border:1px solid #e5e8f0;border-radius:14px;box-shadow:0 10px 26px rgba(10,30,70,.15);
-    display:grid;grid-template-rows:auto 1fr auto;overflow:hidden
-  }
-  .dcp-head{
-    padding:12px 12px;border-bottom:1px solid #eef1f6;display:flex;gap:10px;align-items:center
-  }
-  .dcp-head .avatar{
-    width:30px;height:30px;border-radius:50%;background:#0f3ed6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800
-  }
-  .dcp-head .t{font-weight:800}
-  .dcp-body{padding:10px;overflow:auto;display:grid;gap:8px;background:#f8faff}
-  .msg{max-width:85%;padding:8px 10px;border-radius:12px;border:1px solid #e6ebf2;background:#fff}
-  .me{justify-self:end;background:#1955ff;color:#fff;border-color:#1955ff}
-  .dcp-foot{display:flex;gap:6px;padding:10px;border-top:1px solid #eef1f6;background:#fff}
-  .dcp-foot input{flex:1;padding:10px;border:1px solid #dfe5f5;border-radius:10px}
-  .dcp-foot button{padding:10px 12px;border-radius:10px;border:1px solid #d9e1ff;background:#1955ff;color:#fff;font-weight:700}
-</style>
-
-<div id="delco-chat-launcher" class="delco-chat-launcher" title="Chat with Mikey">💬</div>
-
-<div id="delco-chat" class="delco-chat-panel" hidden>
-  <div class="dcp-head">
-    <div class="avatar">M</div>
-    <div>
-      <div class="t">Mikey — Delco Tech</div>
-      <div style="font-size:12px;color:#6e6e6e">Here to help you win more jobs</div>
-    </div>
-    <button id="delco-close" style="margin-left:auto;border:none;background:none;font-size:18px;cursor:pointer">×</button>
-  </div>
-  <div id="delco-body" class="dcp-body"></div>
-  <div class="dcp-foot">
-    <input id="delco-input" placeholder="Ask anything…"/>
-    <button id="delco-send">Send</button>
-  </div>
-</div>
-
-<script>
-(function(){
-  const $ = (s)=>document.querySelector(s);
-  const body = $('#delco-body');
-  const box = $('#delco-chat');
-  const openBtn = $('#delco-chat-launcher');
-  const closeBtn = $('#delco-close');
-  const input = $('#delco-input');
-  const sendBtn = $('#delco-send');
-  const KEY = 'delco_chat_v1';
-
-  function render(messages){
-    body.innerHTML = '';
-    messages.forEach(m=>{
-      const b = document.createElement('div');
-      b.className = 'msg' + (m.role==='user'?' me':'');
-      b.textContent = m.content;
-      body.appendChild(b);
-    });
-    body.scrollTop = body.scrollHeight;
-  }
-  function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch{ return []; } }
-  function save(msgs){ localStorage.setItem(KEY, JSON.stringify(msgs)); }
-
-  // seed greeting once
-  let messages = load();
-  if(!messages.length){
-    messages = [{ role:'assistant', content:"Hey, I’m Mikey with Delco Tech. Quick question—how many jobs do you think slip away from missed calls each month? I can show you how folks here lock them in. Want me to book you now or do you want the 60-sec rundown?" }];
-    save(messages);
-  }
-  render(messages);
-
-  openBtn.onclick = ()=>{ box.hidden = false; input.focus(); };
-  closeBtn.onclick = ()=>{ box.hidden = true; };
-  sendBtn.onclick = send;
-  input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') send(); });
-
-  async function send(){
-    const text = (input.value||'').trim();
-    if(!text) return;
-    input.value='';
-    messages.push({role:'user', content:text});
-    save(messages); render(messages);
-
-    // typing bubble
-    const t = document.createElement('div');
-    t.className='msg';
-    t.textContent='…';
-    body.appendChild(t);
-    body.scrollTop = body.scrollHeight;
-
-    try{
-      const resp = await fetch('/api/chat', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ messages })
-      }).then(r=>r.json());
-      t.remove();
-      messages.push({role:'assistant', content: resp.reply || "All set."});
-      save(messages); render(messages);
-    }catch(e){
-      t.textContent = "Hmm, I couldn't reach the team. Try again.";
-    }
-  }
-})();
-</script>
-
-
 <body>
 
   <!-- Announce bar w/ dynamic left-spots text -->
@@ -314,8 +198,6 @@
   </section>
 
   <main class="wrap">
-
-
     <div class="grid-2" id="how">
       <section class="card">
         <h3>How it works</h3>
@@ -392,6 +274,126 @@
       const pct = (taken/total)*100;
       document.getElementById('meterFill').style.width = Math.max(5, pct) + '%';
     })();
+  </script>
+
+  <!-- ✅ Chat widget moved INSIDE <body> and made toggleable -->
+  <style>
+    .delco-chat-launcher{
+      position:fixed;right:18px;bottom:18px;z-index:9999;
+      width:58px;height:58px;border-radius:50%;
+      background:#1955ff;color:#fff;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 10px 26px rgba(10,30,70,.25);cursor:pointer;font-weight:800
+    }
+    .delco-chat-panel{
+      position:fixed;right:18px;bottom:86px;z-index:9999;width:320px;max-height:70vh;
+      background:#fff;border:1px solid #e5e8f0;border-radius:14px;box-shadow:0 10px 26px rgba(10,30,70,.15);
+      display:grid;grid-template-rows:auto 1fr auto;overflow:hidden
+    }
+    /* ensure hidden actually hides */
+    .delco-chat-panel[hidden]{display:none !important;}
+    .dcp-head{
+      padding:12px 12px;border-bottom:1px solid #eef1f6;display:flex;gap:10px;align-items:center
+    }
+    .dcp-head .avatar{
+      width:30px;height:30px;border-radius:50%;background:#0f3ed6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800
+    }
+    .dcp-head .t{font-weight:800}
+    .dcp-body{padding:10px;overflow:auto;display:grid;gap:8px;background:#f8faff}
+    .msg{max-width:85%;padding:8px 10px;border-radius:12px;border:1px solid #e6ebf2;background:#fff}
+    .me{justify-self:end;background:#1955ff;color:#fff;border-color:#1955ff}
+    .dcp-foot{display:flex;gap:6px;padding:10px;border-top:1px solid #eef1f6;background:#fff}
+    .dcp-foot input{flex:1;padding:10px;border:1px solid #dfe5f5;border-radius:10px}
+    .dcp-foot button{padding:10px 12px;border-radius:10px;border:1px solid #d9e1ff;background:#1955ff;color:#fff;font-weight:700}
+  </style>
+
+  <div id="delco-chat-launcher" class="delco-chat-launcher" title="Chat with Mikey">💬</div>
+
+  <div id="delco-chat" class="delco-chat-panel" hidden>
+    <div class="dcp-head">
+      <div class="avatar">M</div>
+      <div>
+        <div class="t">Mikey — Delco Tech</div>
+        <div style="font-size:12px;color:#6e6e6e">Here to help you win more jobs</div>
+      </div>
+      <button id="delco-close" style="margin-left:auto;border:none;background:none;font-size:18px;cursor:pointer" aria-label="Close chat">×</button>
+    </div>
+    <div id="delco-body" class="dcp-body"></div>
+    <div class="dcp-foot">
+      <input id="delco-input" placeholder="Ask anything…" />
+      <button id="delco-send">Send</button>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    const $ = (s)=>document.querySelector(s);
+    const body = $('#delco-body');
+    const box = $('#delco-chat');
+    const openBtn = $('#delco-chat-launcher');
+    const closeBtn = $('#delco-close');
+    const input = $('#delco-input');
+    const sendBtn = $('#delco-send');
+    const KEY = 'delco_chat_v1';
+
+    function render(messages){
+      body.innerHTML = '';
+      messages.forEach(m=>{
+        const b = document.createElement('div');
+        b.className = 'msg' + (m.role==='user'?' me':'');
+        b.textContent = m.content;
+        body.appendChild(b);
+      });
+      body.scrollTop = body.scrollHeight;
+    }
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch{ return []; } }
+    function save(msgs){ localStorage.setItem(KEY, JSON.stringify(msgs)); }
+
+    // seed greeting once
+    let messages = load();
+    if(!messages.length){
+      messages = [{ role:'assistant', content:"Hey, I’m Mikey with Delco Tech. Quick question—how many jobs do you think slip away from missed calls each month? I can show you how folks here lock them in. Want me to book you now or do you want the 60-sec rundown?" }];
+      save(messages);
+    }
+    render(messages);
+
+    // launcher toggles visibility
+    openBtn.onclick = ()=>{
+      box.hidden = !box.hidden;
+      if(!box.hidden) input.focus();
+    };
+    closeBtn.onclick = ()=>{ box.hidden = true; };
+
+    sendBtn.onclick = send;
+    input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') send(); });
+
+    async function send(){
+      const text = (input.value||'').trim();
+      if(!text) return;
+      input.value='';
+      messages.push({role:'user', content:text});
+      save(messages); render(messages);
+
+      // typing bubble
+      const t = document.createElement('div');
+      t.className='msg';
+      t.textContent='…';
+      body.appendChild(t);
+      body.scrollTop = body.scrollHeight;
+
+      try{
+        const resp = await fetch('/api/chat', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ messages })
+        }).then(r=>r.json());
+        t.remove();
+        messages.push({role:'assistant', content: resp.reply || "All set."});
+        save(messages); render(messages);
+      }catch(e){
+        t.textContent = "Hmm, I couldn't reach the team. Try again.";
+      }
+    }
+  })();
   </script>
 
   <noscript>
