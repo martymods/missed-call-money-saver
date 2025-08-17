@@ -379,17 +379,21 @@
         body.appendChild(wrap);
         body.scrollTop = body.scrollHeight;
       }
-      async function ask(text){
-        appendMsg('you', text);
-        input.value='';
-        try{
-          const r = await fetch('/api/assist', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({q:text})});
-          const j = await r.json();
-          appendMsg('them', j.answer || 'All set.');
-        }catch(e){
-          appendMsg('them','Hmm, had trouble reaching the server. Try again.');
-        }
-      }
+  async function ask(text){
+    appendMsg('you', text);
+    input.value='';
+    try{
+      const r = await fetch('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ messages: [{ role:'user', content:text }] })
+      });
+      const j = await r.json();
+      appendMsg('them', j.reply || j.answer || 'All set.');
+    }catch(e){
+      appendMsg('them','Hmm, had trouble reaching the server. Try again.');
+    }
+  }
 
       launcher.addEventListener('click', ()=>{
         if (win.style.display==='block') closeChat(); else openChat();
