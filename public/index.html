@@ -27,6 +27,7 @@
   <link rel="preload" as="image" href="/A_promotional_digital_graphic_for_Delco_HVAC_%26_Plu.png">
   <link rel="preload" as="image" href="/A_2D_digital_illustration_in_this_graphic_design_p.png">
   <link rel="preload" as="image" href="/A_flat-style_digital_graphic_design_advertisement_.png">
+  <link rel="preload" as="image" href="/image/delco-tech-seal.png">
 
   <style>
     :root{
@@ -48,6 +49,12 @@
     .nav{max-width:1200px; margin:auto; padding:18px 18px; display:flex; align-items:center; justify-content:space-between;}
     .logo{display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.2px;}
     .logo-badge{width:38px;height:38px;border-radius:10px;background:#0f3ed6;display:grid;place-items:center;color:#fff;font-weight:900;box-shadow:var(--shadow)}
+    .logo-badge .seal-mini{
+  width:100%;
+  height:100%;
+  object-fit:contain;   /* keeps the round seal centered */
+  display:block;
+}
     .nav .btn{padding:10px 16px; border-radius:10px; font-weight:800; text-decoration:none; color:#fff; background:#1955ff; border:1px solid #194df7;}
     .nav .btn:hover{filter:brightness(.96)}
 
@@ -157,7 +164,9 @@
   <!-- Top nav -->
   <header class="nav">
     <div class="logo">
-      <span class="logo-badge">DC</span>
+<span class="logo-badge">
+  <img src="/image/delco-tech-seal.png" alt="Delaware County Tech Division" class="seal-mini">
+</span>
       <div>
         <div>Delco Trades Club</div>
         <small style="color:var(--muted);font-weight:700">Missed-Call Money Saver</small>
