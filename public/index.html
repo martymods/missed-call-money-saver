@@ -30,6 +30,19 @@
   <link rel="preload" as="image" href="/image/delco-tech-seal.png">
 
   <style>
+
+    /* Support email tiny link */
+.help-link{
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  margin-left: 10px;
+}
+.help-link:hover{ text-decoration: underline; }
+/* hide in tight mobile view so it never crowds the CTA */
+@media (max-width: 680px){ .help-link{ display:none; } }
+
     :root{
       --brand:#1955ff; --brand-2:#0f3ed6; --ink:#0f1220; --muted:#6e7280; --bg:#f6f7f9; --ok:#20a055;
       --edge:#eceff6; --shadow:0 12px 30px rgba(9,20,60,.08);
@@ -258,6 +271,8 @@
     </section>
 
     <p class="foot">By calling or texting this number, you agree to receive SMS for scheduling and customer service. Msg&amp;data rates may apply. Reply STOP to cancel, HELP for help.</p>
+    <p class="foot">Need help? Email <a href="mailto:support@delcotechdivision.com">support@delcotechdivision.com</a>.</p>
+
   </main>
 
   <!-- Sticky footer CTA with availability meter -->
