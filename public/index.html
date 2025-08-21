@@ -21,7 +21,7 @@
   <meta name="twitter:description" content="Instant text-back → qualify → book → log → review. Gamified, local, A2P-registered SMS.">
   <meta name="twitter:image" content="https://missed-call-money-saver.onrender.com/og_delco_trades.png">
 
-  <meta name="description" content="Delco trades club: instant text-back when you miss a call, qualify and book in minutes. Zero learning curve.">
+  <meta name="description" content="Delco Tech Division: instant text-back when you miss a call, qualify and book in minutes. Zero learning curve.">
 
   <!-- Preload hero assets for snappy first paint -->
   <link rel="preload" as="image" href="/A_promotional_digital_graphic_for_Delco_HVAC_%26_Plu.png">
@@ -157,7 +157,7 @@
 
   <!-- Announce bar w/ dynamic left-spots text -->
   <div class="announce">
-    <span id="spotsText">Delco Trades Club — opening a few new spots this month.</span>
+    <span id="spotsText">Delco Tech Division — opening a few new spots this month.</span>
     <small>&nbsp;First come, first served.</small>
   </div>
 
@@ -168,7 +168,7 @@
   <img src="/image/delco-tech-seal.png" alt="Delaware County Tech Division" class="seal-mini">
 </span>
       <div>
-        <div>Delco Trades Club</div>
+        <div>Delco Tech Division</div>
         <small style="color:var(--muted);font-weight:700">Missed-Call Money Saver</small>
       </div>
     </div>
@@ -277,7 +277,7 @@
       const taken = Math.min(total-2, Math.max(0, Math.floor((day/30)*(total-2))));
       const left = total - taken;
       document.getElementById('spotsText').textContent =
-        `Delco Trades Club — ${left} of ${total} new spots available this month.`;
+        `Delco Tech Division — ${left} of ${total} new spots available this month.`;
 
       const pct = (taken/total)*100;
       document.getElementById('meterFill').style.width = Math.max(5, pct) + '%';
