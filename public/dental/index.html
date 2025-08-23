@@ -137,6 +137,36 @@
           </select>
           <label>Notes (optional)</label>
           <textarea id="p_notes" placeholder="Anything we should know?"></textarea>
+          <!-- Insurance (optional) -->
+<div style="margin-top:8px;border-top:1px dashed rgba(255,255,255,.18);padding-top:10px">
+  <label>Insurance carrier (optional)</label>
+  <input id="ins_payer" placeholder="e.g., Delta Dental, Aetna Dental, MetLife" />
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div>
+      <label>Member ID</label>
+      <input id="ins_member" placeholder="ID on card" />
+    </div>
+    <div>
+      <label>Date of birth</label>
+      <input id="ins_dob" type="date" />
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div>
+      <label>Last name on policy</label>
+      <input id="ins_last" placeholder="As on the card" />
+    </div>
+    <div>
+      <label>ZIP (optional)</label>
+      <input id="ins_zip" placeholder="19026" />
+    </div>
+  </div>
+  <div class="cta-row">
+    <button type="button" class="btn outline" onclick="runEligibility()">Run instant eligibility</button>
+    <span id="elig_status" class="muted"></span>
+  </div>
+</div>
+
           <div class="cta-row">
             <button class="btn" onclick="nextToSlots()">See available times</button>
           </div>
@@ -282,6 +312,59 @@
     }
     return out;
   }
+
+  // --- Insurance Eligibility (demo) ---
+async function runEligibility(){
+  const payer   = document.getElementById('ins_payer').value.trim();
+  const member  = document.getElementById('ins_member').value.trim();
+  const dob     = document.getElementById('ins_dob').value;
+  const last    = document.getElementById('ins_last').value.trim();
+  const zip     = document.getElementById('ins_zip').value.trim();
+  const status  = document.getElementById('elig_status');
+
+  status.textContent = 'Checking…';
+  try{
+    const r = await fetch('/api/eligibility/check', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ payer, memberId: member, dob, lastName: last, zip })
+    }).then(r=>r.json());
+
+    if(!r || !r.ok){ throw new Error('No response'); }
+
+    if(r.eligible){
+      status.innerHTML = `✅ Eligible: <b>${r.planName || 'Dental PPO'}</b>` + 
+        (r.copayEstimate ? ` • Est. co-pay $${r.copayEstimate}` : '');
+      status.style.color = '#a7f3d0';
+    }else{
+      status.textContent = '⚠️ Not found or out of network (you can still book).';
+      status.style.color = '#fca5a5';
+    }
+
+    // stash sample result so Step 3 summary can show it
+    window._eligResult = r;
+  }catch(e){
+    status.textContent = 'Could not verify right now. We can still book.';
+    status.style.color = '#fca5a5';
+  }
+}
+
+// augment your confirmation summary to show eligibility if it exists
+const _origConfirm = confirmBooking;
+confirmBooking = function(){
+  _origConfirm(); // call your existing function
+  try{
+    const s = document.getElementById('summary');
+    if(window._eligResult){
+      const r = window._eligResult;
+      const line = r.eligible ? 
+        ` Insurance: Eligible${r.planName? ' ('+r.planName+')':''}${r.copayEstimate? ', est. co-pay $'+r.copayEstimate:''}.` :
+        ' Insurance: could not verify; we will confirm before the visit.';
+      s.textContent += line;
+    }
+  }catch(_){}
+}
+
   function confirmBooking(){
     if(!selectedSlot) return;
     const name = document.getElementById('p_name').value.trim();
