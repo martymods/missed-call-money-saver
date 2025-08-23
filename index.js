@@ -27,6 +27,17 @@ app.get('/book', (req, res) => {
   return res.redirect('/checkout');      // fallback if env not set
 });
 
+// 1) Serve everything in /public (so /robots.txt, /favicon.ico work)
+app.use(express.static(path.join(__dirname, 'public'), {
+  extensions: ['html'] // lets /dental resolve to index.html automatically
+}));
+
+// 2) Be explicit for /dental to be safe
+app.use('/dental', express.static(path.join(__dirname, 'public', 'dental'), {
+  extensions: ['html']
+}));
+
+
 const BUSINESS = process.env.BUSINESS_NAME || 'Our Team';
 const CAL_LINK = process.env.CALENDLY_SCHEDULING_LINK || '#';
 const REVIEW_LINK = process.env.REVIEW_LINK || '';
