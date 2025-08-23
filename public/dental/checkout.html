@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Secure Checkout — Delco Tech Division • Dental</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0;background:#0b0f19;color:#e6ebf5;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+    .wrap{max-width:760px;margin:0 auto;padding:28px}
+    .card{background:#121829;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px;margin-top:18px}
+    .btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;background:linear-gradient(180deg,#7c5cff,#5b3bff);color:white;cursor:pointer;display:inline-block;text-decoration:none}
+    .muted{color:#99a3b3}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Secure Checkout</h2>
+    <div class="card">
+      <p class="muted">Plan: <b id="planName"></b></p>
+      <p>Click the button below to complete your order via Stripe Checkout.</p>
+      <a id="payBtn" class="btn" href="#" target="_blank" rel="noopener">Pay with Stripe</a>
+      <p class="muted" style="margin-top:10px">You’ll get an email receipt and be redirected to setup. Questions? <a href="mailto:support@delcotechdivision.com">support@delcotechdivision.com</a></p>
+      <p><a class="muted" href="index.html">← Back</a></p>
+    </div>
+  </div>
+
+<script>
+  // Paste your live Stripe Payment Links here
+  const STRIPE_LINKS = {
+    starter: "https://buy.stripe.com/9B69AT4Yt2nj9x53QpabK03",
+    growth:  "https://buy.stripe.com/4gM6oHez31jf4cL9aJabK04",
+    pro:     "https://buy.stripe.com/4gM14n1Mh1jf9x572BabK05"
+  };
+
+  const p = new URLSearchParams(location.search).get('plan') || 'starter';
+  const labels = {starter:'Starter ($149/mo)', growth:'Growth ($249/mo)', pro:'Pro ($449/mo)'};
+  document.getElementById('planName').textContent = labels[p] || labels.starter;
+
+  const a = document.getElementById('payBtn');
+  a.href = STRIPE_LINKS[p] || '#';
+  a.addEventListener('click', (e) => {
+    if(a.href === '#'){
+      e.preventDefault();
+      alert('Add your Stripe Checkout link in STRIPE_LINKS before going live.');
+    }
+  });
+</script>
+</body>
+</html>
