@@ -37,6 +37,8 @@ app.use('/dental', express.static(path.join(__dirname, 'public', 'dental'), {
   extensions: ['html']
 }));
 
+// mount the API
+app.use('/api/eligibility', require('./routes/eligibility'));
 
 const BUSINESS = process.env.BUSINESS_NAME || 'Our Team';
 const CAL_LINK = process.env.CALENDLY_SCHEDULING_LINK || '#';
