@@ -1,330 +1,402 @@
-require('dotenv').config();
-const express = require('express');
-const dayjs = require('dayjs');
-const cron = require('node-cron');
-const path = require('path');
-const Stripe = require('stripe');
-const OpenAI = require('openai');                           // 👈 NEW
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' }); // 👈 NEW
-
-const { sendSMS } = require('./services/twilioClient');
-const { upsertByPhone, findAll } = require('./services/sheets');
-const { subscribeCalendlyWebhook } = require('./services/calendly');
-const { setStep, setField, get: getState } = require('./lib/leadStore');
-
-const app = express();
-app.use(express.urlencoded({ extended: true })); // Twilio posts form-url-encoded
-app.use(express.json());
-
-// 👉 Serve the landing page & assets from /public
-app.use(express.static(path.join(__dirname, 'public')));
-
-// One canonical booking URL for the site + SMS
-app.get('/book', (req, res) => {
-  const url = process.env.CALENDLY_SCHEDULING_LINK || '';
-  if (url) return res.redirect(url);     // 302 → your Calendly event
-  return res.redirect('/checkout');      // fallback if env not set
-});
-
-// 1) Serve everything in /public (so /robots.txt, /favicon.ico work)
-app.use(express.static(path.join(__dirname, 'public'), {
-  extensions: ['html'] // lets /dental resolve to index.html automatically
-}));
-
-// 2) Be explicit for /dental to be safe
-app.use('/dental', express.static(path.join(__dirname, 'public', 'dental'), {
-  extensions: ['html']
-}));
-
-
-const BUSINESS = process.env.BUSINESS_NAME || 'Our Team';
-const CAL_LINK = process.env.CALENDLY_SCHEDULING_LINK || '#';
-const REVIEW_LINK = process.env.REVIEW_LINK || '';
-const DIAL_TIMEOUT = parseInt(process.env.DIAL_TIMEOUT || '20', 10);
-
-// Health
-app.get('/health', (_, res) => res.json({ ok: true }));
-
-// ---------------------------------------------------------------------
-// Front-end config (safe to expose PUBLISHABLE IDs only)
-// ---------------------------------------------------------------------
-app.get('/config', (_, res) => {
-  res.json({
-    stripePk: process.env.STRIPE_PUBLISHABLE_KEY || '',
-    paypalClientId: process.env.PAYPAL_CLIENT_ID || '',
-    paypalPlanId: process.env.PAYPAL_PLAN_ID || '',
-  });
-});
-
-// ---------------------------------------------------------------------
-// Stripe Checkout: subscription ($150/mo) + one-time setup ($300)
-// Supports promo "DELCO150" via env STRIPE_COUPON_DELCO150
-// ---------------------------------------------------------------------
-app.post('/api/create-checkout-session', async (req, res) => {
-  try {
-    const promo = (req.body?.promo || '').trim().toUpperCase();
-
-    const params = {
-      mode: 'subscription',
-      line_items: [
-        { price: process.env.STRIPE_PRICE_SUB, quantity: 1 },   // $150/mo
-        { price: process.env.STRIPE_PRICE_SETUP, quantity: 1 }, // $300 once
-      ],
-      allow_promotion_codes: true,
-      success_url: `${process.env.APP_BASE_URL}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.APP_BASE_URL}/checkout?canceled=1`,
-    };
-
-    if (promo === 'DELCO150' && process.env.STRIPE_COUPON_DELCO150) {
-      params.discounts = [{ coupon: process.env.STRIPE_COUPON_DELCO150 }];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Delco Tech Division — Dental AI Scheduler</title>
+  <meta name="description" content="Delco Tech Division: HIPAA-ready AI intake & scheduling for small dental practices. Patients book online 24/7. Try the demo and start a trial." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0f19;
+      --card:#121829;
+      --muted:#99a3b3;
+      --fg:#e6ebf5;
+      --brand:#7c5cff;
+      --brand-2:#4cc9f0;
     }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      background: radial-gradient(1200px 600px at 80% -20%, rgba(124,92,255,.25), transparent 60%),
+                  radial-gradient(1000px 600px at -10% 20%, rgba(76,201,240,.18), transparent 60%),
+                  var(--bg);
+      color:var(--fg);
+    }
+    a{color:var(--brand)}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--fg)}
+    .brand-logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+      background: conic-gradient(from 200deg, var(--brand), var(--brand-2));
+      box-shadow:0 8px 24px rgba(124,92,255,.35), inset 0 0 30px rgba(255,255,255,.15);}
+    .brand-logo svg{width:22px;height:22px;fill:#0b0f19}
+    .brand h1{font-size:16px;margin:0;font-weight:800;letter-spacing:.2px}
+    nav a{margin-left:18px;text-decoration:none;color:var(--fg);opacity:.9}
+    .hero{margin-top:28px;display:grid;grid-template-columns:1.2fr 1fr;gap:26px}
+    .card{background:rgba(18,24,41,.85);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;
+      box-shadow:0 10px 30px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.02);backdrop-filter: blur(6px);}
+    h2{margin:0 0 8px 0;font-size:34px;line-height:1.08;letter-spacing:-.3px}
+    .sub{color:var(--muted);margin:10px 0 18px 0}
+    .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+    .btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;background:linear-gradient(180deg, var(--brand), #5b3bff); color:white; cursor:pointer;
+      box-shadow:0 10px 24px rgba(124,92,255,.38);text-decoration:none;display:inline-block}
+    .btn.outline{background:transparent;border:1px solid rgba(255,255,255,.18);color:#e9e9f6}
+    .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(124,92,255,.15);color:#d6d0ff;font-weight:700;font-size:12px;margin-bottom:10px}
+    .trust{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:12px}
+    .trust b{color:#cdd6e9}
+    .demo h3{margin:0 0 8px 0}
+    .steps{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 16px 0}
+    .step{padding:6px 10px;border-radius:999px;border:1px dashed rgba(255,255,255,.18);font-size:12px;color:#cfd6ea}
+    label{display:block;margin:10px 0 6px 0;font-weight:600}
+    input, select, textarea{width:100%;padding:12px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:#0f1527;color:#e8ecf8}
+    textarea{min-height:88px;resize:vertical}
+    .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+    .slot{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:#0f1527;cursor:pointer;text-align:center}
+    .slot.active{outline:2px solid var(--brand);box-shadow:0 0 0 4px rgba(124,92,255,.15) inset}
+    .muted{color:var(--muted)}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .price h3{margin:0}
+    .price .big{font-size:34px;font-weight:800}
+    .list{margin:14px 0 0 0;padding-left:18px;color:#cfd6ea}
+    footer{margin:50px 0 20px 0;color:var(--muted);font-size:12px}
+    @media (max-width: 900px){
+      .hero{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="/" aria-label="Delco Tech Division">
+        <div class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 2c2.5 0 4.8 1 6.6 2.8l-2.2 2.2A6.5 6.5 0 0 0 12 6a6 6 0 1 0 5.9 7.2h3A9 9 0 1 1 12 2zm7.9 7.5-6.9 6.9-3.5-3.5 1.8-1.8 1.7 1.7 5.1-5.1z"/></svg>
+        </div>
+        <h1>Delco Tech Division — Dental</h1>
+      </a>
+      <nav>
+        <a href="#demo">Try the demo</a>
+        <a href="#pricing">Pricing</a>
+        <a href="mailto:support@delcotechdivision.com">Support</a>
+      </nav>
+    </header>
 
-    const session = await stripe.checkout.sessions.create(params);
-    return res.json({ id: session.id });
-  } catch (e) {
-    console.error('Stripe session error:', e?.raw?.message || e?.message, e);
-    return res.status(500).json({ error: 'stripe_error' });
+    <section class="hero">
+      <div class="card">
+        <span class="tag">For Delaware County dental practices</span>
+        <h2>AI scheduling that books patients while you sleep.</h2>
+        <p class="sub">HIPAA-ready intake + scheduling screens basic needs, offers real slots, sends confirmations, and can collect co-pays—without hiring extra staff.</p>
+        <div class="cta-row">
+          <a class="btn" href="#demo">🚀 Try the live demo</a>
+          <a class="btn outline" href="#pricing">View pricing</a>
+          <a class="btn outline" href="/">← Back to Home</a>
+        </div>
+        <div class="trust">
+          <span>✅ <b>HIPAA-ready workflows</b> (BAA available)</span>
+          <span>🔒 Encrypted in transit</span>
+          <span>🦷 Built for hygiene, restorative, emergency</span>
+        </div>
+      </div>
+
+      <div class="card demo" id="demo">
+        <h3>Patient-facing demo</h3>
+        <p class="muted">Answer a few questions, then pick a time. This simulates what your patients see on your website.</p>
+        <div class="steps">
+          <div class="step">1. Intake</div><div class="step">2. Availability</div><div class="step">3. Confirm</div>
+        </div>
+
+        <div id="step1">
+          <label>Full name</label>
+          <input id="p_name" placeholder="Jane Patient" />
+          <label>Mobile (for confirmation)</label>
+          <input id="p_phone" placeholder="(484) 555-1234" />
+          <label>Reason for visit</label>
+          <select id="p_reason">
+            <option>Cleaning & exam</option>
+            <option>Tooth pain / emergency</option>
+            <option>Filling or crown</option>
+            <option>Cosmetic consult</option>
+            <option>Invisalign/orthodontics</option>
+          </select>
+          <label>Pain level</label>
+          <select id="p_pain">
+            <option>None</option>
+            <option>Mild</option>
+            <option>Moderate</option>
+            <option>Severe</option>
+          </select>
+          <label>Preferred time</label>
+          <select id="p_pref">
+            <option value="any">Any</option>
+            <option value="morning">Morning</option>
+            <option value="afternoon">Afternoon</option>
+          </select>
+          <label>Notes (optional)</label>
+          <textarea id="p_notes" placeholder="Anything we should know?"></textarea>
+          <!-- Insurance (optional) -->
+<div style="margin-top:8px;border-top:1px dashed rgba(255,255,255,.18);padding-top:10px">
+  <label>Insurance carrier (optional)</label>
+  <input id="ins_payer" placeholder="e.g., Delta Dental, Aetna Dental, MetLife" />
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div>
+      <label>Member ID</label>
+      <input id="ins_member" placeholder="ID on card" />
+    </div>
+    <div>
+      <label>Date of birth</label>
+      <input id="ins_dob" type="date" />
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div>
+      <label>Last name on policy</label>
+      <input id="ins_last" placeholder="As on the card" />
+    </div>
+    <div>
+      <label>ZIP (optional)</label>
+      <input id="ins_zip" placeholder="19026" />
+    </div>
+  </div>
+  <div class="cta-row">
+    <button type="button" class="btn outline" onclick="runEligibility()">Run instant eligibility</button>
+    <span id="elig_status" class="muted"></span>
+  </div>
+</div>
+
+          <div class="cta-row">
+            <button class="btn" onclick="nextToSlots()">See available times</button>
+          </div>
+        </div>
+
+        <div id="step2" style="display:none">
+          <div class="muted">Choose a time below. These are sample slots for the next few days.</div>
+          <div id="slots" class="slots" role="listbox" aria-label="appointment times"></div>
+          <div class="cta-row">
+            <button class="btn outline" onclick="backToIntake()">← Back</button>
+            <button class="btn" id="confirmBtn" disabled onclick="confirmBooking()">Confirm</button>
+          </div>
+        </div>
+
+        <div id="step3" style="display:none">
+          <h3>✅ Demo booking created</h3>
+          <p class="muted" id="summary"></p>
+          <div class="cta-row">
+            <a class="btn" href="checkout.html?plan=starter">Start your 14-day trial</a>
+            <button class="btn outline" onclick="resetDemo()">Book another</button>
+          </div>
+          <small class="muted">This is a demo—no SMS is being sent. In production, a confirmation text + calendar invite is delivered instantly.</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap" id="pricing" style="padding-left:0;padding-right:0;">
+      <div class="grid-3">
+        <div class="card price">
+          <h3>Starter</h3>
+          <div class="big">$149<span class="muted">/mo</span></div>
+          <ul class="list">
+            <li>AI intake + scheduling widget</li>
+            <li>Unlimited bookings</li>
+            <li>Text/email confirmations</li>
+            <li>Basic reporting</li>
+            <li>One location</li>
+          </ul>
+          <div class="cta-row">
+            <a class="btn" href="checkout.html?plan=starter">Start 14-day trial</a>
+          </div>
+        </div>
+        <div class="card price" style="outline:2px solid rgba(124,92,255,.45)">
+          <h3>Growth</h3>
+          <div class="big">$249<span class="muted">/mo</span></div>
+          <ul class="list">
+            <li>Everything in Starter</li>
+            <li>Insurance eligibility (270/271)</li>
+            <li>Co-pay collection links</li>
+            <li>Priority support</li>
+            <li>Up to 3 providers</li>
+          </ul>
+          <div class="cta-row">
+            <a class="btn" href="checkout.html?plan=growth">Start 14-day trial</a>
+          </div>
+        </div>
+        <div class="card price">
+          <h3>Pro (multi-location)</h3>
+          <div class="big">$449<span class="muted">/mo</span></div>
+          <ul class="list">
+            <li>All Growth features</li>
+            <li>Up to 10 providers</li>
+            <li>Custom domains + SSO</li>
+            <li>Enhanced analytics</li>
+          </ul>
+          <div class="cta-row">
+            <a class="btn" href="checkout.html?plan=pro">Start 14-day trial</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="faq" style="margin-top:20px;">
+      <h3>FAQ</h3>
+      <p><b>Is this HIPAA compliant?</b> We design HIPAA-ready workflows and will sign a BAA for paid plans. Final compliance depends on your hosting and integrations.</p>
+      <p><b>Does it connect to my calendar?</b> Yes—Google/Microsoft calendars and leading practice schedulers when available.</p>
+      <p><b>Can I customize the questions?</b> Absolutely. You choose the intake flow; we provide templates for hygiene, restorative, and emergencies.</p>
+    </section>
+
+    <footer class="wrap" style="padding-left:0;padding-right:0;">
+      <div>© <span id="yr"></span> Delco Tech Division • <a href="/">Home</a> • <a href="mailto:support@delcotechdivision.com">support@delcotechdivision.com</a></div>
+    </footer>
+  </div>
+
+<script>
+  const YEAR = new Date().getFullYear();
+  document.getElementById('yr').textContent = YEAR;
+
+  let selectedSlot = null;
+  function nextToSlots(){
+    const name = document.getElementById('p_name').value.trim();
+    const phone = document.getElementById('p_phone').value.trim();
+    if(!name || !phone){
+      alert('Please enter name and mobile to continue.');
+      return;
+    }
+    document.getElementById('step1').style.display='none';
+    document.getElementById('step2').style.display='block';
+    renderSlots();
   }
-});
+  function backToIntake(){
+    document.getElementById('step2').style.display='none';
+    document.getElementById('step1').style.display='block';
+  }
+  function renderSlots(){
+    const pref = document.getElementById('p_pref').value;
+    const container = document.getElementById('slots');
+    container.innerHTML='';
+    selectedSlot = null;
+    document.getElementById('confirmBtn').disabled = true;
 
-// Pretty routes for static pages
-app.get('/checkout', (_, res) =>
-  res.sendFile(path.join(__dirname, 'public', 'checkout.html'))
-);
-app.get('/thank-you', (_, res) =>
-  res.sendFile(path.join(__dirname, 'public', 'thank-you.html'))
-);
+    const slots = generateSlots(12); // 12 options
+    const filtered = slots.filter(s => {
+      const hour = new Date(s).getHours();
+      if(pref==='morning') return hour>=9 && hour<12;
+      if(pref==='afternoon') return hour>=12 && hour<17;
+      return hour>=9 && hour<17;
+    }).slice(0,12);
 
-// ---------------------------------------------------------------------
-// 🔥 NEW: OpenAI chat endpoint
-// ---------------------------------------------------------------------
-// --- Chat endpoint (logs to JSONL & returns reply) ---
-const fs = require('fs');
-const { randomUUID } = require('crypto');
-
-app.post('/api/chat', async (req, res) => {
-  try {
-    const convId = String(req.body?.convId || randomUUID());
-    const incoming = Array.isArray(req.body?.messages) ? req.body.messages : [];
-
-    // recent, trimmed history
-    const history = incoming.slice(-10).map(m => ({
-      role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: String(m.content || '').slice(0, 2000),
-    }));
-
-    const systemPersona = `
-You are "Mikey from Delco Tech" — a friendly, straight-shooting helper for HVAC & plumbing crews in Delaware County, PA.
-Goals: explain briefly, then CLOSE. If the user shows buying intent (e.g., "yes", "sign me up", "ready", "buy", "activate"), respond with one short confirmation and include exactly one clear checkout link:
-Checkout: ${(process.env.APP_BASE_URL || '')}/checkout
-Also offer the 10-min setup call only if they ask for a call.
-Keep replies 1–3 sentences, practical, Delco-casual unless they ask for details. Never say you're AI.`;
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      temperature: 0.6,
-      max_tokens: 300,
-      messages: [
-        { role: 'system', content: systemPersona },
-        ...history
-      ],
+    filtered.forEach(dt => {
+      const btn = document.createElement('button');
+      btn.className='slot'; btn.type='button';
+      btn.textContent = new Date(dt).toLocaleString([], {weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+      btn.onclick = () => {
+        document.querySelectorAll('.slot').forEach(el=>el.classList.remove('active'));
+        btn.classList.add('active');
+        selectedSlot = dt;
+        document.getElementById('confirmBtn').disabled = false;
+      };
+      container.appendChild(btn);
     });
+  }
+  function generateSlots(count){
+    const out=[];
+    const now = new Date();
+    for(let d=0; d<10 && out.length<count*2; d++){
+      for(let h=9; h<17; h+=1){
+        for(let m of [0,30]){
+          const slot = new Date(now.getFullYear(), now.getMonth(), now.getDate()+d, h, m, 0);
+          if(slot > now) out.push(slot.toISOString());
+        }
+      }
+    }
+    return out;
+  }
 
-    const reply = completion.choices?.[0]?.message?.content || 'Got it.';
+  // --- Insurance Eligibility (demo) ---
+async function runEligibility(){
+  const payer   = document.getElementById('ins_payer').value.trim();
+  const member  = document.getElementById('ins_member').value.trim();
+  const dob     = document.getElementById('ins_dob').value;
+  const last    = document.getElementById('ins_last').value.trim();
+  const zip     = document.getElementById('ins_zip').value.trim();
+  const status  = document.getElementById('elig_status');
 
-    // Append a JSON line for analytics / training later
-    const logLine = {
-      ts: new Date().toISOString(),
-      convId,
-      ip: req.headers['x-forwarded-for'] || req.ip || '',
-      ua: req.headers['user-agent'] || '',
-      lastUser: history[history.length - 1]?.content || '',
-      reply
+  status.textContent = 'Checking…';
+  try{
+    const r = await fetch('/api/eligibility/check', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ payer, memberId: member, dob, lastName: last, zip })
+    }).then(r=>r.json());
+
+    if(!r || !r.ok){ throw new Error('No response'); }
+
+    if(r.eligible){
+      status.innerHTML = `✅ Eligible: <b>${r.planName || 'Dental PPO'}</b>` + 
+        (r.copayEstimate ? ` • Est. co-pay $${r.copayEstimate}` : '');
+      status.style.color = '#a7f3d0';
+    }else{
+      status.textContent = '⚠️ Not found or out of network (you can still book).';
+      status.style.color = '#fca5a5';
+    }
+
+    // stash sample result so Step 3 summary can show it
+    window._eligResult = r;
+  }catch(e){
+    status.textContent = 'Could not verify right now. We can still book.';
+    status.style.color = '#fca5a5';
+  }
+}
+
+// augment your confirmation summary to show eligibility if it exists
+const _origConfirm = confirmBooking;
+confirmBooking = function(){
+  _origConfirm(); // call your existing function
+  try{
+    const s = document.getElementById('summary');
+    if(window._eligResult){
+      const r = window._eligResult;
+      const line = r.eligible ? 
+        ` Insurance: Eligible${r.planName? ' ('+r.planName+')':''}${r.copayEstimate? ', est. co-pay $'+r.copayEstimate:''}.` :
+        ' Insurance: could not verify; we will confirm before the visit.';
+      s.textContent += line;
+    }
+  }catch(_){}
+}
+
+  function confirmBooking(){
+    if(!selectedSlot) return;
+    const name = document.getElementById('p_name').value.trim();
+    const phone = document.getElementById('p_phone').value.trim();
+    const reason = document.getElementById('p_reason').value;
+    const pain = document.getElementById('p_pain').value;
+    const notes = document.getElementById('p_notes').value.trim();
+
+    const when = new Date(selectedSlot);
+    const appt = {
+      id:'demo_' + Math.random().toString(36).slice(2,8),
+      name, phone, reason, pain, notes,
+      start: when.toISOString()
     };
-    fs.appendFile('chatlogs.jsonl', JSON.stringify(logLine) + '\n', () => {});
+    localStorage.setItem('last_demo_booking', JSON.stringify(appt));
 
-    res.json({ reply, convId });
-  } catch (err) {
-    console.error('Chat error:', err?.message || err);
-    res.status(500).json({ error: 'chat_error' });
+    document.getElementById('step2').style.display='none';
+    const s = document.getElementById('summary');
+    s.textContent = `${name} booked ${when.toLocaleString([], {weekday:'long', month:'long', day:'numeric', hour:'numeric', minute:'2-digit'})} for "${reason}" (pain: ${pain}).`;
+    document.getElementById('step3').style.display='block';
   }
-});
-
-
-// ---------------------------------------------------------------------
-// Twilio Voice: forward, then detect missed calls
-// ---------------------------------------------------------------------
-app.post('/voice', (req, res) => {
-  const VoiceResponse = require('twilio').twiml.VoiceResponse;
-  const twiml = new VoiceResponse();
-
-  const dial = twiml.dial({ action: '/voice/after', timeout: DIAL_TIMEOUT });
-  dial.number(process.env.FORWARD_TO_NUMBER);
-
-  twiml.say('Sorry, we were unable to connect your call. We will text you shortly.');
-  res.type('text/xml').send(twiml.toString());
-});
-
-app.post('/voice/after', async (req, res) => {
-  const callStatus = req.body.DialCallStatus; // 'completed' | 'busy' | 'no-answer' | 'failed'
-  const from = req.body.From;
-
-  const VoiceResponse = require('twilio').twiml.VoiceResponse;
-  const twiml = new VoiceResponse();
-  twiml.hangup();
-  res.type('text/xml').send(twiml.toString());
-
-  if (['busy', 'no-answer', 'failed'].includes(callStatus)) {
-    setStep(from, 'ask_name');
-    await upsertByPhone(from, { status: 'opened' });
-    await sendSMS(
-      from,
-      `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name? ` +
-      `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`
-    );
+  function resetDemo(){
+    document.getElementById('step3').style.display='none';
+    document.getElementById('step1').style.display='block';
+    selectedSlot = null;
+    document.getElementById('p_name').value='';
+    document.getElementById('p_phone').value='';
+    document.getElementById('p_reason').selectedIndex=0;
+    document.getElementById('p_pain').selectedIndex=0;
+    document.getElementById('p_pref').selectedIndex=0;
+    document.getElementById('p_notes').value='';
   }
-});
-
-// ---------------------------------------------------------------------
-// Twilio SMS: name -> need -> Calendly link
-// ---------------------------------------------------------------------
-app.post('/sms', async (req, res) => {
-  const MessagingResponse = require('twilio').twiml.MessagingResponse;
-  const twiml = new MessagingResponse();
-
-  const from = req.body.From;
-  const body = (req.body.Body || '').trim();
-  const s = getState(from);
-
-  if (/^help$/i.test(body)) {
-    twiml.message(`Reply STOP to opt-out. To book directly: ${CAL_LINK}`);
-    return res.type('text/xml').send(twiml.toString());
-  }
-
-  if (!s || !s.step) {
-    setStep(from, 'ask_name');
-    await upsertByPhone(from, { status: 'opened' });
-    twiml.message(`Hey, it's ${BUSINESS}. What's your name?`);
-    return res.type('text/xml').send(twiml.toString());
-  }
-
-  if (s.step === 'ask_name') {
-    setField(from, 'name', body);
-    setStep(from, 'ask_need');
-    await upsertByPhone(from, { name: body, status: 'qualified' });
-    twiml.message(`Nice to meet you, ${body}. What can we help you with?`);
-    return res.type('text/xml').send(twiml.toString());
-  }
-
-  if (s.step === 'ask_need') {
-    setField(from, 'need', body);
-    setStep(from, 'book');
-    await upsertByPhone(from, { need: body, status: 'qualified' });
-    twiml.message(
-      `Got it. You can book here: ${CAL_LINK}\n` +
-      `If you prefer, reply with a preferred day/time and we’ll confirm by text.`
-    );
-    return res.type('text/xml').send(twiml.toString());
-  }
-
-  await upsertByPhone(from, { status: 'awaiting_booking' });
-  twiml.message(`Thanks! We’ll confirm shortly. You can also self-book anytime: ${CAL_LINK}`);
-  return res.type('text/xml').send(twiml.toString());
-});
-
-// ---------------------------------------------------------------------
-// Calendly webhook → mark bookings / cancellations
-// ---------------------------------------------------------------------
-app.post('/calendly/webhook', async (req, res) => {
-  try {
-    const event = req.body?.event;
-    const payload = req.body?.payload;
-    if (!event || !payload) return res.status(400).json({ ok: false });
-
-    if (event === 'invitee.created') {
-      const phone = payload?.invitee?.text_reminder_number || '';
-      const start = payload?.event?.start_time;
-      const end = payload?.event?.end_time;
-      const ev = payload?.event?.uri || '';
-      if (phone) {
-        await upsertByPhone(phone, {
-          status: 'booked',
-          appt_start: start || '',
-          appt_end: end || '',
-          calendly_event: ev || ''
-        });
-      }
-    }
-
-    if (event === 'invitee.canceled') {
-      const phone = payload?.invitee?.text_reminder_number || '';
-      if (phone) await upsertByPhone(phone, { status: 'canceled' });
-    }
-
-    return res.json({ ok: true });
-  } catch (e) {
-    console.error('Calendly webhook error:', e);
-    return res.status(500).json({ ok: false });
-  }
-});
-
-// ---------------------------------------------------------------------
-// Review request cron (every 5m, 2h after appt_end)
-// ---------------------------------------------------------------------
-cron.schedule('*/5 * * * *', async () => {
-  try {
-    if (!REVIEW_LINK) return;
-    const rows = await findAll();
-    const header = rows[0] || [];
-    const idx = (name) => header.indexOf(name);
-
-    const now = dayjs();
-
-    for (let i = 1; i < rows.length; i++) {
-      const r = rows[i];
-      const phone = r[idx('phone')];
-      const status = r[idx('status')];
-      const apptEnd = r[idx('appt_end')];
-      if (!phone || !apptEnd) continue;
-
-      const due = now.isAfter(dayjs(apptEnd).add(2, 'hour'));
-      const alreadySent = status && status.includes('review_sent');
-
-      if (status === 'booked' && due && !alreadySent) {
-        await sendSMS(phone, `Thanks for visiting ${BUSINESS}! Mind leaving a quick review? ${REVIEW_LINK}`);
-        await upsertByPhone(phone, { status: 'review_sent' });
-      }
-    }
-  } catch (e) {
-    console.error('Review cron error:', e.message);
-  }
-});
-
-// Dev: simulate a missed call
-app.get('/simulate/missed-call', async (req, res) => {
-  const from = req.query.from;
-  if (!from) return res.status(400).json({ ok: false, error: 'from required' });
-
-  setStep(from, 'ask_name');
-  await upsertByPhone(from, { status: 'opened' });
-  await sendSMS(
-    from,
-    `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name? ` +
-    `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`
-  );
-
-  res.json({ ok: true });
-});
-
-// Boot
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, async () => {
-  console.log(`Missed-Call Money Saver running on :${PORT}`);
-
-  if (process.env.CALENDLY_TOKEN && process.env.APP_BASE_URL) {
-    const cb = `${process.env.APP_BASE_URL}/calendly/webhook`;
-    const r = await subscribeCalendlyWebhook(cb).catch(() => null);
-    console.log(r?.ok ? 'Calendly webhook subscribed.' : 'Calendly webhook not subscribed (optional).');
-  }
-});
+</script>
+</body>
+</html>
