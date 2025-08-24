@@ -123,29 +123,19 @@
           <a class="btn outline" href="#pricing">View pricing</a>
           <a class="btn outline" href="/">← Back to Home</a>
         </div>
-        <div class="trust">
-          <span>✅ <b>HIPAA-ready workflows</b> (BAA available)</span>
-          <span>🔒 Encrypted in transit</span>
-          <span>🦷 Built for hygiene, restorative, emergency</span>
-        </div>
-      </div>
-      <div class="hero-aside">
 
-      <div class="card carousel">
+      <div class="hero-aside">
+<div class="card carousel">
         <div class="slides" id="slides">
           <!-- slides injected by JS -->
           <div class="dots" id="dots" aria-label="carousel navigation"></div>
-        </div>
-      </div>
 
-
-      <div class="card demo" id="demo">
+<div class="card demo" id="demo">
         <h3>Patient-facing demo</h3>
         <p class="muted">Answer a few questions, then pick a time. This simulates what your patients see on your website.</p>
         <div class="steps">
-          <div class="step">1. Intake</div><div class="step">2. Availability</div><div class="step">3. Confirm</div>
-      </div>
-        </div>
+          <div class="step">1. Intake
+
 
         <div id="step1">
           <label>Full name</label>
@@ -184,40 +174,13 @@
       <label>Member ID</label>
       <input id="ins_member" placeholder="ID on card" />
     </div>
-    <div>
-      <label>Date of birth</label>
-      <input id="ins_dob" type="date" />
-    </div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-    <div>
-      <label>Last name on policy</label>
-      <input id="ins_last" placeholder="As on the card" />
-    </div>
-    <div>
-      <label>ZIP (optional)</label>
-      <input id="ins_zip" placeholder="19026" />
-    </div>
-  </div>
-  <div class="cta-row">
-    <button type="button" class="btn outline" onclick="runEligibility()">Run instant eligibility</button>
-    <span id="elig_status" class="muted"></span>
-  </div>
-</div>
+    
 
-          <div class="cta-row">
-            <button class="btn" onclick="nextToSlots()">See available times</button>
-          </div>
-        </div>
 
         <div id="step2" style="display:none">
           <div class="muted">Choose a time below. These are sample slots for the next few days.</div>
-          <div id="slots" class="slots" role="listbox" aria-label="appointment times"></div>
-          <div class="cta-row">
-            <button class="btn outline" onclick="backToIntake()">← Back</button>
-            <button class="btn" id="confirmBtn" disabled onclick="confirmBooking()">Confirm</button>
-          </div>
-        </div>
+          
+
 
         <div id="step3" style="display:none">
           <h3>✅ Demo booking created</h3>
@@ -226,9 +189,8 @@
             <a class="btn" href="checkout.html?plan=starter">Start your 14-day trial</a>
             <button class="btn outline" onclick="resetDemo()">Book another</button>
           </div>
-          <small class="muted">This is a demo—no SMS is being sent. In production, a confirmation text + calendar invite is delivered instantly.</small>
-        </div>
-      </div>
+          
+</div>
     </section>
     <section class="wrap" id="pricing">
       <div class="grid-3">
