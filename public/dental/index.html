@@ -92,6 +92,9 @@
       .carousel .slides{padding-bottom:62%;}
     }
 
+
+    .hero-aside{display:grid;gap:16px}
+
   </style>
 </head>
 <body>
@@ -126,12 +129,22 @@
           <span>🦷 Built for hygiene, restorative, emergency</span>
         </div>
       </div>
+      <div class="hero-aside">
+
+      <div class="card carousel">
+        <div class="slides" id="slides">
+          <!-- slides injected by JS -->
+          <div class="dots" id="dots" aria-label="carousel navigation"></div>
+        </div>
+      </div>
+
 
       <div class="card demo" id="demo">
         <h3>Patient-facing demo</h3>
         <p class="muted">Answer a few questions, then pick a time. This simulates what your patients see on your website.</p>
         <div class="steps">
           <div class="step">1. Intake</div><div class="step">2. Availability</div><div class="step">3. Confirm</div>
+      </div>
         </div>
 
         <div id="step1">
@@ -217,17 +230,6 @@
         </div>
       </div>
     </section>
-
-
-    <section class="wrap" id="gallery" aria-label="Office photos">
-      <div class="card carousel">
-        <div class="slides" id="slides">
-          <!-- slides injected by JS -->
-          <div class="dots" id="dots" aria-label="carousel navigation"></div>
-        </div>
-      </div>
-    </section>
-
     <section class="wrap" id="pricing">
       <div class="grid-3">
         <div class="card price">
