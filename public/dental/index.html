@@ -16,6 +16,8 @@
       --fg:#e6ebf5;
       --brand:#7c5cff;
       --brand-2:#4cc9f0;
+      --header-offset: 88px; /* JS will update based on real height */
+      --menu-top: 88px;      /* JS will update to header bottom */
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -28,13 +30,19 @@
       color:var(--fg);
     }
     a{color:var(--brand)}
-    .wrap{max-width:1100px;margin:0 auto;padding:28px}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px; padding-top: calc(28px + var(--header-offset));}
 
-    /* ========= HEADER (fixed layering & mobile menu) ========= */
+    /* ========= HEADER (now fixed & centered) ========= */
     .site-header{
-      position: sticky; top: 10px; z-index: 3000;
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(1100px, calc(100vw - 24px)); /* 12px gutter each side */
+      z-index: 3000;
+
       display:flex; align-items:center; justify-content:space-between;
-      gap:12px; padding:10px 14px; margin:12px 0 18px;
+      gap:12px; padding:10px 14px;
       background: rgba(8,10,20,.55); border:1px solid rgba(255,255,255,.08);
       border-radius:14px; backdrop-filter: blur(8px);
     }
@@ -63,13 +71,14 @@
     }
 
     @media (max-width: 640px){
-      .site-header{ padding:8px 10px; }
+      .wrap{ padding:20px; padding-top: calc(20px + var(--header-offset)); }
+      .site-header{ width: min(1100px, calc(100vw - 16px)); } /* 8px gutters on very small screens */
       .site-header .brand{ max-width: calc(100% - 56px); }
       .hamburger{ display:inline-flex; }
       .nav-links{
         display:none; position: fixed;
         left:12px; right:12px;
-        top: calc(env(safe-area-inset-top, 0px) + 64px);
+        top: var(--menu-top);
         background: rgba(8,10,20,.96);
         border:1px solid rgba(255,255,255,.12);
         border-radius:14px; padding:12px; flex-direction:column; gap:10px;
@@ -129,7 +138,6 @@
     @media (max-width: 640px){
       .grid-3{grid-template-columns: 1fr;}
       .price .big{font-size:28px}
-      .wrap{padding:20px}
     }
 
     /* --- Simple carousel --- */
@@ -147,25 +155,25 @@
   </style>
 </head>
 <body>
+  <!-- Fixed header sits above, content gets pushed down via --header-offset -->
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="brand-dot"></span>
+      Delco Tech Division — Dental
+    </a>
+
+    <button id="navToggle" class="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span>
+    </button>
+
+    <nav id="navMenu" class="nav-links">
+      <a href="#demo">Try the demo</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#support">Support</a>
+    </nav>
+  </header>
+
   <div class="wrap">
-    <!-- Header -->
-    <header class="site-header">
-      <a class="brand" href="/">
-        <span class="brand-dot"></span>
-        Delco Tech Division — Dental
-      </a>
-
-      <button id="navToggle" class="hamburger" aria-label="Open menu" aria-expanded="false">
-        <span></span>
-      </button>
-
-      <nav id="navMenu" class="nav-links">
-        <a href="#demo">Try the demo</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#support">Support</a>
-      </nav>
-    </header>
-
     <!-- Hero + Demo -->
     <section class="hero">
       <div class="card">
@@ -346,6 +354,22 @@
 <script>
   const YEAR = new Date().getFullYear();
   document.getElementById('yr').textContent = YEAR;
+
+  // ===== compute header offset so content clears fixed header =====
+  (function setHeaderOffsets(){
+    const header = document.querySelector('.site-header');
+    if(!header) return;
+    function apply(){
+      const h = header.offsetHeight;
+      const topPad = 14; // little breathing room below header
+      const top = parseInt(getComputedStyle(header).top) || 10;
+      const total = h + top + topPad;
+      document.documentElement.style.setProperty('--header-offset', total + 'px');
+      document.documentElement.style.setProperty('--menu-top', (top + h + 8) + 'px');
+    }
+    apply();
+    window.addEventListener('resize', apply);
+  })();
 
   // ===== Mobile menu =====
   (function(){
