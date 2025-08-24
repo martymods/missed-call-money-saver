@@ -78,6 +78,20 @@
       .wrap{padding:20px}
     }
 
+  
+    /* --- Simple carousel --- */
+    .carousel{padding:0; overflow:hidden; position:relative;}
+    .carousel .slides{position:relative; width:100%; height:0; padding-bottom:56.25%; border-radius:12px; overflow:hidden;}
+    .carousel img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .6s ease;}
+    .carousel img.active{opacity:1;}
+    .carousel .dots{position:absolute; left:50%; transform:translateX(-50%); bottom:12px; display:flex; gap:8px; z-index:2;}
+    .carousel .dot{width:8px; height:8px; border-radius:999px; background:rgba(255,255,255,.45); border:1px solid rgba(0,0,0,.25); cursor:pointer}
+    .carousel .dot.active{background:var(--brand); box-shadow:0 0 12px rgba(124,92,255,.8);}
+    .carousel .caption{position:absolute; left:0; right:0; bottom:0; padding:10px 14px; background:linear-gradient(180deg,transparent,rgba(0,0,0,.55)); font-size:12px; color:#dfe6ff;}
+    @media (max-width:640px){
+      .carousel .slides{padding-bottom:62%;}
+    }
+
   </style>
 </head>
 <body>
@@ -200,6 +214,16 @@
             <button class="btn outline" onclick="resetDemo()">Book another</button>
           </div>
           <small class="muted">This is a demo—no SMS is being sent. In production, a confirmation text + calendar invite is delivered instantly.</small>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="wrap" id="gallery" aria-label="Office photos">
+      <div class="card carousel">
+        <div class="slides" id="slides">
+          <!-- slides injected by JS -->
+          <div class="dots" id="dots" aria-label="carousel navigation"></div>
         </div>
       </div>
     </section>
@@ -408,6 +432,65 @@ confirmBooking = function(){
     document.getElementById('p_pref').selectedIndex=0;
     document.getElementById('p_notes').value='';
   }
+
+  // --- Simple carousel / slideshow ---
+  (function(){
+    const images = [
+      {src:'/image/dental_1.png', alt:'Front desk at a local dental office'},
+      {src:'/image/dental_2.png', alt:'Dentist and team at work in operatory'},
+      {src:'/image/dental_3.png', alt:'Modern exam room and equipment'}
+    ];
+    const slidesEl = document.getElementById('slides');
+    const dotsEl = document.getElementById('dots');
+    if (!slidesEl || !dotsEl) return;
+
+    // create img elements
+    const imgs = images.map((im, i) => {
+      const img = document.createElement('img');
+      img.src = im.src; img.alt = im.alt;
+      if (i === 0) img.classList.add('active');
+      slidesEl.appendChild(img);
+      return img;
+    });
+
+    // dots
+    const dots = images.map((_, i) => {
+      const d = document.createElement('button');
+      d.className = 'dot' + (i===0 ? ' active' : '');
+      d.type = 'button'; d.setAttribute('aria-label', 'Go to slide ' + (i+1));
+      d.onclick = () => go(i, true);
+      dotsEl.appendChild(d);
+      return d;
+    });
+
+    let idx = 0, timer = null, lastX = null;
+
+    function go(n, manual){
+      idx = (n + imgs.length) % imgs.length;
+      imgs.forEach((el, i) => el.classList.toggle('active', i===idx));
+      dots.forEach((el, i) => el.classList.toggle('active', i===idx));
+      if (manual) restart();
+    }
+    function next(){ go(idx+1); }
+    function restart(){
+      if (timer) clearInterval(timer);
+      timer = setInterval(next, 4200);
+    }
+    restart();
+
+    // swipe on mobile
+    slidesEl.addEventListener('touchstart', e => lastX = e.touches[0].clientX, {passive:true});
+    slidesEl.addEventListener('touchmove', e => {
+      if (lastX === null) return;
+      const dx = e.touches[0].clientX - lastX;
+      if (Math.abs(dx) > 40){
+        go(dx < 0 ? idx+1 : idx-1, true);
+        lastX = null;
+      }
+    }, {passive:true});
+    slidesEl.addEventListener('touchend', ()=> lastX = null);
+  })();
+
 </script>
 </body>
 </html>
