@@ -29,6 +29,58 @@
     }
     a{color:var(--brand)}
     .wrap{max-width:1100px;margin:0 auto;padding:28px}
+
+    /* ========= HEADER (fixed layering & mobile menu) ========= */
+    .site-header{
+      position: sticky; top: 10px; z-index: 3000;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding:10px 14px; margin:12px 0 18px;
+      background: rgba(8,10,20,.55); border:1px solid rgba(255,255,255,.08);
+      border-radius:14px; backdrop-filter: blur(8px);
+    }
+    .site-header .brand{
+      display:inline-flex; align-items:center; gap:10px;
+      font-weight:600; text-decoration:none; color:#e6e7f0;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      max-width: 60vw;
+    }
+    .brand-dot{
+      width:10px; height:10px; border-radius:50%;
+      background: radial-gradient(closest-side, #8b5cf6, #4f46e5);
+      display:inline-block; box-shadow:0 0 14px rgba(139,92,246,.6);
+    }
+    .nav-links{ display:flex; align-items:center; gap:18px; }
+    .nav-links a{ color:#cfd3ff; text-decoration:none; font-weight:500; }
+    .nav-links a:hover{ text-decoration:underline; }
+    .hamburger{
+      display:none; width:40px; height:40px; border-radius:10px;
+      border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+      align-items:center; justify-content:center;
+    }
+    .hamburger span{
+      display:block; width:22px; height:2px; background:#e6e7f0; border-radius:2px;
+      box-shadow:0 8px 0 #e6e7f0, 0 -8px 0 #e6e7f0; /* 3 bars */
+    }
+
+    @media (max-width: 640px){
+      .site-header{ padding:8px 10px; }
+      .site-header .brand{ max-width: calc(100% - 56px); }
+      .hamburger{ display:inline-flex; }
+      .nav-links{
+        display:none; position: fixed;
+        left:12px; right:12px;
+        top: calc(env(safe-area-inset-top, 0px) + 64px);
+        background: rgba(8,10,20,.96);
+        border:1px solid rgba(255,255,255,.12);
+        border-radius:14px; padding:12px; flex-direction:column; gap:10px;
+        box-shadow: 0 18px 40px rgba(0,0,0,.55);
+        z-index: 5000; /* above hero/carousel */
+      }
+      .nav-links.open{ display:flex; }
+      .nav-links a{ padding:12px 10px; border-radius:10px; background: rgba(255,255,255,.03); }
+    }
+
+    /* ========= LAYOUT / HERO ========= */
     header{display:flex;align-items:center;justify-content:space-between;gap:16px}
     .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--fg)}
     .brand-logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
@@ -37,6 +89,7 @@
     .brand-logo svg{width:22px;height:22px;fill:#0b0f19}
     .brand h1{font-size:16px;margin:0;font-weight:800;letter-spacing:.2px}
     nav a{margin-left:18px;text-decoration:none;color:var(--fg);opacity:.9}
+
     .hero{margin-top:28px;display:grid;grid-template-columns:1.2fr 1fr;gap:26px}
     .card{background:rgba(18,24,41,.85);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;
       box-shadow:0 10px 30px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.02);backdrop-filter: blur(6px);}
@@ -64,10 +117,11 @@
     .price .big{font-size:34px;font-weight:800}
     .list{margin:14px 0 0 0;padding-left:18px;color:#cfd6ea}
     footer{margin:50px 0 20px 0;color:var(--muted);font-size:12px}
+
     @media (max-width: 900px){
       .hero{grid-template-columns:1fr}
     }
-  
+
     /* --- Responsive pricing grid & mobile tweaks --- */
     @media (max-width: 1024px){
       .grid-3{grid-template-columns: repeat(2, 1fr);}
@@ -78,7 +132,6 @@
       .wrap{padding:20px}
     }
 
-  
     /* --- Simple carousel --- */
     .carousel{padding:0; overflow:hidden; position:relative;}
     .carousel .slides{position:relative; width:100%; height:0; padding-bottom:56.25%; border-radius:12px; overflow:hidden;}
@@ -91,69 +144,29 @@
     @media (max-width:640px){
       .carousel .slides{padding-bottom:62%;}
     }
-
-  
-/* --- Header base (mobile-friendly) --- */
-.site-header{
-  display:flex; align-items:center; justify-content:space-between;
-  gap:12px; padding:10px 14px; margin:12px auto 18px;
-  background: rgba(8,10,20,.55); border:1px solid rgba(255,255,255,.08);
-  border-radius:14px; backdrop-filter: blur(8px);
-}
-.site-header .brand{
-  display:inline-flex; align-items:center; gap:10px;
-  font-weight:600; text-decoration:none; color:#e6e7f0;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  max-width: 60vw;
-}
-.brand-dot{
-  width:10px; height:10px; border-radius:50%;
-  background: radial-gradient(closest-side, #8b5cf6, #4f46e5);
-  display:inline-block; box-shadow:0 0 14px rgba(139,92,246,.6);
-}
-.nav-links{ display:flex; align-items:center; gap:18px; }
-.nav-links a{ color:#cfd3ff; text-decoration:none; font-weight:500; }
-.nav-links a:hover{ text-decoration:underline; }
-.hamburger{ display:none; width:40px; height:40px; border-radius:10px;
-  border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
-}
-.hamburger span{ display:block; height:2px; margin:6px 9px;
-  background:#e6e7f0; border-radius:2px;
-}
-@media (max-width: 640px){
-  .site-header{ padding:8px 10px; }
-  .site-header .brand{ max-width: calc(100% - 56px); }
-  .hamburger{ display:inline-flex; align-items:center; justify-content:center; }
-  .nav-links{
-    display:none; position: fixed; left:12px; right:12px; top:64px;
-    background: rgba(8,10,20,.92); border:1px solid rgba(255,255,255,.12);
-    border-radius:14px; padding:12px; flex-direction:column; gap:10px;
-    box-shadow: 0 18px 40px rgba(0,0,0,.5); z-index:1000;
-  }
-  .nav-links.open{ display:flex; }
-  .nav-links a{ padding:12px 10px; border-radius:10px; background: rgba(255,255,255,.03); }
-}
-
   </style>
 </head>
 <body>
   <div class="wrap">
+    <!-- Header -->
     <header class="site-header">
-  <a class="brand" href="/">
-    <span class="brand-dot"></span>
-    Delco Tech Division — Dental
-  </a>
+      <a class="brand" href="/">
+        <span class="brand-dot"></span>
+        Delco Tech Division — Dental
+      </a>
 
-  <button id="navToggle" class="hamburger" aria-label="Open menu" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
+      <button id="navToggle" class="hamburger" aria-label="Open menu" aria-expanded="false">
+        <span></span>
+      </button>
 
-  <nav id="navMenu" class="nav-links">
-    <a href="#demo">Try the demo</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#support">Support</a>
-  </nav>
-</header>
+      <nav id="navMenu" class="nav-links">
+        <a href="#demo">Try the demo</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#support">Support</a>
+      </nav>
+    </header>
+
+    <!-- Hero + Demo -->
     <section class="hero">
       <div class="card">
         <span class="tag">For Delaware County dental practices</span>
@@ -169,13 +182,13 @@
           <span>🔒 Encrypted in transit</span>
           <span>🦷 Built for hygiene, restorative, emergency</span>
         </div>
+
         <div class="card carousel" style="margin-top:14px;">
           <div class="slides" id="slides">
             <!-- slides injected by JS -->
             <div class="dots" id="dots" aria-label="carousel navigation"></div>
           </div>
         </div>
-
       </div>
 
       <div class="card demo" id="demo">
@@ -213,35 +226,36 @@
           </select>
           <label>Notes (optional)</label>
           <textarea id="p_notes" placeholder="Anything we should know?"></textarea>
+
           <!-- Insurance (optional) -->
-<div style="margin-top:8px;border-top:1px dashed rgba(255,255,255,.18);padding-top:10px">
-  <label>Insurance carrier (optional)</label>
-  <input id="ins_payer" placeholder="e.g., Delta Dental, Aetna Dental, MetLife" />
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-    <div>
-      <label>Member ID</label>
-      <input id="ins_member" placeholder="ID on card" />
-    </div>
-    <div>
-      <label>Date of birth</label>
-      <input id="ins_dob" type="date" />
-    </div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-    <div>
-      <label>Last name on policy</label>
-      <input id="ins_last" placeholder="As on the card" />
-    </div>
-    <div>
-      <label>ZIP (optional)</label>
-      <input id="ins_zip" placeholder="19026" />
-    </div>
-  </div>
-  <div class="cta-row">
-    <button type="button" class="btn outline" onclick="runEligibility()">Run instant eligibility</button>
-    <span id="elig_status" class="muted"></span>
-  </div>
-</div>
+          <div style="margin-top:8px;border-top:1px dashed rgba(255,255,255,.18);padding-top:10px">
+            <label>Insurance carrier (optional)</label>
+            <input id="ins_payer" placeholder="e.g., Delta Dental, Aetna Dental, MetLife" />
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <label>Member ID</label>
+                <input id="ins_member" placeholder="ID on card" />
+              </div>
+              <div>
+                <label>Date of birth</label>
+                <input id="ins_dob" type="date" />
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <label>Last name on policy</label>
+                <input id="ins_last" placeholder="As on the card" />
+              </div>
+              <div>
+                <label>ZIP (optional)</label>
+                <input id="ins_zip" placeholder="19026" />
+              </div>
+            </div>
+            <div class="cta-row">
+              <button type="button" class="btn outline" onclick="runEligibility()">Run instant eligibility</button>
+              <span id="elig_status" class="muted"></span>
+            </div>
+          </div>
 
           <div class="cta-row">
             <button class="btn" onclick="nextToSlots()">See available times</button>
@@ -268,7 +282,9 @@
         </div>
       </div>
     </section>
-    <section class="wrap" id="pricing">
+
+    <!-- Pricing -->
+    <section class="wrap" id="pricing" style="padding-left:0;padding-right:0;">
       <div class="grid-3">
         <div class="card price">
           <h3>Starter</h3>
@@ -314,6 +330,7 @@
       </div>
     </section>
 
+    <!-- FAQ -->
     <section class="card" id="support" style="margin-top:20px;">
       <h3>FAQ</h3>
       <p><b>Is this HIPAA compliant?</b> We design HIPAA-ready workflows and will sign a BAA for paid plans. Final compliance depends on your hosting and integrations.</p>
@@ -330,6 +347,25 @@
   const YEAR = new Date().getFullYear();
   document.getElementById('yr').textContent = YEAR;
 
+  // ===== Mobile menu =====
+  (function(){
+    const btn = document.getElementById('navToggle');
+    const menu = document.getElementById('navMenu');
+    if(!btn || !menu) return;
+
+    btn.addEventListener('click', () => {
+      const isOpen = menu.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    menu.addEventListener('click', e => {
+      if(e.target.tagName === 'A') menu.classList.remove('open');
+    });
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 640) menu.classList.remove('open');
+    });
+  })();
+
+  // ===== Demo flow =====
   let selectedSlot = null;
   function nextToSlots(){
     const name = document.getElementById('p_name').value.trim();
@@ -388,57 +424,40 @@
     return out;
   }
 
-  // --- Insurance Eligibility (demo) ---
-async function runEligibility(){
-  const payer   = document.getElementById('ins_payer').value.trim();
-  const member  = document.getElementById('ins_member').value.trim();
-  const dob     = document.getElementById('ins_dob').value;
-  const last    = document.getElementById('ins_last').value.trim();
-  const zip     = document.getElementById('ins_zip').value.trim();
-  const status  = document.getElementById('elig_status');
+  // ===== Insurance Eligibility (demo stub -> your backend) =====
+  async function runEligibility(){
+    const payer   = document.getElementById('ins_payer').value.trim();
+    const member  = document.getElementById('ins_member').value.trim();
+    const dob     = document.getElementById('ins_dob').value;
+    const last    = document.getElementById('ins_last').value.trim();
+    const zip     = document.getElementById('ins_zip').value.trim();
+    const status  = document.getElementById('elig_status');
 
-  status.textContent = 'Checking…';
-  try{
-    const r = await fetch('/api/eligibility/check', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ payer, memberId: member, dob, lastName: last, zip })
-    }).then(r=>r.json());
+    status.textContent = 'Checking…';
+    try{
+      const r = await fetch('/api/eligibility/check', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ payer, memberId: member, dob, lastName: last, zip })
+      }).then(r=>r.json());
 
-    if(!r || !r.ok){ throw new Error('No response'); }
+      if(!r || !r.ok){ throw new Error('No response'); }
 
-    if(r.eligible){
-      status.innerHTML = `✅ Eligible: <b>${r.planName || 'Dental PPO'}</b>` + 
-        (r.copayEstimate ? ` • Est. co-pay $${r.copayEstimate}` : '');
-      status.style.color = '#a7f3d0';
-    }else{
-      status.textContent = '⚠️ Not found or out of network (you can still book).';
+      if(r.eligible){
+        status.innerHTML = `✅ Eligible: <b>${r.planName || 'Dental PPO'}</b>` +
+          (r.copayEstimate ? ` • Est. co-pay $${r.copayEstimate}` : '');
+        status.style.color = '#a7f3d0';
+      }else{
+        status.textContent = '⚠️ Not found or out of network (you can still book).';
+        status.style.color = '#fca5a5';
+      }
+
+      window._eligResult = r; // stash for step 3 summary
+    }catch(e){
+      status.textContent = 'Could not verify right now. We can still book.';
       status.style.color = '#fca5a5';
     }
-
-    // stash sample result so Step 3 summary can show it
-    window._eligResult = r;
-  }catch(e){
-    status.textContent = 'Could not verify right now. We can still book.';
-    status.style.color = '#fca5a5';
   }
-}
-
-// augment your confirmation summary to show eligibility if it exists
-const _origConfirm = confirmBooking;
-confirmBooking = function(){
-  _origConfirm(); // call your existing function
-  try{
-    const s = document.getElementById('summary');
-    if(window._eligResult){
-      const r = window._eligResult;
-      const line = r.eligible ? 
-        ` Insurance: Eligible${r.planName? ' ('+r.planName+')':''}${r.copayEstimate? ', est. co-pay $'+r.copayEstimate:''}.` :
-        ' Insurance: could not verify; we will confirm before the visit.';
-      s.textContent += line;
-    }
-  }catch(_){}
-}
 
   function confirmBooking(){
     if(!selectedSlot) return;
@@ -459,8 +478,17 @@ confirmBooking = function(){
     document.getElementById('step2').style.display='none';
     const s = document.getElementById('summary');
     s.textContent = `${name} booked ${when.toLocaleString([], {weekday:'long', month:'long', day:'numeric', hour:'numeric', minute:'2-digit'})} for "${reason}" (pain: ${pain}).`;
+
+    if(window._eligResult){
+      const r = window._eligResult;
+      s.textContent += r.eligible
+        ? ` Insurance: Eligible${r.planName? ' ('+r.planName+')':''}${r.copayEstimate? ', est. co-pay $'+r.copayEstimate:''}.`
+        : ' Insurance: could not verify; we will confirm before the visit.';
+    }
+
     document.getElementById('step3').style.display='block';
   }
+
   function resetDemo(){
     document.getElementById('step3').style.display='none';
     document.getElementById('step1').style.display='block';
@@ -473,7 +501,7 @@ confirmBooking = function(){
     document.getElementById('p_notes').value='';
   }
 
-  // --- Simple carousel / slideshow ---
+  // ===== Simple carousel / slideshow =====
   (function(){
     const images = [
       {src:'/image/dental_1.png', alt:'Front desk at a local dental office'},
@@ -484,7 +512,6 @@ confirmBooking = function(){
     const dotsEl = document.getElementById('dots');
     if (!slidesEl || !dotsEl) return;
 
-    // create img elements
     const imgs = images.map((im, i) => {
       const img = document.createElement('img');
       img.src = im.src; img.alt = im.alt;
@@ -493,7 +520,6 @@ confirmBooking = function(){
       return img;
     });
 
-    // dots
     const dots = images.map((_, i) => {
       const d = document.createElement('button');
       d.className = 'dot' + (i===0 ? ' active' : '');
@@ -530,28 +556,6 @@ confirmBooking = function(){
     }, {passive:true});
     slidesEl.addEventListener('touchend', ()=> lastX = null);
   })();
-
 </script>
-
-<script>
-  (function(){
-    const btn = document.getElementById('navToggle');
-    const menu = document.getElementById('navMenu');
-    if(!btn || !menu) return;
-
-    btn.addEventListener('click', () => {
-      const isOpen = menu.classList.toggle('open');
-      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    });
-
-    menu.addEventListener('click', e => {
-      if(e.target.tagName === 'A') menu.classList.remove('open');
-    });
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 640) menu.classList.remove('open');
-    });
-  })();
-</script>
-
 </body>
 </html>
