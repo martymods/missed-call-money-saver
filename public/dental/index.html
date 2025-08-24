@@ -16,8 +16,6 @@
       --fg:#e6ebf5;
       --brand:#7c5cff;
       --brand-2:#4cc9f0;
-      --header-offset: 88px; /* JS will update based on real height */
-      --menu-top: 88px;      /* JS will update to header bottom */
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -30,17 +28,15 @@
       color:var(--fg);
     }
     a{color:var(--brand)}
-    .wrap{max-width:1100px;margin:0 auto;padding:28px; padding-top: calc(28px + var(--header-offset));}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px;}
 
-    /* ========= HEADER (now fixed & centered) ========= */
+    /* ========= HEADER (in normal flow) ========= */
     .site-header{
-      position: fixed;
-      top: calc(env(safe-area-inset-top, 0px) + 10px);
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(1100px, calc(100vw - 24px)); /* 12px gutter each side */
-      z-index: 3000;
-
+      position: relative; /* back in the document flow */
+      z-index: 10;
+      width: 100%;
+      max-width: 1100px;
+      margin: 10px auto 0;
       display:flex; align-items:center; justify-content:space-between;
       gap:12px; padding:10px 14px;
       background: rgba(8,10,20,.55); border:1px solid rgba(255,255,255,.08);
@@ -71,34 +67,26 @@
     }
 
     @media (max-width: 640px){
-      .wrap{ padding:20px; padding-top: calc(20px + var(--header-offset)); }
-      .site-header{ width: min(1100px, calc(100vw - 16px)); } /* 8px gutters on very small screens */
-      .site-header .brand{ max-width: calc(100% - 56px); }
-      .hamburger{ display:inline-flex; }
+      .wrap{ padding:20px; }
+      .site-header{ width: calc(100% - 16px); } /* small side gutters */
+
+      /* Drawer sits directly under the header */
+      .site-header{overflow:visible}
       .nav-links{
-        display:none; position: fixed;
-        left:12px; right:12px;
-        top: var(--menu-top);
+        display:none; position: absolute;
+        left:12px; right:12px; top: calc(100% + 8px);
         background: rgba(8,10,20,.96);
         border:1px solid rgba(255,255,255,.12);
         border-radius:14px; padding:12px; flex-direction:column; gap:10px;
         box-shadow: 0 18px 40px rgba(0,0,0,.55);
-        z-index: 5000; /* above hero/carousel */
+        z-index: 50;
       }
       .nav-links.open{ display:flex; }
       .nav-links a{ padding:12px 10px; border-radius:10px; background: rgba(255,255,255,.03); }
+      .hamburger{ display:inline-flex; }
     }
 
     /* ========= LAYOUT / HERO ========= */
-    header{display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--fg)}
-    .brand-logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
-      background: conic-gradient(from 200deg, var(--brand), var(--brand-2));
-      box-shadow:0 8px 24px rgba(124,92,255,.35), inset 0 0 30px rgba(255,255,255,.15);}
-    .brand-logo svg{width:22px;height:22px;fill:#0b0f19}
-    .brand h1{font-size:16px;margin:0;font-weight:800;letter-spacing:.2px}
-    nav a{margin-left:18px;text-decoration:none;color:var(--fg);opacity:.9}
-
     .hero{margin-top:28px;display:grid;grid-template-columns:1.2fr 1fr;gap:26px}
     .card{background:rgba(18,24,41,.85);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:22px;
       box-shadow:0 10px 30px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.02);backdrop-filter: blur(6px);}
@@ -155,7 +143,7 @@
   </style>
 </head>
 <body>
-  <!-- Fixed header sits above, content gets pushed down via --header-offset -->
+  <!-- Header is now part of normal flow (no overlay while scrolling) -->
   <header class="site-header">
     <a class="brand" href="/">
       <span class="brand-dot"></span>
@@ -352,26 +340,9 @@
   </div>
 
 <script>
-  const YEAR = new Date().getFullYear();
-  document.getElementById('yr').textContent = YEAR;
+  document.getElementById('yr').textContent = new Date().getFullYear();
 
-  // ===== compute header offset so content clears fixed header =====
-  (function setHeaderOffsets(){
-    const header = document.querySelector('.site-header');
-    if(!header) return;
-    function apply(){
-      const h = header.offsetHeight;
-      const topPad = 14; // little breathing room below header
-      const top = parseInt(getComputedStyle(header).top) || 10;
-      const total = h + top + topPad;
-      document.documentElement.style.setProperty('--header-offset', total + 'px');
-      document.documentElement.style.setProperty('--menu-top', (top + h + 8) + 'px');
-    }
-    apply();
-    window.addEventListener('resize', apply);
-  })();
-
-  // ===== Mobile menu =====
+  // Mobile menu toggle (opens just under the header)
   (function(){
     const btn = document.getElementById('navToggle');
     const menu = document.getElementById('navMenu');
@@ -413,7 +384,7 @@
     selectedSlot = null;
     document.getElementById('confirmBtn').disabled = true;
 
-    const slots = generateSlots(12); // 12 options
+    const slots = generateSlots(12);
     const filtered = slots.filter(s => {
       const hour = new Date(s).getHours();
       if(pref==='morning') return hour>=9 && hour<12;
