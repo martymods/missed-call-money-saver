@@ -67,6 +67,17 @@
     @media (max-width: 900px){
       .hero{grid-template-columns:1fr}
     }
+  
+    /* --- Responsive pricing grid & mobile tweaks --- */
+    @media (max-width: 1024px){
+      .grid-3{grid-template-columns: repeat(2, 1fr);}
+    }
+    @media (max-width: 640px){
+      .grid-3{grid-template-columns: 1fr;}
+      .price .big{font-size:28px}
+      .wrap{padding:20px}
+    }
+
   </style>
 </head>
 <body>
@@ -193,7 +204,7 @@
       </div>
     </section>
 
-    <section class="wrap" id="pricing" style="padding-left:0;padding-right:0;">
+    <section class="wrap" id="pricing">
       <div class="grid-3">
         <div class="card price">
           <h3>Starter</h3>
