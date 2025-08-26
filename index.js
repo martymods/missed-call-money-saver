@@ -59,6 +59,11 @@ app.get('/config', (_, res) => {
   });
 });
 
+// Register API routers
+import eligibilityDXC from './routes/eligibility-dxc.js';
+app.use('/api/eligibility', eligibilityDXC);
+
+
 // ---------------------------------------------------------------------
 // Stripe Checkout: subscription ($150/mo) + one-time setup ($300)
 // Supports promo "DELCO150" via env STRIPE_COUPON_DELCO150
