@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Secure Service Lab — SMS Opt-In</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  body{font-family:system-ui,Arial,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;line-height:1.5}
+  .card{border:1px solid #ddd;border-radius:12px;padding:1rem}
+  label{display:block;margin:.5rem 0}
+  input[type="text"],input[type="tel"]{width:100%;padding:.6rem;border:1px solid #ccc;border-radius:8px}
+  button{padding:.6rem 1rem;border:1px solid #0a7;border-radius:10px;background:#0c8;color:#fff;cursor:pointer}
+  small{color:#555;display:block;margin-top:.5rem}
+</style>
+</head>
+<body>
+  <h1>Sign up for SMS updates</h1>
+  <p>Receive scheduling confirmations, reminders, and customer support texts from <strong>Secure Service Lab</strong>.</p>
+  <div class="card">
+    <form>
+      <label>Mobile number
+        <input type="tel" placeholder="+1 610 555 1234" />
+      </label>
+      <label>
+        <input type="checkbox" required />
+        I agree to receive SMS from Secure Service Lab for scheduling and support.
+        Message frequency varies. Msg &amp; data rates may apply. Reply STOP to cancel, HELP for help.
+        Consent is not a condition of purchase.
+      </label>
+      <button type="button">Join</button>
+      <small>This demo form shows how users opt in. It does not submit data.</small>
+    </form>
+  </div>
+  <p><a href="/privacy">Privacy Policy</a> • <a href="/terms">Terms</a></p>
+</body>
+</html>
