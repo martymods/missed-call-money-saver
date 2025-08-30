@@ -1,5 +1,5 @@
 // routes/eligibility-dxc.js
-import express from 'express';
+const express = require('express');
 
 const router = express.Router();
 
@@ -26,7 +26,7 @@ function parseEligibility(resp) {
   return out;
 }
 
-// POST /api/eligibility/check
+// POST /api/eligibility-dxc/check
 router.post('/check', async (req, res) => {
   try {
     const { payer, memberId, dob, lastName, firstName, zip } = req.body || {};
@@ -89,4 +89,4 @@ router.post('/check', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
