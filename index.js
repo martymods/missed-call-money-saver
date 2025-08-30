@@ -59,9 +59,14 @@ app.get('/config', (_, res) => {
   });
 });
 
+// ✅ add these two lines near your other requires / app.use(...) calls
+const eligibilityDXC = require('./routes/eligibility-dxc'); // no .js needed
+app.use('/api/eligibility-dxc', eligibilityDXC);
+
 // Register API routers
-import eligibilityDXC from './routes/eligibility-dxc.js';
 app.use('/api/eligibility', eligibilityDXC);
+
+
 
 
 // ---------------------------------------------------------------------
