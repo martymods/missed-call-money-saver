@@ -1,0 +1,655 @@
+<!-- packages.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Delco Tech Division — Attorney Growth Packages</title>
+  <meta name="description" content="Nine gamified packages for law firms: from solo boost to fortress‑grade enterprise. Dynamic pricing, automation, and security options."/>
+  <link rel="canonical" href="https://www.delcotechdivision.com/packages.html"/>
+  <style>
+    :root{
+      --ink:#0e1020; --muted:#6b7280; --edge:#e7ebf5; --bg:#f7f8fc;
+      --brand:#1955ff; --brand-2:#0f3ed6; --ok:#16a34a; --warn:#f59e0b; --danger:#ef4444;
+      --card:#ffffff; --shadow:0 14px 34px rgba(16,30,80,.12);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0}
+    body{font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;color:var(--ink);background:linear-gradient(180deg,#fff,#fbfcff)}
+    a{color:var(--brand);text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    /* Header */
+    header{max-width:1200px;margin:0 auto;padding:18px;display:flex;align-items:center;gap:14px;justify-content:space-between}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.2px}
+    .badge{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--brand-2),var(--brand));display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)}
+    nav{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;border-radius:12px;border:1px solid #dfe6ff;background:#f6f8ff;color:#0f1b46;font-weight:800}
+    .btn.primary{background:var(--brand);border-color:#194df7;color:#fff}
+    .btn.ghost{background:#fff;border-color:#e6eafd}
+
+    /* Hero */
+    .hero{max-width:1200px;margin:8px auto 0;padding:16px 18px 24px;display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:center}
+    .hero .card{background:radial-gradient(120% 160% at -10% 0%, #eef3ff, #fff 30%);border:1px solid #e6eafb;border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+    h1{font-size:38px;line-height:1.05;margin:0 0 8px}
+    .sub{color:#3b3f52}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .chip{background:#0f3ed6; color:#fff; padding:6px 10px; border-radius:999px; font-weight:800; border:1px solid rgba(255,255,255,.35)}
+    .hero .pane{background:#0f1a3d;color:#e6ebff;border:1px solid #1c2a66;border-radius:18px;padding:16px;box-shadow:0 20px 60px rgba(15,26,61,.25)}
+
+    /* Config Bar */
+    .config{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:10px}
+    .tile{background:#fff;border:1px solid #e9ecf7;border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+    .tile h3{margin:0 0 8px;font-size:14px;color:#1f2a44}
+    .slider{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+    input[type=range]{width:100%}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #e0e6ff;border-radius:999px;background:#f6f8ff;font-weight:800}
+    .select{width:100%;padding:10px;border:1px solid #e0e6ff;border-radius:10px;background:#fff}
+
+    /* Packages grid */
+    .wrap{max-width:1200px;margin:8px auto 40px;padding:0 18px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    @media (max-width:980px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
+    .card{background:#fff;border:1px solid #e6eafb;border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .pkg{display:flex;flex-direction:column;gap:8px}
+    .pkg .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .lvl{font-weight:900;letter-spacing:.3px}
+    .rarity{font-size:12px;font-weight:900;border:1px solid #dfe6ff;border-radius:999px;padding:4px 8px}
+    .price{display:flex;align-items:baseline;gap:6px}
+    .price .big{font-size:26px;font-weight:900}
+    .includes{display:flex;flex-wrap:wrap;gap:8px}
+    .inc{font-size:12px;font-weight:800;background:#f7f9ff;border:1px solid #e6eafb;border-radius:999px;padding:4px 8px}
+    .cta{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,10,30,.62);backdrop-filter:saturate(130%) blur(6px);display:none;align-items:center;justify-content:center;z-index:50}
+    .modal .sheet{width:min(720px,94vw);background:#fff;border:1px solid #e6eafb;border-radius:16px;box-shadow:0 30px 80px rgba(6,18,60,.3)}
+    .modal header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #edf1ff}
+    .modal .body{padding:14px 16px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field input, .field select, .field textarea{padding:12px;border:1px solid #e1e7ff;border-radius:10px}
+    .hint{font-size:12px;color:var(--muted)}
+
+    /* Enterprise Section */
+    .enterprise{margin-top:24px}
+    .accordion details{background:#0f1a3d;color:#e6ebff;border:1px solid #1c2a66;border-radius:14px;padding:12px}
+    .accordion details+details{margin-top:10px}
+    .accordion summary{cursor:pointer;font-weight:800}
+    .accordion pre{white-space:pre-wrap;font-family:system-ui,Segoe UI,Roboto,Arial;font-size:14px;line-height:1.5;margin:10px 0 0}
+
+    /* Footer */
+    footer{max-width:1200px;margin:20px auto 40px;padding:0 18px;color:#5b6272;font-size:13px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><div class="badge">⚖️</div><div>Delco Tech Division<br><small style="color:var(--muted);font-weight:700">Attorney Growth Suite</small></div></div>
+    <nav>
+      <a class="btn ghost" href="#packages">Packages</a>
+      <a class="btn ghost" href="#security">Security</a>
+      <a class="btn primary" href="#packages">Shop packages</a>
+    </nav>
+  </header>
+
+  <section class="hero" aria-label="Hero">
+    <div class="card">
+      <h1>From Solo to Fortress.</h1>
+      <p class="sub">Nine gamified packages that let attorneys shop with intent: more qualified leads, less admin, optional <b>Fortress‑grade protection</b> when you scale. Automations make your staff faster—no extra headcount.</p>
+      <div class="chips">
+        <span class="chip">Instant text‑back & intake</span>
+        <span class="chip">Calendar + payments</span>
+        <span class="chip">Reviews & reporting</span>
+        <span class="chip">Security add‑ons</span>
+      </div>
+
+      <div class="config">
+        <div class="tile">
+          <h3>1) Firm size</h3>
+          <div class="slider"><input id="attRange" type="range" min="1" max="200" step="1" value="3"><div class="pill"><b id="attCnt">3</b> attorneys</div></div>
+        </div>
+        <div class="tile">
+          <h3>2) Billing</h3>
+          <select id="billing" class="select">
+            <option value="monthly" selected>Monthly</option>
+            <option value="annual">Annual (save ~15%)</option>
+          </select>
+        </div>
+        <div class="tile">
+          <h3>3) Security posture</h3>
+          <select id="sec" class="select">
+            <option value="standard" selected>Standard</option>
+            <option value="shield">Shielded</option>
+            <option value="fortress">Fortress</option>
+          </select>
+        </div>
+      </div>
+      <p class="hint" style="margin-top:6px">Pricing adapts to your team size and security posture. Toggle to feel the power.</p>
+    </div>
+
+    <aside class="pane">
+      <div style="font-weight:800;letter-spacing:.2px">Included feature classes (12)</div>
+      <div class="chips" style="margin-top:8px">
+        <span class="chip" title="1">Lead Capture</span>
+        <span class="chip" title="2">Smart Intake</span>
+        <span class="chip" title="3">Calendar + Pay</span>
+        <span class="chip" title="4">CRM & Reports</span>
+        <span class="chip" title="5">Review Engine</span>
+        <span class="chip" title="6">Ads Assist</span>
+        <span class="chip" title="7">Local SEO</span>
+        <span class="chip" title="8">Brand & Video</span>
+        <span class="chip" title="9">Staff Automations</span>
+        <span class="chip" title="10">Secure Comms</span>
+        <span class="chip" title="11">Compliance</span>
+        <span class="chip" title="12">Enterprise Gov</span>
+      </div>
+      <p class="hint">Higher tiers unlock more classes; enterprise unlocks all 12 with governance add‑ons.</p>
+    </aside>
+  </section>
+
+  <main id="packages" class="wrap">
+    <h2 style="margin:6px 0 12px">Shop Packages</h2>
+    <div class="grid" id="pkgGrid"></div>
+
+    <section id="security" class="enterprise">
+      <h2 style="margin:22px 0 10px">Enterprise buyers — security & maturity</h2>
+      <div class="accordion">
+        <details>
+          <summary>Learning Outcomes (what your team will be able to do)</summary>
+          <pre>Learning Outcomes
+After completing this module, you will be able to:
+Analyse security gaps in acquired software and managed services.
+Apply secure coding practices to mitigate vulnerabilities.
+Arrange security controls within CI/CD pipelines effectively.
+Assess risk impacts of COTS and open-source integrations.
+Calculate potential security risks in software development.
+Categorise security standards and regulations for compliance.
+Compare secure APIs with insecure implementations.
+Define secure SDLC practices for software development.
+Discuss the role of secure programming languages in minimising risks.
+Evaluate the effectiveness of penetration testing and code audits.
+Identify threats in API security and apply mitigation techniques.
+Summarise the security implications of cloud services on organisations...
+          </pre>
+        </details>
+        <details>
+          <summary>Security in Development — approaches we align to</summary>
+          <pre>Security in Development
+Integrating security into development methodologies ensures software is safeguarded against vulnerabilities throughout its lifecycle. Various approaches incorporate security measures differently, aligning with their principles to address risks effectively while maintaining efficiency.
+
+Agile and Security
+Agile development prioritises iterative progress and collaboration, embedding security through continuous involvement and feedback.
+• Security requirements are integrated into user stories and acceptance criteria.
+• Regular iterations enable frequent security testing and updates.
+• Collaboration between developers, testers, and security experts ensures shared responsibility for security.
+• Security measures evolve in tandem with functional requirements.
+
+Waterfall and Security
+The Waterfall methodology follows a linear, sequential structure, embedding security into each phase distinctly.
+• Security is planned during the initial requirements gathering stage.
+• Design phases include detailed risk assessments and secure architecture planning.
+• Dedicated testing phases encompass thorough security testing and validation.
+• Compliance with security standards is emphasised through extensive documentation.
+
+DevOps and Security
+DevOps focuses on automation and collaboration, seamlessly integrating security practices within the development pipeline.
+• Automated security tools perform static and dynamic code analysis during CI/CD.
+• Security teams collaborate with developers and operations staff to ensure security is embedded from the outset.
+• Infrastructure as Code (IaC) incorporates secure configurations into deployment scripts.
+• Continuous monitoring and incident response capabilities enhance security post‑deployment.
+
+DevSecOps Approach
+DevSecOps extends DevOps by embedding security as a fundamental element at every stage of the development lifecycle.
+• Security tools are integrated into automated workflows and CI/CD pipelines.
+• Developers receive training to adopt secure coding practices and understand security vulnerabilities.
+• Threat modelling and risk assessments occur iteratively alongside development activities.
+• Automated compliance checks ensure adherence to security requirements without impeding delivery.
+
+Scaled Agile Framework (SAFe) and Security
+The Scaled Agile Framework integrates security across enterprise‑wide initiatives, aligning with organisational objectives.
+• Security is incorporated into architectural enablers and defined guardrails.
+• PI planning includes risk assessments and compliance reviews.
+• Security specialists contribute expertise within Agile Release Trains.
+• Teams adopt secure coding practices and utilise advanced security tools.
+          </pre>
+        </details>
+        <details>
+          <summary>Software Security Maturity — CMM / SAMM</summary>
+          <pre>Software Security Maturity
+Maturity models like CMM (Capability Maturity Model) and SAMM (Software Assurance Maturity Model) provide structured frameworks to evaluate and enhance software security practices.
+
+Capability Maturity Model (CMM)
+• Structured Framework: five levels from initial to optimising.
+• Process Standardisation: embed consistent security measures.
+• Risk Management: proactive identification and mitigation.
+• Integration with Software Development: align security with delivery.
+
+Software Assurance Maturity Model (SAMM)
+• Domain‑Specific Guidance across governance, construction, verification, deployment.
+• Actionable Roadmaps per maturity level.
+• Adaptability for organisations of all sizes.
+• Focus on Measurability: metrics for progress and effectiveness.
+
+Benefits of Using Maturity Models
+• Benchmarking & assessment against industry standards.
+• Continuous improvement over time.
+• Stakeholder alignment on priorities and progress.
+• Compliance and best‑practices adoption.
+          </pre>
+        </details>
+        <details>
+          <summary>Software & Third‑Party Integration Security</summary>
+          <pre>Software Integration Security
+Integrating commercial off‑the‑shelf (COTS) and open‑source software offers speed and savings but introduces risk.
+
+Risk Assessment of Software
+• Source Code Analysis (open‑source) for vulnerabilities and backdoors.
+• Vendor Security Practices (COTS): regular updates and patching.
+• Supply Chain Risk: dependencies and transitive vulns.
+• Licensing Compliance: obligations and restrictions.
+
+Patch Management and Updates
+Access Control and Authentication
+Vulnerability Monitoring
+Data Protection and Privacy
+• Encryption standards for data in transit/at rest.
+• Data minimisation; collect only what’s required.
+• Regulatory compliance (e.g., GDPR, HIPAA) as applicable.
+
+Third‑Party Service Risks
+• Data exposure via misconfigurations or weak access controls.
+• Data sovereignty concerns across jurisdictions.
+• Dependency on external security measures and SLAs.
+• Lifecycle management of integrations.
+          </pre>
+        </details>
+        <details>
+          <summary>Secure SDLC & Compliance</summary>
+          <pre>Secure Software Development
+Security is integral to the SDLC — address vulnerabilities at every phase.
+
+Requirements Analysis
+• Define security requirements alongside functional ones.
+• Threat modelling and compliance mapping.
+
+Secure Design Principles
+• Least privilege, defence‑in‑depth, fail‑safe defaults.
+• Secure patterns: input validation, output encoding.
+• Isolation for third‑party integrations.
+
+Secure Coding Practices
+• Validate inputs (prevent SQLi/XSS), use prepared statements.
+• Proper authN/authZ; encrypt sensitive data in transit & at rest.
+• Secure error handling; patch dependencies routinely.
+• Follow OWASP & CERT guidance.
+
+Security Compliance — Example: ISO/IEC 27001
+• Risk‑based ISMS with objectives and controls.
+• Operational controls incl. access, crypto, incident mgmt.
+• Audits & continuous improvement.
+• Align to data‑protection regulations.
+          </pre>
+        </details>
+      </div>
+      <p class="hint" style="margin-top:10px">We keep language high‑level here. Enterprise delivery is tailored and under NDA.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div>© <span id="yr"></span> Delco Tech Division • Honest pricing. Simple cancel. Security on your terms.</div>
+  </footer>
+
+  <!-- ===== Configurable endpoints (UPDATE THESE) ===== -->
+  <script>
+    // IMPORTANT — set your webhook to log buyer info (Zapier, Make, custom API, etc.)
+    // Find this line quickly by searching: const LEAD_WEBHOOK = ''
+    const LEAD_WEBHOOK = '';
+    // Optional: change thank-you path if you host elsewhere
+    // Find by searching: const THANKYOU_URL = 'thankyou.html'
+    const THANKYOU_URL = 'thankyou.html';
+  </script>
+
+  <script>
+  /* ===== Catalog & Dynamic Pricing ===================================== */
+  const FEATURE_CLASSES = [
+    'Lead Capture & Missed‑Call Textback', // 1
+    'Smart Intake & Qualification',        // 2
+    'Calendar + Payments',                 // 3
+    'CRM Sync & Reporting',                // 4
+    'Review Engine',                       // 5
+    'Ads Assist & Landing Pages',          // 6
+    'Local SEO & Listings',                // 7
+    'Brand Collateral & Video',            // 8
+    'Staff Automations & Playbooks',       // 9
+    'Secure Comms & Data Hygiene',         // 10
+    'Compliance & Audit Aids',             // 11
+    'Enterprise Governance & SIEM Hooks'   // 12
+  ];
+
+  const PACKAGES = [
+    { id:'solo',    lvl:'Level 1', name:'Solo Boost',        rarity:'Rookie',    baseM:199,  setup:299,  classes:[1,2,3,5] },
+    { id:'assoc',   lvl:'Level 2', name:'Associate Lift',    rarity:'Bronze',    baseM:349,  setup:499,  classes:[1,2,3,4,5] },
+    { id:'rain',    lvl:'Level 3', name:'Rainmaker',         rarity:'Silver',    baseM:599,  setup:999,  classes:[1,2,3,4,5,6] },
+    { id:'trial',   lvl:'Level 4', name:'Trial Boss',        rarity:'Gold',      baseM:899,  setup:1499, classes:[1,2,3,4,5,6,7] },
+    { id:'partner', lvl:'Level 5', name:'Partner Suite',     rarity:'Platinum',  baseM:1399, setup:2499, classes:[1,2,3,4,5,6,7,8] },
+    { id:'leader',  lvl:'Level 6', name:'Market Leader',     rarity:'Diamond',   baseM:1999, setup:3499, classes:[1,2,3,4,5,6,7,8,9] },
+    { id:'amicus',  lvl:'Level 7', name:'Amicus Elite',      rarity:'Legendary', baseM:2999, setup:4999, classes:[1,2,3,4,5,6,7,8,9,10] },
+    { id:'titan',   lvl:'Level 8', name:'Titanium Shield',   rarity:'Mythic',    baseM:4499, setup:7999, classes:[1,2,3,4,5,6,7,8,9,10,11] },
+    { id:'fort',    lvl:'Level 9', name:'Fortress Enterprise',rarity:'Ascendant', baseM:6999, setup:12000, classes:[1,2,3,4,5,6,7,8,9,10,11,12] }
+  ];
+
+  const SIZE_MULT = [
+    { max:3,   m:1.00 },
+    { max:10,  m:1.60 },
+    { max:25,  m:2.40 },
+    { max:50,  m:3.40 },
+    { max:100, m:5.50 },
+    { max:9999,m:8.50 }
+  ];
+  const SEC_MULT = { standard:1.00, shield:1.12, fortress:1.28 };
+  const BILLING_MULT = { monthly:1.0, annual:(12*0.85) }; // 15% savings on annual
+
+  const $ = sel => document.querySelector(sel);
+  const grid = $('#pkgGrid');
+  const attRange = $('#attRange');
+  const attCnt = $('#attCnt');
+  const billing = $('#billing');
+  const sec = $('#sec');
+  $('#yr').textContent = new Date().getFullYear();
+
+  function r50(n){ return Math.round(n/50)*50; }
+  function money(n){ return n.toLocaleString(undefined, {maximumFractionDigits:0}); }
+
+  function sizeMult(n){ return SIZE_MULT.find(x=>n<=x.max).m }
+
+  function priceFor(pkg){
+    const n = +attRange.value; const b = billing.value; const s = sec.value;
+    const mult = sizeMult(n) * SEC_MULT[s];
+    const m = pkg.baseM * mult * (b==='annual' ? (BILLING_MULT.annual/12) : 1);
+    const setup = pkg.setup * (SEC_MULT[s]===1?1:1.05); // small bump on setup when security ↑
+    const monthly = r50(m);
+    const total = b==='annual' ? r50(monthly*12*0.85) : monthly; // safeguard
+    return { monthly, setup, total };
+  }
+
+  function render(){
+    attCnt.textContent = attRange.value;
+    grid.innerHTML = '';
+    PACKAGES.forEach(p=>{
+      const pr = priceFor(p);
+      const card = document.createElement('article');
+      card.className = 'card pkg';
+      card.innerHTML = `
+        <div class="top">
+          <div>
+            <div class="lvl">${p.lvl}</div>
+            <div style="font-size:18px;font-weight:900;letter-spacing:.2px">${p.name}</div>
+          </div>
+          <div class="rarity">${p.rarity}</div>
+        </div>
+        <div class="price"><span class="big">$${money(pr.total)}</span><span class="hint">${billing.value==='annual'?' /year (equiv. $'+money(pr.monthly)+'/mo)':' /mo'} • Setup $${money(pr.setup)}</span></div>
+        <div class="includes">
+          ${p.classes.map(i=>`<span class="inc">${i}. ${FEATURE_CLASSES[i-1].split(' ')[0]}</span>`).join('')}
+        </div>
+        <div class="hint">Full view: ${p.classes.length} of 12 classes</div>
+        <div class="cta">
+          <button class="btn primary" data-buy="${p.id}">Buy ${p.name}</button>
+          <button class="btn" data-view="${p.id}">View details</button>
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
+
+  attRange.addEventListener('input', render);
+  billing.addEventListener('change', render);
+  sec.addEventListener('change', render);
+
+  render();
+
+  /* ===== Buy Flow (Modal) =============================================== */
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="sheet">
+      <header>
+        <div style="font-weight:900">Checkout</div>
+        <button id="xClose" class="btn">× Close</button>
+      </header>
+      <div class="body">
+        <div id="selPkg" class="hint">–</div>
+        <div class="row" style="margin-top:10px">
+          <div class="field"><label>Firm</label><input id="fFirm" placeholder="e.g., Porter & Shaw" required></div>
+          <div class="field"><label>Website</label><input id="fSite" placeholder="https://"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Buyer name</label><input id="fName" placeholder="Full name" required></div>
+          <div class="field"><label>Role</label><input id="fRole" placeholder="Partner / Office Manager / IT"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Email</label><input id="fEmail" type="email" placeholder="you@firm.com" required></div>
+          <div class="field"><label>Phone</label><input id="fPhone" placeholder="(###) ###‑####"></div>
+        </div>
+        <div class="row3">
+          <div class="field"><label>Attorneys</label><input id="fAtt" type="number" min="1" value="3"></div>
+          <div class="field"><label>State</label><input id="fState" placeholder="PA"></div>
+          <div class="field"><label>Promo code</label><input id="fPromo" placeholder="Optional"></div>
+        </div>
+        <div class="field"><label>Notes</label><textarea id="fNotes" rows="3" placeholder="What matters most? Intake? Reviews? Security?"></textarea></div>
+        <div class="row" style="margin-top:8px">
+          <div class="pill" id="priceBadge">$0</div>
+          <div class="hint">We’ll email onboarding within minutes. No card charged here—human‑verified first.</div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button id="btnPlace" class="btn primary">Place order</button>
+          <button id="btnCancel" class="btn">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  function openModal(pkg){
+    const pr = priceFor(pkg);
+    $('#selPkg').innerHTML = `<b>${pkg.name}</b> — ${pkg.lvl} • ${pkg.rarity}<br><span class="hint">${pkg.classes.length}/12 classes • ${billing.value==='annual'?'Annual':'Monthly'} • ${sec.value.toUpperCase()}</span>`;
+    $('#priceBadge').textContent = `${billing.value==='annual'?'$'+money(pr.total)+' /year':'$'+money(pr.total)+' /mo'} • Setup $${money(pr.setup)}`;
+    $('#fAtt').value = attRange.value;
+    modal.style.display='flex';
+    $('#fFirm').focus();
+  }
+  function closeModal(){ modal.style.display='none'; }
+
+  document.addEventListener('click', (e)=>{
+    const buy = e.target.closest('[data-buy]');
+    if(buy){
+      const pkg = PACKAGES.find(p=>p.id===buy.dataset.buy);
+      openModal(pkg);
+      modal.dataset.pkg = pkg.id;
+    }
+    if(e.target.id==='xClose' || e.target.id==='btnCancel'){ closeModal(); }
+    const view = e.target.closest('[data-view]');
+    if(view){
+      const pkg = PACKAGES.find(p=>p.id===view.dataset.view);
+      alert(`${pkg.name} includes:\n\n` + pkg.classes.map(i=>`${i}. ${FEATURE_CLASSES[i-1]}`).join('\n'));
+    }
+  });
+
+  function couponDiscount(code){
+    if(!code) return 0;
+    const c = code.trim().toUpperCase();
+    if(c==='DELCOPIONEER') return 0.10;
+    if(c==='VIPCOUNSEL') return 0.20;
+    return 0;
+  }
+
+  function beacon(url, data){
+    try{
+      const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+      if(navigator.sendBeacon){ navigator.sendBeacon(url, blob); return true; }
+      fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+      return true;
+    }catch{ return false; }
+  }
+
+  function placeOrder(){
+    const pkg = PACKAGES.find(p=>p.id===modal.dataset.pkg);
+    const pr0 = priceFor(pkg);
+    const promo = $('#fPromo').value || '';
+    const disc = couponDiscount(promo);
+    const pr = { monthly: Math.round(pr0.monthly*(1-disc)), setup: Math.round(pr0.setup*(1-disc)), total: Math.round(pr0.total*(1-disc)) };
+
+    const payload = {
+      ts: new Date().toISOString(),
+      pkg: { id: pkg.id, name: pkg.name, lvl: pkg.lvl, rarity: pkg.rarity, classes: pkg.classes },
+      config: { attorneys: +$('#fAtt').value||+attRange.value, billing: billing.value, security: sec.value },
+      price: pr, promo,
+      buyer: { firm: $('#fFirm').value, site: $('#fSite').value, name: $('#fName').value, role: $('#fRole').value, email: $('#fEmail').value, phone: $('#fPhone').value, state: $('#fState').value, notes: $('#fNotes').value }
+    };
+
+    // Local log for you
+    const orders = JSON.parse(localStorage.getItem('orders')||'[]');
+    orders.push(payload);
+    localStorage.setItem('orders', JSON.stringify(orders));
+    localStorage.setItem('last_order', JSON.stringify(payload));
+
+    // Optional webhook to your CRM / Zapier / Sheet Apps Script
+    if(LEAD_WEBHOOK){ beacon(LEAD_WEBHOOK, payload); }
+
+    // Redirect to thank you
+    window.location.href = THANKYOU_URL + '?pkg=' + encodeURIComponent(pkg.id);
+  }
+
+  document.addEventListener('click', (e)=>{
+    if(e.target && e.target.id==='btnPlace'){
+      // lightweight required check
+      if(!$('#fFirm').value || !$('#fName').value || !$('#fEmail').value){
+        alert('Please enter Firm, Buyer name and Email');
+        return;
+      }
+      placeOrder();
+    }
+  });
+  </script>
+</body>
+</html>
+
+
+<!-- thankyou.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Thank You — Delco Tech Division</title>
+  <meta name="description" content="Order received. We’ll confirm and start onboarding shortly."/>
+  <style>
+    :root{ --ink:#0f1220; --muted:#6b7280; --brand:#1955ff; --edge:#e6eafb; --ok:#16a34a; --card:#fff; --shadow:0 14px 34px rgba(16,30,80,.12) }
+    *{box-sizing:border-box}
+    html,body{margin:0}
+    body{font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;color:var(--ink);background:linear-gradient(180deg,#fff,#fbfcff)}
+    .wrap{max-width:900px;margin:0 auto;padding:20px}
+    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #e0e6ff;border-radius:999px;background:#f6f8ff;font-weight:800}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;border-radius:12px;border:1px solid #dfe6ff;background:#f6f8ff;color:#0f1b46;font-weight:800;text-decoration:none}
+    .btn.primary{background:var(--brand);border-color:#194df7;color:#fff}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:900px){.grid,.row{grid-template-columns:1fr}}
+    pre{white-space:pre-wrap;background:#0b1220;color:#e6ebff;border-radius:12px;padding:12px;border:1px solid #14264b}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#0f3ed6,#1955ff);display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)">⚖️</div><div><b>Delco Tech Division</b><br><small style="color:var(--muted);font-weight:700">Order Confirmation</small></div></div>
+      <a class="btn" href="/packages.html">Back to packages</a>
+    </header>
+
+    <section class="card">
+      <h1 style="margin:0 0 6px">Thank you — order received</h1>
+      <p class="pill" id="orderTag">–</p>
+      <p style="color:var(--muted)">We’ll review and email onboarding next. No card was charged here. A specialist will confirm details, activate automations, and coordinate with your staff.</p>
+
+      <div class="grid" style="margin-top:10px">
+        <div>
+          <h3>Buyer</h3>
+          <div id="buyerBox">–</div>
+        </div>
+        <div>
+          <h3>Package</h3>
+          <div id="pkgBox">–</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <h3>Order JSON (for your records)</h3>
+        <pre id="jsonBox">{}</pre>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <a class="btn primary" id="icsBtn" href="#">Add kickoff to calendar</a>
+        <a class="btn" id="emailBtn" href="#">Email a copy</a>
+        <button class="btn" id="clearBtn">Clear local log</button>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:14px">
+      <h3>What happens next</h3>
+      <ol>
+        <li>We confirm your package, team size and security posture.</li>
+        <li>We wire automation: missed‑call textback → intake → calendar → payment → reviews.</li>
+        <li>We set up reporting and, if selected, security controls aligned to governance.</li>
+        <li>You’ll get a short playbook for staff (scripts, workflows, admin access).</li>
+      </ol>
+    </section>
+
+    <footer style="margin:16px 0;color:var(--muted);font-size:13px">© <span id="yr2"></span> Delco Tech Division</footer>
+  </div>
+
+  <script>
+    const data = JSON.parse(localStorage.getItem('last_order')||'null');
+    document.getElementById('yr2').textContent = new Date().getFullYear();
+
+    function money(n){ return (n||0).toLocaleString(undefined,{maximumFractionDigits:0}); }
+
+    if(!data){
+      document.getElementById('orderTag').textContent = 'No recent order found on this device';
+    } else {
+      const tag = `${data.pkg.name} • ${data.pkg.lvl} • ${data.config.billing==='annual'?'Annual':'Monthly'} • ${data.config.security.toUpperCase()}`;
+      document.getElementById('orderTag').textContent = tag;
+      document.getElementById('buyerBox').innerHTML = `
+        <div><b>${data.buyer.name}</b> — ${data.buyer.role||'—'}</div>
+        <div>${data.buyer.firm}</div>
+        <div><a href="mailto:${data.buyer.email}">${data.buyer.email}</a> · ${data.buyer.phone||''}</div>
+        <div>${data.buyer.site||''}</div>`;
+      document.getElementById('pkgBox').innerHTML = `
+        <div><b>${data.pkg.name}</b> (${data.pkg.classes.length}/12 classes)</div>
+        <div>Attorneys: ${data.config.attorneys} · Security: ${data.config.security}</div>
+        <div>Price: ${data.config.billing==='annual' ? ('$'+money(data.price.total)+'/yr') : ('$'+money(data.price.total)+'/mo')} · Setup $${money(data.price.setup)}</div>`;
+      document.getElementById('jsonBox').textContent = JSON.stringify(data,null,2);
+
+      // Email shortcut
+      const subj = encodeURIComponent(`Delco order — ${data.pkg.name} for ${data.buyer.firm}`);
+      const body = encodeURIComponent(JSON.stringify(data,null,2));
+      document.getElementById('emailBtn').href = `mailto:${data.buyer.email}?subject=${subj}&body=${body}`;
+
+      // Quick ICS for a 30‑min kickoff in 2 business days @ 10:00 local
+      const start = new Date();
+      const addBusinessDays = (d,n)=>{ let x=0; while(x<n){ d.setDate(d.getDate()+1); const day=d.getDay(); if(day!==0 && day!==6) x++; } return d };
+      const s = addBusinessDays(new Date(),2); s.setHours(10,0,0,0);
+      const e = new Date(s.getTime()+30*60000);
+      function iso(d){ return d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z' }
+      const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//DelcoTech//Packages//EN\nBEGIN:VEVENT\nUID:${Date.now()}@delcotechdivision.com\nDTSTAMP:${iso(new Date())}\nDTSTART:${iso(s)}\nDTEND:${iso(e)}\nSUMMARY:Delco Tech — Onboarding Kickoff\nDESCRIPTION:${data.pkg.name} — ${data.config.security.toUpperCase()} — ${data.buyer.firm}\nEND:VEVENT\nEND:VCALENDAR`;
+      const blob = new Blob([ics], {type:'text/calendar'});
+      const url = URL.createObjectURL(blob);
+      const icsBtn = document.getElementById('icsBtn');
+      icsBtn.href = url; icsBtn.download = 'delco_kickoff.ics';
+    }
+
+    document.getElementById('clearBtn').onclick = () => {
+      localStorage.removeItem('last_order');
+      alert('Local order log cleared on this browser.');
+      location.reload();
+    };
+  </script>
+</body>
+</html>
