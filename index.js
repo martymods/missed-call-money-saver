@@ -7,6 +7,7 @@ const Stripe = require('stripe');
 const OpenAI = require('openai');                           // 👈 NEW
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' }); // 👈 NEW
+const APP_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://www.delcotechdivision.com';
 
 const { sendSMS } = require('./services/twilioClient');
 const { upsertByPhone, findAll } = require('./services/sheets');
@@ -335,6 +336,67 @@ cron.schedule('*/5 * * * *', async () => {
     console.error('Review cron error:', e.message);
   }
 });
+
+// Simple health check (optional)
+app.get('/api/health', async (req, res) => {
+  try {
+    // Optional: ping Stripe to confirm key works
+    const ok = !!process.env.STRIPE_SECRET_KEY;
+    res.json({ ok, stripe: ok, public: APP_BASE_URL });
+  } catch {
+    res.json({ ok: false, stripe: false, public: APP_BASE_URL });
+  }
+});
+
+// Optional lightweight lead log so the front-end "begin_checkout" call doesn't 404
+app.post('/api/lead', async (req, res) => {
+  try {
+    // You can persist to DB/Sheets/etc. For now just acknowledge.
+    // console.log('lead:', req.body);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'lead_store_failed' });
+  }
+});
+
+/**
+ * Dynamic one-time checkout
+ * Expects: { amountCents, summary, partnerSlug?, rep?, dealId? }
+ * Returns: { url }
+ */
+app.post('/api/deal/checkout/stripe', async (req, res) => {
+  try {
+    const { amountCents, summary = '', partnerSlug = '', rep = '', dealId = '' } = req.body || {};
+
+    const amt = Number(amountCents) | 0;
+    if (!amt || amt < 100) return res.status(400).json({ error: 'invalid_amount' });
+
+    const name = String(summary).slice(0, 120) || 'Delco Tech — Custom Package';
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card', 'link'],
+      allow_promotion_codes: true,
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name },
+          unit_amount: amt
+        },
+        quantity: 1
+      }],
+      success_url: `${APP_BASE_URL}/deal-thank-you.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${APP_BASE_URL}/legal.html#packages`,
+      metadata: { partnerSlug, rep, dealId }
+    });
+
+    return res.json({ url: session.url });
+  } catch (e) {
+    // console.error('checkout error', e);
+    res.status(500).json({ error: 'checkout_failed' });
+  }
+});
+
 
 // Dev: simulate a missed call
 app.get('/simulate/missed-call', async (req, res) => {
