@@ -4,49 +4,53 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Grid Starter — PJM • EIA-930 (Free Tier)</title>
-  <meta name="description" content="Free-tier grid dashboard for PJM using EIA-930 open data. Paste your EIA API key, pick a balancing authority, and plot load + generation mix.">
+  <meta name="description" content="Free-tier grid dashboard using EIA-930: demand vs forecast, fuel time-series, interchange, and revenue estimates.">
   <meta name="theme-color" content="#0f1a3d">
   <style>
-    :root{ --ink:#0f1a3d; --muted:#6b7280; --edge:#e6eafb; --bg:#f7f8ff; --brand:#1955ff; --brand2:#0f3ed6; --card:#fff; --shadow:0 14px 34px rgba(16,30,80,.12) }
+    :root{
+      --ink:#0f1a3d; --muted:#6b7280; --edge:#e6eafb; --bg:#f7f8ff;
+      --brand:#1955ff; --brand2:#0f3ed6; --card:#fff; --ok:#16a34a; --warn:#f59e0b;
+      --shadow:0 14px 34px rgba(16,30,80,.12)
+    }
     *{box-sizing:border-box} html,body{margin:0}
     body{font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;color:var(--ink);background:linear-gradient(180deg,#fff,#fbfcff)}
-    header{max-width:1200px;margin:0 auto;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    header{max-width:1280px;margin:0 auto;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .brand{display:flex;align-items:center;gap:10px;font-weight:900}
     .badge{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--brand2),var(--brand));display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)}
-    .wrap{max-width:1200px;margin:10px auto 40px;padding:0 18px;display:grid;grid-template-columns:320px 1fr;gap:12px}
+    .wrap{max-width:1280px;margin:10px auto 40px;padding:0 18px;display:grid;grid-template-columns:320px 1fr;gap:12px}
     @media (max-width:980px){.wrap{grid-template-columns:1fr}}
     .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
-    h1{font-size:24px;margin:0}
-    h2{font-size:16px;margin:0 0 8px}
+    h1{font-size:24px;margin:0} h2{font-size:16px;margin:0 0 8px}
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
     input,select,button{padding:10px;border:1px solid #e1e7ff;border-radius:10px;font:inherit}
     button{background:#f6f8ff;font-weight:800;cursor:pointer}
     button.primary{background:var(--brand);border-color:#194df7;color:#fff}
-    .hint{color:var(--muted);font-size:12px}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #e0e6ff;border-radius:999px;background:#f6f8ff;font-weight:800}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .hint{color:var(--muted);font-size:12px} .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #e0e6ff;border-radius:999px;background:#f6f8ff;font-weight:800}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media (max-width:900px){.grid{grid-template-columns:1fr}}
     canvas{background:#fff;border:1px solid #eef2ff;border-radius:12px;padding:8px}
-    .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
     .kpi .tile{background:#fff;border:1px solid var(--edge);border-radius:12px;padding:12px}
     .kpi .big{font-weight:900;font-size:22px}
-    footer{max-width:1200px;margin:8px auto 30px;padding:0 18px;color:#5b6272;font-size:12px}
+    .kpi .good{color:var(--ok)} .kpi .warn{color:var(--warn)}
+    footer{max-width:1280px;margin:8px auto 30px;padding:0 18px;color:#5b6272;font-size:12px}
 
-    /* Fix: keep charts from stretching vertically */
-    .chartbox{
-      position: relative;
-      height: 280px;       /* tweak to taste (220–360px works well) */
-      width: 100%;
-    }
-    @media (min-width: 1280px){
-      .chartbox{ height: 320px; }
-    }
-    /* Let the canvas fill the box instead of expanding the page */
-    .chartbox canvas{
-      height: 100% !important;
-      width: 100% !important;
-      display: block;
-    }
+    /* chart height lock */
+    .chartbox{ position:relative; height:320px; width:100%; }
+    @media (max-width:600px){ .chartbox{ height:260px; } }
+    .chartbox canvas{ height:100% !important; width:100% !important; display:block; }
+
+    /* fuel cards */
+    .fuels{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    @media (max-width:1000px){.fuels{grid-template-columns:repeat(2,1fr)}}
+    .fuel{display:flex;flex-direction:column;gap:6px;border:1px solid var(--edge);border-radius:12px;padding:12px;background:#fff}
+    .fuel .row{display:flex;align-items:center;justify-content:space-between}
+    .badge2{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;background:#f0f4ff;border:1px solid #e1e8ff;font-weight:800}
+    .money{font-weight:900}
+    .sub{font-size:12px;color:var(--muted)}
+    .mini{font-size:11px;color:var(--muted)}
+    .sep{height:1px;background:#eef2ff;margin:4px 0}
+    .priceCtl{display:flex;align-items:center;gap:8px}
+    .priceCtl input[type=range]{flex:1}
   </style>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
 </head>
@@ -62,7 +66,7 @@
       <div class="field">
         <label><b>EIA API Key</b></label>
         <input id="eiaKey" placeholder="paste your EIA key" autocomplete="off">
-        <div class="hint">Get one free in 1 minute at <a href="https://www.eia.gov/opendata/" target="_blank">EIA Open Data</a>. Stored only in this browser.</div>
+        <div class="hint">Get one free in 1 minute at <a href="https://www.eia.gov/opendata/" target="_blank">EIA Open Data</a>. (Stored only in this browser.)</div>
       </div>
       <div class="field">
         <label><b>Balancing Authority</b></label>
@@ -76,7 +80,7 @@
           <option value="SWPP">SPP (Southwest Power Pool)</option>
           <option value="TVA">TVA (Tennessee Valley)</option>
         </select>
-        <div class="hint">Most U.S. data is at balancing-authority level (not strict city level).</div>
+        <div class="hint">Data is BA / zone level (not literal city).</div>
       </div>
       <div class="field">
         <label><b>Window</b></label>
@@ -86,11 +90,18 @@
           <option value="168">Last 7 days</option>
         </select>
       </div>
+
+      <div class="field">
+        <label><b>Price ($/MWh)</b></label>
+        <div class="priceCtl">
+          <input id="price" type="range" min="10" max="250" step="5" value="75">
+          <input id="priceNum" type="number" min="0" step="1" value="75" style="width:90px">
+        </div>
+        <div class="mini">Used for revenue estimates (Revenue/h ≈ Price × Current Load). Real nodal/zone LMPs require PJM credentials.</div>
+      </div>
+
       <div class="field">
         <button id="btnLoad" class="primary">Fetch data</button>
-      </div>
-      <div class="field">
-        <div class="hint">Free-tier build: EIA-930 demand & generation. Price/emissions can be added later (PJM DM2, WattTime, ElectricityMaps).</div>
       </div>
       <div class="field">
         <div id="status" class="pill">Idle</div>
@@ -101,56 +112,56 @@
       <div class="kpi" style="margin-bottom:10px">
         <div class="tile"><div class="hint">Current Demand</div><div class="big" id="kpiDemand">—</div></div>
         <div class="tile"><div class="hint">Last Updated (local)</div><div class="big" id="kpiTime">—</div></div>
-        <div class="tile"><div class="hint">Top Fuel (last hr)</div><div class="big" id="kpiFuel">—</div></div>
+        <div class="tile"><div class="hint">Net Imports</div><div class="big" id="kpiInterchg">—</div><div class="mini">(+ import / − export)</div></div>
+        <div class="tile"><div class="hint">Est. Revenue / hour</div><div class="big money" id="kpiRev">$—</div><div class="mini">Price × Load</div></div>
       </div>
 
       <div class="grid">
         <div>
-          <h2>Load — last period</h2>
+          <h2>Load vs Day-Ahead Forecast</h2>
           <div class="chartbox"><canvas id="chartDemand"></canvas></div>
         </div>
         <div>
-          <h2>Generation mix — last hour</h2>
-          <div class="chartbox"><canvas id="chartMix"></canvas></div>
+          <h2>Fuel mix — stacked (MW)</h2>
+          <div class="chartbox"><canvas id="chartFuelTS"></canvas></div>
         </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <h2>“Assets” by fuel (live split)</h2>
+        <div class="fuels" id="fuelCards"></div>
       </div>
     </section>
   </main>
 
   <footer>
-    <div>Free-tier sources: EIA Form 930 region data (demand & net generation). Add PJM prices and emissions later with your own credentials.</div>
+    <div>Sources: EIA Form 930 (free). Revenue is an estimate; for real trading/ops use PJM LMPs and settlement rules.</div>
   </footer>
 
-  <!-- Load Chart.js BEFORE your inline code (no defer) -->
+  <!-- Chart.js BEFORE inline -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <script>
-  // ---------- Helpers
+  // -------- Helpers
   const $ = s => document.querySelector(s);
   const fmtNum = n => (n==null? '—' : Number(n).toLocaleString());
+  const fmtMoney = n => (isFinite(n)? '$' + Number(n).toLocaleString(undefined,{maximumFractionDigits:0}) : '$—');
   const pad = n => (n<10?'0'+n:n);
   function toEIAISO(d){
-    // Return YYYY-MM-DDTHH with UTC offset removal (EIA expects UTC timestamps without minutes)
-    // We'll request in UTC boundaries for simplicity
-    const z = new Date(d.getTime());
-    z.setUTCMinutes(0,0,0);
+    const z = new Date(d.getTime()); z.setUTCMinutes(0,0,0);
     return `${z.getUTCFullYear()}-${pad(z.getUTCMonth()+1)}-${pad(z.getUTCDate())}T${pad(z.getUTCHours())}`;
   }
-  // Parse EIA period strings like "YYYY-MM-DDTHH" or with full timestamp + offset
   function parseEIAPeriod(p){
     if(!p) return null;
-    // Hour-only format: treat as UTC hour
     if (/^\d{4}-\d{2}-\d{2}T\d{2}$/.test(p)) {
       const [Y,M,D,H] = p.replace('T','-').split('-').map(Number);
       return new Date(Date.UTC(Y, M-1, D, H, 0, 0));
     }
-    // Normalize space -> T if present
-    const s = p.replace(' ', 'T');
-    const d = new Date(s);
+    const s = p.replace(' ', 'T'); const d = new Date(s);
     return isNaN(d) ? null : d;
   }
 
-  // ---------- Persist simple settings
+  // -------- Persist settings
   const store = {
     get k(){ return localStorage.getItem('eia_key')||'' },
     set k(v){ localStorage.setItem('eia_key', v||'') },
@@ -158,74 +169,153 @@
     set ba(v){ localStorage.setItem('eia_ba', v||'PJM') },
     get win(){ return localStorage.getItem('eia_win')||'24' },
     set win(v){ localStorage.setItem('eia_win', v||'24') },
+    get price(){ return Number(localStorage.getItem('price_mwh')||'75') },
+    set price(v){ localStorage.setItem('price_mwh', String(v)) },
   };
   $('#eiaKey').value = store.k; $('#ba').value = store.ba; $('#win').value = store.win;
+  $('#price').value = store.price; $('#priceNum').value = store.price;
   $('#eiaKey').addEventListener('input', e=> store.k = e.target.value.trim());
   $('#ba').addEventListener('change', e=> store.ba = e.target.value);
   $('#win').addEventListener('change', e=> store.win = e.target.value);
+  $('#price').addEventListener('input', e=> { $('#priceNum').value = e.target.value; store.price = e.target.value; updateMoney(); });
+  $('#priceNum').addEventListener('input', e=> { $('#price').value = e.target.value||0; store.price = e.target.value||0; updateMoney(); });
 
-  // ---------- Chart handles
-  let demandChart, mixChart;
+  // -------- Charts
+  let demandChart, fuelTSChart;
   function ensureCharts(){
     if(!demandChart){
       demandChart = new Chart($('#chartDemand'), {
         type:'line',
-        data:{ labels:[], datasets:[{ label:'Demand (MW)', data:[] }] },
-        options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ ticks:{ maxRotation:0 }}, y:{ beginAtZero:true }}}
+        data:{ labels:[], datasets:[
+          { label:'Demand (MW)', data:[], borderWidth:2, tension:.25 },
+          { label:'Forecast (MW)', data:[], borderWidth:2, tension:.25, borderDash:[6,6] }
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false,
+          interaction:{ mode:'index', intersect:false },
+          scales:{ x:{ ticks:{ maxRotation:0 }}, y:{ beginAtZero:true } }
+        }
       });
     }
-    if(!mixChart){
-      mixChart = new Chart($('#chartMix'), {
-        type:'doughnut',
-        data:{ labels:[], datasets:[{ data:[] }] },
-        options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' }}}
+    if(!fuelTSChart){
+      fuelTSChart = new Chart($('#chartFuelTS'), {
+        type:'line',
+        data:{ labels:[], datasets:[] },
+        options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+          plugins:{ legend:{ position:'bottom' }},
+          scales:{ x:{ stacked:true }, y:{ beginAtZero:true, stacked:true } }
+        }
       });
     }
   }
 
-  // ---------- EIA 930 fetchers
-  async function eiaFetchDemand(key, ba, hours){
-    const end = new Date();
-    const start = new Date(end.getTime() - Number(hours)*3600*1000);
+  // -------- EIA fetchers
+  async function eiaFetchRegion(key, ba, hours, typeCode){
+    const end = new Date(); const start = new Date(end.getTime() - Number(hours)*3600*1000);
     const url = new URL('https://api.eia.gov/v2/electricity/rto/region-data/data/');
     url.searchParams.set('api_key', key);
-    url.searchParams.set('frequency', 'hourly');
-    url.searchParams.append('data[0]', 'value');
+    url.searchParams.set('frequency','hourly');
+    url.searchParams.append('data[0]','value');
     url.searchParams.append('facets[respondent][]', ba);
-    url.searchParams.append('facets[type][]', 'D'); // Demand
-    url.searchParams.set('start', toEIAISO(start));
-    url.searchParams.set('end', toEIAISO(end));
-    const r = await fetch(url);
-    if(!r.ok) throw new Error('EIA demand failed');
-    const j = await r.json();
-    return (j?.response?.data||[]).sort((a,b)=> new Date(a.period) - new Date(b.period));
+    url.searchParams.append('facets[type][]', typeCode); // D, DF, NG, NI etc.
+    url.searchParams.set('start', toEIAISO(start)); url.searchParams.set('end', toEIAISO(end));
+    const r = await fetch(url); if(!r.ok) throw new Error('EIA region '+typeCode+' failed');
+    const j = await r.json(); return (j?.response?.data||[]).sort((a,b)=> new Date(a.period)-new Date(b.period));
   }
 
-  async function eiaFetchGenMix(key, ba){
-    // Last 1–2 hours of net generation by fuel
-    const end = new Date();
-    const start = new Date(end.getTime() - 2*3600*1000);
-    const url = new URL('https://api.eia.gov/v2/electricity/rto/region-data/data/');
+  async function eiaFetchFuelTimeSeries(key, ba, hours){
+    const end = new Date(); const start = new Date(end.getTime() - Number(hours)*3600*1000);
+    const url = new URL('https://api.eia.gov/v2/electricity/rto/fuel-type-data/data/');
     url.searchParams.set('api_key', key);
-    url.searchParams.set('frequency', 'hourly');
-    url.searchParams.append('data[0]', 'value');
+    url.searchParams.set('frequency','hourly');
+    url.searchParams.append('data[0]','value');
     url.searchParams.append('facets[respondent][]', ba);
-    url.searchParams.append('facets[type][]', 'NG'); // Net Generation
-    url.searchParams.set('start', toEIAISO(start));
-    url.searchParams.set('end', toEIAISO(end));
-    const r = await fetch(url);
-    if(!r.ok) throw new Error('EIA gen failed');
-    const j = await r.json();
-    const rows = (j?.response?.data||[]);
-    // Keep the latest hour and roll up by fuel-type
-    rows.sort((a,b)=> new Date(b.period) - new Date(a.period));
-    const latestHr = rows.length? rows[0].period : null;
-    const byFuel = {};
-    for(const row of rows){ if(row.period!==latestHr) continue; const f = row.fueltype||'OTH'; byFuel[f] = (byFuel[f]||0) + Number(row.value||0); }
-    return { period: latestHr, mix: byFuel };
+    url.searchParams.set('start', toEIAISO(start)); url.searchParams.set('end', toEIAISO(end));
+    const r = await fetch(url); if(!r.ok) throw new Error('EIA fuel series failed');
+    const rows = (await r.json())?.response?.data || [];
+    rows.sort((a,b)=> new Date(a.period)-new Date(b.period));
+    // Group by period → fuel → value
+    const fuelset = new Set(); const map = new Map();
+    for(const row of rows){
+      const t = row.period; const f = row.fueltype||'OTH'; fuelset.add(f);
+      if(!map.has(t)) map.set(t,{});
+      map.get(t)[f] = (map.get(t)[f]||0) + Number(row.value||0);
+    }
+    const times = Array.from(map.keys());
+    const fuels = Array.from(fuelset);
+    const byFuel = {}; for(const f of fuels){ byFuel[f] = times.map(t=> (map.get(t)[f]||0)); }
+    return { times, fuels, byFuel };
   }
 
-  // ---------- Main
+  async function eiaFetchInterchangeNet(key, ba, hours){
+    const end = new Date(); const start = new Date(end.getTime() - Number(hours)*3600*1000);
+    const url = new URL('https://api.eia.gov/v2/electricity/rto/interchange-data/data/');
+    url.searchParams.set('api_key', key);
+    url.searchParams.set('frequency','hourly');
+    url.searchParams.append('data[0]','value');
+    // Pull both directions that touch BA
+    url.searchParams.append('facets[fromba][]', ba);
+    url.searchParams.append('facets[toba][]', ba);
+    url.searchParams.set('start', toEIAISO(start)); url.searchParams.set('end', toEIAISO(end));
+    const r = await fetch(url); if(!r.ok) throw new Error('EIA interchange failed');
+    const rows = (await r.json())?.response?.data || [];
+    // Net = sum(imports) - sum(exports)
+    let imp = 0, exp = 0; const latestByPair = {};
+    for(const row of rows){
+      const v = Number(row.value||0);
+      if(row.toba===ba) imp += v; else if(row.fromba===ba) exp += v;
+      // keep last hour per pair for "top partners"
+      const k = row.fromba+'>'+row.toba;
+      if(!latestByPair[k] || new Date(row.period)>new Date(latestByPair[k].period)) latestByPair[k]=row;
+    }
+    const net = imp - exp;
+    // Build top partners snapshot (latest hour)
+    const latestHr = rows.length? rows.map(r=>r.period).sort().slice(-1)[0] : null;
+    const partners = [];
+    if(latestHr){
+      for(const r of Object.values(latestByPair)){
+        if(r.period!==latestHr) continue;
+        if(r.toba===ba) partners.push({name:r.fromba, dir:'import', mw:Number(r.value||0)});
+        if(r.fromba===ba) partners.push({name:r.toba, dir:'export', mw:-Number(r.value||0)});
+      }
+      partners.sort((a,b)=> Math.abs(b.mw)-Math.abs(a.mw));
+    }
+    return { net, partners, latestHr };
+  }
+
+  // -------- UI builders
+  const FUEL_NAMES = {NG:'Gas', COL:'Coal', NUC:'Nuclear', WND:'Wind', SUN:'Solar', WAT:'Hydro', OIL:'Oil', OTH:'Other'};
+  const FUEL_ORDER = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH'];
+
+  function renderFuelCards(mixObj, totalMW, price){
+    const el = $('#fuelCards'); el.innerHTML = '';
+    const fuels = Object.keys(mixObj);
+    fuels.sort((a,b)=> FUEL_ORDER.indexOf(a)-FUEL_ORDER.indexOf(b));
+    for(const f of fuels){
+      const mw = mixObj[f]||0; const share = totalMW>0 ? (mw/totalMW) : 0;
+      const revH = share * price * totalMW; // split revenue by share
+      const card = document.createElement('div'); card.className = 'fuel';
+      card.innerHTML = `
+        <div class="row"><div><span class="badge2">${FUEL_NAMES[f]?.[0]||'?'}</span> <b>${FUEL_NAMES[f]||f}</b></div>
+             <div class="money">${fmtNum(mw)} MW</div></div>
+        <div class="row sub"><div>${(share*100).toFixed(1)}% share</div><div>${fmtMoney(revH)}/h</div></div>
+        <div class="sep"></div>
+        <div class="mini">Assumes uniform price $/MWh across fuels for an at-a-glance revenue split.</div>`;
+      el.appendChild(card);
+    }
+  }
+
+  function updateMoney(){
+    const price = Number($('#priceNum').value||0);
+    const txt = $('#kpiDemand').textContent.replace(/[, MW]/g,'');
+    const load = Number(txt)||0;
+    $('#kpiRev').textContent = fmtMoney(price * load);
+    // If we have lastMix cached, update fuel card money split quickly
+    if(window.__lastMix && load>0){
+      renderFuelCards(window.__lastMix, load, price);
+    }
+  }
+
+  // -------- Main loader
   async function loadAll(){
     const key = ($('#eiaKey').value||'').trim();
     const ba = $('#ba').value;
@@ -236,45 +326,66 @@
     ensureCharts();
 
     try{
-      const [dRows, gen] = await Promise.all([
-        eiaFetchDemand(key, ba, hours),
-        eiaFetchGenMix(key, ba)
+      // Region: actual demand + forecast
+      const [act, fcast] = await Promise.all([
+        eiaFetchRegion(key, ba, hours, 'D'),
+        eiaFetchRegion(key, ba, hours, 'DF')
       ]);
 
-      // Demand chart
-      const labels = dRows
-        .map(r=> parseEIAPeriod(r.period))
-        .map(d => d ? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00` : '');
-      const vals = dRows.map(r=> Number(r.value||0));
+      const labels = act.map(r=> parseEIAPeriod(r.period))
+                        .map(d=> d ? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00` : '');
+      const valsAct = act.map(r=> Number(r.value||0));
+      // Align forecast by period
+      const fMap = new Map(fcast.map(r=> [r.period, Number(r.value||0)]));
+      const valsFc = act.map(r=> fMap.get(r.period) ?? null);
+
       demandChart.data.labels = labels;
-      demandChart.data.datasets[0].data = vals;
+      demandChart.data.datasets[0].data = valsAct;
+      demandChart.data.datasets[1].data = valsFc;
       demandChart.update();
 
-      // KPIs
-      const last = dRows[dRows.length-1];
+      const last = act[act.length-1];
       $('#kpiDemand').textContent = last? `${fmtNum(last.value)} MW` : '—';
       const lastDt = parseEIAPeriod(last?.period);
       $('#kpiTime').textContent = lastDt ? lastDt.toLocaleString() : '—';
 
-      // Mix chart
-      const mix = gen.mix || {};
-      const order = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH'];
-      const labelsMix = Object.keys(mix).sort((a,b)=> order.indexOf(a)-order.indexOf(b));
-      const dataMix = labelsMix.map(k=> mix[k]);
-      mixChart.data.labels = labelsMix.map(k=> ({NG:'Gas',COL:'Coal',NUC:'Nuclear',WND:'Wind',SUN:'Solar',WAT:'Hydro',OIL:'Oil',OTH:'Other'}[k]||k));
-      mixChart.data.datasets[0].data = dataMix;
-      mixChart.update();
-      const top = labelsMix.map((k,i)=>({k, v:dataMix[i]})).sort((a,b)=>b.v-a.v)[0];
-      $('#kpiFuel').textContent = top? `${({NG:'Gas',COL:'Coal',NUC:'Nuclear',WND:'Wind',SUN:'Solar',WAT:'Hydro',OIL:'Oil',OTH:'Other'}[top.k]||top.k)} (${fmtNum(top.v)} MW)` : '—';
+      // Fuel time-series
+      const fuelTS = await eiaFetchFuelTimeSeries(key, ba, hours);
+      const fuelLabels = fuelTS.times.map(t=> {
+        const d = parseEIAPeriod(t); return d? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`:'';
+      });
+      fuelTSChart.data.labels = fuelLabels;
+      // Make ordered datasets
+      fuelTSChart.data.datasets = FUEL_ORDER.filter(f=> fuelTS.fuels.includes(f)).map((f,i)=>({
+        label: FUEL_NAMES[f]||f, data: fuelTS.byFuel[f]||[], borderWidth:1, fill:true, tension:.2
+      }));
+      fuelTSChart.update();
+
+      // Latest mix for cards (use last timestamp)
+      const lastIdx = fuelTS.times.length - 1;
+      const lastMix = {};
+      for(const f of fuelTS.fuels){ lastMix[f] = (fuelTS.byFuel[f]||[])[lastIdx]||0; }
+      window.__lastMix = lastMix; // cache
+      const currentLoad = Number(last?.value||0);
+      renderFuelCards(lastMix, currentLoad, Number($('#priceNum').value||0));
+
+      // Interchange (net)
+      const inter = await eiaFetchInterchangeNet(key, ba, hours);
+      const netStr = (inter.net>=0? '+' : '−') + fmtNum(Math.abs(inter.net)) + ' MW';
+      $('#kpiInterchg').textContent = netStr;
 
       $('#status').textContent = 'OK';
+
+      // Update revenue tile
+      updateMoney();
+
     }catch(e){
       console.error(e);
       $('#status').textContent = 'Error fetching data (check key / network)';
     }
   }
 
-  // Wire up + auto-start if a key is present
+  // Wire up + auto
   document.getElementById('btnLoad').addEventListener('click', loadAll);
   const qsKey = new URLSearchParams(location.search).get('eia');
   if(qsKey){ document.getElementById('eiaKey').value = qsKey; store.k = qsKey; }
