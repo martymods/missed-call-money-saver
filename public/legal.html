@@ -1,4 +1,4 @@
-<!-- packages.html -->
+<!-- packages.html (Stripe-enabled) -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,27 +8,19 @@
   <meta name="description" content="Nine gamified packages for law firms: from solo boost to fortress‑grade enterprise. Dynamic pricing, automation, and security options."/>
   <link rel="canonical" href="https://www.delcotechdivision.com/packages.html"/>
   <style>
-    :root{
-      --ink:#0e1020; --muted:#6b7280; --edge:#e7ebf5; --bg:#f7f8fc;
-      --brand:#1955ff; --brand-2:#0f3ed6; --ok:#16a34a; --warn:#f59e0b; --danger:#ef4444;
-      --card:#ffffff; --shadow:0 14px 34px rgba(16,30,80,.12);
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0}
+    :root{ --ink:#0e1020; --muted:#6b7280; --edge:#e7ebf5; --bg:#f7f8fc; --brand:#1955ff; --brand-2:#0f3ed6; --ok:#16a34a; --warn:#f59e0b; --danger:#ef4444; --card:#ffffff; --shadow:0 14px 34px rgba(16,30,80,.12) }
+    *{box-sizing:border-box} html,body{margin:0}
     body{font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;color:var(--ink);background:linear-gradient(180deg,#fff,#fbfcff)}
-    a{color:var(--brand);text-decoration:none}
-    a:hover{text-decoration:underline}
-
-    /* Header */
+    a{color:var(--brand);text-decoration:none} a:hover{text-decoration:underline}
     header{max-width:1200px;margin:0 auto;padding:18px;display:flex;align-items:center;gap:14px;justify-content:space-between}
     .logo{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.2px}
     .badge{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--brand-2),var(--brand));display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)}
     nav{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;border-radius:12px;border:1px solid #dfe6ff;background:#f6f8ff;color:#0f1b46;font-weight:800}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;border-radius:12px;border:1px solid #dfe6ff;background:#f6f8ff;color:#0f1b46;font-weight:800;cursor:pointer}
+    .btn[disabled]{opacity:.6;pointer-events:none}
     .btn.primary{background:var(--brand);border-color:#194df7;color:#fff}
     .btn.ghost{background:#fff;border-color:#e6eafd}
 
-    /* Hero */
     .hero{max-width:1200px;margin:8px auto 0;padding:16px 18px 24px;display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:center}
     .hero .card{background:radial-gradient(120% 160% at -10% 0%, #eef3ff, #fff 30%);border:1px solid #e6eafb;border-radius:20px;padding:22px;box-shadow:var(--shadow)}
     h1{font-size:38px;line-height:1.05;margin:0 0 8px}
@@ -37,43 +29,17 @@
     .chip{background:#0f3ed6; color:#fff; padding:6px 10px; border-radius:999px; font-weight:800; border:1px solid rgba(255,255,255,.35)}
     .hero .pane{background:#0f1a3d;color:#e6ebff;border:1px solid #1c2a66;border-radius:18px;padding:16px;box-shadow:0 20px 60px rgba(15,26,61,.25)}
 
-    /* Config Bar */
     .config{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:10px}
     .tile{background:#fff;border:1px solid #e9ecf7;border-radius:14px;padding:12px;box-shadow:var(--shadow)}
     .tile h3{margin:0 0 8px;font-size:14px;color:#1f2a44}
-    .slider{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
-    input[type=range]{width:100%}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #e0e6ff;border-radius:999px;background:#f6f8ff;font-weight:800}
-    .select{width:100%;padding:10px;border:1px solid #e0e6ff;border-radius:10px;background:#fff}
-/* Make slider easy to grab on desktop and ensure it's on top */
-.slider{ grid-template-columns: auto 1fr auto auto; align-items:center; gap:10px }
-.slider input[type=range]{
-  -webkit-appearance:none; appearance:none;
-  width:100%; height:12px; border-radius:999px;
-  background:#e6eafb; outline:0; cursor:pointer;
-  position:relative; z-index:2;  /* keep above neighbors */
-}
-.slider .spin{
-  width:38px; height:38px; border-radius:10px; border:1px solid #e0e6ff;
-  background:#f6f8ff; font-weight:900; font-size:18px; line-height:1;
-  display:grid; place-items:center; cursor:pointer;
-}
-.slider .spin:active{ transform:translateY(1px) }
+    .slider{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center}
+    input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:12px;border-radius:999px;background:#e6eafb;outline:0;cursor:pointer;position:relative;z-index:2}
+    .spin{width:38px;height:38px;border-radius:10px;border:1px solid #e0e6ff;background:#f6f8ff;font-weight:900;font-size:18px;line-height:1;display:grid;place-items:center;cursor:pointer}
+    .spin:active{transform:translateY(1px)}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--brand);border:2px solid #fff;box-shadow:0 2px 6px rgba(16,30,80,.3);cursor:pointer}
+    input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--brand);border:2px solid #fff;box-shadow:0 2px 6px rgba(16,30,80,.3);cursor:pointer}
+    input[type=range]::-moz-range-track{height:12px;background:#e6eafb;border-radius:999px}
 
-/* Big thumbs so it’s easy to drag */
-.slider input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
-  background:var(--brand); border:2px solid #fff; box-shadow:0 2px 6px rgba(16,30,80,.3); cursor:pointer;
-}
-.slider input[type=range]::-moz-range-thumb{
-  width:20px; height:20px; border-radius:50%;
-  background:var(--brand); border:2px solid #fff; box-shadow:0 2px 6px rgba(16,30,80,.3); cursor:pointer;
-}
-.slider input[type=range]::-moz-range-track{
-  height:12px; background:#e6eafb; border-radius:999px;
-}
-
-    /* Packages grid */
     .wrap{max-width:1200px;margin:8px auto 40px;padding:0 18px}
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
     @media (max-width:980px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
@@ -88,7 +54,6 @@
     .inc{font-size:12px;font-weight:800;background:#f7f9ff;border:1px solid #e6eafb;border-radius:999px;padding:4px 8px}
     .cta{display:flex;gap:8px;flex-wrap:wrap}
 
-    /* Modal */
     .modal{position:fixed;inset:0;background:rgba(0,10,30,.62);backdrop-filter:saturate(130%) blur(6px);display:none;align-items:center;justify-content:center;z-index:50}
     .modal .sheet{width:min(720px,94vw);background:#fff;border:1px solid #e6eafb;border-radius:16px;box-shadow:0 30px 80px rgba(6,18,60,.3)}
     .modal header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #edf1ff}
@@ -99,14 +64,12 @@
     .field input, .field select, .field textarea{padding:12px;border:1px solid #e1e7ff;border-radius:10px}
     .hint{font-size:12px;color:var(--muted)}
 
-    /* Enterprise Section */
     .enterprise{margin-top:24px}
     .accordion details{background:#0f1a3d;color:#e6ebff;border:1px solid #1c2a66;border-radius:14px;padding:12px}
     .accordion details+details{margin-top:10px}
     .accordion summary{cursor:pointer;font-weight:800}
     .accordion pre{white-space:pre-wrap;font-family:system-ui,Segoe UI,Roboto,Arial;font-size:14px;line-height:1.5;margin:10px 0 0}
 
-    /* Footer */
     footer{max-width:1200px;margin:20px auto 40px;padding:0 18px;color:#5b6272;font-size:13px}
   </style>
 </head>
@@ -135,12 +98,11 @@
         <div class="tile">
           <h3>1) Firm size</h3>
           <div class="slider">
-  <button class="spin dec" type="button" aria-label="Decrease">–</button>
-  <input id="attRange" type="range" min="1" max="200" step="1" value="3">
-  <button class="spin inc" type="button" aria-label="Increase">+</button>
-  <div class="pill"><b id="attCnt">3</b> attorneys</div>
-</div>
-
+            <button class="spin dec" type="button" aria-label="Decrease">–</button>
+            <input id="attRange" type="range" min="1" max="200" step="1" value="3">
+            <button class="spin inc" type="button" aria-label="Increase">+</button>
+            <div class="pill"><b id="attCnt">3</b> attorneys</div>
+          </div>
         </div>
         <div class="tile">
           <h3>2) Billing</h3>
@@ -208,120 +170,17 @@ Summarise the security implications of cloud services on organisations...
         </details>
         <details>
           <summary>Security in Development — approaches we align to</summary>
-          <pre>Security in Development
-Integrating security into development methodologies ensures software is safeguarded against vulnerabilities throughout its lifecycle. Various approaches incorporate security measures differently, aligning with their principles to address risks effectively while maintaining efficiency.
-
-Agile and Security
-Agile development prioritises iterative progress and collaboration, embedding security through continuous involvement and feedback.
-• Security requirements are integrated into user stories and acceptance criteria.
-• Regular iterations enable frequent security testing and updates.
-• Collaboration between developers, testers, and security experts ensures shared responsibility for security.
-• Security measures evolve in tandem with functional requirements.
-
-Waterfall and Security
-The Waterfall methodology follows a linear, sequential structure, embedding security into each phase distinctly.
-• Security is planned during the initial requirements gathering stage.
-• Design phases include detailed risk assessments and secure architecture planning.
-• Dedicated testing phases encompass thorough security testing and validation.
-• Compliance with security standards is emphasised through extensive documentation.
-
-DevOps and Security
-DevOps focuses on automation and collaboration, seamlessly integrating security practices within the development pipeline.
-• Automated security tools perform static and dynamic code analysis during CI/CD.
-• Security teams collaborate with developers and operations staff to ensure security is embedded from the outset.
-• Infrastructure as Code (IaC) incorporates secure configurations into deployment scripts.
-• Continuous monitoring and incident response capabilities enhance security post‑deployment.
-
-DevSecOps Approach
-DevSecOps extends DevOps by embedding security as a fundamental element at every stage of the development lifecycle.
-• Security tools are integrated into automated workflows and CI/CD pipelines.
-• Developers receive training to adopt secure coding practices and understand security vulnerabilities.
-• Threat modelling and risk assessments occur iteratively alongside development activities.
-• Automated compliance checks ensure adherence to security requirements without impeding delivery.
-
-Scaled Agile Framework (SAFe) and Security
-The Scaled Agile Framework integrates security across enterprise‑wide initiatives, aligning with organisational objectives.
-• Security is incorporated into architectural enablers and defined guardrails.
-• PI planning includes risk assessments and compliance reviews.
-• Security specialists contribute expertise within Agile Release Trains.
-• Teams adopt secure coding practices and utilise advanced security tools.
+          <pre>Agile • Waterfall • DevOps • DevSecOps • SAFe — we integrate safeguards throughout delivery and pipelines while keeping velocity high.
           </pre>
         </details>
         <details>
           <summary>Software Security Maturity — CMM / SAMM</summary>
-          <pre>Software Security Maturity
-Maturity models like CMM (Capability Maturity Model) and SAMM (Software Assurance Maturity Model) provide structured frameworks to evaluate and enhance software security practices.
-
-Capability Maturity Model (CMM)
-• Structured Framework: five levels from initial to optimising.
-• Process Standardisation: embed consistent security measures.
-• Risk Management: proactive identification and mitigation.
-• Integration with Software Development: align security with delivery.
-
-Software Assurance Maturity Model (SAMM)
-• Domain‑Specific Guidance across governance, construction, verification, deployment.
-• Actionable Roadmaps per maturity level.
-• Adaptability for organisations of all sizes.
-• Focus on Measurability: metrics for progress and effectiveness.
-
-Benefits of Using Maturity Models
-• Benchmarking & assessment against industry standards.
-• Continuous improvement over time.
-• Stakeholder alignment on priorities and progress.
-• Compliance and best‑practices adoption.
-          </pre>
-        </details>
-        <details>
-          <summary>Software & Third‑Party Integration Security</summary>
-          <pre>Software Integration Security
-Integrating commercial off‑the‑shelf (COTS) and open‑source software offers speed and savings but introduces risk.
-
-Risk Assessment of Software
-• Source Code Analysis (open‑source) for vulnerabilities and backdoors.
-• Vendor Security Practices (COTS): regular updates and patching.
-• Supply Chain Risk: dependencies and transitive vulns.
-• Licensing Compliance: obligations and restrictions.
-
-Patch Management and Updates
-Access Control and Authentication
-Vulnerability Monitoring
-Data Protection and Privacy
-• Encryption standards for data in transit/at rest.
-• Data minimisation; collect only what’s required.
-• Regulatory compliance (e.g., GDPR, HIPAA) as applicable.
-
-Third‑Party Service Risks
-• Data exposure via misconfigurations or weak access controls.
-• Data sovereignty concerns across jurisdictions.
-• Dependency on external security measures and SLAs.
-• Lifecycle management of integrations.
+          <pre>We assess and uplift your maturity with measurable roadmaps. Language kept deliberately high‑level; specifics are governed under NDA.
           </pre>
         </details>
         <details>
           <summary>Secure SDLC & Compliance</summary>
-          <pre>Secure Software Development
-Security is integral to the SDLC — address vulnerabilities at every phase.
-
-Requirements Analysis
-• Define security requirements alongside functional ones.
-• Threat modelling and compliance mapping.
-
-Secure Design Principles
-• Least privilege, defence‑in‑depth, fail‑safe defaults.
-• Secure patterns: input validation, output encoding.
-• Isolation for third‑party integrations.
-
-Secure Coding Practices
-• Validate inputs (prevent SQLi/XSS), use prepared statements.
-• Proper authN/authZ; encrypt sensitive data in transit & at rest.
-• Secure error handling; patch dependencies routinely.
-• Follow OWASP & CERT guidance.
-
-Security Compliance — Example: ISO/IEC 27001
-• Risk‑based ISMS with objectives and controls.
-• Operational controls incl. access, crypto, incident mgmt.
-• Audits & continuous improvement.
-• Align to data‑protection regulations.
+          <pre>Least privilege • defence‑in‑depth • threat modelling • secure coding • automated compliance checks • ISO/IEC 27001 alignment.
           </pre>
         </details>
       </div>
@@ -335,55 +194,53 @@ Security Compliance — Example: ISO/IEC 27001
 
   <!-- ===== Configurable endpoints (UPDATE THESE) ===== -->
   <script>
-    // IMPORTANT — set your webhook to log buyer info (Zapier, Make, custom API, etc.)
-    // Find this line quickly by searching: const LEAD_WEBHOOK = ''
+    // Optional: set your webhook to log buyer info (Zapier, Make, custom API, etc.)
     const LEAD_WEBHOOK = '';
-    // Optional: change thank-you path if you host elsewhere
-    // Find by searching: const THANKYOU_URL = 'thankyou.html'
-    const THANKYOU_URL = 'thankyou.html';
+
+    // Stripe dynamic checkout — uses your Node API from the other project
+    const CHECKOUT_ENDPOINT = '/api/deal/checkout/stripe';
+    const PARTNER_SLUG = 'delco-attorney'; // purely for metadata / success URL
+
+    // Track reps/campaigns (optional)
+    const QS = new URLSearchParams(location.search);
+    const REP = QS.get('rep') || '';
+    const DEAL_ID = 'law_' + Math.random().toString(36).slice(2,7) + Date.now().toString(36).slice(-4);
   </script>
 
   <script>
   /* ===== Catalog & Dynamic Pricing ===================================== */
   const FEATURE_CLASSES = [
-    'Lead Capture & Missed‑Call Textback', // 1
-    'Smart Intake & Qualification',        // 2
-    'Calendar + Payments',                 // 3
-    'CRM Sync & Reporting',                // 4
-    'Review Engine',                       // 5
-    'Ads Assist & Landing Pages',          // 6
-    'Local SEO & Listings',                // 7
-    'Brand Collateral & Video',            // 8
-    'Staff Automations & Playbooks',       // 9
-    'Secure Comms & Data Hygiene',         // 10
-    'Compliance & Audit Aids',             // 11
-    'Enterprise Governance & SIEM Hooks'   // 12
+    'Lead Capture & Missed‑Call Textback',
+    'Smart Intake & Qualification',
+    'Calendar + Payments',
+    'CRM Sync & Reporting',
+    'Review Engine',
+    'Ads Assist & Landing Pages',
+    'Local SEO & Listings',
+    'Brand Collateral & Video',
+    'Staff Automations & Playbooks',
+    'Secure Comms & Data Hygiene',
+    'Compliance & Audit Aids',
+    'Enterprise Governance & SIEM Hooks'
   ];
 
   const PACKAGES = [
-    { id:'solo',    lvl:'Level 1', name:'Solo Boost',        rarity:'Rookie',    baseM:199,  setup:299,  classes:[1,2,3,5] },
-    { id:'assoc',   lvl:'Level 2', name:'Associate Lift',    rarity:'Bronze',    baseM:349,  setup:499,  classes:[1,2,3,4,5] },
-    { id:'rain',    lvl:'Level 3', name:'Rainmaker',         rarity:'Silver',    baseM:599,  setup:999,  classes:[1,2,3,4,5,6] },
-    { id:'trial',   lvl:'Level 4', name:'Trial Boss',        rarity:'Gold',      baseM:899,  setup:1499, classes:[1,2,3,4,5,6,7] },
-    { id:'partner', lvl:'Level 5', name:'Partner Suite',     rarity:'Platinum',  baseM:1399, setup:2499, classes:[1,2,3,4,5,6,7,8] },
-    { id:'leader',  lvl:'Level 6', name:'Market Leader',     rarity:'Diamond',   baseM:1999, setup:3499, classes:[1,2,3,4,5,6,7,8,9] },
-    { id:'amicus',  lvl:'Level 7', name:'Amicus Elite',      rarity:'Legendary', baseM:2999, setup:4999, classes:[1,2,3,4,5,6,7,8,9,10] },
-    { id:'titan',   lvl:'Level 8', name:'Titanium Shield',   rarity:'Mythic',    baseM:4499, setup:7999, classes:[1,2,3,4,5,6,7,8,9,10,11] },
-    { id:'fort',    lvl:'Level 9', name:'Fortress Enterprise',rarity:'Ascendant', baseM:6999, setup:12000, classes:[1,2,3,4,5,6,7,8,9,10,11,12] }
+    { id:'solo',    lvl:'Level 1', name:'Solo Boost',         rarity:'Rookie',    baseM:199,  setup:299,  classes:[1,2,3,5] },
+    { id:'assoc',   lvl:'Level 2', name:'Associate Lift',     rarity:'Bronze',    baseM:349,  setup:499,  classes:[1,2,3,4,5] },
+    { id:'rain',    lvl:'Level 3', name:'Rainmaker',          rarity:'Silver',    baseM:599,  setup:999,  classes:[1,2,3,4,5,6] },
+    { id:'trial',   lvl:'Level 4', name:'Trial Boss',         rarity:'Gold',      baseM:899,  setup:1499, classes:[1,2,3,4,5,6,7] },
+    { id:'partner', lvl:'Level 5', name:'Partner Suite',      rarity:'Platinum',  baseM:1399, setup:2499, classes:[1,2,3,4,5,6,7,8] },
+    { id:'leader',  lvl:'Level 6', name:'Market Leader',      rarity:'Diamond',   baseM:1999, setup:3499, classes:[1,2,3,4,5,6,7,8,9] },
+    { id:'amicus',  lvl:'Level 7', name:'Amicus Elite',       rarity:'Legendary', baseM:2999, setup:4999, classes:[1,2,3,4,5,6,7,8,9,10] },
+    { id:'titan',   lvl:'Level 8', name:'Titanium Shield',    rarity:'Mythic',    baseM:4499, setup:7999, classes:[1,2,3,4,5,6,7,8,9,10,11] },
+    { id:'fort',    lvl:'Level 9', name:'Fortress Enterprise',rarity:'Ascendant', baseM:6999, setup:12000,classes:[1,2,3,4,5,6,7,8,9,10,11,12] }
   ];
 
-  const SIZE_MULT = [
-    { max:3,   m:1.00 },
-    { max:10,  m:1.60 },
-    { max:25,  m:2.40 },
-    { max:50,  m:3.40 },
-    { max:100, m:5.50 },
-    { max:9999,m:8.50 }
-  ];
+  const SIZE_MULT = [ { max:3,m:1.00 }, { max:10,m:1.60 }, { max:25,m:2.40 }, { max:50,m:3.40 }, { max:100,m:5.50 }, { max:9999,m:8.50 } ];
   const SEC_MULT = { standard:1.00, shield:1.12, fortress:1.28 };
-  const BILLING_MULT = { monthly:1.0, annual:(12*0.85) }; // 15% savings on annual
+  const BILLING_MULT = { monthly:1.0, annual:(12*0.85) }; // 15% off annual
 
-  const $ = sel => document.querySelector(sel);
+  const $ = s => document.querySelector(s);
   const grid = $('#pkgGrid');
   const attRange = $('#attRange');
   const attCnt = $('#attCnt');
@@ -392,17 +249,16 @@ Security Compliance — Example: ISO/IEC 27001
   $('#yr').textContent = new Date().getFullYear();
 
   function r50(n){ return Math.round(n/50)*50; }
-  function money(n){ return n.toLocaleString(undefined, {maximumFractionDigits:0}); }
-
+  function money(n){ return n.toLocaleString(undefined,{maximumFractionDigits:0}); }
   function sizeMult(n){ return SIZE_MULT.find(x=>n<=x.max).m }
 
   function priceFor(pkg){
     const n = +attRange.value; const b = billing.value; const s = sec.value;
     const mult = sizeMult(n) * SEC_MULT[s];
     const m = pkg.baseM * mult * (b==='annual' ? (BILLING_MULT.annual/12) : 1);
-    const setup = pkg.setup * (SEC_MULT[s]===1?1:1.05); // small bump on setup when security ↑
+    const setup = pkg.setup * (SEC_MULT[s]===1?1:1.05);
     const monthly = r50(m);
-    const total = b==='annual' ? r50(monthly*12*0.85) : monthly; // safeguard
+    const total = b==='annual' ? r50(monthly*12*0.85) : monthly;
     return { monthly, setup, total };
   }
 
@@ -422,9 +278,7 @@ Security Compliance — Example: ISO/IEC 27001
           <div class="rarity">${p.rarity}</div>
         </div>
         <div class="price"><span class="big">$${money(pr.total)}</span><span class="hint">${billing.value==='annual'?' /year (equiv. $'+money(pr.monthly)+'/mo)':' /mo'} • Setup $${money(pr.setup)}</span></div>
-        <div class="includes">
-          ${p.classes.map(i=>`<span class="inc">${i}. ${FEATURE_CLASSES[i-1].split(' ')[0]}</span>`).join('')}
-        </div>
+        <div class="includes">${p.classes.map(i=>`<span class="inc">${i}. ${FEATURE_CLASSES[i-1].split(' ')[0]}</span>`).join('')}</div>
         <div class="hint">Full view: ${p.classes.length} of 12 classes</div>
         <div class="cta">
           <button class="btn primary" data-buy="${p.id}">Buy ${p.name}</button>
@@ -433,27 +287,14 @@ Security Compliance — Example: ISO/IEC 27001
       grid.appendChild(card);
     });
   }
-
   attRange.addEventListener('input', render);
   billing.addEventListener('change', render);
   sec.addEventListener('change', render);
-
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.spin');
+    if(btn){ const dir = btn.classList.contains('inc')?1:-1; let v = +attRange.value + dir; v = Math.min(+attRange.max, Math.max(+attRange.min, v)); attRange.value = String(v); render(); }
+  });
   render();
-
-// Desktop-friendly +/- controls for the Attorneys slider
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.spin');
-  if(!btn) return;
-  const dir = btn.classList.contains('inc') ? 1 : -1;
-  const step = parseInt(attRange.step || '1', 10);
-  const min  = parseInt(attRange.min  || '1', 10);
-  const max  = parseInt(attRange.max  || '200', 10);
-  let val = parseInt(attRange.value || '1', 10) + dir * step;
-  val = Math.min(max, Math.max(min, val));
-  attRange.value = String(val);
-  render();
-});
-
 
   /* ===== Buy Flow (Modal) =============================================== */
   const modal = document.createElement('div');
@@ -486,10 +327,10 @@ document.addEventListener('click', (e) => {
         <div class="field"><label>Notes</label><textarea id="fNotes" rows="3" placeholder="What matters most? Intake? Reviews? Security?"></textarea></div>
         <div class="row" style="margin-top:8px">
           <div class="pill" id="priceBadge">$0</div>
-          <div class="hint">We’ll email onboarding within minutes. No card charged here—human‑verified first.</div>
+          <div class="hint">Card is charged on Stripe. You’ll see the thank‑you screen after checkout.</div>
         </div>
         <div class="row" style="margin-top:10px">
-          <button id="btnPlace" class="btn primary">Place order</button>
+          <button id="btnPlace" class="btn primary">Place order → Pay</button>
           <button id="btnCancel" class="btn">Cancel</button>
         </div>
       </div>
@@ -508,37 +349,34 @@ document.addEventListener('click', (e) => {
 
   document.addEventListener('click', (e)=>{
     const buy = e.target.closest('[data-buy]');
-    if(buy){
-      const pkg = PACKAGES.find(p=>p.id===buy.dataset.buy);
-      openModal(pkg);
-      modal.dataset.pkg = pkg.id;
-    }
+    if(buy){ const pkg = PACKAGES.find(p=>p.id===buy.dataset.buy); openModal(pkg); modal.dataset.pkg = pkg.id; }
     if(e.target.id==='xClose' || e.target.id==='btnCancel'){ closeModal(); }
     const view = e.target.closest('[data-view]');
-    if(view){
-      const pkg = PACKAGES.find(p=>p.id===view.dataset.view);
-      alert(`${pkg.name} includes:\n\n` + pkg.classes.map(i=>`${i}. ${FEATURE_CLASSES[i-1]}`).join('\n'));
-    }
+    if(view){ const pkg = PACKAGES.find(p=>p.id===view.dataset.view); alert(`${pkg.name} includes:\n\n` + pkg.classes.map(i=>`${i}. ${FEATURE_CLASSES[i-1]}`).join('\n')); }
   });
 
-  function couponDiscount(code){
-    if(!code) return 0;
-    const c = code.trim().toUpperCase();
-    if(c==='DELCOPIONEER') return 0.10;
-    if(c==='VIPCOUNSEL') return 0.20;
-    return 0;
+  function couponDiscount(code){ if(!code) return 0; const c = code.trim().toUpperCase(); if(c==='DELCOPIONEER') return 0.10; if(c==='VIPCOUNSEL') return 0.20; return 0; }
+  function beacon(url, data){ try{ const blob = new Blob([JSON.stringify(data)], {type:'application/json'}); if(navigator.sendBeacon){ navigator.sendBeacon(url, blob); return true; } fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)}); return true; }catch{ return false; } }
+
+  async function startStripeCheckout(payload){
+    // Decide charge amount: Monthly → first month + setup. Annual → full year (discount already applied)
+    const amt = (payload.config.billing==='annual' ? (payload.price.total) : (payload.price.monthly + payload.price.setup));
+    const amountCents = Math.max(100, Math.round(amt * 100));
+    const summary = `${payload.pkg.name} (${payload.pkg.lvl} — ${payload.config.security}) · ${payload.config.billing} · ${payload.config.attorneys} attys · ${payload.buyer.firm}`;
+
+    // Optional lead log like the other project
+    try { fetch('/api/lead', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'begin_checkout', partnerSlug: PARTNER_SLUG, rep: REP, dealId: DEAL_ID, amount: amountCents }) }); } catch {}
+
+    const r = await fetch(CHECKOUT_ENDPOINT, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ amountCents, summary, partnerSlug: PARTNER_SLUG, rep: REP, dealId: DEAL_ID })
+    }).then(r=>r.json()).catch(()=>null);
+
+    if (r?.url) { window.location.href = r.url; return; }
+    throw new Error('stripe_unavailable');
   }
 
-  function beacon(url, data){
-    try{
-      const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
-      if(navigator.sendBeacon){ navigator.sendBeacon(url, blob); return true; }
-      fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
-      return true;
-    }catch{ return false; }
-  }
-
-  function placeOrder(){
+  async function placeOrder(btn){
     const pkg = PACKAGES.find(p=>p.id===modal.dataset.pkg);
     const pr0 = priceFor(pkg);
     const promo = $('#fPromo').value || '';
@@ -550,30 +388,28 @@ document.addEventListener('click', (e) => {
       pkg: { id: pkg.id, name: pkg.name, lvl: pkg.lvl, rarity: pkg.rarity, classes: pkg.classes },
       config: { attorneys: +$('#fAtt').value||+attRange.value, billing: billing.value, security: sec.value },
       price: pr, promo,
-      buyer: { firm: $('#fFirm').value, site: $('#fSite').value, name: $('#fName').value, role: $('#fRole').value, email: $('#fEmail').value, phone: $('#fPhone').value, state: $('#fState').value, notes: $('#fNotes').value }
+      buyer: { firm: $('#fFirm').value, site: $('#fSite').value, name: $('#fName').value, role: $('#fRole').value, email: $('#fEmail').value, phone: $('#fPhone').value, state: $('#fState').value, notes: $('#fNotes').value },
+      rep: REP, dealId: DEAL_ID
     };
 
-    // Local log for you
-    const orders = JSON.parse(localStorage.getItem('orders')||'[]');
-    orders.push(payload);
+    // Local log for your records
+    const orders = JSON.parse(localStorage.getItem('orders')||'[]'); orders.push(payload);
     localStorage.setItem('orders', JSON.stringify(orders));
     localStorage.setItem('last_order', JSON.stringify(payload));
 
-    // Optional webhook to your CRM / Zapier / Sheet Apps Script
+    // Optional webhook
     if(LEAD_WEBHOOK){ beacon(LEAD_WEBHOOK, payload); }
 
-    // Redirect to thank you
-    window.location.href = THANKYOU_URL + '?pkg=' + encodeURIComponent(pkg.id);
+    // Begin Stripe checkout
+    btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Redirecting to Stripe…';
+    try { await startStripeCheckout(payload); }
+    catch(e){ btn.disabled=false; btn.textContent = orig; alert('Could not start checkout. If this persists, contact support.'); }
   }
 
   document.addEventListener('click', (e)=>{
     if(e.target && e.target.id==='btnPlace'){
-      // lightweight required check
-      if(!$('#fFirm').value || !$('#fName').value || !$('#fEmail').value){
-        alert('Please enter Firm, Buyer name and Email');
-        return;
-      }
-      placeOrder();
+      if(!$('#fFirm').value || !$('#fName').value || !$('#fEmail').value){ alert('Please enter Firm, Buyer name and Email'); return; }
+      placeOrder(e.target);
     }
   });
   </script>
