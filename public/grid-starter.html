@@ -49,7 +49,6 @@
     }
   </style>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 </head>
 <body>
   <header>
@@ -121,6 +120,9 @@
   <footer>
     <div>Free-tier sources: EIA Form 930 region data (demand & net generation). Add PJM prices and emissions later with your own credentials.</div>
   </footer>
+
+  <!-- Load Chart.js BEFORE your inline code (no defer) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <script>
   // ---------- Helpers
@@ -272,13 +274,11 @@
     }
   }
 
-  // Wire up
-  $('#btnLoad').addEventListener('click', loadAll);
-
-  // Auto-start if key present or provided via ?eia=KEY
+  // Wire up + auto-start if a key is present
+  document.getElementById('btnLoad').addEventListener('click', loadAll);
   const qsKey = new URLSearchParams(location.search).get('eia');
-  if(qsKey){ $('#eiaKey').value = qsKey; store.k = qsKey; }
-  if($('#eiaKey').value){ loadAll(); }
+  if(qsKey){ document.getElementById('eiaKey').value = qsKey; store.k = qsKey; }
+  if(document.getElementById('eiaKey').value){ loadAll(); }
   </script>
 </body>
 </html>
