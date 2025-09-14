@@ -22,10 +22,11 @@
     .wrap{
       max-width:1280px;margin:10px auto 40px;padding:0 18px;
       display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;
+      min-width:0;
     }
     @media (max-width:980px){.wrap{grid-template-columns:1fr}}
 
-    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:14px;box-shadow:var(--shadow);min-width:0}
     h1{font-size:24px;margin:0} h2{font-size:16px;margin:0 0 8px}
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
     input,select,button{padding:10px;border:1px solid #e1e7ff;border-radius:10px;font:inherit}
@@ -37,6 +38,7 @@
     /* charts row; force both columns to be shrinkable */
     .grid{
       display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;
+      min-width:0;
     }
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
 
@@ -48,9 +50,9 @@
     footer{max-width:1280px;margin:8px auto 30px;padding:0 18px;color:#5b6272;font-size:12px}
 
     /* chart height lock */
-    .chartbox{ position:relative; height:320px; width:100%; }
+    .chartbox{ position:relative; height:320px; width:100%; min-width:0; }
     @media (max-width:600px){ .chartbox{ height:260px; } }
-    .chartbox canvas{ height:100% !important; width:100% !important; display:block; }
+    .chartbox canvas{ height:100% !important; width:100% !important; max-width:100% !important; display:block; }
 
     /* fuel cards */
     .fuels{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -68,6 +70,7 @@
     /* weather row; make the chart column shrinkable */
     .wx{
       display:grid;grid-template-columns:360px minmax(0,1fr);gap:12px;
+      min-width:0;
     }
     @media (max-width:1000px){.wx{grid-template-columns:1fr}}
 
@@ -243,7 +246,7 @@
           { label:'Demand (MW)', data:[], borderWidth:2, tension:.25 },
           { label:'Forecast (MW)', data:[], borderWidth:2, tension:.25, borderDash:[6,6] }
         ]},
-        options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+        options:{ responsive:true, responsiveAnimationDuration:0, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
           scales:{ x:{ ticks:{ maxRotation:0 }}, y:{ beginAtZero:true } }
         }
       });
@@ -252,7 +255,7 @@
       fuelTSChart = new Chart($('#chartFuelTS'), {
         type:'line',
         data:{ labels:[], datasets:[] },
-        options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        options:{ responsive:true, responsiveAnimationDuration:0, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
           plugins:{ legend:{ position:'bottom' }},
           scales:{ x:{ stacked:true }, y:{ beginAtZero:true, stacked:true } }
         }
@@ -265,7 +268,7 @@
           { label:'Temperature (°F)', data:[], yAxisID:'temp', borderWidth:2, tension:.25 },
           { label:'Precip (in/hr)', data:[], yAxisID:'precip', borderWidth:2, borderDash:[6,6], tension:.25 }
         ]},
-        options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        options:{ responsive:true, responsiveAnimationDuration:0, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
           plugins:{ legend:{ position:'bottom' }},
           scales:{ temp:{ type:'linear', position:'left', beginAtZero:false },
                   precip:{ type:'linear', position:'right', beginAtZero:true } }
@@ -508,19 +511,20 @@
       $('#status').textContent = 'OK';
       updateMoney();
 
-      // nudge charts to re-measure after paint
-      resizeChartsSoon();
+      // Wait two frames, then force a resize (prevents “crunched” charts).
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize();
+
     }catch(e){
       console.error(e);
       $('#status').textContent = 'Error fetching data (check keys / network)';
     }
   }
 
-  // Resize helper so canvases adapt immediately and on window resizes
-  function resizeChartsSoon(){
-    setTimeout(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); }, 50);
-  }
-  window.addEventListener('resize', ()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); });
+  // Resize helpers so canvases adapt immediately and on layout changes
+  function resizeChartsSoon(){ setTimeout(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); }, 50); }
+  window.addEventListener('resize', resizeChartsSoon);
+  new ResizeObserver(resizeChartsSoon).observe(document.body); // catch grid column shifts
 
   // Wire up + auto
   document.getElementById('btnLoad').addEventListener('click', loadAll);
