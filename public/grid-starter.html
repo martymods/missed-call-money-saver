@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Grid Starter — PJM • EIA‑930 (Free Tier)</title>
-  <meta name="description" content="Free‑tier grid dashboard for PJM using EIA‑930 open data. Paste your EIA API key, pick a balancing authority, and plot load + generation mix.">
+  <title>Grid Starter — PJM • EIA-930 (Free Tier)</title>
+  <meta name="description" content="Free-tier grid dashboard for PJM using EIA-930 open data. Paste your EIA API key, pick a balancing authority, and plot load + generation mix.">
   <meta name="theme-color" content="#0f1a3d">
   <style>
     :root{ --ink:#0f1a3d; --muted:#6b7280; --edge:#e6eafb; --bg:#f7f8ff; --brand:#1955ff; --brand2:#0f3ed6; --card:#fff; --shadow:0 14px 34px rgba(16,30,80,.12) }
@@ -31,13 +31,29 @@
     .kpi .tile{background:#fff;border:1px solid var(--edge);border-radius:12px;padding:12px}
     .kpi .big{font-weight:900;font-size:22px}
     footer{max-width:1200px;margin:8px auto 30px;padding:0 18px;color:#5b6272;font-size:12px}
+
+    /* Fix: keep charts from stretching vertically */
+    .chartbox{
+      position: relative;
+      height: 280px;       /* tweak to taste (220–360px works well) */
+      width: 100%;
+    }
+    @media (min-width: 1280px){
+      .chartbox{ height: 320px; }
+    }
+    /* Let the canvas fill the box instead of expanding the page */
+    .chartbox canvas{
+      height: 100% !important;
+      width: 100% !important;
+      display: block;
+    }
   </style>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 </head>
 <body>
   <header>
-    <div class="brand"><div class="badge">⚡</div><div>Grid Starter<br><small style="color:var(--muted);font-weight:700">PJM • EIA‑930 (Free)</small></div></div>
+    <div class="brand"><div class="badge">⚡</div><div>Grid Starter<br><small style="color:var(--muted);font-weight:700">PJM • EIA-930 (Free)</small></div></div>
     <a href="/legal.html" class="pill">← Back to Packages</a>
   </header>
 
@@ -52,8 +68,8 @@
       <div class="field">
         <label><b>Balancing Authority</b></label>
         <select id="ba">
-          <option value="PJM" selected>PJM (Mid‑Atlantic)</option>
-          <option value="ISNE">ISO‑NE (New England)</option>
+          <option value="PJM" selected>PJM (Mid-Atlantic)</option>
+          <option value="ISNE">ISO-NE (New England)</option>
           <option value="NYIS">NYISO (New York)</option>
           <option value="CISO">CAISO (California)</option>
           <option value="ERCO">ERCOT (Texas)</option>
@@ -61,7 +77,7 @@
           <option value="SWPP">SPP (Southwest Power Pool)</option>
           <option value="TVA">TVA (Tennessee Valley)</option>
         </select>
-        <div class="hint">Most U.S. data is at balancing‑authority level (not strict city level).</div>
+        <div class="hint">Most U.S. data is at balancing-authority level (not strict city level).</div>
       </div>
       <div class="field">
         <label><b>Window</b></label>
@@ -75,7 +91,7 @@
         <button id="btnLoad" class="primary">Fetch data</button>
       </div>
       <div class="field">
-        <div class="hint">Free‑tier build: EIA‑930 demand & generation. Price/emissions can be added later (PJM DM2, WattTime, ElectricityMaps).</div>
+        <div class="hint">Free-tier build: EIA-930 demand & generation. Price/emissions can be added later (PJM DM2, WattTime, ElectricityMaps).</div>
       </div>
       <div class="field">
         <div id="status" class="pill">Idle</div>
@@ -92,18 +108,18 @@
       <div class="grid">
         <div>
           <h2>Load — last period</h2>
-          <canvas id="chartDemand" height="160"></canvas>
+          <div class="chartbox"><canvas id="chartDemand"></canvas></div>
         </div>
         <div>
           <h2>Generation mix — last hour</h2>
-          <canvas id="chartMix" height="160"></canvas>
+          <div class="chartbox"><canvas id="chartMix"></canvas></div>
         </div>
       </div>
     </section>
   </main>
 
   <footer>
-    <div>Free‑tier sources: EIA Form 930 region data (demand & net generation). Add PJM prices and emissions later with your own credentials.</div>
+    <div>Free-tier sources: EIA Form 930 region data (demand & net generation). Add PJM prices and emissions later with your own credentials.</div>
   </footer>
 
   <script>
@@ -117,6 +133,19 @@
     const z = new Date(d.getTime());
     z.setUTCMinutes(0,0,0);
     return `${z.getUTCFullYear()}-${pad(z.getUTCMonth()+1)}-${pad(z.getUTCDate())}T${pad(z.getUTCHours())}`;
+  }
+  // Parse EIA period strings like "YYYY-MM-DDTHH" or with full timestamp + offset
+  function parseEIAPeriod(p){
+    if(!p) return null;
+    // Hour-only format: treat as UTC hour
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}$/.test(p)) {
+      const [Y,M,D,H] = p.replace('T','-').split('-').map(Number);
+      return new Date(Date.UTC(Y, M-1, D, H, 0, 0));
+    }
+    // Normalize space -> T if present
+    const s = p.replace(' ', 'T');
+    const d = new Date(s);
+    return isNaN(d) ? null : d;
   }
 
   // ---------- Persist simple settings
@@ -136,8 +165,20 @@
   // ---------- Chart handles
   let demandChart, mixChart;
   function ensureCharts(){
-    if(!demandChart){ demandChart = new Chart($('#chartDemand'), { type:'line', data:{ labels:[], datasets:[{ label:'Demand (MW)', data:[] }] }, options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ ticks:{ maxRotation:0 }}, y:{ beginAtZero:true }}} }); }
-    if(!mixChart){ mixChart = new Chart($('#chartMix'), { type:'doughnut', data:{ labels:[], datasets:[{ data:[] }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' }}} }); }
+    if(!demandChart){
+      demandChart = new Chart($('#chartDemand'), {
+        type:'line',
+        data:{ labels:[], datasets:[{ label:'Demand (MW)', data:[] }] },
+        options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ ticks:{ maxRotation:0 }}, y:{ beginAtZero:true }}}
+      });
+    }
+    if(!mixChart){
+      mixChart = new Chart($('#chartMix'), {
+        type:'doughnut',
+        data:{ labels:[], datasets:[{ data:[] }] },
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' }}}
+      });
+    }
   }
 
   // ---------- EIA 930 fetchers
@@ -199,7 +240,9 @@
       ]);
 
       // Demand chart
-      const labels = dRows.map(r=> new Date(r.period)).map(d=> `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:00`);
+      const labels = dRows
+        .map(r=> parseEIAPeriod(r.period))
+        .map(d => d ? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00` : '');
       const vals = dRows.map(r=> Number(r.value||0));
       demandChart.data.labels = labels;
       demandChart.data.datasets[0].data = vals;
@@ -208,7 +251,8 @@
       // KPIs
       const last = dRows[dRows.length-1];
       $('#kpiDemand').textContent = last? `${fmtNum(last.value)} MW` : '—';
-      $('#kpiTime').textContent = last? new Date(last.period).toLocaleString() : '—';
+      const lastDt = parseEIAPeriod(last?.period);
+      $('#kpiTime').textContent = lastDt ? lastDt.toLocaleString() : '—';
 
       // Mix chart
       const mix = gen.mix || {};
