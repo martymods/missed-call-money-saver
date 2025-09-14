@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Grid Starter — PJM • EIA‑930 (Free Tier)</title>
+  <meta name="description" content="Free‑tier grid dashboard for PJM using EIA‑930 open data. Paste your EIA API key, pick a balancing authority, and plot load + generation mix.">
+  <meta name="theme-color" content="#0f1a3d">
+  <style>
+    :root{ --ink:#0f1a3d; --muted:#6b7280; --edge:#e6eafb; --bg:#f7f8ff; --brand:#1955ff; --brand2:#0f3ed6; --card:#fff; --shadow:0 14px 34px rgba(16,30,80,.12) }
+    *{box-sizing:border-box} html,body{margin:0}
+    body{font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;color:var(--ink);background:linear-gradient(180deg,#fff,#fbfcff)}
+    header{max-width:1200px;margin:0 auto;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900}
+    .badge{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--brand2),var(--brand));display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)}
+    .wrap{max-width:1200px;margin:10px auto 40px;padding:0 18px;display:grid;grid-template-columns:320px 1fr;gap:12px}
+    @media (max-width:980px){.wrap{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    h1{font-size:24px;margin:0}
+    h2{font-size:16px;margin:0 0 8px}
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+    input,select,button{padding:10px;border:1px solid #e1e7ff;border-radius:10px;font:inherit}
+    button{background:#f6f8ff;font-weight:800;cursor:pointer}
+    button.primary{background:var(--brand);border-color:#194df7;color:#fff}
+    .hint{color:var(--muted);font-size:12px}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #e0e6ff;border-radius:999px;background:#f6f8ff;font-weight:800}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    canvas{background:#fff;border:1px solid #eef2ff;border-radius:12px;padding:8px}
+    .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .kpi .tile{background:#fff;border:1px solid var(--edge);border-radius:12px;padding:12px}
+    .kpi .big{font-weight:900;font-size:22px}
+    footer{max-width:1200px;margin:8px auto 30px;padding:0 18px;color:#5b6272;font-size:12px}
+  </style>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="badge">⚡</div><div>Grid Starter<br><small style="color:var(--muted);font-weight:700">PJM • EIA‑930 (Free)</small></div></div>
+    <a href="/legal.html" class="pill">← Back to Packages</a>
+  </header>
+
+  <main class="wrap">
+    <aside class="card">
+      <h1>Setup</h1>
+      <div class="field">
+        <label><b>EIA API Key</b></label>
+        <input id="eiaKey" placeholder="paste your EIA key" autocomplete="off">
+        <div class="hint">Get one free in 1 minute at <a href="https://www.eia.gov/opendata/" target="_blank">EIA Open Data</a>. Stored only in this browser.</div>
+      </div>
+      <div class="field">
+        <label><b>Balancing Authority</b></label>
+        <select id="ba">
+          <option value="PJM" selected>PJM (Mid‑Atlantic)</option>
+          <option value="ISNE">ISO‑NE (New England)</option>
+          <option value="NYIS">NYISO (New York)</option>
+          <option value="CISO">CAISO (California)</option>
+          <option value="ERCO">ERCOT (Texas)</option>
+          <option value="MISO">MISO (Midcontinent)</option>
+          <option value="SWPP">SPP (Southwest Power Pool)</option>
+          <option value="TVA">TVA (Tennessee Valley)</option>
+        </select>
+        <div class="hint">Most U.S. data is at balancing‑authority level (not strict city level).</div>
+      </div>
+      <div class="field">
+        <label><b>Window</b></label>
+        <select id="win">
+          <option value="24" selected>Last 24 hours</option>
+          <option value="48">Last 48 hours</option>
+          <option value="168">Last 7 days</option>
+        </select>
+      </div>
+      <div class="field">
+        <button id="btnLoad" class="primary">Fetch data</button>
+      </div>
+      <div class="field">
+        <div class="hint">Free‑tier build: EIA‑930 demand & generation. Price/emissions can be added later (PJM DM2, WattTime, ElectricityMaps).</div>
+      </div>
+      <div class="field">
+        <div id="status" class="pill">Idle</div>
+      </div>
+    </aside>
+
+    <section class="card">
+      <div class="kpi" style="margin-bottom:10px">
+        <div class="tile"><div class="hint">Current Demand</div><div class="big" id="kpiDemand">—</div></div>
+        <div class="tile"><div class="hint">Last Updated (local)</div><div class="big" id="kpiTime">—</div></div>
+        <div class="tile"><div class="hint">Top Fuel (last hr)</div><div class="big" id="kpiFuel">—</div></div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <h2>Load — last period</h2>
+          <canvas id="chartDemand" height="160"></canvas>
+        </div>
+        <div>
+          <h2>Generation mix — last hour</h2>
+          <canvas id="chartMix" height="160"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div>Free‑tier sources: EIA Form 930 region data (demand & net generation). Add PJM prices and emissions later with your own credentials.</div>
+  </footer>
+
+  <script>
+  // ---------- Helpers
+  const $ = s => document.querySelector(s);
+  const fmtNum = n => (n==null? '—' : Number(n).toLocaleString());
+  const pad = n => (n<10?'0'+n:n);
+  function toEIAISO(d){
+    // Return YYYY-MM-DDTHH with UTC offset removal (EIA expects UTC timestamps without minutes)
+    // We'll request in UTC boundaries for simplicity
+    const z = new Date(d.getTime());
+    z.setUTCMinutes(0,0,0);
+    return `${z.getUTCFullYear()}-${pad(z.getUTCMonth()+1)}-${pad(z.getUTCDate())}T${pad(z.getUTCHours())}`;
+  }
+
+  // ---------- Persist simple settings
+  const store = {
+    get k(){ return localStorage.getItem('eia_key')||'' },
+    set k(v){ localStorage.setItem('eia_key', v||'') },
+    get ba(){ return localStorage.getItem('eia_ba')||'PJM' },
+    set ba(v){ localStorage.setItem('eia_ba', v||'PJM') },
+    get win(){ return localStorage.getItem('eia_win')||'24' },
+    set win(v){ localStorage.setItem('eia_win', v||'24') },
+  };
+  $('#eiaKey').value = store.k; $('#ba').value = store.ba; $('#win').value = store.win;
+  $('#eiaKey').addEventListener('input', e=> store.k = e.target.value.trim());
+  $('#ba').addEventListener('change', e=> store.ba = e.target.value);
+  $('#win').addEventListener('change', e=> store.win = e.target.value);
+
+  // ---------- Chart handles
+  let demandChart, mixChart;
+  function ensureCharts(){
+    if(!demandChart){ demandChart = new Chart($('#chartDemand'), { type:'line', data:{ labels:[], datasets:[{ label:'Demand (MW)', data:[] }] }, options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ ticks:{ maxRotation:0 }}, y:{ beginAtZero:true }}} }); }
+    if(!mixChart){ mixChart = new Chart($('#chartMix'), { type:'doughnut', data:{ labels:[], datasets:[{ data:[] }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' }}} }); }
+  }
+
+  // ---------- EIA 930 fetchers
+  async function eiaFetchDemand(key, ba, hours){
+    const end = new Date();
+    const start = new Date(end.getTime() - Number(hours)*3600*1000);
+    const url = new URL('https://api.eia.gov/v2/electricity/rto/region-data/data/');
+    url.searchParams.set('api_key', key);
+    url.searchParams.set('frequency', 'hourly');
+    url.searchParams.append('data[0]', 'value');
+    url.searchParams.append('facets[respondent][]', ba);
+    url.searchParams.append('facets[type][]', 'D'); // Demand
+    url.searchParams.set('start', toEIAISO(start));
+    url.searchParams.set('end', toEIAISO(end));
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('EIA demand failed');
+    const j = await r.json();
+    return (j?.response?.data||[]).sort((a,b)=> new Date(a.period) - new Date(b.period));
+  }
+
+  async function eiaFetchGenMix(key, ba){
+    // Last 1–2 hours of net generation by fuel
+    const end = new Date();
+    const start = new Date(end.getTime() - 2*3600*1000);
+    const url = new URL('https://api.eia.gov/v2/electricity/rto/region-data/data/');
+    url.searchParams.set('api_key', key);
+    url.searchParams.set('frequency', 'hourly');
+    url.searchParams.append('data[0]', 'value');
+    url.searchParams.append('facets[respondent][]', ba);
+    url.searchParams.append('facets[type][]', 'NG'); // Net Generation
+    url.searchParams.set('start', toEIAISO(start));
+    url.searchParams.set('end', toEIAISO(end));
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('EIA gen failed');
+    const j = await r.json();
+    const rows = (j?.response?.data||[]);
+    // Keep the latest hour and roll up by fuel-type
+    rows.sort((a,b)=> new Date(b.period) - new Date(a.period));
+    const latestHr = rows.length? rows[0].period : null;
+    const byFuel = {};
+    for(const row of rows){ if(row.period!==latestHr) continue; const f = row.fueltype||'OTH'; byFuel[f] = (byFuel[f]||0) + Number(row.value||0); }
+    return { period: latestHr, mix: byFuel };
+  }
+
+  // ---------- Main
+  async function loadAll(){
+    const key = ($('#eiaKey').value||'').trim();
+    const ba = $('#ba').value;
+    const hours = +$('#win').value;
+    if(!key){ $('#status').textContent = 'Add your EIA key to start'; return; }
+
+    $('#status').textContent = 'Loading…';
+    ensureCharts();
+
+    try{
+      const [dRows, gen] = await Promise.all([
+        eiaFetchDemand(key, ba, hours),
+        eiaFetchGenMix(key, ba)
+      ]);
+
+      // Demand chart
+      const labels = dRows.map(r=> new Date(r.period)).map(d=> `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:00`);
+      const vals = dRows.map(r=> Number(r.value||0));
+      demandChart.data.labels = labels;
+      demandChart.data.datasets[0].data = vals;
+      demandChart.update();
+
+      // KPIs
+      const last = dRows[dRows.length-1];
+      $('#kpiDemand').textContent = last? `${fmtNum(last.value)} MW` : '—';
+      $('#kpiTime').textContent = last? new Date(last.period).toLocaleString() : '—';
+
+      // Mix chart
+      const mix = gen.mix || {};
+      const order = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH'];
+      const labelsMix = Object.keys(mix).sort((a,b)=> order.indexOf(a)-order.indexOf(b));
+      const dataMix = labelsMix.map(k=> mix[k]);
+      mixChart.data.labels = labelsMix.map(k=> ({NG:'Gas',COL:'Coal',NUC:'Nuclear',WND:'Wind',SUN:'Solar',WAT:'Hydro',OIL:'Oil',OTH:'Other'}[k]||k));
+      mixChart.data.datasets[0].data = dataMix;
+      mixChart.update();
+      const top = labelsMix.map((k,i)=>({k, v:dataMix[i]})).sort((a,b)=>b.v-a.v)[0];
+      $('#kpiFuel').textContent = top? `${({NG:'Gas',COL:'Coal',NUC:'Nuclear',WND:'Wind',SUN:'Solar',WAT:'Hydro',OIL:'Oil',OTH:'Other'}[top.k]||top.k)} (${fmtNum(top.v)} MW)` : '—';
+
+      $('#status').textContent = 'OK';
+    }catch(e){
+      console.error(e);
+      $('#status').textContent = 'Error fetching data (check key / network)';
+    }
+  }
+
+  // Wire up
+  $('#btnLoad').addEventListener('click', loadAll);
+
+  // Auto-start if key present or provided via ?eia=KEY
+  const qsKey = new URLSearchParams(location.search).get('eia');
+  if(qsKey){ $('#eiaKey').value = qsKey; store.k = qsKey; }
+  if($('#eiaKey').value){ loadAll(); }
+  </script>
+</body>
+</html>
