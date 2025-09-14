@@ -18,15 +18,14 @@
     .brand{display:flex;align-items:center;gap:10px;font-weight:900}
     .badge{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--brand2),var(--brand));display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)}
 
-    /* main two-column shell; allow right pane to actually shrink */
+    /* *** critical: allow columns to actually shrink *** */
     .wrap{
       max-width:1280px;margin:10px auto 40px;padding:0 18px;
       display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;
-      min-width:0;
     }
     @media (max-width:980px){.wrap{grid-template-columns:1fr}}
 
-    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:14px;box-shadow:var(--shadow);min-width:0}
+    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
     h1{font-size:24px;margin:0} h2{font-size:16px;margin:0 0 8px}
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
     input,select,button{padding:10px;border:1px solid #e1e7ff;border-radius:10px;font:inherit}
@@ -35,12 +34,10 @@
     .hint{color:var(--muted);font-size:12px}
     .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #e0e6ff;border-radius:999px;background:#f6f8ff;font-weight:800}
 
-    /* charts row; force both columns to be shrinkable */
-    .grid{
-      display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;
-      min-width:0;
-    }
+    /* charts row; both columns shrinkable */
+    .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .grid > *{min-width:0}
 
     canvas{background:#fff;border:1px solid #eef2ff;border-radius:12px;padding:8px}
     .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -49,10 +46,10 @@
     .kpi .good{color:var(--ok)} .kpi .warn{color:var(--warn)}
     footer{max-width:1280px;margin:8px auto 30px;padding:0 18px;color:#5b6272;font-size:12px}
 
-    /* chart height lock */
+    /* lock chart height + let canvases fill box */
     .chartbox{ position:relative; height:320px; width:100%; min-width:0; }
     @media (max-width:600px){ .chartbox{ height:260px; } }
-    .chartbox canvas{ height:100% !important; width:100% !important; max-width:100% !important; display:block; }
+    .chartbox canvas{ height:100% !important; width:100% !important; display:block; }
 
     /* fuel cards */
     .fuels{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -67,22 +64,16 @@
     .priceCtl{display:flex;align-items:center;gap:8px}
     .priceCtl input[type=range]{flex:1}
 
-    /* weather row; make the chart column shrinkable */
-    .wx{
-      display:grid;grid-template-columns:360px minmax(0,1fr);gap:12px;
-      min-width:0;
-    }
+    /* weather row; make chart column shrinkable */
+    .wx{display:grid;grid-template-columns:360px minmax(0,1fr);gap:12px}
     @media (max-width:1000px){.wx{grid-template-columns:1fr}}
-
-    /* absolutely critical in CSS Grid: let children be narrower than their content */
-    .grid > *, .wx > *, .chartbox { min-width:0; }
-
+    .wx > *{min-width:0}
     .wxNow{display:flex;gap:12px;align-items:center;border:1px solid var(--edge);border-radius:12px;padding:12px;background:#fff}
     .wxNow img{width:64px;height:64px}
     .wxNums{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
     .wxTile{border:1px solid var(--edge);border-radius:10px;padding:8px;background:#fff}
     .wxAlerts{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-    .alert{border-left:4px solid var(--warn);padding:8px 10px;border-radius:8px;background:#fff;border:1px solid var(--edge)}
+    .alert{border-left:4px solid var(--warn);padding:8px 10px;border-radius:8px;background:#fff;border:1px solid #e1f0ff}
     .alert.bad{border-left-color:var(--bad)}
     .badgeS{display:inline-block;padding:2px 6px;border-radius:999px;background:#f2f4ff;border:1px solid #e5eafe;font-size:12px;font-weight:800}
   </style>
@@ -124,7 +115,6 @@
           <option value="168">Last 7 days</option>
         </select>
       </div>
-
       <div class="field">
         <label><b>Price ($/MWh)</b></label>
         <div class="priceCtl">
@@ -133,7 +123,6 @@
         </div>
         <div class="mini">Used for revenue estimates (Revenue/h ≈ Price × Current Load). Real nodal/zone LMPs require PJM credentials.</div>
       </div>
-
       <div class="field">
         <button id="btnLoad" class="primary">Fetch data</button>
       </div>
@@ -184,9 +173,7 @@
             <div class="wxTile"><div class="sub">Wind</div><div class="big" id="wxWind">—</div></div>
           </div>
 
-          <div class="wxAlerts" id="wxAlerts">
-            <!-- NOAA alerts inject here -->
-          </div>
+          <div class="wxAlerts" id="wxAlerts"></div>
         </div>
 
         <div>
@@ -205,7 +192,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <script>
-  // -------- Helpers
+  // ---------- helpers
   const $ = s => document.querySelector(s);
   const fmtNum = n => (n==null? '—' : Number(n).toLocaleString());
   const fmtMoney = n => (isFinite(n)? '$' + Number(n).toLocaleString(undefined,{maximumFractionDigits:0}) : '$—');
@@ -217,7 +204,7 @@
     const s = p.replace(' ', 'T'); const d = new Date(s); return isNaN(d) ? null : d;
   }
 
-  // -------- Persist settings
+  // ---------- persist
   const store = {
     get k(){ return localStorage.getItem('eia_key')||'' },
     set k(v){ localStorage.setItem('eia_key', v||'') },
@@ -236,9 +223,29 @@
   $('#price').addEventListener('input', e=> { $('#priceNum').value = e.target.value; store.price = e.target.value; updateMoney(); });
   $('#priceNum').addEventListener('input', e=> { $('#price').value = e.target.value||0; store.price = e.target.value||0; updateMoney(); });
 
-  // -------- Charts
+  // ---------- charts
   let demandChart, fuelTSChart, wxChart;
-  function ensureCharts(){
+
+  // Wait until a box actually has width before creating/resizing charts
+  function waitForBox(el, min=200, tries=30){
+    return new Promise(resolve=>{
+      function ok(){ return el && el.clientWidth >= min; }
+      if(ok()) return resolve();
+      let t=0;
+      const raf = ()=> {
+        if(ok() || t++>tries) return resolve();
+        requestAnimationFrame(raf);
+      };
+      raf();
+    });
+  }
+
+  async function ensureCharts(){
+    const b1 = $('#chartDemand').parentElement;
+    const b2 = $('#chartFuelTS').parentElement;
+    const b3 = $('#chartWX').parentElement;
+    await waitForBox(b1); await waitForBox(b2); await waitForBox(b3);
+
     if(!demandChart){
       demandChart = new Chart($('#chartDemand'), {
         type:'line',
@@ -246,7 +253,8 @@
           { label:'Demand (MW)', data:[], borderWidth:2, tension:.25 },
           { label:'Forecast (MW)', data:[], borderWidth:2, tension:.25, borderDash:[6,6] }
         ]},
-        options:{ responsive:true, responsiveAnimationDuration:0, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+        options:{ responsive:true, maintainAspectRatio:false, resizeDelay:50,
+          interaction:{ mode:'index', intersect:false },
           scales:{ x:{ ticks:{ maxRotation:0 }}, y:{ beginAtZero:true } }
         }
       });
@@ -255,7 +263,8 @@
       fuelTSChart = new Chart($('#chartFuelTS'), {
         type:'line',
         data:{ labels:[], datasets:[] },
-        options:{ responsive:true, responsiveAnimationDuration:0, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        options:{ responsive:true, maintainAspectRatio:false, resizeDelay:50,
+          interaction:{mode:'index',intersect:false},
           plugins:{ legend:{ position:'bottom' }},
           scales:{ x:{ stacked:true }, y:{ beginAtZero:true, stacked:true } }
         }
@@ -266,9 +275,10 @@
         type:'line',
         data:{ labels:[], datasets:[
           { label:'Temperature (°F)', data:[], yAxisID:'temp', borderWidth:2, tension:.25 },
-          { label:'Precip (in/hr)', data:[], yAxisID:'precip', borderWidth:2, borderDash:[6,6], tension:.25 }
+          { label:'Precip (in/hr)',   data:[], yAxisID:'precip', borderWidth:2, borderDash:[6,6], tension:.25 }
         ]},
-        options:{ responsive:true, responsiveAnimationDuration:0, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        options:{ responsive:true, maintainAspectRatio:false, resizeDelay:50,
+          interaction:{mode:'index',intersect:false},
           plugins:{ legend:{ position:'bottom' }},
           scales:{ temp:{ type:'linear', position:'left', beginAtZero:false },
                   precip:{ type:'linear', position:'right', beginAtZero:true } }
@@ -277,7 +287,13 @@
     }
   }
 
-  // -------- EIA fetchers
+  // Keep canvases sized when layout changes (this is what DevTools was “forcing”)
+  const ro = new ResizeObserver(()=> {
+    demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize();
+  });
+  ro.observe(document.body);
+
+  // ---------- EIA fetchers
   async function eiaFetchRegion(key, ba, hours, typeCode){
     const end = new Date(); const start = new Date(end.getTime() - Number(hours)*3600*1000);
     const url = new URL('https://api.eia.gov/v2/electricity/rto/region-data/data/');
@@ -312,7 +328,7 @@
     return { net: imp-exp };
   }
 
-  // -------- Weather (Open-Meteo + NOAA alerts)
+  // ---------- weather (Open-Meteo + NOAA)
   const BA_COORDS = {
     PJM:{lat:39.9526, lon:-75.1652, place:'Philadelphia, PA'},
     ISNE:{lat:42.3601, lon:-71.0589, place:'Boston, MA'},
@@ -323,7 +339,6 @@
     SWPP:{lat:34.7465, lon:-92.2896, place:'Little Rock, AR'},
     TVA:{lat:35.0456, lon:-85.3097, place:'Chattanooga, TN'}
   };
-
   function weatherIconInfo(code){
     const map = [
       {codes:[0], icon:'clear-day', label:'Clear'},
@@ -339,7 +354,7 @@
     for(const m of map){ if(m.codes.includes(Number(code))) return m; }
     return {icon:'unknown', label:'—'};
   }
-  function iconURL(icon){ return `https://cdn.jsdelivr.net/npm/@open-meteo/weather-icons@1.7.0/production/fill/${icon}.svg`; }
+  const iconURL = i => `https://cdn.jsdelivr.net/npm/@open-meteo/weather-icons@1.7.0/production/fill/${i}.svg`;
 
   async function fetchWeather(lat, lon, hours){
     const pastDays = Math.max(1, Math.ceil(hours/24));
@@ -364,11 +379,7 @@
       precipIn: slice(H.precipitation),
       windMph: slice(H.wind_speed_10m),
       code: slice(H.weathercode),
-      now: {
-        tempF: H.temperature_2m?.[endIdx-1],
-        windMph: H.wind_speed_10m?.[endIdx-1],
-        code: H.weathercode?.[endIdx-1]
-      }
+      now: { tempF: H.temperature_2m?.[endIdx-1], windMph: H.wind_speed_10m?.[endIdx-1], code: H.weathercode?.[endIdx-1] }
     };
   }
 
@@ -419,7 +430,6 @@
     }
   }
 
-  // -------- UI builders (energy)
   const FUEL_NAMES = {NG:'Gas', COL:'Coal', NUC:'Nuclear', WND:'Wind', SUN:'Solar', WAT:'Hydro', OIL:'Oil', OTH:'Other'};
   const FUEL_ORDER = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH'];
 
@@ -448,7 +458,7 @@
     if(window.__lastMix && load>0){ renderFuelCards(window.__lastMix, load, price); }
   }
 
-  // -------- Main loader
+  // ---------- main
   async function loadAll(){
     const key = ($('#eiaKey').value||'').trim();
     const ba = $('#ba').value;
@@ -456,10 +466,9 @@
     if(!key){ $('#status').textContent = 'Add your EIA key to start'; return; }
 
     $('#status').textContent = 'Loading…';
-    ensureCharts();
+    await ensureCharts();
 
     try{
-      // Region: actual demand + forecast
       const [act, fcast] = await Promise.all([
         eiaFetchRegion(key, ba, hours, 'D'),
         eiaFetchRegion(key, ba, hours, 'DF')
@@ -480,53 +489,38 @@
       const lastDt = parseEIAPeriod(last?.period);
       $('#kpiTime').textContent = lastDt ? lastDt.toLocaleString() : '—';
 
-      // Fuel time-series
       const fuelTS = await eiaFetchFuelTimeSeries(key, ba, hours);
       const fuelLabels = fuelTS.times.map(t=> { const d=parseEIAPeriod(t); return d? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`:''; });
       fuelTSChart.data.labels = fuelLabels;
-      fuelTSChart.data.datasets = FUEL_ORDER
-        .filter(f=> fuelTS.fuels.includes(f))
-        .map(f=>({ label:FUEL_NAMES[f]||f, data:fuelTS.byFuel[f]||[], borderWidth:1, fill:true, tension:.2 }));
+      fuelTSChart.data.datasets = FUEL_ORDER.filter(f=> fuelTS.fuels.includes(f)).map(f=>({ label:FUEL_NAMES[f]||f, data:fuelTS.byFuel[f]||[], borderWidth:1, fill:true, tension:.2 }));
       fuelTSChart.update();
 
-      // Live fuel split for “assets”
       const lastIdx = fuelTS.times.length - 1;
       const lastMix = {}; for(const f of fuelTS.fuels){ lastMix[f] = (fuelTS.byFuel[f]||[])[lastIdx]||0; }
       window.__lastMix = lastMix;
       renderFuelCards(lastMix, Number(last?.value||0), Number($('#priceNum').value||0));
 
-      // Interchange (net)
       const inter = await eiaFetchInterchangeNet(key, ba, hours);
       $('#kpiInterchg').textContent = (inter.net>=0? '+' : '−') + fmtNum(Math.abs(inter.net)) + ' MW';
 
-      // Weather + Alerts
       const loc = BA_COORDS[ba] || BA_COORDS.PJM;
-      const [wx, alerts] = await Promise.all([
-        fetchWeather(loc.lat, loc.lon, hours),
-        fetchNOAAAlerts(loc.lat, loc.lon)
-      ]);
+      const [wx, alerts] = await Promise.all([ fetchWeather(loc.lat, loc.lon, hours), fetchNOAAAlerts(loc.lat, loc.lon) ]);
       renderWeather(wx, loc.place);
       renderAlerts(alerts);
 
-      $('#status').textContent = 'OK';
-      updateMoney();
-
-      // Wait two frames, then force a resize (prevents “crunched” charts).
-      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      // wait two frames then force a resize (prevents “crunched” charts)
+      await new Promise(r => requestAnimationFrame(()=> requestAnimationFrame(r)));
       demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize();
 
+      $('#status').textContent = 'OK';
+      updateMoney();
     }catch(e){
       console.error(e);
       $('#status').textContent = 'Error fetching data (check keys / network)';
     }
   }
 
-  // Resize helpers so canvases adapt immediately and on layout changes
-  function resizeChartsSoon(){ setTimeout(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); }, 50); }
-  window.addEventListener('resize', resizeChartsSoon);
-  new ResizeObserver(resizeChartsSoon).observe(document.body); // catch grid column shifts
-
-  // Wire up + auto
+  // wire up + auto
   document.getElementById('btnLoad').addEventListener('click', loadAll);
   const qsKey = new URLSearchParams(location.search).get('eia');
   if(qsKey){ document.getElementById('eiaKey').value = qsKey; store.k = qsKey; }
