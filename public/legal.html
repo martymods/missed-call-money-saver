@@ -518,31 +518,38 @@ function beacon(url, data){
   }catch{ return false; }
 }
 
-/* ===== Stripe wiring (same pattern as index.html) ===== */
-// Load publishable key, create a Stripe instance
-let stripe = null;
-fetch('/config').then(r=>r.json()).then(cfg=>{
-  if (cfg?.stripePk) { stripe = Stripe(cfg.stripePk); }
-});
+/* ===== Dynamic checkout wiring (matches your /api/deal/checkout/stripe) ===== */
+const CHECKOUT_ENDPOINT = '/api/deal/checkout/stripe';
+const PARTNER_SLUG = 'delco-attorney';                // for success URL tagging
+const QS = new URLSearchParams(location.search);
+const REP = QS.get('rep') || '';
+const DEAL_ID = 'law_' + Math.random().toString(36).slice(2,7) + Date.now().toString(36).slice(-4);
 
-// Create a Checkout Session on your Node server, then redirect
-async function startStripeCheckout(promo){
-  try{
-    if(!stripe){ window.location.href = '/checkout'; return; } // fallback to your /checkout route
-    const r = await fetch('/api/create-checkout-session', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ promo: (promo||'').trim() })
+// Begin Stripe checkout using dynamic amount
+async function startStripeCheckoutDynamic(payload){
+  // Amount rules: annual = full year total; monthly = first month + setup
+  const dueNow = (payload.config.billing === 'annual')
+    ? payload.price.total
+    : (payload.price.monthly + payload.price.setup);
+
+  const amountCents = Math.max(100, Math.round(dueNow * 100));
+  const summary = `${payload.pkg.name} (${payload.pkg.lvl} — ${payload.config.security.toUpperCase()}) · ${payload.config.billing} · ${payload.config.attorneys} attys · ${payload.buyer.firm}`;
+
+  // Optional internal lead log
+  try {
+    await fetch('/api/lead', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ type:'begin_checkout', partnerSlug: PARTNER_SLUG, rep: REP, dealId: DEAL_ID, amount: amountCents, summary })
     });
-    const j = await r.json();
-    if (j?.id) {
-      await stripe.redirectToCheckout({ sessionId: j.id });
-    } else {
-      window.location.href = '/checkout';
-    }
-  }catch(e){
-    window.location.href = '/checkout';
-  }
+  } catch {}
+
+  const r = await fetch(CHECKOUT_ENDPOINT, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ amountCents, summary, partnerSlug: PARTNER_SLUG, rep: REP, dealId: DEAL_ID })
+  }).then(r=>r.json()).catch(()=>null);
+
+  if (r?.url) { location.href = r.url; return; }
+  alert('Stripe checkout is unavailable right now. Please try again or call.');
 }
 
 /* ===== Place Order (save → optional webhook → Stripe) ===== */
@@ -562,18 +569,19 @@ function placeOrder(btn){
     pkg: { id: pkg.id, name: pkg.name, lvl: pkg.lvl, rarity: pkg.rarity, classes: pkg.classes },
     config: { attorneys: +$('#fAtt').value||+attRange.value, billing: billing.value, security: sec.value },
     price: pr, promo,
-    buyer: { firm: $('#fFirm').value, site: $('#fSite').value, name: $('#fName').value, role: $('#fRole').value, email: $('#fEmail').value, phone: $('#fPhone').value, state: $('#fState').value, notes: $('#fNotes').value }
+    buyer: { firm: $('#fFirm').value, site: $('#fSite').value, name: $('#fName').value, role: $('#fRole').value, email: $('#fEmail').value, phone: $('#fPhone').value, state: $('#fState').value, notes: $('#fNotes').value },
+    rep: REP, dealId: DEAL_ID
   };
 
-  // Local log (for follow-up) + optional external webhook
+  // Save for follow-up (and for the thank-you page)
   const orders = JSON.parse(localStorage.getItem('orders')||'[]'); orders.push(payload);
   localStorage.setItem('orders', JSON.stringify(orders));
   localStorage.setItem('last_order', JSON.stringify(payload));
-  if(LEAD_WEBHOOK){ beacon(LEAD_WEBHOOK, payload); }
+  if (LEAD_WEBHOOK) { beacon(LEAD_WEBHOOK, payload); }
 
-  // Go to Stripe (same as your working index.html flow)
+  // Redirect to Stripe with the dynamic amount
   btn.disabled = true; const txt = btn.textContent; btn.textContent = 'Redirecting to Stripe…';
-  startStripeCheckout(promo).catch(()=>{}).finally(()=>{ btn.disabled=false; btn.textContent=txt; });
+  startStripeCheckoutDynamic(payload).finally(()=>{ btn.disabled=false; btn.textContent=txt; });
 }
 
 document.addEventListener('click', (e)=>{
@@ -584,12 +592,7 @@ document.addEventListener('click', (e)=>{
     placeOrder(e.target);
   }
 });
-
-// keep openModal() updating price badge
 </script>
-
-
-  <script src="https://js.stripe.com/v3/"></script>
 
 </body>
 </html>
