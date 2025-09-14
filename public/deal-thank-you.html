@@ -1,0 +1,106 @@
+<!-- deal-thank-you.html (success URL for Stripe endpoint) -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Payment Complete — Delco Tech Division</title>
+  <meta name="description" content="Thank you for your purchase. We’re kicking off onboarding shortly."/>
+  <style>
+    :root{ --ink:#0f1220; --muted:#6b7280; --brand:#1955ff; --edge:#e6eafb; --card:#fff; --shadow:0 14px 34px rgba(16,30,80,.12) }
+    *{box-sizing:border-box} html,body{margin:0}
+    body{font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;color:var(--ink);background:linear-gradient(180deg,#fff,#fbfcff)}
+    .wrap{max-width:900px;margin:0 auto;padding:20px}
+    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #e0e6ff;border-radius:999px;background:#f6f8ff;font-weight:800}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;border-radius:12px;border:1px solid #dfe6ff;background:#f6f8ff;color:#0f1b46;font-weight:800;text-decoration:none}
+    .btn.primary{background:var(--brand);border-color:#194df7;color:#fff}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:900px){.grid,.row{grid-template-columns:1fr}}
+    pre{white-space:pre-wrap;background:#0b1220;color:#e6ebff;border-radius:12px;padding:12px;border:1px solid #14264b}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#0f3ed6,#1955ff);display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)">⚖️</div><div><b>Delco Tech Division</b><br><small style="color:var(--muted);font-weight:700">Payment Confirmation</small></div></div>
+      <a class="btn" href="/packages.html">Back to packages</a>
+    </header>
+
+    <section class="card">
+      <h1 style="margin:0 0 6px">Thank you — payment received</h1>
+      <p class="pill" id="orderTag">–</p>
+      <p style="color:var(--muted)">A specialist will email onboarding details and coordinate with your team. Save the JSON below for your records.</p>
+
+      <div class="grid" style="margin-top:10px">
+        <div>
+          <h3>Buyer</h3>
+          <div id="buyerBox">–</div>
+        </div>
+        <div>
+          <h3>Package</h3>
+          <div id="pkgBox">–</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <h3>Order JSON (local)</h3>
+        <pre id="jsonBox">{}</pre>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <a class="btn primary" id="icsBtn" href="#">Add kickoff to calendar</a>
+        <a class="btn" id="emailBtn" href="#">Email a copy</a>
+        <button class="btn" id="clearBtn">Clear local log</button>
+      </div>
+    </section>
+
+    <footer style="margin:16px 0;color:var(--muted);font-size:13px">© <span id="yr2"></span> Delco Tech Division</footer>
+  </div>
+
+  <script>
+    const data = JSON.parse(localStorage.getItem('last_order')||'null');
+    document.getElementById('yr2').textContent = new Date().getFullYear();
+    function money(n){ return (n||0).toLocaleString(undefined,{maximumFractionDigits:0}); }
+
+    if(!data){
+      document.getElementById('orderTag').textContent = 'No recent order found on this device';
+    } else {
+      const tag = `${data.pkg.name} • ${data.pkg.lvl} • ${data.config.billing==='annual'?'Annual':'Monthly'} • ${data.config.security.toUpperCase()}`;
+      document.getElementById('orderTag').textContent = tag;
+      document.getElementById('buyerBox').innerHTML = `
+        <div><b>${data.buyer.name}</b> — ${data.buyer.role||'—'}</div>
+        <div>${data.buyer.firm}</div>
+        <div><a href="mailto:${data.buyer.email}">${data.buyer.email}</a> · ${data.buyer.phone||''}</div>
+        <div>${data.buyer.site||''}</div>`;
+      document.getElementById('pkgBox').innerHTML = `
+        <div><b>${data.pkg.name}</b> (${data.pkg.classes.length}/12 classes)</div>
+        <div>Attorneys: ${data.config.attorneys} · Security: ${data.config.security}</div>
+        <div>Charge: ${data.config.billing==='annual' ? ('$'+money(data.price.total)+'/yr') : ('$'+money(data.price.monthly + data.price.setup) + ' today (1st month + setup)')}</div>`;
+      document.getElementById('jsonBox').textContent = JSON.stringify(data,null,2);
+
+      const subj = encodeURIComponent(`Delco order — ${data.pkg.name} for ${data.buyer.firm}`);
+      const body = encodeURIComponent(JSON.stringify(data,null,2));
+      document.getElementById('emailBtn').href = `mailto:${data.buyer.email}?subject=${subj}&body=${body}`;
+
+      // Kickoff invite in 2 business days @ 10:00
+      const addBusinessDays = (d,n)=>{ let x=0; while(x<n){ d.setDate(d.getDate()+1); const day=d.getDay(); if(day!==0 && day!==6) x++; } return d };
+      const s = addBusinessDays(new Date(),2); s.setHours(10,0,0,0);
+      const e = new Date(s.getTime()+30*60000);
+      function iso(d){ return d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z' }
+      const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//DelcoTech//Packages//EN\nBEGIN:VEVENT\nUID:${Date.now()}@delcotechdivision.com\nDTSTAMP:${iso(new Date())}\nDTSTART:${iso(s)}\nDTEND:${iso(e)}\nSUMMARY:Delco Tech — Onboarding Kickoff\nDESCRIPTION:${data.pkg.name} — ${data.config.security.toUpperCase()} — ${data.buyer.firm}\nEND:VEVENT\nEND:VCALENDAR`;
+      const blob = new Blob([ics], {type:'text/calendar'});
+      const url = URL.createObjectURL(blob);
+      const icsBtn = document.getElementById('icsBtn');
+      icsBtn.href = url; icsBtn.download = 'delco_kickoff.ics';
+    }
+
+    document.getElementById('clearBtn').onclick = () => {
+      localStorage.removeItem('last_order');
+      alert('Local order log cleared on this browser.');
+      location.reload();
+    };
+  </script>
+</body>
+</html>
