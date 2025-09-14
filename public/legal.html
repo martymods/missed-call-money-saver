@@ -1,3 +1,4 @@
+
 <!-- packages.html -->
 <!doctype html>
 <html lang="en">
@@ -45,6 +46,33 @@
     input[type=range]{width:100%}
     .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #e0e6ff;border-radius:999px;background:#f6f8ff;font-weight:800}
     .select{width:100%;padding:10px;border:1px solid #e0e6ff;border-radius:10px;background:#fff}
+/* Make slider easy to grab on desktop and ensure it's on top */
+.slider{ grid-template-columns: auto 1fr auto auto; align-items:center; gap:10px }
+.slider input[type=range]{
+  -webkit-appearance:none; appearance:none;
+  width:100%; height:12px; border-radius:999px;
+  background:#e6eafb; outline:0; cursor:pointer;
+  position:relative; z-index:2;  /* keep above neighbors */
+}
+.slider .spin{
+  width:38px; height:38px; border-radius:10px; border:1px solid #e0e6ff;
+  background:#f6f8ff; font-weight:900; font-size:18px; line-height:1;
+  display:grid; place-items:center; cursor:pointer;
+}
+.slider .spin:active{ transform:translateY(1px) }
+
+/* Big thumbs so it’s easy to drag */
+.slider input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+  background:var(--brand); border:2px solid #fff; box-shadow:0 2px 6px rgba(16,30,80,.3); cursor:pointer;
+}
+.slider input[type=range]::-moz-range-thumb{
+  width:20px; height:20px; border-radius:50%;
+  background:var(--brand); border:2px solid #fff; box-shadow:0 2px 6px rgba(16,30,80,.3); cursor:pointer;
+}
+.slider input[type=range]::-moz-range-track{
+  height:12px; background:#e6eafb; border-radius:999px;
+}
 
     /* Packages grid */
     .wrap{max-width:1200px;margin:8px auto 40px;padding:0 18px}
@@ -107,7 +135,13 @@
       <div class="config">
         <div class="tile">
           <h3>1) Firm size</h3>
-          <div class="slider"><input id="attRange" type="range" min="1" max="200" step="1" value="3"><div class="pill"><b id="attCnt">3</b> attorneys</div></div>
+          <div class="slider">
+  <button class="spin dec" type="button" aria-label="Decrease">–</button>
+  <input id="attRange" type="range" min="1" max="200" step="1" value="3">
+  <button class="spin inc" type="button" aria-label="Increase">+</button>
+  <div class="pill"><b id="attCnt">3</b> attorneys</div>
+</div>
+
         </div>
         <div class="tile">
           <h3>2) Billing</h3>
@@ -406,6 +440,21 @@ Security Compliance — Example: ISO/IEC 27001
   sec.addEventListener('change', render);
 
   render();
+
+// Desktop-friendly +/- controls for the Attorneys slider
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.spin');
+  if(!btn) return;
+  const dir = btn.classList.contains('inc') ? 1 : -1;
+  const step = parseInt(attRange.step || '1', 10);
+  const min  = parseInt(attRange.min  || '1', 10);
+  const max  = parseInt(attRange.max  || '200', 10);
+  let val = parseInt(attRange.value || '1', 10) + dir * step;
+  val = Math.min(max, Math.max(min, val));
+  attRange.value = String(val);
+  render();
+});
+
 
   /* ===== Buy Flow (Modal) =============================================== */
   const modal = document.createElement('div');
