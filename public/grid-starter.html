@@ -212,6 +212,12 @@
     </section>
   </main>
 
+<div class="tileSm">
+  <div class="sub">Modeled transportation noise</div>
+  <div class="big" id="noiseNow">—</div>
+</div>
+
+
   <footer>
     <div>Sources: EIA Form 930 (free). Weather via Open-Meteo; alerts via api.weather.gov. Air via Open-Meteo Air-Quality. Water via USGS NWIS (nearest station). TRI counts via EPA ECHO. Revenue is an estimate; for trading/ops use ISO LMPs and settlement rules.</div>
   </footer>
@@ -252,20 +258,21 @@
   let demandChart, fuelTSChart, wxChart, aqChart, waterChart;
 
   // stable box helper to avoid “crunched” canvases before layout settles
-  function waitForStableBox(box, minW=160, minH=120){
-    return new Promise(resolve=>{
-      function check(){
-        const r1 = box.getBoundingClientRect();
-        if(r1.width < minW || r1.height < minH){ return requestAnimationFrame(check); }
-        requestAnimationFrame(()=>{
-          const r2 = box.getBoundingClientRect();
-          if (Math.abs(r2.width-r1.width)>0.5 || Math.abs(r2.height-r1.height)>0.5) return requestAnimationFrame(check);
-          resolve();
-        });
+function waitForStableBox(box, minW=160, minH=120, timeoutMs=1500){
+  return new Promise(resolve=>{
+    const t0 = performance.now();
+    function check(){
+      const r1 = box.getBoundingClientRect();
+      if((performance.now()-t0)>timeoutMs || (r1.width>=minW && r1.height>=minH)){
+        // one extra frame to settle
+        return requestAnimationFrame(()=> resolve());
       }
-      check();
-    });
-  }
+      requestAnimationFrame(check);
+    }
+    check();
+  });
+}
+
   async function ensureCharts(){
     await Promise.all([
       waitForStableBox($('#chartDemand').parentElement),
@@ -555,6 +562,161 @@
     if(window.__lastMix && load>0){ renderFuelCards(window.__lastMix, load, price); }
   }
 
+
+// ---------- Environment helpers (TRI / Noise / USGS already in your file? replace these)
+
+/* EPA ECHO TRI (facilities within N miles)
+   The old /RestServices/echo_rest_services.get_facilities path 404s.
+   Current production paths are under /echo (er_rest_services OR facility_rest_services).
+   We try the modern endpoint first and gracefully fall back.
+*/
+async function fetchTRICount(lat, lon, radiusMiles=25){
+  const qs = p => Object.entries(p).map(([k,v])=> `${k}=${encodeURIComponent(v)}`).join('&');
+
+  // Candidate endpoints (first that returns JSON wins)
+  const bases = [
+    'https://echodata.epa.gov/echo/er_rest_services.get_facilities',        // primary
+    'https://echodata.epa.gov/echo/facility_rest_services.get_facilities'   // fallback
+  ];
+  const params = {
+    output: 'JSON',
+    p_program: 'TRI',      // restrict to TRI reporters
+    p_lat: lat.toFixed(3),
+    p_long: lon.toFixed(3),
+    p_radius: radiusMiles  // miles
+  };
+
+  for(const base of bases){
+    try{
+      const r = await fetch(`${base}?${qs(params)}`);
+      if(!r.ok) continue;
+      const j = await r.json();
+      // ECHO returns { Results: { QueryRows: [ ... ] } } or similar — be tolerant
+      const rows = j?.Results?.QueryRows || j?.Results || j?.facilities || [];
+      const n = Array.isArray(rows) ? rows.length : (Number(j?.Results?.TotalFacilities) || 0);
+      if(n>0 || r.ok) return n;
+    }catch(e){ /* try next */ }
+  }
+
+  // Last-ditch: report 0 and don’t blow up the UI
+  console.warn('ECHO TRI lookup failed; showing 0.');
+  return 0;
+}
+
+/* DOT Transportation Noise Map — modeled DNL (day–night level) at a point.
+   Uses ArcGIS MapServer/identify. This is a modeled (static) exposure number (dB).
+   Not time-series, but useful as context beside your tiles.
+*/
+async function fetchNoiseDNL(lat, lon){
+  // Known public service (BTS Transportation Noise). If DOT rotates layers, we handle errors.
+  const url = 'https://gis.dot.gov/arcgis/rest/services/BTS/Transportation_Noise/MapServer/identify';
+  const body = new URLSearchParams({
+    f: 'json',
+    sr: '4326',
+    tolerance: '3',
+    returnGeometry: 'false',
+    mapExtent: `${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01}`,
+    imageDisplay: '400,400,96',
+    geometry: JSON.stringify({ x: lon, y: lat, spatialReference:{ wkid:4326 }}),
+    geometryType: 'esriGeometryPoint',
+    layers: 'all'  // search all sublayers for a hit
+  });
+
+  try{
+    const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+    if(!r.ok) throw new Error('DOT noise identify failed');
+    const j = await r.json();
+    const first = (j?.results||[]).find(v => typeof v?.attributes?.DNL === 'number' || typeof v?.attributes?.dnl === 'number');
+    const dnl = first?.attributes?.DNL ?? first?.attributes?.dnl;
+    if(Number.isFinite(dnl)) return Math.round(dnl);
+  }catch(e){
+    console.warn('DOT noise identify error', e);
+  }
+  return null; // no value at this point (rural areas often have no polygon/return)
+}
+
+/* USGS — pick nearest station with recent *temperature* (00010) and pull daily mean (°C) to keep it stable.
+   If no candidate, we leave tile/chart blank. (Your previous USGS 400s were from a radius query that
+   sometimes returns no station; this version tries a stricter filter and guards every step.)
+*/
+async function fetchUSGSWater(lat, lon, radiusKm=80){
+  const siteURL = new URL('https://waterservices.usgs.gov/nwis/site/');
+  siteURL.search = new URLSearchParams({
+    format: 'json',
+    parameterCd: '00010',   // water temperature
+    hasDataTypeCd: 'dv',    // daily values
+    siteType: 'ST',
+    latitude: lat,
+    longitude: lon,
+    distance: (radiusKm*0.621371).toFixed(0)  // USGS expects miles in this endpoint
+  }).toString();
+
+  try{
+    const sResp = await fetch(siteURL);
+    if(!sResp.ok) throw new Error('site search failed');
+    const sj = await sResp.json();
+    const sites = sj?.value?.sites || [];
+    if(!sites.length) return { site: 'No station', times:[], vals:[] };
+
+    // pick the closest
+    const best = sites[0];
+    const site = best?.siteCode?.[0]?.value || best?.sourceInfo?.siteCode?.[0]?.value;
+    if(!site) return { site: 'No station', times:[], vals:[] };
+
+    // daily values (last 14–30 days) for temperature (°C)
+    const now = new Date(); const start = new Date(now.getTime() - 30*86400e3);
+    const dvURL = new URL('https://waterservices.usgs.gov/nwis/dv/');
+    dvURL.search = new URLSearchParams({
+      format: 'json',
+      sites: site,
+      parameterCd: '00010',
+      startDT: start.toISOString().slice(0,10),
+      endDT: now.toISOString().slice(0,10)
+    }).toString();
+
+    const dResp = await fetch(dvURL);
+    if(!dResp.ok) throw new Error('dv fetch failed');
+    const dj = await dResp.json();
+    const ts = dj?.value?.timeSeries?.[0];
+    const pts = ts?.values?.[0]?.value || [];
+    const times = pts.map(p => new Date(p.dateTime));
+    const vals  = pts.map(p => Number(p.value));
+
+    return { site, times, vals };
+  }catch(e){
+    console.warn('USGS water fallback', e);
+    return { site: 'Unavailable', times:[], vals:[] };
+  }
+}
+
+// --- Environment (beta)
+const [triCount, dnl, water] = await Promise.all([
+  fetchTRICount(loc.lat, loc.lon, 25),
+  fetchNoiseDNL(loc.lat, loc.lon),
+  fetchUSGSWater(loc.lat, loc.lon, 80) // ~50 miles
+]);
+
+// TRI tile
+document.getElementById('echoCount').textContent = triCount ? triCount.toLocaleString() : '—';
+
+// Noise tile (DNL dB)
+const noiseTile = document.getElementById('noiseNow');
+if(noiseTile){
+  noiseTile.textContent = (dnl!=null) ? `${dnl} dB DNL` : '—';
+  noiseTile.parentElement.title = 'DOT modeled day–night sound level at point';
+}
+
+// Water chart + station label
+document.getElementById('usgsStation').textContent = water.site || '—';
+if(waterChart){
+  const labels = water.times.map(d => `${d.getMonth()+1}/${d.getDate()}`);
+  waterChart.data.labels = labels;
+  waterChart.data.datasets[0].label = 'Water temp (°C)';
+  waterChart.data.datasets[0].data = water.vals;
+  waterChart.update();
+}
+
+  
   // ---------- main
   async function loadAll(){
     const key = ($('#eiaKey').value||'').trim();
