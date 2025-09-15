@@ -212,12 +212,6 @@
     </section>
   </main>
 
-<div class="tileSm">
-  <div class="sub">Modeled transportation noise</div>
-  <div class="big" id="noiseNow">—</div>
-</div>
-
-
   <footer>
     <div>Sources: EIA Form 930 (free). Weather via Open-Meteo; alerts via api.weather.gov. Air via Open-Meteo Air-Quality. Water via USGS NWIS (nearest station). TRI counts via EPA ECHO. Revenue is an estimate; for trading/ops use ISO LMPs and settlement rules.</div>
   </footer>
@@ -258,21 +252,20 @@
   let demandChart, fuelTSChart, wxChart, aqChart, waterChart;
 
   // stable box helper to avoid “crunched” canvases before layout settles
-function waitForStableBox(box, minW=160, minH=120, timeoutMs=1500){
-  return new Promise(resolve=>{
-    const t0 = performance.now();
-    function check(){
-      const r1 = box.getBoundingClientRect();
-      if((performance.now()-t0)>timeoutMs || (r1.width>=minW && r1.height>=minH)){
-        // one extra frame to settle
-        return requestAnimationFrame(()=> resolve());
+  function waitForStableBox(box, minW=160, minH=120){
+    return new Promise(resolve=>{
+      function check(){
+        const r1 = box.getBoundingClientRect();
+        if(r1.width < minW || r1.height < minH){ return requestAnimationFrame(check); }
+        requestAnimationFrame(()=>{
+          const r2 = box.getBoundingClientRect();
+          if (Math.abs(r2.width-r1.width)>0.5 || Math.abs(r2.height-r1.height)>0.5) return requestAnimationFrame(check);
+          resolve();
+        });
       }
-      requestAnimationFrame(check);
-    }
-    check();
-  });
-}
-
+      check();
+    });
+  }
   async function ensureCharts(){
     await Promise.all([
       waitForStableBox($('#chartDemand').parentElement),
@@ -689,32 +682,6 @@ async function fetchUSGSWater(lat, lon, radiusKm=80){
   }
 }
 
-// --- Environment (beta)
-const [triCount, dnl, water] = await Promise.all([
-  fetchTRICount(loc.lat, loc.lon, 25),
-  fetchNoiseDNL(loc.lat, loc.lon),
-  fetchUSGSWater(loc.lat, loc.lon, 80) // ~50 miles
-]);
-
-// TRI tile
-document.getElementById('echoCount').textContent = triCount ? triCount.toLocaleString() : '—';
-
-// Noise tile (DNL dB)
-const noiseTile = document.getElementById('noiseNow');
-if(noiseTile){
-  noiseTile.textContent = (dnl!=null) ? `${dnl} dB DNL` : '—';
-  noiseTile.parentElement.title = 'DOT modeled day–night sound level at point';
-}
-
-// Water chart + station label
-document.getElementById('usgsStation').textContent = water.site || '—';
-if(waterChart){
-  const labels = water.times.map(d => `${d.getMonth()+1}/${d.getDate()}`);
-  waterChart.data.labels = labels;
-  waterChart.data.datasets[0].label = 'Water temp (°C)';
-  waterChart.data.datasets[0].data = water.vals;
-  waterChart.update();
-}
 
   
   // ---------- main
