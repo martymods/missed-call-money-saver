@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Grid Starter — PJM • EIA-930 (Free Tier)</title>
-  <meta name="description" content="Free-tier grid dashboard using EIA-930: demand vs forecast, fuel time-series, interchange, revenue, local weather + alerts, and basic environment signals (beta).">
+  <meta name="description" content="Free-tier grid dashboard using EIA-930: demand vs forecast, fuel time-series, interchange, revenue, local weather + alerts, plus basic environment signals (beta).">
   <meta name="theme-color" content="#0f1a3d">
   <style>
     :root{
@@ -202,17 +202,18 @@
           <div class="chartbox"><canvas id="chartWater"></canvas></div>
         </div>
       </div>
-      <div class="envTiles" style="margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      <div class="envTiles" style="margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
         <div class="tileSm"><div class="sub">Air: latest US AQI</div><div class="big" id="aqiNow">—</div></div>
         <div class="tileSm"><div class="sub">Water station</div><div class="big" id="usgsStation">—</div></div>
-        <div class="tileSm"><div class="sub">Notes</div><div class="big" style="font-size:14px">Signals only; use local agencies for compliance</div></div>
+        <div class="tileSm"><div class="sub">Nearby TRI facilities (EPA)</div><div class="big" id="echoCount">—</div></div>
+        <div class="tileSm"><div class="sub">Notes</div><div class="big" style="font-size:14px">Noise is model-based; use DOT map for context</div></div>
       </div>
       <div class="mini" style="margin-top:6px">Soil/ground & noise lack universal live APIs. For context, combine TRI/Superfund + DOT noise maps with local data.</div>
     </section>
   </main>
 
   <footer>
-    <div>Sources: EIA Form 930 (free). Weather via Open-Meteo; alerts via api.weather.gov. Air via Open-Meteo Air-Quality. Water via USGS NWIS (nearest station). Revenue is an estimate; for trading/ops use ISO LMPs and settlement rules.</div>
+    <div>Sources: EIA Form 930 (free). Weather via Open-Meteo; alerts via api.weather.gov. Air via Open-Meteo Air-Quality. Water via USGS NWIS (nearest station). TRI counts via EPA ECHO. Revenue is an estimate; for trading/ops use ISO LMPs and settlement rules.</div>
   </footer>
 
   <script>
@@ -247,10 +248,10 @@
   $('#price').addEventListener('input', e=> { $('#priceNum').value = e.target.value; store.price = e.target.value; updateMoney(); });
   $('#priceNum').addEventListener('input', e=> { $('#price').value = e.target.value||0; store.price = e.target.value||0; updateMoney(); });
 
-  // ---------- charts (Chart.js loads deferred)
+  // ---------- charts
   let demandChart, fuelTSChart, wxChart, aqChart, waterChart;
 
-  // Wait for a box to have stable non-zero width & height across two frames
+  // stable box helper to avoid “crunched” canvases before layout settles
   function waitForStableBox(box, minW=160, minH=120){
     return new Promise(resolve=>{
       function check(){
@@ -265,9 +266,7 @@
       check();
     });
   }
-
   async function ensureCharts(){
-    // wait until containers are laid out to avoid “crunched” canvases
     await Promise.all([
       waitForStableBox($('#chartDemand').parentElement),
       waitForStableBox($('#chartFuelTS').parentElement),
@@ -339,7 +338,7 @@
     }
   }
 
-  // ResizeObserver keeps canvases correct after any grid reflow
+  // keep canvases correct after any grid reflow
   const ro = new ResizeObserver(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); aqChart?.resize(); waterChart?.resize(); });
   ro.observe(document.body);
 
@@ -370,7 +369,6 @@
     const end = new Date(); const start = new Date(end.getTime() - Number(hours)*3600*1000);
     const url = new URL('https://api.eia.gov/v2/electricity/rto/interchange-data/data/');
     url.searchParams.set('api_key', key); url.searchParams.set('frequency','hourly'); url.searchParams.append('data[0]','value');
-    // We’ll fetch both directions then net them
     url.searchParams.set('start', toEIAISO(start)); url.searchParams.set('end', toEIAISO(end));
     const r = await fetch(url); if(!r.ok) throw new Error('EIA interchange failed');
     const rows = (await r.json())?.response?.data || [];
@@ -477,6 +475,59 @@
     }
   }
 
+  // ---------- Environment (air, water, TRI)
+  async function fetchAirQuality(lat, lon, hours){
+    const pastDays = Math.max(1, Math.ceil(hours/24));
+    const url = new URL('https://air-quality-api.open-meteo.com/v1/air-quality');
+    url.search = [
+      `latitude=${lat}`, `longitude=${lon}`,
+      'hourly=pm2_5,us_aqi', `past_days=${pastDays}`, 'timezone=auto'
+    ].join('&');
+    const r = await fetch(url); if(!r.ok) throw new Error('Air quality failed');
+    const j = await r.json();
+    const H = j.hourly || {};
+    const times = H.time?.map(t => new Date(t)) || [];
+    const endIdx = times.length, startIdx = Math.max(0, endIdx-hours);
+    const slice = a => (a||[]).slice(startIdx,endIdx);
+    return {
+      times: times.slice(startIdx,endIdx),
+      pm25: slice(H.pm2_5),
+      aqi:  slice(H.us_aqi),
+      aqiNow: H.us_aqi?.[endIdx-1] ?? null
+    };
+  }
+
+  async function fetchUSGSWater(lat, lon, hours){
+    try{
+      // find nearest site with water temperature (00010), within 50 km
+      const r1 = await fetch(`https://waterservices.usgs.gov/nwis/site/?format=rjson&hasDataTypeCd=iv&parameterCd=00010&lat=${lat}&lon=${lon}&siteType=ST&distance=50`);
+      const s1 = await r1.json();
+      const site = s1?.site?.[0]?.siteCode?.[0]?.value;
+      if(!site) throw new Error('no site');
+      const period = `PT${hours}H`;
+      const r2 = await fetch(`https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${site}&parameterCd=00010&period=${period}`);
+      const s2 = await r2.json();
+      const ts = s2?.value?.timeSeries?.[0]?.values?.[0]?.value || [];
+      const labels = ts.map(v => new Date(v.dateTime));
+      const vals   = ts.map(v => Number(v.value));
+      return { site, labels, vals };
+    }catch{
+      return { site:null, labels:[], vals:[] };
+    }
+  }
+
+  // EPA ECHO: count nearby TRI facilities (proxy for potential ground pollution)
+  async function fetchTRICount(lat, lon, miles=25){
+    try{
+      const u = `https://echodata.epa.gov/echo/RestServices/echo_rest_services.get_facilities?output=JSON&p_program=TRI&p_lat=${lat}&p_long=${lon}&p_radius=${miles}`;
+      const r = await fetch(u);
+      const j = await r.json();
+      // try a couple likely shapes
+      const count = j?.Results?.QueryRows ?? j?.Results?.ResultCount ?? j?.Results?.Facilities?.length ?? null;
+      return count==null ? null : Number(count);
+    }catch{ return null; }
+  }
+
   // ---------- UI builders (energy)
   const FUEL_NAMES = {NG:'Gas', COL:'Coal', NUC:'Nuclear', WND:'Wind', SUN:'Solar', WAT:'Hydro', OIL:'Oil', OTH:'Other'};
   const FUEL_ORDER = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH'];
@@ -502,47 +553,6 @@
     const load = Number(txt)||0;
     $('#kpiRev').textContent = fmtMoney(price * load);
     if(window.__lastMix && load>0){ renderFuelCards(window.__lastMix, load, price); }
-  }
-
-  // ---------- Environment (beta)
-  async function fetchAirQuality(lat, lon, hours){
-    const pastDays = Math.max(1, Math.ceil(hours/24));
-    const url = new URL('https://air-quality-api.open-meteo.com/v1/air-quality');
-    url.search = [
-      `latitude=${lat}`, `longitude=${lon}`,
-      'hourly=pm2_5,us_aqi', `past_days=${pastDays}`, 'timezone=auto'
-    ].join('&');
-    const r = await fetch(url); if(!r.ok) throw new Error('Air quality failed');
-    const j = await r.json();
-    const H = j.hourly || {};
-    const times = H.time?.map(t => new Date(t)) || [];
-    const endIdx = times.length, startIdx = Math.max(0, endIdx-hours);
-    const slice = a => (a||[]).slice(startIdx,endIdx);
-    return {
-      times: times.slice(startIdx,endIdx),
-      pm25: slice(H.pm2_5),
-      aqi:  slice(H.us_aqi),
-      aqiNow: H.us_aqi?.[endIdx-1] ?? null
-    };
-  }
-
-  async function fetchUSGSWater(lat, lon, hours){
-    try{
-      // find nearest site with water temperature (00010), within 50 km
-      const r1 = await fetch(`https://waterservices.usgs.gov/nwis/site/?format=rjson&hasDataTypeCd=iv&parameterCd=00010&lat=${lat}&long=${lon}&siteType=ST&distance=50`);
-      const s1 = await r1.json();
-      const site = s1?.site?.[0]?.siteCode?.[0]?.value;
-      if(!site) throw new Error('no site');
-      const period = `PT${hours}H`;
-      const r2 = await fetch(`https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${site}&parameterCd=00010&period=${period}`);
-      const s2 = await r2.json();
-      const ts = s2?.value?.timeSeries?.[0]?.values?.[0]?.value || [];
-      const labels = ts.map(v => new Date(v.dateTime));
-      const vals   = ts.map(v => Number(v.value));
-      return { site, labels, vals };
-    }catch{
-      return { site:null, labels:[], vals:[] };
-    }
   }
 
   // ---------- main
@@ -599,7 +609,11 @@
       renderAlerts(alerts);
 
       // Environment (beta)
-      const [air, water] = await Promise.all([ fetchAirQuality(loc.lat, loc.lon, hours), fetchUSGSWater(loc.lat, loc.lon, hours) ]);
+      const [air, water, triCount] = await Promise.all([
+        fetchAirQuality(loc.lat, loc.lon, hours),
+        fetchUSGSWater(loc.lat, loc.lon, hours),
+        fetchTRICount(loc.lat, loc.lon, 25)
+      ]);
       // Air
       const airLabels = air.times.map(d => `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`);
       aqChart.data.labels = airLabels;
@@ -607,13 +621,17 @@
       aqChart.data.datasets[1].data = air.aqi;
       aqChart.update();
       $('#aqiNow').textContent = air.aqiNow!=null ? Math.round(air.aqiNow) : '—';
+
       // Water
       waterChart.data.labels = water.labels.map(d => `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`);
       waterChart.data.datasets[0].data = water.vals;
       waterChart.update();
       $('#usgsStation').textContent = water.site || '—';
 
-      // Force a resize after render (mirrors the DevTools effect)
+      // TRI count
+      $('#echoCount').textContent = triCount!=null ? fmtNum(triCount) : '—';
+
+      // mirror the DevTools “resize” effect once everything is drawn
       requestAnimationFrame(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); aqChart?.resize(); waterChart?.resize(); });
 
       $('#status').textContent = 'OK';
