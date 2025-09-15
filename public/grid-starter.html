@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Grid Starter — PJM • EIA-930 (Free Tier)</title>
-  <meta name="description" content="Free-tier grid dashboard using EIA-930: demand vs forecast, fuel time-series, interchange, revenue estimates, and local weather + alerts.">
+  <meta name="description" content="Free-tier grid dashboard using EIA-930: demand vs forecast, fuel time-series, interchange, revenue, local weather + alerts, and basic environment signals (beta).">
   <meta name="theme-color" content="#0f1a3d">
   <style>
     :root{
@@ -25,9 +25,8 @@
       min-width:0;
     }
     @media (max-width:980px){.wrap{grid-template-columns:1fr}}
-
     .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
-    .card>*{min-width:0} /* <<< critical so inner grids can shrink */
+    .card>*{min-width:0}
 
     h1{font-size:24px;margin:0} h2{font-size:16px;margin:0 0 8px}
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
@@ -80,8 +79,14 @@
     .alert{border-left:4px solid var(--warn);padding:8px 10px;border-radius:8px;background:#fff;border:1px solid #e1f0ff}
     .alert.bad{border-left-color:var(--bad)}
     .badgeS{display:inline-block;padding:2px 6px;border-radius:999px;background:#f2f4ff;border:1px solid #e5eafe;font-size:12px;font-weight:800}
+
+    /* ENVIRONMENT beta */
+    .envGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+    @media (max-width:900px){.envGrid{grid-template-columns:1fr}}
+    .tileSm{background:#fff;border:1px solid var(--edge);border-radius:12px;padding:12px}
   </style>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 </head>
 <body>
   <header>
@@ -119,6 +124,7 @@
           <option value="168">Last 7 days</option>
         </select>
       </div>
+
       <div class="field">
         <label><b>Price ($/MWh)</b></label>
         <div class="priceCtl">
@@ -127,12 +133,9 @@
         </div>
         <div class="mini">Used for revenue estimates (Revenue/h ≈ Price × Current Load). Real nodal/zone LMPs require PJM credentials.</div>
       </div>
-      <div class="field">
-        <button id="btnLoad" class="primary">Fetch data</button>
-      </div>
-      <div class="field">
-        <div id="status" class="pill">Idle</div>
-      </div>
+
+      <div class="field"><button id="btnLoad" class="primary">Fetch data</button></div>
+      <div class="field"><div id="status" class="pill">Idle</div></div>
     </aside>
 
     <section class="card">
@@ -176,7 +179,6 @@
             <div class="wxTile"><div class="sub">Temperature now</div><div class="big" id="wxTemp">—</div></div>
             <div class="wxTile"><div class="sub">Wind</div><div class="big" id="wxWind">—</div></div>
           </div>
-
           <div class="wxAlerts" id="wxAlerts"></div>
         </div>
 
@@ -186,13 +188,32 @@
         </div>
       </div>
     </section>
+
+    <!-- Environment (beta) -->
+    <section class="card">
+      <h2>Environment (beta) — near your BA</h2>
+      <div class="envGrid">
+        <div>
+          <h3 style="margin:4px 0 8px">Air quality (PM2.5, US AQI)</h3>
+          <div class="chartbox"><canvas id="chartAQ"></canvas></div>
+        </div>
+        <div>
+          <h3 style="margin:4px 0 8px">Water (nearest USGS station — °C)</h3>
+          <div class="chartbox"><canvas id="chartWater"></canvas></div>
+        </div>
+      </div>
+      <div class="envTiles" style="margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div class="tileSm"><div class="sub">Air: latest US AQI</div><div class="big" id="aqiNow">—</div></div>
+        <div class="tileSm"><div class="sub">Water station</div><div class="big" id="usgsStation">—</div></div>
+        <div class="tileSm"><div class="sub">Notes</div><div class="big" style="font-size:14px">Signals only; use local agencies for compliance</div></div>
+      </div>
+      <div class="mini" style="margin-top:6px">Soil/ground & noise lack universal live APIs. For context, combine TRI/Superfund + DOT noise maps with local data.</div>
+    </section>
   </main>
 
   <footer>
-    <div>Sources: EIA Form 930 (free). Weather via Open-Meteo; alerts via api.weather.gov. Revenue is an estimate; for real trading/ops use ISO LMPs and settlement rules.</div>
+    <div>Sources: EIA Form 930 (free). Weather via Open-Meteo; alerts via api.weather.gov. Air via Open-Meteo Air-Quality. Water via USGS NWIS (nearest station). Revenue is an estimate; for trading/ops use ISO LMPs and settlement rules.</div>
   </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <script>
   // ---------- helpers
@@ -226,10 +247,8 @@
   $('#price').addEventListener('input', e=> { $('#priceNum').value = e.target.value; store.price = e.target.value; updateMoney(); });
   $('#priceNum').addEventListener('input', e=> { $('#price').value = e.target.value||0; store.price = e.target.value||0; updateMoney(); });
 
-  // ---------- charts
-  Chart.defaults.maintainAspectRatio = false; // global
-
-  let demandChart, fuelTSChart, wxChart;
+  // ---------- charts (Chart.js loads deferred)
+  let demandChart, fuelTSChart, wxChart, aqChart, waterChart;
 
   // Wait for a box to have stable non-zero width & height across two frames
   function waitForStableBox(box, minW=160, minH=120){
@@ -239,8 +258,7 @@
         if(r1.width < minW || r1.height < minH){ return requestAnimationFrame(check); }
         requestAnimationFrame(()=>{
           const r2 = box.getBoundingClientRect();
-          const stable = Math.abs(r2.width-r1.width)<1 && Math.abs(r2.height-r1.height)<1;
-          if(!stable) return requestAnimationFrame(check);
+          if (Math.abs(r2.width-r1.width)>0.5 || Math.abs(r2.height-r1.height)>0.5) return requestAnimationFrame(check);
           resolve();
         });
       }
@@ -249,13 +267,14 @@
   }
 
   async function ensureCharts(){
-    const b1 = $('#chartDemand').parentElement;
-    const b2 = $('#chartFuelTS').parentElement;
-    const b3 = $('#chartWX').parentElement;
-
-    await waitForStableBox(b1);
-    await waitForStableBox(b2);
-    await waitForStableBox(b3);
+    // wait until containers are laid out to avoid “crunched” canvases
+    await Promise.all([
+      waitForStableBox($('#chartDemand').parentElement),
+      waitForStableBox($('#chartFuelTS').parentElement),
+      waitForStableBox($('#chartWX').parentElement),
+      waitForStableBox($('#chartAQ').parentElement),
+      waitForStableBox($('#chartWater').parentElement),
+    ]);
 
     if(!demandChart){
       demandChart = new Chart($('#chartDemand'), {
@@ -264,7 +283,7 @@
           { label:'Demand (MW)', data:[], borderWidth:2, tension:.25 },
           { label:'Forecast (MW)', data:[], borderWidth:2, tension:.25, borderDash:[6,6] }
         ]},
-        options:{ responsive:true, interaction:{ mode:'index', intersect:false },
+        options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
           scales:{ x:{ ticks:{ maxRotation:0 }}, y:{ beginAtZero:true } }
         }
       });
@@ -273,7 +292,7 @@
       fuelTSChart = new Chart($('#chartFuelTS'), {
         type:'line',
         data:{ labels:[], datasets:[] },
-        options:{ responsive:true, interaction:{mode:'index',intersect:false},
+        options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
           plugins:{ legend:{ position:'bottom' }},
           scales:{ x:{ stacked:true }, y:{ beginAtZero:true, stacked:true } }
         }
@@ -286,19 +305,42 @@
           { label:'Temperature (°F)', data:[], yAxisID:'temp', borderWidth:2, tension:.25 },
           { label:'Precip (in/hr)',   data:[], yAxisID:'precip', borderWidth:2, borderDash:[6,6], tension:.25 }
         ]},
-        options:{ responsive:true, interaction:{mode:'index',intersect:false},
+        options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
           plugins:{ legend:{ position:'bottom' }},
           scales:{ temp:{ type:'linear', position:'left', beginAtZero:false },
                   precip:{ type:'linear', position:'right', beginAtZero:true } }
         }
       });
     }
+    if(!aqChart){
+      aqChart = new Chart($('#chartAQ'), {
+        type:'line',
+        data:{ labels:[], datasets:[
+          { label:'PM2.5 (µg/m³)', data:[], borderWidth:2, tension:.25 },
+          { label:'US AQI', data:[], borderWidth:2, tension:.25, borderDash:[6,6], yAxisID:'aqi' }
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+          plugins:{ legend:{ position:'bottom' }},
+          scales:{ y:{ beginAtZero:true }, aqi:{ position:'right', beginAtZero:true, suggestedMax:150 } }
+        }
+      });
+    }
+    if(!waterChart){
+      waterChart = new Chart($('#chartWater'), {
+        type:'line',
+        data:{ labels:[], datasets:[
+          { label:'Water temp (°C)', data:[], borderWidth:2, tension:.25 }
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+          plugins:{ legend:{ position:'bottom' }},
+          scales:{ y:{ beginAtZero:false } }
+        }
+      });
+    }
   }
 
-  // Keep canvases sized when layout changes
-  const ro = new ResizeObserver(()=>{
-    demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize();
-  });
+  // ResizeObserver keeps canvases correct after any grid reflow
+  const ro = new ResizeObserver(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); aqChart?.resize(); waterChart?.resize(); });
   ro.observe(document.body);
 
   // ---------- EIA fetchers
@@ -328,15 +370,15 @@
     const end = new Date(); const start = new Date(end.getTime() - Number(hours)*3600*1000);
     const url = new URL('https://api.eia.gov/v2/electricity/rto/interchange-data/data/');
     url.searchParams.set('api_key', key); url.searchParams.set('frequency','hourly'); url.searchParams.append('data[0]','value');
-    url.searchParams.append('facets[fromba][]', ba); url.searchParams.append('facets[toba][]', ba);
+    // We’ll fetch both directions then net them
     url.searchParams.set('start', toEIAISO(start)); url.searchParams.set('end', toEIAISO(end));
     const r = await fetch(url); if(!r.ok) throw new Error('EIA interchange failed');
     const rows = (await r.json())?.response?.data || [];
-    let imp=0, exp=0; for(const row of rows){ const v=Number(row.value||0); if(row.toba===ba) imp+=v; else if(row.fromba===ba) exp+=v; }
+    let imp=0, exp=0; for(const row of rows){ const v=Number(row.value||0); if(row.toba===ba) imp+=v; if(row.fromba===ba) exp+=v; }
     return { net: imp-exp };
   }
 
-  // ---------- weather
+  // ---------- Weather & alerts
   const BA_COORDS = {
     PJM:{lat:39.9526, lon:-75.1652, place:'Philadelphia, PA'},
     ISNE:{lat:42.3601, lon:-71.0589, place:'Boston, MA'},
@@ -390,7 +432,6 @@
       now: { tempF: H.temperature_2m?.[endIdx-1], windMph: H.wind_speed_10m?.[endIdx-1], code: H.weathercode?.[endIdx-1] }
     };
   }
-
   async function fetchNOAAAlerts(lat, lon){
     try{
       const r = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`);
@@ -406,7 +447,6 @@
       }));
     }catch{ return []; }
   }
-
   function renderWeather(wx, placeLabel){
     const info = weatherIconInfo(wx.now.code);
     $('#wxIcon').src = iconURL(info.icon);
@@ -422,7 +462,6 @@
     wxChart.data.datasets[1].data = wx.precipIn;
     wxChart.update();
   }
-
   function renderAlerts(list){
     const box = $('#wxAlerts'); box.innerHTML = '';
     if(!list.length){ box.innerHTML = '<div class="wxTile"><span class="badgeS">No active alerts</span></div>'; return; }
@@ -438,9 +477,9 @@
     }
   }
 
+  // ---------- UI builders (energy)
   const FUEL_NAMES = {NG:'Gas', COL:'Coal', NUC:'Nuclear', WND:'Wind', SUN:'Solar', WAT:'Hydro', OIL:'Oil', OTH:'Other'};
   const FUEL_ORDER = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH'];
-
   function renderFuelCards(mixObj, totalMW, price){
     const el = $('#fuelCards'); el.innerHTML = '';
     const fuels = Object.keys(mixObj).sort((a,b)=> FUEL_ORDER.indexOf(a)-FUEL_ORDER.indexOf(b));
@@ -457,13 +496,53 @@
       el.appendChild(card);
     }
   }
-
   function updateMoney(){
     const price = Number($('#priceNum').value||0);
     const txt = $('#kpiDemand').textContent.replace(/[, MW]/g,'');
     const load = Number(txt)||0;
     $('#kpiRev').textContent = fmtMoney(price * load);
     if(window.__lastMix && load>0){ renderFuelCards(window.__lastMix, load, price); }
+  }
+
+  // ---------- Environment (beta)
+  async function fetchAirQuality(lat, lon, hours){
+    const pastDays = Math.max(1, Math.ceil(hours/24));
+    const url = new URL('https://air-quality-api.open-meteo.com/v1/air-quality');
+    url.search = [
+      `latitude=${lat}`, `longitude=${lon}`,
+      'hourly=pm2_5,us_aqi', `past_days=${pastDays}`, 'timezone=auto'
+    ].join('&');
+    const r = await fetch(url); if(!r.ok) throw new Error('Air quality failed');
+    const j = await r.json();
+    const H = j.hourly || {};
+    const times = H.time?.map(t => new Date(t)) || [];
+    const endIdx = times.length, startIdx = Math.max(0, endIdx-hours);
+    const slice = a => (a||[]).slice(startIdx,endIdx);
+    return {
+      times: times.slice(startIdx,endIdx),
+      pm25: slice(H.pm2_5),
+      aqi:  slice(H.us_aqi),
+      aqiNow: H.us_aqi?.[endIdx-1] ?? null
+    };
+  }
+
+  async function fetchUSGSWater(lat, lon, hours){
+    try{
+      // find nearest site with water temperature (00010), within 50 km
+      const r1 = await fetch(`https://waterservices.usgs.gov/nwis/site/?format=rjson&hasDataTypeCd=iv&parameterCd=00010&lat=${lat}&long=${lon}&siteType=ST&distance=50`);
+      const s1 = await r1.json();
+      const site = s1?.site?.[0]?.siteCode?.[0]?.value;
+      if(!site) throw new Error('no site');
+      const period = `PT${hours}H`;
+      const r2 = await fetch(`https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${site}&parameterCd=00010&period=${period}`);
+      const s2 = await r2.json();
+      const ts = s2?.value?.timeSeries?.[0]?.values?.[0]?.value || [];
+      const labels = ts.map(v => new Date(v.dateTime));
+      const vals   = ts.map(v => Number(v.value));
+      return { site, labels, vals };
+    }catch{
+      return { site:null, labels:[], vals:[] };
+    }
   }
 
   // ---------- main
@@ -477,11 +556,11 @@
     await ensureCharts();
 
     try{
+      // demand + forecast
       const [act, fcast] = await Promise.all([
         eiaFetchRegion(key, ba, hours, 'D'),
         eiaFetchRegion(key, ba, hours, 'DF')
       ]);
-
       const labels = act.map(r=> parseEIAPeriod(r.period)).map(d=> d ? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00` : '');
       const valsAct = act.map(r=> Number(r.value||0));
       const fMap = new Map(fcast.map(r=> [r.period, Number(r.value||0)]));
@@ -497,6 +576,7 @@
       const lastDt = parseEIAPeriod(last?.period);
       $('#kpiTime').textContent = lastDt ? lastDt.toLocaleString() : '—';
 
+      // fuel TS
       const fuelTS = await eiaFetchFuelTimeSeries(key, ba, hours);
       const fuelLabels = fuelTS.times.map(t=> { const d=parseEIAPeriod(t); return d? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`:''; });
       fuelTSChart.data.labels = fuelLabels;
@@ -508,16 +588,33 @@
       window.__lastMix = lastMix;
       renderFuelCards(lastMix, Number(last?.value||0), Number($('#priceNum').value||0));
 
+      // interchange
       const inter = await eiaFetchInterchangeNet(key, ba, hours);
       $('#kpiInterchg').textContent = (inter.net>=0? '+' : '−') + fmtNum(Math.abs(inter.net)) + ' MW';
 
+      // weather + alerts
       const loc = BA_COORDS[ba] || BA_COORDS.PJM;
       const [wx, alerts] = await Promise.all([ fetchWeather(loc.lat, loc.lon, hours), fetchNOAAAlerts(loc.lat, loc.lon) ]);
       renderWeather(wx, loc.place);
       renderAlerts(alerts);
 
-      // Force a resize after render (this mirrors the DevTools effect)
-      requestAnimationFrame(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); });
+      // Environment (beta)
+      const [air, water] = await Promise.all([ fetchAirQuality(loc.lat, loc.lon, hours), fetchUSGSWater(loc.lat, loc.lon, hours) ]);
+      // Air
+      const airLabels = air.times.map(d => `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`);
+      aqChart.data.labels = airLabels;
+      aqChart.data.datasets[0].data = air.pm25;
+      aqChart.data.datasets[1].data = air.aqi;
+      aqChart.update();
+      $('#aqiNow').textContent = air.aqiNow!=null ? Math.round(air.aqiNow) : '—';
+      // Water
+      waterChart.data.labels = water.labels.map(d => `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`);
+      waterChart.data.datasets[0].data = water.vals;
+      waterChart.update();
+      $('#usgsStation').textContent = water.site || '—';
+
+      // Force a resize after render (mirrors the DevTools effect)
+      requestAnimationFrame(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); aqChart?.resize(); waterChart?.resize(); });
 
       $('#status').textContent = 'OK';
       updateMoney();
@@ -534,4 +631,3 @@
   </script>
 </body>
 </html>
-
