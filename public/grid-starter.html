@@ -421,17 +421,25 @@
     const times = Array.from(map.keys()); const fuels = Array.from(fuelset); const byFuel={}; for(const f of fuels){ byFuel[f]=times.map(t=> (map.get(t)[f]||0)); }
     return { times, fuels, byFuel };
   }
-  async function eiaFetchInterchangeNet(key, ba, hours){
+async function eiaFetchInterchangeNet(key, ba, hours){
+  async function fetchSide(side){
     const end = new Date(); const start = new Date(end.getTime() - Number(hours)*3600*1000);
     const url = new URL('https://api.eia.gov/v2/electricity/rto/interchange-data/data/');
-    url.searchParams.set('api_key', key); url.searchParams.set('frequency','hourly'); url.searchParams.append('data[0]','value');
-    url.searchParams.append('facets[fromba][]', ba); url.searchParams.append('facets[toba][]', ba);
-    url.searchParams.set('start', toEIAISO(start)); url.searchParams.set('end', toEIAISO(end));
-    const r = await fetch(url); if(!r.ok) throw new Error('EIA interchange failed');
-    const rows = (await r.json())?.response?.data || [];
-    let imp=0, exp=0; for(const row of rows){ const v=Number(row.value||0); if(row.toba===ba) imp+=v; else if(row.fromba===ba) exp+=v; }
-    return { net: imp-exp };
+    url.searchParams.set('api_key', key);
+    url.searchParams.set('frequency','hourly');
+    url.searchParams.append('data[0]','value');
+    url.searchParams.append(`facets[${side}][]`, ba); // either 'toba' OR 'fromba'
+    url.searchParams.set('start', toEIAISO(start));
+    url.searchParams.set('end', toEIAISO(end));
+    const r = await fetch(url); if(!r.ok) throw new Error('EIA interchange '+side+' failed');
+    return (await r.json())?.response?.data || [];
   }
+  const [inRows, outRows] = await Promise.all([fetchSide('toba'), fetchSide('fromba')]);
+  const imp = inRows.reduce((s,r)=> s + Number(r.value||0), 0);
+  const exp = outRows.reduce((s,r)=> s + Number(r.value||0), 0);
+  return { net: imp - exp };
+}
+
 
   // ---------- Weather (Open-Meteo + NOAA alerts)
   function weatherIconInfo(code){
