@@ -536,9 +536,12 @@
     async function findSite(params){
       const base='https://waterservices.usgs.gov/nwis/site/';
       const url = new URL(base);
+      // USGS Site Service does NOT support latitude/longitude params; use bBox around point
+      const dy = 50/111; // ~111 km per 1° lat
+      const dx = 50/(111*Math.cos(lat*Math.PI/180));
+      const bBox = [(lon-dx).toFixed(4),(lat-dy).toFixed(4),(lon+dx).toFixed(4),(lat+dy).toFixed(4)].join(',');
       url.search = new URLSearchParams({
-        format:'json', siteType:'ST', siteStatus:'active',
-        latitude:String(lat), longitude:String(lon), distance:'50',
+        format:'json', bBox:bBox, siteType:'ST', siteStatus:'active',
         ...params
       }).toString();
       const r = await fetch(url);
@@ -584,14 +587,21 @@
   // EPA ECHO TRI count (simple bbox/latlon search). Use Facility REST which supports lat/long.
   async function fetchTRICount(lat, lon, radiusKm=25){
     try{
-      const url = new URL('https://echo.epa.gov/echoapi/json/facilities');
+      // Use FRS get_facilities (supports lat/long + radius; 25 miles max)
+      const url = new URL('https://ofmpub.epa.gov/frs_public2/frs_rest_services.get_facilities');
+      const miles = Math.min(Math.round(radiusKm * 0.621371), 25);
       url.search = new URLSearchParams({
-        p_program:'TRI', p_lat:lat, p_long:lon, p_radius:radiusKm, output:'JSON'
+        latitude83: lat, longitude83: lon, search_radius: miles,
+        pgm_sys_acrnm: 'TRIS', output: 'JSON'
       }).toString();
-      const r = await fetch(url); if(!r.ok) throw new Error('ECHO fail');
+      const r = await fetch(url); if(!r.ok) throw new Error('FRS fail');
       const j = await r.json();
-      const c = Number(j?.Results?.Facilities?.length || 0);
-      return c;
+      const count =
+        (j?.Results?.Facilities?.length) ??
+        (j?.Facilities?.length) ??
+        (j?.FRSFacilitiesList?.FRSFacility?.length) ??
+        0;
+      return Number(count);
     }catch(e){ return null; }
   }
 
@@ -633,13 +643,18 @@
 
   // ---------- Citizens (FCC + Census ACS)
   async function fetchCounty(lat, lon){
-    const u = new URL('https://geo.fcc.gov/api/census/area');
-    u.search = new URLSearchParams({lat, lon, format:'json'});
-    const r = await fetch(u); if(!r.ok) throw new Error();
-    const j = await r.json();
-    const c = j?.results?.[0];
-    if(!c) throw new Error('no county');
-    return { name: c.name, statefp: c.state_fips, countyfp: c.county_fips };
+    // FCC 'area' endpoint blocks CORS. Use Census Geocoder via JSONP for county FIPS.
+    const u = new URL('https://geocoding.geo.census.gov/geocoder/geographies/coordinates');
+    u.search = new URLSearchParams({
+      x: String(lon), y: String(lat),
+      benchmark: 'Public_AR_Current',
+      vintage: 'Current_Current',
+      format: 'jsonp'
+    }).toString();
+    const j = await jsonp(u.toString());
+    const county = j?.result?.geographies?.Counties?.[0];
+    if(!county) throw new Error('no county');
+    return { name: county.NAME, statefp: county.STATE, countyfp: county.COUNTY };
   }
   async function fetchACS(statefp, countyfp){
     // NAME, population, median age, BA+ %, Unemployment %
@@ -669,12 +684,11 @@
   async function fetchTourism(lat, lon){
     const r10=10000, r15=15000, r20=20000;
     function Q(body){ return `[out:json][timeout:25];(${body});out ids;`; }
-    const qAttr = Q(`nwr["tourism"~"^attraction|museum|gallery|theme_park|artwork|zoo|aquarium|viewpoint$"](around:${r10},${lat},${lon})`);
-    const qHotel= Q(`nwr["tourism"~"^hotel|motel|hostel|guest_house|apartment|chalet|camp_site$"](around:${r10},${lat},${lon})`);
-    const qParks= Q(`nwr["leisure"~"^park|garden|nature_reserve$"](around:${r10},${lat},${lon});nwr["boundary"="national_park"](around:${r20},${lat},${lon})`);
-    const qGate = Q(`nwr["aeroway"="aerodrome"](around:${r20},${lat},${lon});nwr["railway"="station"](around:${r10},${lat},${lon});nwr["amenity"="ferry_terminal"](around:${r15},${lat},${lon})`);
-    const [a,h,p,g] = await Promise.all([overpassQuery(qAttr),overpassQuery(qHotel),overpassQuery(qParks),overpassQuery(qGate)]);
-    const A=a.length, H=h.length, P=p.length, G=g.length;
+    const qAttr = Q(`nwr["tourism"~"^(attraction|museum|gallery|theme_park|artwork|zoo|aquarium|viewpoint)$"](around:${r10},${lat},${lon})`);
+    const qHotel= Q(`nwr["tourism"~"^(hotel|motel|hostel|guest_house|apartment|chalet|camp_site)$"](around:${r10},${lat},${lon})`);
+    const qParks= Q(`nwr["leisure"~"^(park|garden|nature_reserve)$"](around:${r15},${lat},${lon});nwr["boundary"="national_park"](around:${r20},${lat},${lon})`);
+    const qGate = Q(`nwr["aeroway"="aerodrome"](around:${r20},${lat},${lon});nwr["amenity"="ferry_terminal"](around:${r15},${lat},${lon})`);
+    const [a,h,p,g] = await Promise.all([overpassQuery(qAttr),overpassQuery(qHotel),overpassQuery(qParks),overpassQuery(qGate)]);const A=a.length, H=h.length, P=p.length, G=g.length;
     return {A,H,P,G, score: 3*A + 2*P + 2*G + 1*H};
   }
 
