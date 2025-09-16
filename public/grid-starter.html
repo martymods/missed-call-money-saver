@@ -205,6 +205,20 @@
     if (/^\d{4}-\d{2}-\d{2}T\d{2}$/.test(p)) { const [Y,M,D,H]=p.replace('T','-').split('-').map(Number); return new Date(Date.UTC(Y,M-1,D,H,0,0)); }
     const s = p.replace(' ', 'T'); const d = new Date(s); return isNaN(d) ? null : d;
   }
+  // JSONP helper (for ArcGIS identify without CORS)
+  function jsonp(url, params={}, timeout=8000){
+    return new Promise((resolve,reject)=>{
+      const cb = `__cb_${Math.random().toString(36).slice(2)}`;
+      const q = new URLSearchParams({...params, f:'pjson', callback:cb});
+      const s = document.createElement('script');
+      const timer = setTimeout(()=>{ cleanup(); reject(new Error('jsonp timeout')); }, timeout);
+      function cleanup(){ delete window[cb]; s.remove(); clearTimeout(timer); }
+      window[cb] = (data)=>{ cleanup(); resolve(data); };
+      s.src = url + (url.includes('?')? '&' : '?') + q.toString();
+      s.onerror = ()=>{ cleanup(); reject(new Error('jsonp error')); };
+      document.head.appendChild(s);
+    });
+  }
 
   // ---------- persist
   const store = {
@@ -450,7 +464,6 @@
   }
 
   // ---------- Environment (air, water, TRI, noise)
-
   async function fetchAirQuality(lat, lon, hours){
     const pastDays = Math.max(1, Math.ceil(hours/24));
     const url = new URL('https://air-quality-api.open-meteo.com/v1/air-quality');
@@ -472,7 +485,6 @@
     };
   }
 
-  // TRI (EPA ECHO) — primary + fallback; quiet failure
   async function fetchTRICount(lat, lon, miles=25){
     const qs = p => Object.entries(p).map(([k,v])=> `${k}=${encodeURIComponent(v)}`).join('&');
     const params = { output:'JSON', p_program:'TRI', p_lat:lat.toFixed(3), p_long:lon.toFixed(3), p_radius:miles };
@@ -493,54 +505,53 @@
     return null;
   }
 
-  // DOT Transportation Noise — prefer maps.dot.gov; fallback to gis.dot.gov; quiet failure
+  // DOT Transportation Noise via JSONP (CORS-free)
   async function fetchNoiseDNL(lat, lon){
-    const makeBody = () => new URLSearchParams({
-      f:'json', sr:'4326', tolerance:'3', returnGeometry:'false',
+    const params = {
+      sr:'4326', tolerance:'3', returnGeometry:'false',
       mapExtent:`${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01}`,
       imageDisplay:'400,400,96',
       geometry: JSON.stringify({ x:lon, y:lat, spatialReference:{wkid:4326} }),
       geometryType:'esriGeometryPoint',
       layers:'all'
-    });
-
+    };
     const endpoints = [
       'https://maps.dot.gov/arcgis/rest/services/BTS/Transportation_Noise/MapServer/identify',
       'https://gis.dot.gov/arcgis/rest/services/BTS/Transportation_Noise/MapServer/identify'
     ];
-
     for(const url of endpoints){
       try{
-        const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: makeBody() });
-        if(!r.ok) continue;
-        const j = await r.json();
+        const j = await jsonp(url, params, 7000);
         const first = (j?.results||[]).find(v => typeof v?.attributes?.DNL === 'number' || typeof v?.attributes?.dnl === 'number');
         const dnl = first?.attributes?.DNL ?? first?.attributes?.dnl;
         if(Number.isFinite(dnl)) return Math.round(dnl);
-      }catch{ /* try next endpoint */ }
+      }catch{ /* try next */ }
     }
     return null;
   }
 
-  // USGS — nearest station with recent daily water temperature (°C)
+  // USGS — find nearest active stream station with daily water temp, then fetch last 30 days
   async function fetchUSGSWater(lat, lon){
     try{
-      // ✅ Correct params for site service: latitude & longitude; format=json
-      const siteURL = `https://waterservices.usgs.gov/nwis/site/?format=json&parameterCd=00010&siteType=ST&latitude=${lat}&longitude=${lon}&distance=50`;
+      const siteURL = `https://waterservices.usgs.gov/nwis/site/?format=json&seriesCatalogOutput=true&hasDataTypeCd=dv&siteStatus=active&siteType=ST&parameterCd=00010&latitude=${lat}&longitude=${lon}&distance=50`;
       const sResp = await fetch(siteURL);
       if(!sResp.ok) throw new Error('site search failed');
       const sj = await sResp.json();
 
-      let site;
-      // handle multiple possible shapes
-      site = sj?.site?.[0]?.siteCode?.[0]?.value
-          || sj?.value?.sites?.[0]?.siteCode?.[0]?.value
-          || sj?.value?.timeSeries?.[0]?.sourceInfo?.siteCode?.[0]?.value
-          || sj?.Site?.[0]?.siteCode?.[0]?.value;
+      // lots of shapes possible — try common ones
+      const list =
+        sj?.site ||
+        sj?.value?.sites ||
+        sj?.Site ||
+        sj?.value?.timeSeries?.map(t => t?.sourceInfo) || [];
 
+      let site;
+      for(const row of (list||[])){
+        const code = row?.siteCode?.[0]?.value || row?.siteCode?.[0]?.value;
+        if(code){ site = code; break; }
+      }
       if(!site) return { site:'No station', times:[], vals:[] };
 
-      // daily temp (last 30 days)
       const now = new Date(); const start = new Date(now.getTime() - 30*86400e3);
       const startStr = start.toISOString().slice(0,10);
       const endStr   = now.toISOString().slice(0,10);
