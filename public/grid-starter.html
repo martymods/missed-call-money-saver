@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Grid Starter — PJM • EIA-930 (Free Tier)</title>
-  <meta name="description" content="Free-tier grid dashboard using EIA-930: demand vs forecast, fuel time-series, interchange, revenue, local weather + alerts, environment and citizens snapshot.">
+  <meta name="description" content="Free-tier grid dashboard using EIA-930: demand vs forecast, fuel time-series, interchange, revenue, local weather + alerts, environment, citizens & tourism snapshots.">
   <meta name="theme-color" content="#0f1a3d">
   <style>
     :root{ --ink:#0f1a3d; --muted:#6b7280; --edge:#e6eafb; --bg:#f7f8ff; --brand:#1955ff; --brand2:#0f3ed6; --card:#fff; --ok:#16a34a; --warn:#f59e0b; --bad:#ef4444; --shadow:0 14px 34px rgba(16,30,80,.12) }
@@ -74,14 +74,18 @@
     .alert.bad{border-left-color:var(--bad)}
     .badgeS{display:inline-block;padding:2px 6px;border-radius:999px;background:#f2f4ff;border:1px solid #e5eafe;font-size:12px;font-weight:800}
 
-    /* ENV + CITIZENS */
+    /* MISC TILES */
     .envGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
     @media (max-width:900px){.envGrid{grid-template-columns:1fr}}
     .tileSm{background:#fff;border:1px solid var(--edge);border-radius:12px;padding:12px}
     .note{margin-top:8px;font-size:12px;color:#374151}
-  </style>
 
-  <!-- Chart.js can load a tick later; we’ll guard for it in JS -->
+    /* TOURISM */
+    .tourGrid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px}
+    @media (max-width:900px){.tourGrid{grid-template-columns:1fr}}
+    .tourTiles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+    @media (max-width:1100px){.tourTiles{grid-template-columns:repeat(2,1fr)}}
+  </style>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 </head>
@@ -132,7 +136,7 @@
       </div>
 
       <div class="field">
-        <label class="hint"><input type="checkbox" id="noiseOn"> Try DOT noise (beta; may fail by region)</label>
+        <label class="hint"><input type="checkbox" id="noiseOn"> Try DOT transportation noise (beta)</label>
       </div>
 
       <div class="field"><button id="btnLoad" class="primary">Fetch data</button></div>
@@ -180,6 +184,7 @@
             <div class="wxTile"><div class="sub">Temperature now</div><div class="big" id="wxTemp">—</div></div>
             <div class="wxTile"><div class="sub">Wind</div><div class="big" id="wxWind">—</div></div>
           </div>
+
           <div class="wxAlerts" id="wxAlerts"></div>
         </div>
 
@@ -190,12 +195,11 @@
       </div>
     </section>
 
-    <!-- Environment (beta) -->
     <section class="card">
       <h2>Environment (beta) — near your BA</h2>
       <div class="envGrid">
         <div>
-          <h3 style="margin:4px 0 8px">Air quality (PM2.5, US AQI)</h3>
+          <h3 style="margin:4px 0 8px">Air quality (PM2.5 & US AQI)</h3>
           <div class="chartbox"><canvas id="chartAQ"></canvas></div>
         </div>
         <div>
@@ -204,33 +208,50 @@
         </div>
       </div>
       <div class="envTiles" style="margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        <div class="tileSm"><div class="sub">Nearby permitted dischargers (EPA TRI/ECHO)</div><div class="big" id="echoCount">—</div></div>
         <div class="tileSm"><div class="sub">Air: latest US AQI</div><div class="big" id="aqiNow">—</div></div>
-        <div class="tileSm"><div class="sub">Water station</div><div class="big" id="usgsStation">—</div></div>
-        <div class="tileSm"><div class="sub">Nearby TRI facilities (EPA)</div><div class="big" id="echoCount">—</div></div>
+        <div class="tileSm"><div class="sub">Water: station used</div><div class="big" id="usgsStation">—</div></div>
         <div class="tileSm"><div class="sub">Modeled transportation noise</div><div class="big" id="noiseNow">—</div></div>
       </div>
-      <div class="note">Soil/ground & noise lack universal live APIs. For context, combine EPA TRI/Superfund + U.S. DOT Noise Map with local data.</div>
+      <div class="note">Soil/ground & noise lack universal live APIs. For context, combine TRI/Superfund & DOT Noise Map with local data.</div>
     </section>
 
-    <!-- Citizens (beta) -->
     <section class="card">
       <h2>Citizens (beta) — county near your BA</h2>
       <div class="envTiles" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-        <div class="tileSm"><div class="sub">County</div><div class="big" id="civCounty">—</div></div>
-        <div class="tileSm"><div class="sub">Population</div><div class="big" id="civPop">—</div></div>
-        <div class="tileSm"><div class="sub">Median age</div><div class="big" id="civAge">—</div></div>
-        <div class="tileSm"><div class="sub">Bachelor’s+ (%)</div><div class="big" id="civEdu">—</div></div>
-        <div class="tileSm"><div class="sub">Unemployment (%)</div><div class="big" id="civUnemp">—</div></div>
+        <div class="tileSm"><div class="sub">County</div><div class="big" id="c_county">—</div></div>
+        <div class="tileSm"><div class="sub">Population</div><div class="big" id="c_pop">—</div></div>
+        <div class="tileSm"><div class="sub">Median age</div><div class="big" id="c_age">—</div></div>
+        <div class="tileSm"><div class="sub">Bachelor’s+ (%)</div><div class="big" id="c_bach">—</div></div>
+        <div class="tileSm"><div class="sub">Unemployment (%)</div><div class="big" id="c_unemp">—</div></div>
       </div>
-      <div class="note">Sources: FCC Block Finder (county), U.S. Census ACS 5-year Data Profile (education, age, population, unemployment).</div>
+      <div class="mini" style="margin-top:6px">Sources: FCC Block Finder (county), U.S. Census ACS 5-year Data Profile.</div>
+    </section>
+
+    <section class="card">
+      <h2>Tourism (beta) — within ~10 km of BA center</h2>
+      <div class="tourGrid">
+        <div>
+          <div class="chartbox" style="height:260px"><canvas id="chartTour"></canvas></div>
+        </div>
+        <div class="tourTiles">
+          <div class="tileSm"><div class="sub">Attractions</div><div class="big" id="t_attract">—</div></div>
+          <div class="tileSm"><div class="sub">Hotels & lodging</div><div class="big" id="t_hotels">—</div></div>
+          <div class="tileSm"><div class="sub">Parks & nature</div><div class="big" id="t_parks">—</div></div>
+          <div class="tileSm"><div class="sub">Gateways</div><div class="big" id="t_gate">—</div></div>
+          <div class="tileSm"><div class="sub">Attractiveness (score)</div><div class="big" id="t_score">—</div></div>
+        </div>
+      </div>
+      <div class="mini" style="margin-top:6px">Source: OpenStreetMap via Overpass API (CORS-friendly POST, mirror fallback). If rate-limited, tiles show “—”.</div>
     </section>
   </main>
 
   <footer>
-    <div>Sources: EIA Form 930 (free). Weather via Open-Meteo; alerts via api.weather.gov. Air via Open-Meteo Air-Quality. Water via USGS NWIS (nearest station). TRI counts via EPA ECHO. Citizens via U.S. Census ACS. Revenue is an estimate; for trading/ops use ISO LMPs and settlement rules.</div>
+    <div>Sources: EIA Form 930 (free). Weather via Open-Meteo; alerts via api.weather.gov. Air quality via Open-Meteo Air-Quality. Water via USGS NWIS. Dischargers via EPA ECHO/Facility API. Citizens via FCC & U.S. Census. Tourism via OpenStreetMap/Overpass. Revenue is an estimate; for real trading/ops use ISO LMPs and settlement rules.</div>
   </footer>
+
   <script>
-  // ---------- tiny DOM helpers
+  // ---------- helpers
   const $ = s => document.querySelector(s);
   const fmtNum = n => (n==null? '—' : Number(n).toLocaleString());
   const fmtMoney = n => (isFinite(n)? '$' + Number(n).toLocaleString(undefined,{maximumFractionDigits:0}) : '$—');
@@ -242,22 +263,21 @@
     const s = p.replace(' ', 'T'); const d = new Date(s); return isNaN(d) ? null : d;
   }
 
-  // ---------- JSONP helper (for CORS-less ArcGIS / FCC-like endpoints)
-  function jsonp(url, params={}, timeout=9000){
-    return new Promise((resolve,reject)=>{
-      const cb = `__cb_${Math.random().toString(36).slice(2)}`;
-      const q = new URLSearchParams({...params, f:'pjson', callback:cb});
-      const s = document.createElement('script');
-      const timer = setTimeout(()=>{ cleanup(); reject(new Error('jsonp timeout')); }, timeout);
-      function cleanup(){ delete window[cb]; s.remove(); clearTimeout(timer); }
-      window[cb] = (data)=>{ cleanup(); resolve(data); };
-      s.src = url + (url.includes('?')? '&' : '?') + q.toString();
-      s.onerror = ()=>{ cleanup(); reject(new Error('jsonp error')); };
-      document.head.appendChild(s);
+  // Wait for a box to have stable non-zero width & height across a few frames
+  function waitForStableBox(box, minW=160, minH=120, timeoutMs=1500){
+    return new Promise(resolve=>{
+      const t0 = performance.now();
+      function check(){
+        const r1 = box.getBoundingClientRect();
+        if(r1.width>=minW && r1.height>=minH) return resolve();
+        if(performance.now()-t0>timeoutMs) return resolve();
+        requestAnimationFrame(check);
+      }
+      check();
     });
   }
 
-  // ---------- local storage
+  // ---------- persist
   const store = {
     get k(){ return localStorage.getItem('eia_key')||'' },
     set k(v){ localStorage.setItem('eia_key', v||'') },
@@ -279,45 +299,13 @@
   $('#priceNum').addEventListener('input', e=> { $('#price').value = e.target.value||0; store.price = e.target.value||0; updateMoney(); });
   $('#noiseOn').addEventListener('change', e=> store.noise = e.target.checked);
 
-  // ---------- Chart guards + layout
-  let demandChart, fuelTSChart, wxChart, aqChart, waterChart;
-
-  function waitForStableBox(el, minW=160, minH=120, timeoutMs=1500){
-    return new Promise(resolve=>{
-      const t0 = performance.now();
-      function check(){
-        const r = el.getBoundingClientRect();
-        if(r.width>=minW && r.height>=minH) return resolve();
-        if(performance.now()-t0>timeoutMs) return resolve();
-        requestAnimationFrame(check);
-      }
-      check();
-    });
-  }
-
-  function waitForChart(maxMs=8000){
-    return new Promise(res=>{
-      const t0=performance.now();
-      (function poll(){
-        if (window.Chart) return res(true);
-        if (performance.now()-t0>maxMs) return res(false);
-        setTimeout(poll, 30);
-      })();
-    });
-  }
+  // ---------- charts
+  let demandChart, fuelTSChart, wxChart, aqChart, waterChart, tourChart;
 
   async function ensureCharts(){
-    // Wait for Chart.js to actually be defined even though it's deferred
-    const ok = await waitForChart();
-    if(!ok || !window.Chart){ throw new Error('Chart.js not ready'); }
-
-    await Promise.all([
-      waitForStableBox($('#chartDemand').parentElement),
-      waitForStableBox($('#chartFuelTS').parentElement),
-      waitForStableBox($('#chartWX').parentElement),
-      waitForStableBox($('#chartAQ').parentElement),
-      waitForStableBox($('#chartWater').parentElement),
-    ]);
+    await waitForStableBox($('#chartDemand').parentElement);
+    await waitForStableBox($('#chartFuelTS').parentElement);
+    await waitForStableBox($('#chartWX').parentElement);
 
     if(!demandChart){
       demandChart = new Chart($('#chartDemand'), {
@@ -326,7 +314,7 @@
           { label:'Demand (MW)', data:[], borderWidth:2, tension:.25 },
           { label:'Forecast (MW)', data:[], borderWidth:2, tension:.25, borderDash:[6,6] }
         ]},
-        options:{ responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+        options:{ responsive:true, interaction:{ mode:'index', intersect:false },
           scales:{ x:{ ticks:{ maxRotation:0 }}, y:{ beginAtZero:true } }
         }
       });
@@ -335,7 +323,7 @@
       fuelTSChart = new Chart($('#chartFuelTS'), {
         type:'line',
         data:{ labels:[], datasets:[] },
-        options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        options:{ responsive:true, interaction:{mode:'index',intersect:false},
           plugins:{ legend:{ position:'bottom' }},
           scales:{ x:{ stacked:true }, y:{ beginAtZero:true, stacked:true } }
         }
@@ -348,7 +336,7 @@
           { label:'Temperature (°F)', data:[], yAxisID:'temp', borderWidth:2, tension:.25 },
           { label:'Precip (in/hr)',   data:[], yAxisID:'precip', borderWidth:2, borderDash:[6,6], tension:.25 }
         ]},
-        options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        options:{ responsive:true, interaction:{mode:'index',intersect:false},
           plugins:{ legend:{ position:'bottom' }},
           scales:{ temp:{ type:'linear', position:'left', beginAtZero:false },
                   precip:{ type:'linear', position:'right', beginAtZero:true } }
@@ -362,7 +350,7 @@
           { label:'PM2.5 (µg/m³)', data:[], borderWidth:2, tension:.25 },
           { label:'US AQI', data:[], borderWidth:2, tension:.25, borderDash:[6,6], yAxisID:'aqi' }
         ]},
-        options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        options:{ responsive:true, interaction:{mode:'index',intersect:false},
           plugins:{ legend:{ position:'bottom' }},
           scales:{ y:{ beginAtZero:true }, aqi:{ position:'right', beginAtZero:true, suggestedMax:150 } }
         }
@@ -372,15 +360,35 @@
       waterChart = new Chart($('#chartWater'), {
         type:'line',
         data:{ labels:[], datasets:[ { label:'Water temp (°C)', data:[], borderWidth:2, tension:.25 } ]},
-        options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
-          plugins:{ legend:{ position:'bottom' }},
+        options:{ responsive:true, interaction:{mode:'index',intersect:false}, plugins:{ legend:{ position:'bottom' }},
           scales:{ y:{ beginAtZero:false } }
         }
       });
     }
+    if(!tourChart){
+      tourChart = new Chart($('#chartTour'), {
+        type:'doughnut',
+        data:{ labels:['Attractions','Hotels','Parks/Nature','Gateways'],
+          datasets:[{ data:[0,0,0,0] }]},
+        options:{ responsive:true, plugins:{ legend:{ position:'bottom' }} }
+      });
+    }
   }
 
-  new ResizeObserver(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); aqChart?.resize(); waterChart?.resize(); }).observe(document.body);
+  // resize on layout change
+  new ResizeObserver(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); aqChart?.resize(); waterChart?.resize(); tourChart?.resize(); }).observe(document.body);
+
+  // ---------- BA coordinates (representative)
+  const BA_COORDS = {
+    PJM:{lat:39.9526, lon:-75.1652, place:'Philadelphia, PA'},
+    ISNE:{lat:42.3601, lon:-71.0589, place:'Boston, MA'},
+    NYIS:{lat:42.6526, lon:-73.7562, place:'Albany, NY'},
+    CISO:{lat:38.5816, lon:-121.4944, place:'Sacramento, CA'},
+    ERCO:{lat:30.2672, lon:-97.7431, place:'Austin, TX'},
+    MISO:{lat:38.6270, lon:-90.1994, place:'St. Louis, MO'},
+    SWPP:{lat:34.7465, lon:-92.2896, place:'Little Rock, AR'},
+    TVA:{lat:35.0456, lon:-85.3097, place:'Chattanooga, TN'}
+  };
 
   // ---------- EIA 930
   async function eiaFetchRegion(key, ba, hours, typeCode){
@@ -409,10 +417,11 @@
     const end = new Date(); const start = new Date(end.getTime() - Number(hours)*3600*1000);
     const url = new URL('https://api.eia.gov/v2/electricity/rto/interchange-data/data/');
     url.searchParams.set('api_key', key); url.searchParams.set('frequency','hourly'); url.searchParams.append('data[0]','value');
+    url.searchParams.append('facets[fromba][]', ba); url.searchParams.append('facets[toba][]', ba);
     url.searchParams.set('start', toEIAISO(start)); url.searchParams.set('end', toEIAISO(end));
     const r = await fetch(url); if(!r.ok) throw new Error('EIA interchange failed');
     const rows = (await r.json())?.response?.data || [];
-    let imp=0, exp=0; for(const row of rows){ const v=Number(row.value||0); if(row.toba===ba) imp+=v; if(row.fromba===ba) exp+=v; }
+    let imp=0, exp=0; for(const row of rows){ const v=Number(row.value||0); if(row.toba===ba) imp+=v; else if(row.fromba===ba) exp+=v; }
     return { net: imp-exp };
   }
 
@@ -476,7 +485,7 @@
   }
 
   function renderWeather(wx, placeLabel){
-    const info = weatherIconInfo(wx.now.code);
+    const info = weatherIconInfo(wx.now.code||0);
     $('#wxIcon').src = iconURL(info.icon);
     $('#wxTitle').textContent = `${info.label}`;
     $('#wxPlace').textContent = placeLabel || '—';
@@ -490,6 +499,7 @@
     wxChart.data.datasets[1].data = wx.precipIn;
     wxChart.update();
   }
+
   function renderAlerts(list){
     const box = $('#wxAlerts'); box.innerHTML = '';
     if(!list.length){ box.innerHTML = '<div class="wxTile"><span class="badgeS">No active alerts</span></div>'; return; }
@@ -505,173 +515,182 @@
     }
   }
 
-  // ---------- Environment: Air (Open-Meteo AQ), Water (USGS), TRI, DOT noise
-  async function fetchAirQuality(lat, lon, hours){
+  // ---------- Environment: Air (Open-Meteo AQ) & Water (USGS)
+  async function fetchAir(lat, lon, hours){
     const pastDays = Math.max(1, Math.ceil(hours/24));
-    const url = new URL('https://air-quality-api.open-meteo.com/v1/air-quality');
-    url.search = [
-      `latitude=${lat}`, `longitude=${lon}`,
-      'hourly=pm2_5,us_aqi', `past_days=${pastDays}`, 'forecast_days=2', 'timezone=auto'
-    ].join('&');
-    const r = await fetch(url); if(!r.ok) throw new Error('Air quality failed');
-    const j = await r.json();
-    const H = j.hourly || {};
-    const times = H.time?.map(t => new Date(t)) || [];
-    const endIdx = times.length, startIdx = Math.max(0, endIdx-hours);
-    const slice = a => (a||[]).slice(startIdx,endIdx);
+    const u = new URL('https://air-quality-api.open-meteo.com/v1/air-quality');
+    u.search = [`latitude=${lat}`,`longitude=${lon}`,`hourly=pm2_5,us_aqi`,`past_days=${pastDays}`,`forecast_days=2`,`timezone=auto`].join('&');
+    const r = await fetch(u); if(!r.ok) throw new Error('AQ failed'); const j = await r.json();
+    const H=j.hourly||{}; const times=(H.time||[]).map(t=>new Date(t));
+    const endIdx = times.length, startIdx = Math.max(0,endIdx-hours);
     return {
-      times: times.slice(startIdx,endIdx),
-      pm25: slice(H.pm2_5),
-      aqi:  slice(H.us_aqi),
+      labels: times.slice(startIdx,endIdx).map(d=> `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`),
+      pm25: (H.pm2_5||[]).slice(startIdx,endIdx),
+      aqi: (H.us_aqi||[]).slice(startIdx,endIdx),
       aqiNow: H.us_aqi?.[endIdx-1] ?? null
     };
   }
 
-  // USGS — use 'lat' + 'long' and seriesCatalogOutput=true to avoid 400s
-  async function fetchUSGSWater(lat, lon){
-    try{
-      const siteURL = `https://waterservices.usgs.gov/nwis/site/?format=json&seriesCatalogOutput=true&hasDataTypeCd=dv&siteStatus=active&siteType=ST&parameterCd=00010&lat=${lat}&long=${lon}&distance=50`;
-      const sResp = await fetch(siteURL);
-      if(!sResp.ok) throw new Error('site search failed');
-      const sj = await sResp.json();
-
-      // Try both possible shapes
-      const sitesA = sj?.value?.site || [];
-      const sitesB = sj?.site || [];
-      const sites = sitesA.length ? sitesA : sitesB;
-
-      let siteId=null, stationLabel='Unavailable';
-      if (sites.length){
-        const s = sites[0];
-        siteId = s?.siteCode?.[0]?.value || null;
-        stationLabel = s?.siteName || siteId || 'Unavailable';
-      }
-      if(!siteId) return { site: stationLabel, times:[], vals:[] };
-
-      const now = new Date(); const start = new Date(now.getTime() - 30*86400e3);
-      const startStr = start.toISOString().slice(0,10);
-      const endStr   = now.toISOString().slice(0,10);
-      const dvURL = `https://waterservices.usgs.gov/nwis/dv/?format=json&sites=${encodeURIComponent(siteId)}&parameterCd=00010&startDT=${startStr}&endDT=${endStr}`;
-      const dResp = await fetch(dvURL);
-      if(!dResp.ok) throw new Error('dv fetch failed');
-      const dj = await dResp.json();
-      const ts = dj?.value?.timeSeries?.[0]?.values?.[0]?.value || [];
-      const times = ts.map(p => new Date(p.dateTime));
-      const vals  = ts.map(p => Number(p.value));
-      return { site: stationLabel, times, vals };
-    }catch{
-      return { site:'Unavailable', times:[], vals:[] };
+  async function fetchUSGSWater(lat, lon, hours){
+    // Step 1: find a nearby site (IV preferred, then DV)
+    async function findSite(params){
+      const base='https://waterservices.usgs.gov/nwis/site/';
+      const url = new URL(base);
+      url.search = new URLSearchParams({
+        format:'json', siteType:'ST', siteStatus:'active',
+        latitude:String(lat), longitude:String(lon), distance:'50',
+        ...params
+      }).toString();
+      const r = await fetch(url);
+      if(!r.ok) return null;
+      const j = await r.json();
+      const sites = j?.value?.site || [];
+      const id = sites[0]?.siteCode?.[0]?.value || null;
+      const name = sites[0]?.siteName || null;
+      return id ? {id,name} : null;
     }
-  }
+    let site = await findSite({hasDataTypeCd:'iv', parameterCd:'00010'});
+    if(!site) site = await findSite({hasDataTypeCd:'dv', parameterCd:'00010'});
+    if(!site) site = await findSite({}); // last-ditch
+    if(!site) throw new Error('No station');
 
-  // ECHO TRI count — try multiple endpoints; tolerate CORS/404 by returning null
-  async function fetchTRICount(lat, lon, miles=25){
-    const qs = p => Object.entries(p).map(([k,v])=> `${k}=${encodeURIComponent(v)}`).join('&');
-    const params = { output:'JSON', p_program:'TRI', p_lat:lat.toFixed(3), p_long:lon.toFixed(3), p_radius:miles };
-    const tries = [
-      'https://echo.epa.gov/echoapi/json/facilities',
-      'https://echodata.epa.gov/echo/echo_rest_services.get_facilities',
-      'https://echodata.epa.gov/echo/er_rest_services.get_facilities'
-    ];
-    for(const base of tries){
-      try{
-        const r = await fetch(`${base}?${qs(params)}`);
-        if(!r.ok) continue;
+    // Step 2: get data (IV if possible, else DV daily)
+    try{
+      const u = new URL('https://waterservices.usgs.gov/nwis/iv/');
+      u.search = new URLSearchParams({format:'json', sites:site.id, parameterCd:'00010', period:`P${hours}H`});
+      const r = await fetch(u); if(r.ok){
         const j = await r.json();
-        const rows = j?.Results?.Facilities || j?.Results?.QueryRows || [];
-        const n = Array.isArray(rows) ? rows.length : (Number(j?.Results?.TotalFacilities)||Number(j?.Results?.ResultCount)||0);
-        if(Number.isFinite(n)) return n;
-      }catch{}
-    }
-    return null;
+        const ts = j?.value?.timeSeries?.[0];
+        if(ts?.values?.[0]?.value?.length){
+          const rows = ts.values[0].value;
+          const labels = rows.map(v => new Date(v.dateTime)).map(d=> `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`);
+          const vals = rows.map(v => Number(v.value));
+          return {labels, vals, site};
+        }
+      }
+    }catch{}
+    // DV daily fallback (last 7 days window)
+    const end = new Date(); const start = new Date(end.getTime() - Math.max(24,hours)*3600*1000);
+    const u2 = new URL('https://waterservices.usgs.gov/nwis/dv/');
+    u2.search = new URLSearchParams({format:'json', sites:site.id, parameterCd:'00010', startDT:start.toISOString().slice(0,10), endDT:end.toISOString().slice(0,10)});
+    const r2 = await fetch(u2); if(!r2.ok) throw new Error('DV failed');
+    const j2 = await r2.json();
+    const rows = j2?.value?.timeSeries?.[0]?.values?.[0]?.value || [];
+    const labels = rows.map(v=> v.dateTime.slice(0,10));
+    const vals = rows.map(v=> Number(v.value));
+    return {labels, vals, site};
   }
 
-  // DOT Transportation Noise (JSONP; optional)
-  async function fetchNoiseDNL(lat, lon){
-    if(!store.noise) return null;
-    const params = {
-      sr:'4326', tolerance:'3', returnGeometry:'false',
-      mapExtent:`${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01}`,
-      imageDisplay:'400,400,96',
-      geometry: JSON.stringify({ x:lon, y:lat, spatialReference:{wkid:4326} }),
-      geometryType:'esriGeometryPoint',
-      layers:'all'
-    };
-    const endpoints = [
-      'https://maps.dot.gov/arcgis/rest/services/BTS/Transportation_Noise/MapServer/identify',
-      'https://gis.dot.gov/arcgis/rest/services/BTS/Transportation_Noise/MapServer/identify'
-    ];
-    for(const url of endpoints){
-      try{
-        const j = await jsonp(url, params, 7000);
-        const r = (j?.results||[]).find(v => typeof v?.attributes?.DNL === 'number' || typeof v?.attributes?.dnl === 'number');
-        const dnl = r?.attributes?.DNL ?? r?.attributes?.dnl;
-        if(Number.isFinite(dnl)) return Math.round(dnl);
-      }catch{}
-    }
-    return null;
-  }
-
-  // ---------- Citizens (county snapshot) — JSONP to ArcGIS USA Counties (no CORS), then ACS
-  async function fetchCountyFIPS(lat, lon){
+  // EPA ECHO TRI count (simple bbox/latlon search). Use Facility REST which supports lat/long.
+  async function fetchTRICount(lat, lon, radiusKm=25){
     try{
-      const url = 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_Counties/FeatureServer/0/query';
-      const params = {
+      const url = new URL('https://echo.epa.gov/echoapi/json/facilities');
+      url.search = new URLSearchParams({
+        p_program:'TRI', p_lat:lat, p_long:lon, p_radius:radiusKm, output:'JSON'
+      }).toString();
+      const r = await fetch(url); if(!r.ok) throw new Error('ECHO fail');
+      const j = await r.json();
+      const c = Number(j?.Results?.Facilities?.length || 0);
+      return c;
+    }catch(e){ return null; }
+  }
+
+  // DOT Noise via JSONP (optional)
+  function jsonp(url){
+    return new Promise((resolve,reject)=>{
+      const cb='__cb_'+Math.random().toString(36).slice(2);
+      window[cb]=(d)=>{ resolve(d); cleanup(); };
+      function cleanup(){ delete window[cb]; s.remove(); }
+      const s=document.createElement('script');
+      s.onerror=()=>{ reject(new Error('jsonp error')); cleanup(); };
+      s.src = url + (url.includes('?')?'&':'?') + 'callback='+cb;
+      document.body.appendChild(s);
+    });
+  }
+  async function fetchNoiseDNL(lat, lon){
+    try{
+      const base='https://maps.dot.gov/arcgis/rest/services/BTS/Transportation_Noise/MapServer/identify';
+      const qp = new URLSearchParams({
+        f:'pjson',
         geometry: JSON.stringify({x:lon, y:lat, spatialReference:{wkid:4326}}),
         geometryType:'esriGeometryPoint',
-        inSR:'4326',
-        spatialRel:'esriSpatialRelIntersects',
-        outFields:'NAME,STATE_NAME,STATE_FIPS,COUNTY_FIPS',
-        returnGeometry:false
-      };
-      const j = await jsonp(url, params, 8000);
-      const a = j?.features?.[0]?.attributes;
-      if(!a) return null;
-      const state = String(a.STATE_FIPS).padStart(2,'0');
-      const county = String(a.COUNTY_FIPS).padStart(3,'0');
-      const name = `${a.NAME} County, ${a.STATE_NAME}`;
-      return {state, county, name};
+        sr:'4326',
+        mapExtent:'-180,-90,180,90',
+        imageDisplay:'800,600,96',
+        tolerance:'3',
+        layers:'all'
+      }).toString();
+      const j = await jsonp(base+'?'+qp);
+      const res = j?.results||[];
+      let val = null;
+      for(const r of res){
+        const a=r?.attributes||{};
+        val = a.DNL || a.dnl || a.GRIDCODE || a.Value || val;
+      }
+      return val==null? null : Number(val);
     }catch{ return null; }
   }
 
-  async function fetchACSCounty(state, county){
-    try{
-      const vars = ['NAME','DP05_0001E','DP05_0018E','DP02_0068PE','DP03_0009PE']; // population, median age, BA+, unemployment
-      const u = `https://api.census.gov/data/2022/acs/acs5/profile?get=${vars.join(',')}&for=county:${county}&in=state:${state}`;
-      const r = await fetch(u); if(!r.ok) throw new Error();
-      const j = await r.json();
-      const row = j?.[1];
-      if(!row) return null;
-      return {
-        name: row[0],
-        pop: Number(row[1]),
-        age: Number(row[2]),
-        edu: Number(row[3]),
-        unemp: Number(row[4])
-      };
-    }catch{ return null; }
+  // ---------- Citizens (FCC + Census ACS)
+  async function fetchCounty(lat, lon){
+    const u = new URL('https://geo.fcc.gov/api/census/area');
+    u.search = new URLSearchParams({lat, lon, format:'json'});
+    const r = await fetch(u); if(!r.ok) throw new Error();
+    const j = await r.json();
+    const c = j?.results?.[0];
+    if(!c) throw new Error('no county');
+    return { name: c.name, statefp: c.state_fips, countyfp: c.county_fips };
+  }
+  async function fetchACS(statefp, countyfp){
+    // NAME, population, median age, BA+ %, Unemployment %
+    const vars = ['NAME','DP05_0001E','DP05_0018E','DP02_0068P','DP03_0009PE'];
+    const u = new URL('https://api.census.gov/data/2022/acs/acs5/profile');
+    u.search = new URLSearchParams({ get: vars.join(','), for:`county:${countyfp}`, in:`state:${statefp}` });
+    const r = await fetch(u); if(!r.ok) throw new Error();
+    const j = await r.json();
+    const row = j?.[1]; if(!row) throw new Error();
+    return { name: row[0], pop: row[1], age: row[2], bach: row[3], unemp: row[4] };
   }
 
-  function renderCitizens(civ, fallbackName){
-    $('#civCounty').textContent = civ?.name || fallbackName || '—';
-    $('#civPop').textContent    = (civ?.pop!=null) ? fmtNum(civ.pop) : '—';
-    $('#civAge').textContent    = (civ?.age!=null) ? String(civ.age.toFixed(1)) : '—';
-    $('#civEdu').textContent    = (civ?.edu!=null) ? String(civ.edu.toFixed(1)) : '—';
-    $('#civUnemp').textContent  = (civ?.unemp!=null) ? String(civ.unemp.toFixed(1)) : '—';
+  // ---------- Tourism (OSM / Overpass)
+  async function overpassQuery(q){
+    const endpoints=[
+      'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter'
+    ];
+    for(const ep of endpoints){
+      try{
+        const r = await fetch(ep,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(q)});
+        if(r.ok){ const j = await r.json(); return j?.elements||[]; }
+      }catch(e){}
+    }
+    return [];
+  }
+  async function fetchTourism(lat, lon){
+    const r10=10000, r15=15000, r20=20000;
+    function Q(body){ return `[out:json][timeout:25];(${body});out ids;`; }
+    const qAttr = Q(`nwr["tourism"~"^attraction|museum|gallery|theme_park|artwork|zoo|aquarium|viewpoint$"](around:${r10},${lat},${lon})`);
+    const qHotel= Q(`nwr["tourism"~"^hotel|motel|hostel|guest_house|apartment|chalet|camp_site$"](around:${r10},${lat},${lon})`);
+    const qParks= Q(`nwr["leisure"~"^park|garden|nature_reserve$"](around:${r10},${lat},${lon});nwr["boundary"="national_park"](around:${r20},${lat},${lon})`);
+    const qGate = Q(`nwr["aeroway"="aerodrome"](around:${r20},${lat},${lon});nwr["railway"="station"](around:${r10},${lat},${lon});nwr["amenity"="ferry_terminal"](around:${r15},${lat},${lon})`);
+    const [a,h,p,g] = await Promise.all([overpassQuery(qAttr),overpassQuery(qHotel),overpassQuery(qParks),overpassQuery(qGate)]);
+    const A=a.length, H=h.length, P=p.length, G=g.length;
+    return {A,H,P,G, score: 3*A + 2*P + 2*G + 1*H};
   }
 
-  // ---------- UI helpers
+  // ---------- UI build: fuel cards & revenue KPI
+  const FUEL_NAMES = {NG:'Gas', COL:'Coal', NUC:'Nuclear', WND:'Wind', SUN:'Solar', WAT:'Hydro', OIL:'Oil', OTH:'Other'};
+  const FUEL_ORDER = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH'];
+
   function renderFuelCards(mixObj, totalMW, price){
     const el = $('#fuelCards'); el.innerHTML = '';
-    const FUEL_NAMES = {NG:'Gas', COL:'Coal', NUC:'Nuclear', WND:'Wind', SUN:'Solar', WAT:'Hydro', OIL:'Oil', OTH:'Other'};
-    const ORDER = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH'];
-    const fuels = Object.keys(mixObj||{}).sort((a,b)=> ORDER.indexOf(a)-ORDER.indexOf(b));
+    const fuels = Object.keys(mixObj).sort((a,b)=> FUEL_ORDER.indexOf(a)-FUEL_ORDER.indexOf(b));
     for(const f of fuels){
       const mw = mixObj[f]||0; const share = totalMW>0 ? (mw/totalMW) : 0;
       const revH = share * price * totalMW;
       const card = document.createElement('div'); card.className = 'fuel';
       card.innerHTML = `
-        <div class="row"><div><span class="badge2">${(FUEL_NAMES[f]||'?')[0]}</span> <b>${FUEL_NAMES[f]||f}</b></div>
+        <div class="row"><div><span class="badge2">${FUEL_NAMES[f]?.[0]||'?'}</span> <b>${FUEL_NAMES[f]||f}</b></div>
              <div class="money">${fmtNum(mw)} MW</div></div>
         <div class="row sub"><div>${(share*100).toFixed(1)}% share</div><div>${fmtMoney(revH)}/h</div></div>
         <div class="sep"></div>
@@ -687,57 +706,8 @@
     $('#kpiRev').textContent = fmtMoney(price * load);
     if(window.__lastMix && load>0){ renderFuelCards(window.__lastMix, load, price); }
   }
-  /* ---------- BA representative coordinates (for WX/env/citizens/tourism) */
-  const BA_COORDS = {
-    PJM:{lat:39.9526, lon:-75.1652, place:'Philadelphia, PA'},
-    ISNE:{lat:42.3601, lon:-71.0589, place:'Boston, MA'},
-    NYIS:{lat:42.6526, lon:-73.7562, place:'Albany, NY'},
-    CISO:{lat:38.5816, lon:-121.4944, place:'Sacramento, CA'},
-    ERCO:{lat:30.2672, lon:-97.7431, place:'Austin, TX'},
-    MISO:{lat:38.6270, lon:-90.1994, place:'St. Louis, MO'},
-    SWPP:{lat:34.7465, lon:-92.2896, place:'Little Rock, AR'},
-    TVA:{lat:35.0456, lon:-85.3097, place:'Chattanooga, TN'}
-  };
 
-  /* ---------- Tourism (OSM / Overpass) */
-  let tourChart;
-  function ensureTourChart(){
-    if(tourChart) return;
-    tourChart = new Chart($('#chartTour'), {
-      type:'doughnut',
-      data:{ labels:['Attractions','Hotels','Parks/Nature','Gateways'],
-        datasets:[{ data:[0,0,0,0] }]},
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' }} }
-    });
-  }
-  async function overpassQuery(q){
-    // Robust mirror rotation; Overpass expects UTF-8 body with data=...
-    const endpoints=[
-      'https://overpass-api.de/api/interpreter',
-      'https://overpass.kumi.systems/api/interpreter'
-    ];
-    const body = 'data='+encodeURIComponent(q);
-    for(const ep of endpoints){
-      try{
-        const r = await fetch(ep,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body});
-        if(r.ok){ const j = await r.json(); return j?.elements||[]; }
-      }catch{}
-    }
-    return [];
-  }
-  function Q(body){ return `[out:json][timeout:30];(${body});out ids;`; }
-  async function fetchTourism(lat, lon){
-    const r10=10000, r15=15000, r20=20000;
-    const qAttr = Q(`nwr["tourism"~"^(attraction|museum|gallery|theme_park|artwork|zoo|aquarium|viewpoint)$"](around:${r10},${lat},${lon})`);
-    const qHotel= Q(`nwr["tourism"~"^(hotel|motel|hostel|guest_house|apartment|chalet|camp_site)$"](around:${r10},${lat},${lon})`);
-    const qParks= Q(`nwr["leisure"~"^(park|garden|nature_reserve)$"](around:${r10},${lat},${lon});nwr["boundary"="national_park"](around:${r20},${lat},${lon})`);
-    const qGate = Q(`nwr["aeroway"="aerodrome"](around:${r20},${lat},${lon});nwr["railway"="station"](around:${r10},${lat},${lon});nwr["amenity"="ferry_terminal"](around:${r15},${lat},${lon})`);
-    const [a,h,p,g] = await Promise.all([overpassQuery(qAttr),overpassQuery(qHotel),overpassQuery(qParks),overpassQuery(qGate)]);
-    const A=a.length, H=h.length, P=p.length, G=g.length;
-    return {A,H,P,G, score: 3*A + 2*P + 2*G + 1*H};
-  }
-
-  /* ---------- MAIN LOADER */
+  // ---------- main loader
   async function loadAll(){
     const key = ($('#eiaKey').value||'').trim();
     const ba = $('#ba').value;
@@ -746,16 +716,14 @@
 
     $('#status').textContent = 'Loading…';
     await ensureCharts();
-    ensureTourChart();
 
     try{
-      const loc = BA_COORDS[ba];
-
-      // Demand & Forecast
+      // Energy: region + forecast
       const [act, fcast] = await Promise.all([
         eiaFetchRegion(key, ba, hours, 'D'),
         eiaFetchRegion(key, ba, hours, 'DF')
       ]);
+
       const labels = act.map(r=> parseEIAPeriod(r.period)).map(d=> d ? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00` : '');
       const valsAct = act.map(r=> Number(r.value||0));
       const fMap = new Map(fcast.map(r=> [r.period, Number(r.value||0)]));
@@ -771,95 +739,128 @@
       const lastDt = parseEIAPeriod(last?.period);
       $('#kpiTime').textContent = lastDt ? lastDt.toLocaleString() : '—';
 
-      // Fuel mix time-series
+      // Fuel time-series
       const fuelTS = await eiaFetchFuelTimeSeries(key, ba, hours);
-      const fuelLabels = fuelTS.times.map(t=> { const d=parseEIAPeriod(t); return d? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`:''; });
-      const NAME = {NG:'Gas',COL:'Coal',NUC:'Nuclear',WND:'Wind',SUN:'Solar',WAT:'Hydro',OIL:'Oil',OTH:'Other'};
+      const fuelLabels = fuelTS.times.map(t=> { const d = parseEIAPeriod(t); return d ? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00` : ''; });
       fuelTSChart.data.labels = fuelLabels;
-      fuelTSChart.data.datasets = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH']
-        .filter(f=> fuelTS.fuels.includes(f))
-        .map(f=>({ label:NAME[f], data:fuelTS.byFuel[f]||[], borderWidth:1, fill:true, tension:.2 }));
+      fuelTSChart.data.datasets = FUEL_ORDER
+        .filter(f => fuelTS.fuels.includes(f))
+        .map(f => ({ label: FUEL_NAMES[f] || f, data: fuelTS.byFuel[f] || [], borderWidth: 1, fill: true, tension: .2 }));
       fuelTSChart.update();
 
+      // Last fuel mix snapshot for cards + revenue split
       const lastIdx = fuelTS.times.length - 1;
-      const lastMix = {}; for(const f of fuelTS.fuels){ lastMix[f] = (fuelTS.byFuel[f]||[])[lastIdx]||0; }
+      const lastMix = {};
+      for (const f of fuelTS.fuels) { lastMix[f] = (fuelTS.byFuel[f] || [])[lastIdx] || 0; }
       window.__lastMix = lastMix;
-      renderFuelCards(lastMix, Number(last?.value||0), Number($('#priceNum').value||0));
+      renderFuelCards(lastMix, Number(last?.value || 0), Number($('#priceNum').value || 0));
 
-      // Interchange
+      // Interchange KPI
       const inter = await eiaFetchInterchangeNet(key, ba, hours);
-      $('#kpiInterchg').textContent = (inter.net>=0? '+' : '−') + fmtNum(Math.abs(inter.net)) + ' MW';
+      $('#kpiInterchg').textContent = (inter.net >= 0 ? '+' : '−') + fmtNum(Math.abs(inter.net)) + ' MW';
 
-      // Weather + Alerts
-      const [wx, alerts] = await Promise.all([ fetchWeather(loc.lat, loc.lon, hours), fetchNOAAAlerts(loc.lat, loc.lon) ]);
+      // Weather + alerts (location by BA)
+      const loc = BA_COORDS[ba] || BA_COORDS.PJM;
+      const [wx, alerts] = await Promise.all([
+        fetchWeather(loc.lat, loc.lon, hours),
+        fetchNOAAAlerts(loc.lat, loc.lon)
+      ]);
       renderWeather(wx, loc.place);
       renderAlerts(alerts);
 
-      // Environment (Air / Water / TRI / Noise)
-      const [air, water, triCount, dnl] = await Promise.all([
-        fetchAirQuality(loc.lat, loc.lon, hours),
-        fetchUSGSWater(loc.lat, loc.lon),
-        fetchTRICount(loc.lat, loc.lon, 25),
-        fetchNoiseDNL(loc.lat, loc.lon)
+      // Environment: Air quality + Water
+      const [aq, water] = await Promise.all([
+        fetchAir(loc.lat, loc.lon, hours).catch(() => null),
+        fetchUSGSWater(loc.lat, loc.lon, hours).catch(() => null)
       ]);
 
-      // Air
-      if(air?.times){
-        const airLabels = air.times.map(d => `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`);
-        aqChart.data.labels = airLabels;
-        aqChart.data.datasets[0].data = air.pm25||[];
-        aqChart.data.datasets[1].data = air.aqi||[];
+      if (aq) {
+        aqChart.data.labels = aq.labels;
+        aqChart.data.datasets[0].data = aq.pm25;
+        aqChart.data.datasets[1].data = aq.aqi;
         aqChart.update();
-        $('#aqiNow').textContent = air.aqiNow!=null ? Math.round(air.aqiNow) : '—';
-      }else{
+        $('#aqiNow').textContent = aq.aqiNow == null ? '—' : Math.round(aq.aqiNow);
+      } else {
+        aqChart.data.labels = []; aqChart.data.datasets[0].data = []; aqChart.data.datasets[1].data = []; aqChart.update();
         $('#aqiNow').textContent = '—';
       }
 
-      // Water
-      $('#usgsStation').textContent = water?.site || '—';
-      if(water?.times?.length){
-        const labelsW = water.times.map(d => `${d.getMonth()+1}/${d.getDate()}`);
-        waterChart.data.labels = labelsW;
-        waterChart.data.datasets[0].data = water.vals||[];
+      if (water) {
+        waterChart.data.labels = water.labels;
+        waterChart.data.datasets[0].data = water.vals;
         waterChart.update();
-      }else{
+        $('#usgsStation').textContent = water.site?.name || water.site?.id || 'Unknown';
+      } else {
         waterChart.data.labels = []; waterChart.data.datasets[0].data = []; waterChart.update();
+        $('#usgsStation').textContent = 'Unavailable';
       }
 
-      // TRI & Noise tiles
-      $('#echoCount').textContent = (triCount!=null) ? fmtNum(triCount) : '—';
-      $('#noiseNow').textContent = (dnl!=null) ? `${dnl} dB DNL` : (store.noise ? '—' : 'off');
+      // EPA TRI/ECHO (nearby permitted dischargers)
+      const triCount = await fetchTRICount(loc.lat, loc.lon, 25);
+      $('#echoCount').textContent = triCount == null ? '—' : fmtNum(triCount);
 
-      // Citizens snapshot (county) — ArcGIS JSONP for FIPS (CORS-safe), then ACS
-      const fips = await fetchCountyFIPS(loc.lat, loc.lon);
-      const civ  = fips ? await fetchACSCounty(fips.state, fips.county) : null;
-      renderCitizens(civ, fips?.name || '—');
+      // Optional DOT transportation noise (JSONP; behind toggle)
+      if (store.noise) {
+        const dnl = await fetchNoiseDNL(loc.lat, loc.lon).catch(() => null);
+        $('#noiseNow').textContent = dnl == null ? '—' : `${Math.round(dnl)} dB DNL`;
+      } else {
+        $('#noiseNow').textContent = '—';
+      }
 
-      // Tourism
-      const tour = await fetchTourism(loc.lat, loc.lon);
-      $('#t_attract').textContent = fmtNum(tour.A);
-      $('#t_hotels').textContent  = fmtNum(tour.H);
-      $('#t_parks').textContent   = fmtNum(tour.P);
-      $('#t_gate').textContent    = fmtNum(tour.G);
-      $('#t_score').textContent   = fmtNum(tour.score);
-      tourChart.data.datasets[0].data = [tour.A, tour.H, tour.P, tour.G];
-      tourChart.update();
+      // Citizens (county snapshot via FCC + Census ACS)
+      try {
+        const cty = await fetchCounty(loc.lat, loc.lon);
+        const acs = await fetchACS(cty.statefp, cty.countyfp);
+        $('#c_county').textContent = acs.name || cty.name || '—';
+        $('#c_pop').textContent = fmtNum(acs.pop);
+        $('#c_age').textContent = isFinite(+acs.age) ? Number(acs.age).toFixed(1) : '—';
+        $('#c_bach').textContent = isFinite(+acs.bach) ? Number(acs.bach).toFixed(1) : '—';
+        $('#c_unemp').textContent = isFinite(+acs.unemp) ? Number(acs.unemp).toFixed(1) : '—';
+      } catch {
+        $('#c_county').textContent = '—';
+        $('#c_pop').textContent = '—';
+        $('#c_age').textContent = '—';
+        $('#c_bach').textContent = '—';
+        $('#c_unemp').textContent = '—';
+      }
 
-      // finalize
-      requestAnimationFrame(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); aqChart?.resize(); waterChart?.resize(); tourChart?.resize?.(); });
+      // Tourism (OSM / Overpass)
+      try {
+        const t = await fetchTourism(loc.lat, loc.lon);
+        $('#t_attract').textContent = fmtNum(t.A);
+        $('#t_hotels').textContent  = fmtNum(t.H);
+        $('#t_parks').textContent   = fmtNum(t.P);
+        $('#t_gate').textContent    = fmtNum(t.G);
+        $('#t_score').textContent   = fmtNum(t.score);
+        tourChart.data.datasets[0].data = [t.A, t.H, t.P, t.G];
+        tourChart.update();
+      } catch {
+        $('#t_attract').textContent = '—';
+        $('#t_hotels').textContent  = '—';
+        $('#t_parks').textContent   = '—';
+        $('#t_gate').textContent    = '—';
+        $('#t_score').textContent   = '—';
+        tourChart.data.datasets[0].data = [0,0,0,0];
+        tourChart.update();
+      }
+
+      // Nudge Chart.js to re-measure after DOM fills in
+      requestAnimationFrame(() => {
+        demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize();
+        aqChart?.resize(); waterChart?.resize(); tourChart?.resize();
+      });
+
       $('#status').textContent = 'OK';
       updateMoney();
-    }catch(e){
+    } catch (e) {
       console.error(e);
-      $('#status').textContent = 'Error fetching data (check key / network)';
+      $('#status').textContent = 'Error fetching data (check keys / network)';
     }
   }
 
-  // ---------- Boot
-  document.getElementById('btnLoad').addEventListener('click', loadAll);
+  // Hook up UI + auto-load
+  document.getElementById('btnLoad').addEventListener('click', () => loadAll());
   const qsKey = new URLSearchParams(location.search).get('eia');
-  if(qsKey){ document.getElementById('eiaKey').value = qsKey; store.k = qsKey; }
-  if(document.getElementById('eiaKey').value){ loadAll(); }
-  </script>
-</body>
-</html>
+  if (qsKey) { document.getElementById('eiaKey').value = qsKey; store.k = qsKey; }
+  if (document.getElementById('eiaKey').value) { loadAll(); }
+</script>
