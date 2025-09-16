@@ -85,6 +85,23 @@
     @media (max-width:900px){.tourGrid{grid-template-columns:1fr}}
     .tourTiles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
     @media (max-width:1100px){.tourTiles{grid-template-columns:repeat(2,1fr)}}
+
+    /* SERVICES (city-sim tiles) */
+.servicesGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:1100px){.servicesGrid{grid-template-columns:repeat(2,1fr)}}
+.serviceCard{background:#fff;border:1px solid var(--edge);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.serviceCard .top{display:flex;align-items:center;gap:10px}
+.badge3{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#f4f6ff;border:1px solid #e1e8ff;font-weight:900}
+.serviceCard .blurb{font-size:13px;color:var(--muted)}
+.serviceCard .budget{display:flex;align-items:center;gap:8px}
+.serviceCard .budget input[type=range]{flex:1}
+.serviceCard .miniRow{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted)}
+.meter{height:8px;border-radius:999px;background:#eef2ff;overflow:hidden}
+.meter>i{display:block;height:100%;background:linear-gradient(90deg,var(--brand2),var(--brand));width:var(--pct,100%)}
+.serviceCard .meta{font-size:12px;color:#374151}
+.serviceCard .list{font-size:12px;color:#475569;line-height:1.35}
+
+    
   </style>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
@@ -245,6 +262,16 @@
       </div>
       <div class="mini" style="margin-top:6px">Source: OpenStreetMap via Overpass API. If rate-limited or query invalid, tiles show “—”.</div>
     </section>
+
+    <section class="card" id="services">
+  <h2>City Services — budget & effect (playful)</h2>
+  <div class="mini" style="margin-bottom:6px">
+    Slide budgets (50–150%). Effect follows city-sim rules: 50% → 25% effect, 150% → 125% effect.
+  </div>
+  <div class="servicesGrid" id="servicesGrid"></div>
+</section>
+
+    
   </main>
 
   <footer>
@@ -759,6 +786,112 @@ function renderCitizens(civ, fallbackName){
   document.getElementById('civUnemp').textContent  = civ?.unemp!=null ? String(civ.unemp.toFixed(1)) : '—';
 }
 
+// ---------- SERVICES (city-sim style)
+const SERVICES = [
+  {id:'budget', name:'Budget', icon:'💰', blurb:'Global funding lever. Sweet spot: ~100%.', tips:[
+    '50% budget → 25% effect (square rule below 100%)',
+    '150% budget → 125% effect (gentle slope above 100%)',
+    '101% often spawns 1 extra vehicle for pennies'
+  ]},
+  {id:'land', name:'Landscaping', icon:'🌳', blurb:'Paths, trees, canals & cosmetics boost value.', tips:[
+    'Paths & quays improve vibes and foot access'
+  ]},
+  {id:'disaster', name:'Disaster Services', icon:'🚨', blurb:'Warn & respond to bad days.', tips:[
+    'Towers/shelters reduce casualties & damage'
+  ]},
+  {id:'edu', name:'Education', icon:'🎓', blurb:'Schools level up zones and unlock higher density.', tips:[
+    'Elementary → High School → University ladder'
+  ]},
+  {id:'garbage', name:'Garbage', icon:'🗑️', blurb:'Landfills, recyclers, incinerators keep illness down.', tips:[
+    'Missed pickups → sickness → abandonment'
+  ]},
+  {id:'fire', name:'Fire', icon:'🔥', blurb:'Firehouses & helicopters fight urban/forest fires.', tips:[
+    'Coverage & terrain matter for response times'
+  ]},
+  {id:'health', name:'Healthcare', icon:'🏥', blurb:'Clinics & hospitals keep cims healthy. Deathcare too.', tips:[
+    'Cemeteries & crematoriums prevent backlog'
+  ]},
+  {id:'heat', name:'Heating', icon:'🥶', blurb:'District heat reduces electric load in cold cities.', tips:[
+    'Pipes + plants; optional alternative to power'
+  ]},
+  {id:'parks', name:'Parks & Plazas', icon:'🛝', blurb:'Leisure boosts land value & tourism.', tips:[
+    'Park maintenance temporarily buffs all parks'
+  ]},
+  {id:'parkmaint', name:'Park Maintenance', icon:'🧰', blurb:'Crews give a short-lived boost on visit.', tips:[
+    'Routes matter; place depots near clusters'
+  ]},
+  {id:'police', name:'Police', icon:'🚓', blurb:'Law & order; reduces crime and increases safety.', tips:[
+    'Budget affects patrol coverage & response'
+  ]},
+  {id:'power', name:'Power', icon:'⚡', blurb:'Keep city energized; outages cripple everything.', tips:[
+    'Watch net imports/exports & reserve margin'
+  ]},
+  {id:'road', name:'Road Maintenance', icon:'🛣️', blurb:'Snow/repairs keep speeds up & jams down.', tips:[
+    'Better speeds → higher effective capacity'
+  ]},
+  {id:'transport', name:'Transportation', icon:'🚌', blurb:'Move workers, shoppers & tourists efficiently.', tips:[
+    'Weather & wind can hint at disruptions'
+  ]},
+  {id:'water', name:'Water & Sewage', icon:'🚰', blurb:'Fresh water in, sewage out = healthy city.', tips:[
+    'Scale gradually; early game can run at 70–90%'
+  ]}
+];
+
+// piecewise effect curve: below 100% → square; above 100% → gentle 0.5 slope
+function effectFromBudget(b){
+  if(b<=100) return Math.round((b/100)*(b/100)*100);     // 50% -> 25%
+  return Math.round(100 + (b-100)*0.5);                   // 150% -> 125%
+}
+
+// lightweight DOM helpers for services
+function setServiceMeta(id, text){
+  const el = document.querySelector(`.serviceCard[data-id="${id}"] .meta`);
+  if(el) el.textContent = text || '—';
+}
+
+function renderServices(){
+  const host = document.getElementById('servicesGrid');
+  if(!host) return;
+  host.innerHTML = '';
+  for(const s of SERVICES){
+    const card = document.createElement('div');
+    card.className = 'serviceCard';
+    card.setAttribute('data-id', s.id);
+    card.innerHTML = `
+      <div class="top"><span class="badge3">${s.icon}</span><b>${s.name}</b></div>
+      <div class="blurb">${s.blurb}</div>
+
+      <div class="budget">
+        <input type="range" min="50" max="150" step="1" value="100" data-id="${s.id}">
+        <div class="miniRow"><span id="b_${s.id}">100%</span><span><span id="e_${s.id}">100%</span> effect</span></div>
+      </div>
+      <div class="meter"><i style="--pct:100%"></i></div>
+
+      <div class="mini meta">—</div>
+      ${Array.isArray(s.tips)&&s.tips.length
+        ? `<div class="list">${s.tips.map(t=>`• ${t}`).join('<br>')}</div>` : '' }
+    `;
+    host.appendChild(card);
+  }
+  // wire up sliders
+  host.querySelectorAll('input[type=range]').forEach(sl=>{
+    const id = sl.dataset.id;
+    function sync(){
+      const b = Number(sl.value);
+      const eff = effectFromBudget(b);
+      document.getElementById('b_'+id).textContent = `${b}%`;
+      document.getElementById('e_'+id).textContent = `${eff}%`;
+      sl.closest('.serviceCard').querySelector('.meter>i').style.setProperty('--pct', eff+'%');
+    }
+    sl.addEventListener('input', sync);
+    sync();
+  });
+}
+
+// render once at boot; meta text can be updated later from live data
+renderServices();
+
+
   // ---------- main loader
   async function loadAll(){
     const key = ($('#eiaKey').value||'').trim();
@@ -806,11 +939,13 @@ function renderCitizens(civ, fallbackName){
 
       // Interchange (net)
       const inter = await eiaFetchInterchangeNet(key, ba, hours);
+      setServiceMeta('power', (inter.net>=0? 'Net import +' : 'Net export −') + fmtNum(Math.abs(inter.net)) + ' MW');
       $('#kpiInterchg').textContent = (inter.net>=0? '+' : '−') + fmtNum(Math.abs(inter.net)) + ' MW';
 
       // Weather + Alerts
       const [wx, alerts] = await Promise.all([ fetchWeather(loc.lat, loc.lon, hours), fetchNOAAAlerts(loc.lat, loc.lon) ]);
       renderWeather(wx, loc.place);
+      setServiceMeta('transport', `Wind ${Math.round((wx?.now?.windMph)||0)} mph`);
       renderAlerts(alerts);
 
       // Environment: Air + Water + (optional Noise) + TRI count
@@ -829,6 +964,7 @@ function renderCitizens(civ, fallbackName){
       }else{
         $('#aqiNow').textContent = '—';
       }
+      setServiceMeta('health', air?.aqiNow==null ? 'AQI —' : `AQI ${Math.round(air.aqiNow)}`);
       if(water){
         waterChart.data.labels = water.labels;
         waterChart.data.datasets[0].data = water.vals;
@@ -837,6 +973,7 @@ function renderCitizens(civ, fallbackName){
       }else{
         $('#usgsStation').textContent = '—';
       }
+      setServiceMeta('water', water?.site?.name || water?.site?.id || '—');
       $('#echoCount').textContent = tri==null? 'n/a' : fmtNum(tri);
       $('#noiseNow').textContent = (dnl==null? '—' : `${Math.round(dnl)} dB DNL`);
 
