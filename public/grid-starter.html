@@ -849,6 +849,59 @@ function setServiceMeta(id, text){
   if(el) el.textContent = text || '—';
 }
 
+// ---------- SERVICES: real data fetchers
+
+// Garbage (EPA Landfill LMOP, by lat/lon radius)
+async function fetchGarbageStats(lat, lon){
+  try{
+    const url = `https://services.arcgis.com/fIaUy7R3iJcOqIBa/ArcGIS/rest/services/New_Landfills/FeatureServer/0/query?where=1=1&geometry=${lon},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&distance=50&units=esriSRUnit_StatuteMile&outFields=landfill_name,waste_in_place_tons&f=json`;
+    const r = await fetch(url);
+    if(!r.ok) throw new Error();
+    const j = await r.json();
+    return j?.features?.length || 0;
+  }catch{ return null; }
+}
+
+// Fire (USFA Fire Department Registry CSV → not API, so just show count if nearby county)
+async function fetchFireDeptCount(countyName){
+  // simplest: show placeholder — in real use, preload CSV offline
+  return `See registry for ${countyName}`;
+}
+
+// Police (FBI UCR Crime Data Explorer — requires key, skip live call in browser for now)
+async function fetchPoliceCrime(stateAbbr){
+  // Placeholder text until FBI API key is wired
+  return `FBI UCR stats (${stateAbbr})`;
+}
+
+// Road (Chicago 311 potholes example — not national, so fallback)
+async function fetchRoadIncidents(lat, lon){
+  try{
+    const r = await fetch(`https://data.cityofchicago.org/resource/v6vf-nfxy.json?$limit=5&status=Open`);
+    if(!r.ok) throw new Error();
+    const j = await r.json();
+    return j.length;
+  }catch{ return null; }
+}
+
+// Education (Urban Institute API)
+async function fetchSchoolCount(statefp){
+  try{
+    const url = `https://educationdata.urban.org/api/v1/schools/ccd/directory/2020/?state_fips=${statefp}`;
+    const r = await fetch(url);
+    if(!r.ok) throw new Error();
+    const j = await r.json();
+    return j?.results?.length || 0;
+  }catch{ return null; }
+}
+
+// Parks (TPL ParkServe — ArcGIS service)
+async function fetchParkCount(cityName){
+  // Placeholder: robust ArcGIS query can be added if CORS works
+  return `Parks near ${cityName}`;
+}
+
+
 function renderServices(){
   const host = document.getElementById('servicesGrid');
   if(!host) return;
@@ -981,6 +1034,29 @@ renderServices();
 const fips = await fetchCountyFIPS(loc.lat, loc.lon);
 const civ  = fips ? await fetchACSCounty(fips.state, fips.county) : null;
 renderCitizens(civ, fips?.name || '—');
+
+// ---------- City Services (live stats)
+try{
+  const garbage = await fetchGarbageStats(loc.lat, loc.lon);
+  setServiceMeta('garbage', garbage==null? '—' : `${garbage} landfills nearby`);
+
+  const fire = await fetchFireDeptCount(fips?.name);
+  setServiceMeta('fire', fire || '—');
+
+  const police = await fetchPoliceCrime(fips?.state);
+  setServiceMeta('police', police || '—');
+
+  const road = await fetchRoadIncidents(loc.lat, loc.lon);
+  setServiceMeta('road', road==null? '—' : `${road} pothole cases (Chicago sample)`);
+
+  const edu = await fetchSchoolCount(fips?.state);
+  setServiceMeta('edu', edu==null? '—' : `${edu} schools in state`);
+
+  const parks = await fetchParkCount(loc.place);
+  setServiceMeta('parks', parks || '—');
+}catch(e){
+  console.warn('Services fetch failed', e);
+}
 
 
       // Tourism (Overpass)
