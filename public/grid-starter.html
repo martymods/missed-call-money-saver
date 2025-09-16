@@ -280,6 +280,8 @@
 
   <script>
   // ---------- helpers
+  // FBI Crime Data Explorer (state summarized endpoint)
+  const FBI_KEY = 'OFxF5037ejE39j9wkGvIQHwpK96Xhq9HwSaXlIff';  // <-- your key
   const $ = s => document.querySelector(s);
   const fmtNum = n => (n==null? '—' : Number(n).toLocaleString());
   const fmtMoney = n => (isFinite(n)? '$' + Number(n).toLocaleString(undefined,{maximumFractionDigits:0}) : '$—');
@@ -869,20 +871,48 @@ async function fetchFireDeptCount(countyName){
 }
 
 // Police (FBI UCR Crime Data Explorer — requires key, skip live call in browser for now)
-async function fetchPoliceCrime(stateAbbr){
-  // Placeholder text until FBI API key is wired
-  return `FBI UCR stats (${stateAbbr})`;
-}
+// map FIPS state -> USPS
+const FIPS_TO_USPS = {
+  "01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT","10":"DE","11":"DC","12":"FL",
+  "13":"GA","15":"HI","16":"ID","17":"IL","18":"IN","19":"IA","20":"KS","21":"KY","22":"LA","23":"ME",
+  "24":"MD","25":"MA","26":"MI","27":"MN","28":"MS","29":"MO","30":"MT","31":"NE","32":"NV","33":"NH",
+  "34":"NJ","35":"NM","36":"NY","37":"NC","38":"ND","39":"OH","40":"OK","41":"OR","42":"PA","44":"RI",
+  "45":"SC","46":"SD","47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA","54":"WV","55":"WI","56":"WY","72":"PR"
+};
 
-// Road (Chicago 311 potholes example — not national, so fallback)
-async function fetchRoadIncidents(lat, lon){
+async function fetchPoliceCrime(stateFips){
   try{
-    const r = await fetch(`https://data.cityofchicago.org/resource/v6vf-nfxy.json?$limit=5&status=Open`);
+    const st = FIPS_TO_USPS[String(stateFips).padStart(2,'0')];
+    if(!st) return null;
+    // latest full year (API lags; use last year)
+    const y = new Date().getFullYear()-1;
+    const url = `https://api.usa.gov/crime/fbi/sapi/api/summarized/state/${st}/offense/reported/${y}/${y}?api_key=${FBI_KEY}`;
+    const r = await fetch(url);
     if(!r.ok) throw new Error();
     const j = await r.json();
-    return j.length;
+    const total = (j?.results||[]).reduce((s,row)=> s + Number(row.actual||0), 0);
+    return `FBI UCR ${y}: ${total.toLocaleString()} offenses`;
   }catch{ return null; }
 }
+
+
+// Roadworks (OSM): count highway=construction / highway with construction=* within ~15km
+async function fetchRoadIncidents(lat, lon){
+  try{
+    const q = `[out:json][timeout:25];
+      (
+        node["highway"="construction"](around:15000,${lat},${lon});
+        way["highway"="construction"](around:15000,${lat},${lon});
+        relation["highway"="construction"](around:15000,${lat},${lon});
+        node["construction"](around:15000,${lat},${lon});
+        way["construction"](around:15000,${lat},${lon});
+        relation["construction"](around:15000,${lat},${lon});
+      ); out ids;`;
+    const els = await overpassQuery(q);
+    return els.length;
+  }catch{ return null; }
+}
+
 
 // Education (Urban Institute API)
 async function fetchSchoolCount(statefp){
@@ -895,11 +925,43 @@ async function fetchSchoolCount(statefp){
   }catch{ return null; }
 }
 
-// Parks (TPL ParkServe — ArcGIS service)
-async function fetchParkCount(cityName){
-  // Placeholder: robust ArcGIS query can be added if CORS works
-  return `Parks near ${cityName}`;
+// Parks: try ParkServe (ArcGIS), else OSM fallback
+async function fetchParkCount(latOrPlace, lonMaybe){
+  // allow both (lat,lon) OR (place string); we’ll call with lat/lon below
+  async function tryParkServe(lat, lon){
+    try{
+      // Park polygons within 25 km (buffer miles ≈ 15.5)
+      const url = `https://services.arcgis.com/8df8p0NlLFEShl0r/arcgis/rest/services/ParkServe_Shareable/FeatureServer/0/query` +
+        `?where=1%3D1&geometry=${lon}%2C${lat}&geometryType=esriGeometryPoint&inSR=4326` +
+        `&spatialRel=esriSpatialRelIntersects&distance=25&units=esriSRUnit_Kilometer&outFields=Park_Name&returnGeometry=false&f=json`;
+      const r = await fetch(url);
+      if(!r.ok) throw new Error();
+      const j = await r.json();
+      const n = j?.features?.length || 0;
+      return n;
+    }catch{ return null; }
+  }
+  async function tryOSM(lat, lon){
+    const around = 15000;
+    const q = `[out:json][timeout:25];
+      (
+        node["leisure"="park"](around:${around},${lat},${lon});
+        way["leisure"="park"](around:${around},${lat},${lon});
+        relation["leisure"="park"](around:${around},${lat},${lon});
+      ); out ids;`;
+    const els = await overpassQuery(q);
+    return els.length;
+  }
+
+  if(typeof latOrPlace === 'number'){
+    const lat = latOrPlace, lon = lonMaybe;
+    const ps = await tryParkServe(lat, lon);
+    if(ps!=null) return ps;               // ParkServe success
+    return await tryOSM(lat, lon);        // fallback
+  }
+  return null;
 }
+
 
 
 function renderServices(){
@@ -1035,28 +1097,34 @@ const fips = await fetchCountyFIPS(loc.lat, loc.lon);
 const civ  = fips ? await fetchACSCounty(fips.state, fips.county) : null;
 renderCitizens(civ, fips?.name || '—');
 
-// ---------- City Services (live stats)
+// ---------- City Services (live stats — national sources)
 try{
+  // Garbage — EPA LMOP (already national)
   const garbage = await fetchGarbageStats(loc.lat, loc.lon);
   setServiceMeta('garbage', garbage==null? '—' : `${garbage} landfills nearby`);
 
-  const fire = await fetchFireDeptCount(fips?.name);
-  setServiceMeta('fire', fire || '—');
+  // Fire — USFA registry is a national CSV; until you preload it, keep the county pointer
+  setServiceMeta('fire', fips?.name ? `See registry for ${fips.name}` : '—');
 
+  // Police — FBI summarized by state (national)
   const police = await fetchPoliceCrime(fips?.state);
   setServiceMeta('police', police || '—');
 
-  const road = await fetchRoadIncidents(loc.lat, loc.lon);
-  setServiceMeta('road', road==null? '—' : `${road} pothole cases (Chicago sample)`);
+  // Road — national OSM roadworks
+  const roadworks = await fetchRoadIncidents(loc.lat, loc.lon);
+  setServiceMeta('road', roadworks==null? '—' : `${roadworks} roadworks nearby`);
 
+  // Education — Urban Institute (national)
   const edu = await fetchSchoolCount(fips?.state);
-  setServiceMeta('edu', edu==null? '—' : `${edu} schools in state`);
+  setServiceMeta('edu', edu==null? '—' : `${edu.toLocaleString()} schools in state`);
 
-  const parks = await fetchParkCount(loc.place);
-  setServiceMeta('parks', parks || '—');
+  // Parks — ParkServe (ArcGIS) with OSM fallback (both national)
+  const parkCount = await fetchParkCount(loc.lat, loc.lon);
+  setServiceMeta('parks', parkCount==null? '—' : `${parkCount} parks within ~15 km`);
 }catch(e){
   console.warn('Services fetch failed', e);
 }
+
 
 
       // Tourism (Overpass)
