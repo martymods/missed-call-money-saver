@@ -206,7 +206,7 @@
         <div class="tileSm"><div class="sub">Air: latest US AQI</div><div class="big" id="aqiNow">—</div></div>
         <div class="tileSm"><div class="sub">Water station</div><div class="big" id="usgsStation">—</div></div>
         <div class="tileSm"><div class="sub">Nearby TRI facilities (EPA)</div><div class="big" id="echoCount">—</div></div>
-        <div class="tileSm"><div class="sub">Notes</div><div class="big" style="font-size:14px">Noise is model-based; use DOT map for context</div></div>
+        <div class="tileSm"><div class="sub">Modeled transportation noise</div><div class="big" id="noiseNow">—</div></div>
       </div>
       <div class="mini" style="margin-top:6px">Soil/ground & noise lack universal live APIs. For context, combine TRI/Superfund + DOT noise maps with local data.</div>
     </section>
@@ -252,20 +252,20 @@
   let demandChart, fuelTSChart, wxChart, aqChart, waterChart;
 
   // stable box helper to avoid “crunched” canvases before layout settles
-  function waitForStableBox(box, minW=160, minH=120){
+  function waitForStableBox(box, minW=160, minH=120, timeoutMs=1500){
     return new Promise(resolve=>{
+      const t0 = performance.now();
       function check(){
         const r1 = box.getBoundingClientRect();
-        if(r1.width < minW || r1.height < minH){ return requestAnimationFrame(check); }
-        requestAnimationFrame(()=>{
-          const r2 = box.getBoundingClientRect();
-          if (Math.abs(r2.width-r1.width)>0.5 || Math.abs(r2.height-r1.height)>0.5) return requestAnimationFrame(check);
-          resolve();
-        });
+        if((performance.now()-t0)>timeoutMs || (r1.width>=minW && r1.height>=minH)){
+          return requestAnimationFrame(()=> resolve());
+        }
+        requestAnimationFrame(check);
       }
       check();
     });
   }
+
   async function ensureCharts(){
     await Promise.all([
       waitForStableBox($('#chartDemand').parentElement),
@@ -475,7 +475,7 @@
     }
   }
 
-  // ---------- Environment (air, water, TRI)
+  // ---------- Environment (air, water, TRI, noise)
   async function fetchAirQuality(lat, lon, hours){
     const pastDays = Math.max(1, Math.ceil(hours/24));
     const url = new URL('https://air-quality-api.open-meteo.com/v1/air-quality');
@@ -497,49 +497,89 @@
     };
   }
 
-  async function fetchUSGSWater(lat, lon, hours){
-    try{
-      // find nearest site with water temperature (00010), within 50 km
-      const r1 = await fetch(`https://waterservices.usgs.gov/nwis/site/?format=rjson&hasDataTypeCd=iv&parameterCd=00010&lat=${lat}&lon=${lon}&siteType=ST&distance=50`);
-      const s1 = await r1.json();
-      const site = s1?.site?.[0]?.siteCode?.[0]?.value;
-      if(!site) throw new Error('no site');
-      const period = `PT${hours}H`;
-      const r2 = await fetch(`https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${site}&parameterCd=00010&period=${period}`);
-      const s2 = await r2.json();
-      const ts = s2?.value?.timeSeries?.[0]?.values?.[0]?.value || [];
-      const labels = ts.map(v => new Date(v.dateTime));
-      const vals   = ts.map(v => Number(v.value));
-      return { site, labels, vals };
-    }catch{
-      return { site:null, labels:[], vals:[] };
+  // EPA ECHO TRI — try one stable endpoint and fall back once; otherwise return null silently
+  async function fetchTRICount(lat, lon, miles=25){
+    const qs = p => Object.entries(p).map(([k,v])=> `${k}=${encodeURIComponent(v)}`).join('&');
+    const params = { output:'JSON', p_program:'TRI', p_lat:lat.toFixed(3), p_long:lon.toFixed(3), p_radius:miles };
+    const tries = [
+      'https://echodata.epa.gov/echo/echo_rest_services.get_facilities',
+      'https://echodata.epa.gov/echo/er_rest_services.get_facilities'
+    ];
+    for(const base of tries){
+      try{
+        const r = await fetch(`${base}?${qs(params)}`);
+        if(!r.ok) continue;
+        const j = await r.json();
+        const rows = j?.Results?.QueryRows || j?.Results?.Facilities || [];
+        const n = Array.isArray(rows) ? rows.length : (Number(j?.Results?.ResultCount)||Number(j?.Results?.TotalFacilities)||0);
+        return Number.isFinite(n) ? n : null;
+      }catch{/* ignore and fall back */}
     }
+    return null;
   }
 
-  // EPA ECHO: count nearby TRI facilities (proxy for potential ground pollution)
-  async function fetchTRICount(lat, lon, miles=25){
+  // DOT Transportation Noise — modeled DNL dB at a point (not time-series)
+  async function fetchNoiseDNL(lat, lon){
+    const url = 'https://gis.dot.gov/arcgis/rest/services/BTS/Transportation_Noise/MapServer/identify';
+    const body = new URLSearchParams({
+      f:'json', sr:'4326', tolerance:'3', returnGeometry:'false',
+      mapExtent:`${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01}`,
+      imageDisplay:'400,400,96',
+      geometry: JSON.stringify({ x:lon, y:lat, spatialReference:{wkid:4326} }),
+      geometryType:'esriGeometryPoint',
+      layers:'all'
+    });
     try{
-      const u = `https://echodata.epa.gov/echo/RestServices/echo_rest_services.get_facilities?output=JSON&p_program=TRI&p_lat=${lat}&p_long=${lon}&p_radius=${miles}`;
-      const r = await fetch(u);
+      const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+      if(!r.ok) throw new Error();
       const j = await r.json();
-      // try a couple likely shapes
-      const count = j?.Results?.QueryRows ?? j?.Results?.ResultCount ?? j?.Results?.Facilities?.length ?? null;
-      return count==null ? null : Number(count);
+      const first = (j?.results||[]).find(v => typeof v?.attributes?.DNL === 'number' || typeof v?.attributes?.dnl === 'number');
+      const dnl = first?.attributes?.DNL ?? first?.attributes?.dnl;
+      return Number.isFinite(dnl) ? Math.round(dnl) : null;
     }catch{ return null; }
   }
 
-  // ---------- UI builders (energy)
-  const FUEL_NAMES = {NG:'Gas', COL:'Coal', NUC:'Nuclear', WND:'Wind', SUN:'Solar', WAT:'Hydro', OIL:'Oil', OTH:'Other'};
-  const FUEL_ORDER = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH'];
+  // USGS — nearest station with recent daily water temperature (°C)
+  async function fetchUSGSWater(lat, lon){
+    try{
+      // USGS site search: miles + lat/lon + rjson + daily-values capability
+      const siteURL = `https://waterservices.usgs.gov/nwis/site/?format=rjson&parameterCd=00010&hasDataTypeCd=dv&siteType=ST&lat=${lat}&lon=${lon}&distance=50`;
+      const sResp = await fetch(siteURL);
+      if(!sResp.ok) throw new Error('site search failed');
+      const sj = await sResp.json();
+      const sites = sj?.site?.length ? sj.site : sj?.value?.sites || [];
+      if(!sites.length) return { site:'No station', times:[], vals:[] };
+
+      // pick first/closest
+      const site = (sites[0]?.siteCode?.[0]?.value) || (sites[0]?.sourceInfo?.siteCode?.[0]?.value);
+      if(!site) return { site:'No station', times:[], vals:[] };
+
+      // daily temp (last 30 days)
+      const now = new Date(); const start = new Date(now.getTime() - 30*86400e3);
+      const dvURL = `https://waterservices.usgs.gov/nwis/dv/?format=json&sites=${site}&parameterCd=00010&startDT=${start.toISOString().slice(0,10)}&endDT=${now.toISOString().slice(0,10)}`;
+      const dResp = await fetch(dvURL);
+      if(!dResp.ok) throw new Error('dv fetch failed');
+      const dj = await dResp.json();
+      const ts = dj?.value?.timeSeries?.[0]?.values?.[0]?.value || [];
+      const times = ts.map(p => new Date(p.dateTime));
+      const vals  = ts.map(p => Number(p.value));
+      return { site, times, vals };
+    }catch{
+      return { site:'Unavailable', times:[], vals:[] };
+    }
+  }
+
   function renderFuelCards(mixObj, totalMW, price){
     const el = $('#fuelCards'); el.innerHTML = '';
-    const fuels = Object.keys(mixObj).sort((a,b)=> FUEL_ORDER.indexOf(a)-FUEL_ORDER.indexOf(b));
+    const FUEL_NAMES = {NG:'Gas', COL:'Coal', NUC:'Nuclear', WND:'Wind', SUN:'Solar', WAT:'Hydro', OIL:'Oil', OTH:'Other'};
+    const FUEL_ORDER = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH'];
+    const fuels = Object.keys(mixObj||{}).sort((a,b)=> FUEL_ORDER.indexOf(a)-FUEL_ORDER.indexOf(b));
     for(const f of fuels){
       const mw = mixObj[f]||0; const share = totalMW>0 ? (mw/totalMW) : 0;
       const revH = share * price * totalMW;
       const card = document.createElement('div'); card.className = 'fuel';
       card.innerHTML = `
-        <div class="row"><div><span class="badge2">${FUEL_NAMES[f]?.[0]||'?'}</span> <b>${FUEL_NAMES[f]||f}</b></div>
+        <div class="row"><div><span class="badge2">${(FUEL_NAMES[f]||'?')[0]}</span> <b>${FUEL_NAMES[f]||f}</b></div>
              <div class="money">${fmtNum(mw)} MW</div></div>
         <div class="row sub"><div>${(share*100).toFixed(1)}% share</div><div>${fmtMoney(revH)}/h</div></div>
         <div class="sep"></div>
@@ -555,135 +595,6 @@
     if(window.__lastMix && load>0){ renderFuelCards(window.__lastMix, load, price); }
   }
 
-
-// ---------- Environment helpers (TRI / Noise / USGS already in your file? replace these)
-
-/* EPA ECHO TRI (facilities within N miles)
-   The old /RestServices/echo_rest_services.get_facilities path 404s.
-   Current production paths are under /echo (er_rest_services OR facility_rest_services).
-   We try the modern endpoint first and gracefully fall back.
-*/
-async function fetchTRICount(lat, lon, radiusMiles=25){
-  const qs = p => Object.entries(p).map(([k,v])=> `${k}=${encodeURIComponent(v)}`).join('&');
-
-  // Candidate endpoints (first that returns JSON wins)
-  const bases = [
-    'https://echodata.epa.gov/echo/er_rest_services.get_facilities',        // primary
-    'https://echodata.epa.gov/echo/facility_rest_services.get_facilities'   // fallback
-  ];
-  const params = {
-    output: 'JSON',
-    p_program: 'TRI',      // restrict to TRI reporters
-    p_lat: lat.toFixed(3),
-    p_long: lon.toFixed(3),
-    p_radius: radiusMiles  // miles
-  };
-
-  for(const base of bases){
-    try{
-      const r = await fetch(`${base}?${qs(params)}`);
-      if(!r.ok) continue;
-      const j = await r.json();
-      // ECHO returns { Results: { QueryRows: [ ... ] } } or similar — be tolerant
-      const rows = j?.Results?.QueryRows || j?.Results || j?.facilities || [];
-      const n = Array.isArray(rows) ? rows.length : (Number(j?.Results?.TotalFacilities) || 0);
-      if(n>0 || r.ok) return n;
-    }catch(e){ /* try next */ }
-  }
-
-  // Last-ditch: report 0 and don’t blow up the UI
-  console.warn('ECHO TRI lookup failed; showing 0.');
-  return 0;
-}
-
-/* DOT Transportation Noise Map — modeled DNL (day–night level) at a point.
-   Uses ArcGIS MapServer/identify. This is a modeled (static) exposure number (dB).
-   Not time-series, but useful as context beside your tiles.
-*/
-async function fetchNoiseDNL(lat, lon){
-  // Known public service (BTS Transportation Noise). If DOT rotates layers, we handle errors.
-  const url = 'https://gis.dot.gov/arcgis/rest/services/BTS/Transportation_Noise/MapServer/identify';
-  const body = new URLSearchParams({
-    f: 'json',
-    sr: '4326',
-    tolerance: '3',
-    returnGeometry: 'false',
-    mapExtent: `${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01}`,
-    imageDisplay: '400,400,96',
-    geometry: JSON.stringify({ x: lon, y: lat, spatialReference:{ wkid:4326 }}),
-    geometryType: 'esriGeometryPoint',
-    layers: 'all'  // search all sublayers for a hit
-  });
-
-  try{
-    const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
-    if(!r.ok) throw new Error('DOT noise identify failed');
-    const j = await r.json();
-    const first = (j?.results||[]).find(v => typeof v?.attributes?.DNL === 'number' || typeof v?.attributes?.dnl === 'number');
-    const dnl = first?.attributes?.DNL ?? first?.attributes?.dnl;
-    if(Number.isFinite(dnl)) return Math.round(dnl);
-  }catch(e){
-    console.warn('DOT noise identify error', e);
-  }
-  return null; // no value at this point (rural areas often have no polygon/return)
-}
-
-/* USGS — pick nearest station with recent *temperature* (00010) and pull daily mean (°C) to keep it stable.
-   If no candidate, we leave tile/chart blank. (Your previous USGS 400s were from a radius query that
-   sometimes returns no station; this version tries a stricter filter and guards every step.)
-*/
-async function fetchUSGSWater(lat, lon, radiusKm=80){
-  const siteURL = new URL('https://waterservices.usgs.gov/nwis/site/');
-  siteURL.search = new URLSearchParams({
-    format: 'json',
-    parameterCd: '00010',   // water temperature
-    hasDataTypeCd: 'dv',    // daily values
-    siteType: 'ST',
-    latitude: lat,
-    longitude: lon,
-    distance: (radiusKm*0.621371).toFixed(0)  // USGS expects miles in this endpoint
-  }).toString();
-
-  try{
-    const sResp = await fetch(siteURL);
-    if(!sResp.ok) throw new Error('site search failed');
-    const sj = await sResp.json();
-    const sites = sj?.value?.sites || [];
-    if(!sites.length) return { site: 'No station', times:[], vals:[] };
-
-    // pick the closest
-    const best = sites[0];
-    const site = best?.siteCode?.[0]?.value || best?.sourceInfo?.siteCode?.[0]?.value;
-    if(!site) return { site: 'No station', times:[], vals:[] };
-
-    // daily values (last 14–30 days) for temperature (°C)
-    const now = new Date(); const start = new Date(now.getTime() - 30*86400e3);
-    const dvURL = new URL('https://waterservices.usgs.gov/nwis/dv/');
-    dvURL.search = new URLSearchParams({
-      format: 'json',
-      sites: site,
-      parameterCd: '00010',
-      startDT: start.toISOString().slice(0,10),
-      endDT: now.toISOString().slice(0,10)
-    }).toString();
-
-    const dResp = await fetch(dvURL);
-    if(!dResp.ok) throw new Error('dv fetch failed');
-    const dj = await dResp.json();
-    const ts = dj?.value?.timeSeries?.[0];
-    const pts = ts?.values?.[0]?.value || [];
-    const times = pts.map(p => new Date(p.dateTime));
-    const vals  = pts.map(p => Number(p.value));
-
-    return { site, times, vals };
-  }catch(e){
-    console.warn('USGS water fallback', e);
-    return { site: 'Unavailable', times:[], vals:[] };
-  }
-}
-
-
-  
   // ---------- main
   async function loadAll(){
     const key = ($('#eiaKey').value||'').trim();
@@ -695,6 +606,9 @@ async function fetchUSGSWater(lat, lon, radiusKm=80){
     await ensureCharts();
 
     try{
+      // BA location
+      const loc = ({"PJM":{lat:39.9526,lon:-75.1652,place:"Philadelphia, PA"},"ISNE":{lat:42.3601,lon:-71.0589,place:"Boston, MA"},"NYIS":{lat:42.6526,lon:-73.7562,place:"Albany, NY"},"CISO":{lat:38.5816,lon:-121.4944,place:"Sacramento, CA"},"ERCO":{lat:30.2672,lon:-97.7431,place:"Austin, TX"},"MISO":{lat:38.6270,lon:-90.1994,place:"St. Louis, MO"},"SWPP":{lat:34.7465,lon:-92.2896,place:"Little Rock, AR"},"TVA":{lat:35.0456,lon:-85.3097,place:"Chattanooga, TN"}})[ba];
+
       // demand + forecast
       const [act, fcast] = await Promise.all([
         eiaFetchRegion(key, ba, hours, 'D'),
@@ -719,7 +633,7 @@ async function fetchUSGSWater(lat, lon, radiusKm=80){
       const fuelTS = await eiaFetchFuelTimeSeries(key, ba, hours);
       const fuelLabels = fuelTS.times.map(t=> { const d=parseEIAPeriod(t); return d? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`:''; });
       fuelTSChart.data.labels = fuelLabels;
-      fuelTSChart.data.datasets = FUEL_ORDER.filter(f=> fuelTS.fuels.includes(f)).map(f=>({ label:FUEL_NAMES[f]||f, data:fuelTS.byFuel[f]||[], borderWidth:1, fill:true, tension:.2 }));
+      fuelTSChart.data.datasets = ['NG','COL','NUC','WND','SUN','WAT','OIL','OTH'].filter(f=> fuelTS.fuels.includes(f)).map(f=>({ label:{NG:'Gas',COL:'Coal',NUC:'Nuclear',WND:'Wind',SUN:'Solar',WAT:'Hydro',OIL:'Oil',OTH:'Other'}[f], data:fuelTS.byFuel[f]||[], borderWidth:1, fill:true, tension:.2 }));
       fuelTSChart.update();
 
       const lastIdx = fuelTS.times.length - 1;
@@ -732,33 +646,46 @@ async function fetchUSGSWater(lat, lon, radiusKm=80){
       $('#kpiInterchg').textContent = (inter.net>=0? '+' : '−') + fmtNum(Math.abs(inter.net)) + ' MW';
 
       // weather + alerts
-      const loc = BA_COORDS[ba] || BA_COORDS.PJM;
       const [wx, alerts] = await Promise.all([ fetchWeather(loc.lat, loc.lon, hours), fetchNOAAAlerts(loc.lat, loc.lon) ]);
       renderWeather(wx, loc.place);
       renderAlerts(alerts);
 
       // Environment (beta)
-      const [air, water, triCount] = await Promise.all([
+      const [air, water, triCount, dnl] = await Promise.all([
         fetchAirQuality(loc.lat, loc.lon, hours),
-        fetchUSGSWater(loc.lat, loc.lon, hours),
-        fetchTRICount(loc.lat, loc.lon, 25)
+        fetchUSGSWater(loc.lat, loc.lon),
+        fetchTRICount(loc.lat, loc.lon, 25),
+        fetchNoiseDNL(loc.lat, loc.lon)
       ]);
+
       // Air
-      const airLabels = air.times.map(d => `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`);
-      aqChart.data.labels = airLabels;
-      aqChart.data.datasets[0].data = air.pm25;
-      aqChart.data.datasets[1].data = air.aqi;
-      aqChart.update();
-      $('#aqiNow').textContent = air.aqiNow!=null ? Math.round(air.aqiNow) : '—';
+      if(air?.times){
+        const airLabels = air.times.map(d => `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`);
+        aqChart.data.labels = airLabels;
+        aqChart.data.datasets[0].data = air.pm25||[];
+        aqChart.data.datasets[1].data = air.aqi||[];
+        aqChart.update();
+        $('#aqiNow').textContent = air.aqiNow!=null ? Math.round(air.aqiNow) : '—';
+      }else{
+        $('#aqiNow').textContent = '—';
+      }
 
       // Water
-      waterChart.data.labels = water.labels.map(d => `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:00`);
-      waterChart.data.datasets[0].data = water.vals;
-      waterChart.update();
-      $('#usgsStation').textContent = water.site || '—';
+      $('#usgsStation').textContent = water?.site || '—';
+      if(water?.times?.length){
+        const labelsW = water.times.map(d => `${d.getMonth()+1}/${d.getDate()}`);
+        waterChart.data.labels = labelsW;
+        waterChart.data.datasets[0].data = water.vals||[];
+        waterChart.update();
+      }else{
+        waterChart.data.labels = []; waterChart.data.datasets[0].data = []; waterChart.update();
+      }
 
       // TRI count
-      $('#echoCount').textContent = triCount!=null ? fmtNum(triCount) : '—';
+      $('#echoCount').textContent = (triCount!=null) ? fmtNum(triCount) : '—';
+
+      // Noise tile (DNL dB)
+      $('#noiseNow').textContent = (dnl!=null) ? `${dnl} dB DNL` : '—';
 
       // mirror the DevTools “resize” effect once everything is drawn
       requestAnimationFrame(()=>{ demandChart?.resize(); fuelTSChart?.resize(); wxChart?.resize(); aqChart?.resize(); waterChart?.resize(); });
