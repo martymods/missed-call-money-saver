@@ -118,18 +118,15 @@
         <p>Every Xbox 360 game is <b>$5</b> right now. Tap a case → fly-to-cart → stack combos for dopamine hits.</p>
       </div>
       <div class="yt" style="width:360px;max-width:100%">
-        <!-- Trailer embed (example — you can swap per-game in the modal later) -->
         <iframe width="360" height="202" src="https://www.youtube.com/embed/T9Ezd2FqxAU"
           title="Halo 3 Trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen></iframe>
       </div>
     </section>
 
-    <!-- Grid of games (seeded; will be replaced with RAWG covers if key is set) -->
     <div id="grid" class="grid"></div>
   </div>
 
-  <!-- Cart panel -->
   <div id="cart" class="cart" role="dialog" aria-label="Your cart">
     <h3>Your Stack</h3>
     <div id="lines"></div>
@@ -146,24 +143,24 @@
 <script>
 /** ---- Config ---- **/
 const PRICE_EACH = 5; // USD
-const RAWG_KEY = ''; // <-- put your RAWG API key here to auto-fill covers (platform 14)
+const RAWG_KEY = ''; // <-- add your RAWG API key to auto-fill official covers
 
-/** ---- Seed list (covers will be filled by RAWG if key provided) ---- **/
+/** ---- Seed list ---- **/
 let GAMES = [
-  { id:'halo-3',       title:'Halo 3',                cover:'', yt:'T9Ezd2FqxAU' },
-  { id:'gow2',         title:'Gears of War 2',        cover:'', yt:'Yk9G7OyU9CY' },
-  { id:'fable-2',      title:'Fable II',              cover:'', yt:'1Xh3ZrQK1k8' },
-  { id:'skyrim',       title:'The Elder Scrolls V: Skyrim', cover:'', yt:'JSRtYpNRoN0' },
-  { id:'forza-4',      title:'Forza Motorsport 4',    cover:'', yt:'6v2L2UGZJAM' },
-  { id:'cod-mw2',      title:'Call of Duty: Modern Warfare 2', cover:'', yt:'coiTJbr9m04' },
-  { id:'red-dead',     title:'Red Dead Redemption',   cover:'', yt:'MemkzzlQJ6Y' },
-  { id:'bioshock',     title:'BioShock',              cover:'', yt:'2bZk3E3vSRA' },
-  { id:'assassins',    title:'Assassin’s Creed II',   cover:'', yt:'mbahj7gSIU8' },
-  { id:'nfss',         title:'Need for Speed: Shift', cover:'', yt:'wq6vNusJygk' },
+  { id:'halo-3',   title:'Halo 3',                               cover:'', yt:'T9Ezd2FqxAU', rawg:'halo-3' },
+  { id:'gow2',     title:'Gears of War 2',                       cover:'', yt:'Yk9G7OyU9CY', rawg:'gears-of-war-2' },
+  { id:'fable-2',  title:'Fable II',                             cover:'', yt:'1Xh3ZrQK1k8', rawg:'fable-ii' },
+  { id:'skyrim',   title:'The Elder Scrolls V: Skyrim',          cover:'', yt:'JSRtYpNRoN0', rawg:'the-elder-scrolls-v-skyrim' },
+  { id:'forza-4',  title:'Forza Motorsport 4',                   cover:'', yt:'6v2L2UGZJAM', rawg:'forza-motorsport-4' },
+  { id:'cod-mw2',  title:'Call of Duty: Modern Warfare 2',       cover:'', yt:'coiTJbr9m04', rawg:'call-of-duty-modern-warfare-2' },
+  { id:'red-dead', title:'Red Dead Redemption',                  cover:'', yt:'MemkzzlQJ6Y', rawg:'red-dead-redemption' },
+  { id:'bioshock', title:'BioShock',                             cover:'', yt:'2bZk3E3vSRA', rawg:'bioshock' },
+  { id:'assassins',title:'Assassin’s Creed II',                  cover:'', yt:'mbahj7gSIU8', rawg:'assassins-creed-ii' },
+  { id:'nfss',     title:'Need for Speed: Shift',                cover:'', yt:'wq6vNusJygk', rawg:'need-for-speed-shift' },
 ];
 
 /** ---- State ---- **/
-let cart = JSON.parse(localStorage.getItem('x360_cart')||'[]'); // [{id,qty}]
+let cart = JSON.parse(localStorage.getItem('x360_cart')||'[]');
 let lastAddTs = 0, combo = 0;
 
 /** ---- Helpers ---- **/
@@ -172,6 +169,11 @@ function fmtUSD(n){ return '$' + n.toFixed(2); }
 function save(){ localStorage.setItem('x360_cart', JSON.stringify(cart)); }
 function gameById(id){ return GAMES.find(g=>g.id===id); }
 function enc(u){ try { return encodeURI(u); } catch { return u; } }
+function ytThumb(g){ return g?.yt ? `https://img.youtube.com/vi/${g.yt}/hqdefault.jpg` : ''; }
+function pickCover(g){
+  // Preference: RAWG/IGDB/bucket -> YouTube thumbnail -> SVG placeholder
+  return g.cover ? enc(g.cover) : (ytThumb(g) || placeholder(g.title));
+}
 function placeholder(title){
   const svg = `
   <svg xmlns='http://www.w3.org/2000/svg' width='640' height='900'>
@@ -193,20 +195,33 @@ function placeholder(title){
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-/** ---- Try RAWG for real covers (Xbox 360 = platform 14) ---- **/
+/** ---- RAWG cover resolution (slug first, then search) ---- **/
+async function resolveCoverFromRAWG(g){
+  if (!RAWG_KEY) return '';
+  const base = 'https://api.rawg.io/api/games';
+  try{
+    if (g.rawg){
+      const r = await fetch(`${base}/${encodeURIComponent(g.rawg)}?key=${RAWG_KEY}`);
+      const j = await r.json();
+      if (j && j.background_image) return j.background_image;
+    }
+    // Fallback: title search, restricted to Xbox 360 (platform 14)
+    const r2 = await fetch(`${base}?key=${RAWG_KEY}&search=${encodeURIComponent(g.title)}&platforms=14&page_size=1`);
+    const j2 = await r2.json();
+    return j2?.results?.[0]?.background_image || '';
+  }catch(e){
+    console.warn('RAWG lookup failed for', g.title, e);
+    return '';
+  }
+}
+
 async function maybeLoadRAWG(){
   if (!RAWG_KEY) return;
-  try{
-    const r = await fetch(`https://api.rawg.io/api/games?key=${RAWG_KEY}&platforms=14&page_size=40`);
-    const data = await r.json();
-    if (Array.isArray(data.results) && data.results.length){
-      const byName = new Map(data.results.map(v=>[v.name.toLowerCase(), v]));
-      GAMES = GAMES.map(g=>{
-        const hit = byName.get(g.title.toLowerCase());
-        return hit ? { ...g, cover: hit.background_image || '' } : g;
-      });
-    }
-  }catch(e){ console.warn('RAWG fetch failed; using placeholders.', e); }
+  await Promise.all(GAMES.map(async (g, i)=>{
+    if (g.cover) return;
+    const img = await resolveCoverFromRAWG(g);
+    if (img) g.cover = img;
+  }));
 }
 
 /** ---- UI calcs ---- **/
@@ -241,7 +256,7 @@ function renderGrid(){
       </div>
     `;
     const img = card.querySelector('.cover img');
-    img.src = g.cover ? enc(g.cover) : placeholder(g.title);
+    img.src = pickCover(g);
     img.onerror = () => { img.src = placeholder(g.title); img.onerror = null; };
     grid.appendChild(card);
   });
@@ -265,7 +280,7 @@ function renderCart(){
       </div>
     `;
     const img = div.querySelector('.thumb img');
-    img.src = g.cover ? enc(g.cover) : placeholder(g.title);
+    img.src = pickCover(g);
     img.onerror = () => { img.src = placeholder(g.title); img.onerror = null; };
     lines.appendChild(div);
   });
@@ -321,7 +336,8 @@ function add(id, fromEl){
   if (fromEl) flyToCart(fromEl);
   $('#comboText').textContent = combo > 1 ? `x${combo}` : '';
   showToast(combo>1 ? `STACK COMBO x${combo}!` : `+1 added`);
-  bits($('#openCart').getBoundingClientRect().left, $('#openCart').getBoundingClientRect().top);
+  const b = $('#openCart').getBoundingClientRect();
+  bits(b.left, b.top);
 }
 
 function dec(id){ const i=cart.findIndex(r=>r.id===id); if(i>-1){ cart[i].qty--; if(cart[i].qty<=0) cart.splice(i,1); save(); renderCart(); recalc(); } }
@@ -329,8 +345,8 @@ function inc(id){ const i=cart.findIndex(r=>r.id===id); if(i>-1){ cart[i].qty++;
 
 /** ---- Bootstrap ---- **/
 (async ()=>{
-  await maybeLoadRAWG();   // fills GAMES.cover when possible
-  renderGrid();            // render with real covers or placeholders
+  await maybeLoadRAWG();      // if key present, fills official covers
+  renderGrid();               // always shows something: RAWG cover or YouTube thumb or SVG
   renderCart();
   recalc();
 })();
@@ -358,7 +374,6 @@ document.addEventListener('click', (e)=>{
 
 document.getElementById('checkout').onclick = async ()=>{
   if (!cart.length) { showToast('Add something first'); return; }
-  // Build payload for server: explode into line_items ($5 each)
   const items = cart.flatMap(row => Array.from({length:row.qty}, ()=>({
       id: row.id, title: gameById(row.id)?.title || 'Xbox 360 Game', price: PRICE_EACH
   })));
