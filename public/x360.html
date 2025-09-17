@@ -19,11 +19,11 @@
   .wrap{max-width:1200px;margin:auto;padding:18px}
   header{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-bottom:8px}
   .logo{display:flex;gap:10px;align-items:center}
-.logo i{
-  width:30px;height:30px;display:inline-block;border-radius:8px;
-  background: linear-gradient(135deg, var(--brand), var(--brand2));
-  box-shadow: 0 8px 28px rgba(0,229,255,.25);
-}
+  .logo i{
+    width:30px;height:30px;display:inline-block;border-radius:8px;
+    background: linear-gradient(135deg, var(--brand), var(--brand2));
+    box-shadow: 0 8px 28px rgba(0,229,255,.25);
+  }
 
   h1{font-size:22px;margin:0}
   .tag{font-size:12px;color:var(--muted)}
@@ -125,7 +125,7 @@
       </div>
     </section>
 
-    <!-- Grid of games (seeded; wire to APIs later) -->
+    <!-- Grid of games (seeded; will be replaced with RAWG covers if key is set) -->
     <div id="grid" class="grid"></div>
   </div>
 
@@ -144,20 +144,22 @@
   <div id="bits" class="bits"></div>
 
 <script>
-/** ---- Config & seed data (replace with API-fed list later) ---- **/
+/** ---- Config ---- **/
 const PRICE_EACH = 5; // USD
-// Minimal seed (cover URLs can be swapped to RAWG/IGDB later)
-const GAMES = [
-  { id:'halo-3',       title:'Halo 3',                cover:'https://m.media-amazon.com/images/I/71J8l+o4gAL._AC_UF894,1000_QL80_.jpg', yt:'T9Ezd2FqxAU' },
-  { id:'gow2',         title:'Gears of War 2',        cover:'https://m.media-amazon.com/images/I/71c-5Wz3d0L._AC_UF894,1000_QL80_.jpg', yt:'Yk9G7OyU9CY' },
-  { id:'fable-2',      title:'Fable II',              cover:'https://m.media-amazon.com/images/I/81wM8GZcTWL._AC_UF894,1000_QL80_.jpg', yt:'1Xh3ZrQK1k8' },
-  { id:'skyrim',       title:'The Elder Scrolls V: Skyrim', cover:'https://m.media-amazon.com/images/I/61+PqVkC1ML._AC_UF894,1000_QL80_.jpg', yt:'JSRtYpNRoN0' },
-  { id:'forza-4',      title:'Forza Motorsport 4',    cover:'https://m.media-amazon.com/images/I/71pD4qKqPlL._AC_UF894,1000_QL80_.jpg', yt:'6v2L2UGZJAM' },
-  { id:'cod-mw2',      title:'Call of Duty: Modern Warfare 2', cover:'https://m.media-amazon.com/images/I/81cRr8b2FhL._AC_UF894,1000_QL80_.jpg', yt:'coiTJbr9m04' },
-  { id:'red-dead',     title:'Red Dead Redemption',   cover:'https://m.media-amazon.com/images/I/91fTwJ0PsrL._AC_UF894,1000_QL80_.jpg', yt:'MemkzzlQJ6Y' },
-  { id:'bioshock',     title:'BioShock',              cover:'https://m.media-amazon.com/images/I/81m9kUtLHJL._AC_UF894,1000_QL80_.jpg', yt:'2bZk3E3vSRA' },
-  { id:'assassins',    title:'Assassin’s Creed II',   cover:'https://m.media-amazon.com/images/I/71O1yJ9D0rL._AC_UF894,1000_QL80_.jpg', yt:'mbahj7gSIU8' },
-  { id:'nfss',         title:'Need for Speed: Shift', cover:'https://m.media-amazon.com/images/I/81vQy6s3bBL._AC_UF894,1000_QL80_.jpg', yt:'wq6vNusJygk' },
+const RAWG_KEY = ''; // <-- put your RAWG API key here to auto-fill covers (platform 14)
+
+/** ---- Seed list (covers will be filled by RAWG if key provided) ---- **/
+let GAMES = [
+  { id:'halo-3',       title:'Halo 3',                cover:'', yt:'T9Ezd2FqxAU' },
+  { id:'gow2',         title:'Gears of War 2',        cover:'', yt:'Yk9G7OyU9CY' },
+  { id:'fable-2',      title:'Fable II',              cover:'', yt:'1Xh3ZrQK1k8' },
+  { id:'skyrim',       title:'The Elder Scrolls V: Skyrim', cover:'', yt:'JSRtYpNRoN0' },
+  { id:'forza-4',      title:'Forza Motorsport 4',    cover:'', yt:'6v2L2UGZJAM' },
+  { id:'cod-mw2',      title:'Call of Duty: Modern Warfare 2', cover:'', yt:'coiTJbr9m04' },
+  { id:'red-dead',     title:'Red Dead Redemption',   cover:'', yt:'MemkzzlQJ6Y' },
+  { id:'bioshock',     title:'BioShock',              cover:'', yt:'2bZk3E3vSRA' },
+  { id:'assassins',    title:'Assassin’s Creed II',   cover:'', yt:'mbahj7gSIU8' },
+  { id:'nfss',         title:'Need for Speed: Shift', cover:'', yt:'wq6vNusJygk' },
 ];
 
 /** ---- State ---- **/
@@ -169,6 +171,45 @@ const $ = sel => document.querySelector(sel);
 function fmtUSD(n){ return '$' + n.toFixed(2); }
 function save(){ localStorage.setItem('x360_cart', JSON.stringify(cart)); }
 function gameById(id){ return GAMES.find(g=>g.id===id); }
+function enc(u){ try { return encodeURI(u); } catch { return u; } }
+function placeholder(title){
+  const svg = `
+  <svg xmlns='http://www.w3.org/2000/svg' width='640' height='900'>
+    <defs>
+      <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+        <stop offset='0' stop-color='#0ee' />
+        <stop offset='1' stop-color='#2f6' />
+      </linearGradient>
+    </defs>
+    <rect width='100%' height='100%' fill='#0a1029'/>
+    <rect x='0' y='0' width='100%' height='100%' fill='url(#g)' opacity='0.08'/>
+    <text x='50%' y='50%' font-family='Inter, Arial' font-size='42' fill='#e6ebff' text-anchor='middle'>
+      ${title.replace(/&/g,'&amp;')}
+    </text>
+    <text x='50%' y='60%' font-family='Inter, Arial' font-size='20' fill='#97a0c9' text-anchor='middle'>
+      Cover loading...
+    </text>
+  </svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+/** ---- Try RAWG for real covers (Xbox 360 = platform 14) ---- **/
+async function maybeLoadRAWG(){
+  if (!RAWG_KEY) return;
+  try{
+    const r = await fetch(`https://api.rawg.io/api/games?key=${RAWG_KEY}&platforms=14&page_size=40`);
+    const data = await r.json();
+    if (Array.isArray(data.results) && data.results.length){
+      const byName = new Map(data.results.map(v=>[v.name.toLowerCase(), v]));
+      GAMES = GAMES.map(g=>{
+        const hit = byName.get(g.title.toLowerCase());
+        return hit ? { ...g, cover: hit.background_image || '' } : g;
+      });
+    }
+  }catch(e){ console.warn('RAWG fetch failed; using placeholders.', e); }
+}
+
+/** ---- UI calcs ---- **/
 function recalc(){
   const count = cart.reduce((a,b)=>a+b.qty,0);
   $('#cartCount').textContent = count;
@@ -176,6 +217,8 @@ function recalc(){
   $('#subtotal').textContent = fmtUSD(subtotal);
   $('#empty').style.display = count? 'none':'block';
 }
+
+/** ---- Renderers ---- **/
 function renderGrid(){
   const grid = $('#grid'); grid.innerHTML='';
   GAMES.forEach(g=>{
@@ -184,7 +227,7 @@ function renderGrid(){
       <div class="caseWrap">
         <div class="case">
           <span class="spine"></span>
-          <div class="cover"><img src="${g.cover}" alt="${g.title} cover"/></div>
+          <div class="cover"><img alt="${g.title} cover"/></div>
           <div class="shine"></div>
         </div>
       </div>
@@ -197,16 +240,20 @@ function renderGrid(){
         <button class="btn buy" data-id="${g.id}">Add</button>
       </div>
     `;
+    const img = card.querySelector('.cover img');
+    img.src = g.cover ? enc(g.cover) : placeholder(g.title);
+    img.onerror = () => { img.src = placeholder(g.title); img.onerror = null; };
     grid.appendChild(card);
   });
 }
+
 function renderCart(){
   const lines = $('#lines'); lines.innerHTML='';
   cart.forEach(row=>{
     const g = gameById(row.id); if(!g) return;
     const div = document.createElement('div'); div.className='line';
     div.innerHTML = `
-      <div class="thumb"><img src="${g.cover}" alt=""></div>
+      <div class="thumb"><img alt=""></div>
       <div class="grow">
         <div style="font-weight:800">${g.title}</div>
         <div class="tag">$${PRICE_EACH} each</div>
@@ -217,9 +264,14 @@ function renderCart(){
         <button class="qbtn" data-inc="${g.id}">+</button>
       </div>
     `;
+    const img = div.querySelector('.thumb img');
+    img.src = g.cover ? enc(g.cover) : placeholder(g.title);
+    img.onerror = () => { img.src = placeholder(g.title); img.onerror = null; };
     lines.appendChild(div);
   });
 }
+
+/** ---- FX ---- **/
 function showToast(text){
   const t = document.createElement('div'); t.className='toast'; t.textContent = text;
   document.body.appendChild(t);
@@ -276,7 +328,12 @@ function dec(id){ const i=cart.findIndex(r=>r.id===id); if(i>-1){ cart[i].qty--;
 function inc(id){ const i=cart.findIndex(r=>r.id===id); if(i>-1){ cart[i].qty++; save(); renderCart(); recalc(); } }
 
 /** ---- Bootstrap ---- **/
-renderGrid(); renderCart(); recalc();
+(async ()=>{
+  await maybeLoadRAWG();   // fills GAMES.cover when possible
+  renderGrid();            // render with real covers or placeholders
+  renderCart();
+  recalc();
+})();
 
 document.addEventListener('click', (e)=>{
   const addBtn = e.target.closest('.btn.buy');
