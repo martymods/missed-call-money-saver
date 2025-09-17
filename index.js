@@ -101,6 +101,45 @@ app.post('/api/create-checkout-session', async (req, res) => {
   }
 });
 
+// Xbox 360 store: $5-per-game cart → Stripe Checkout
+app.post('/api/store/checkout', async (req, res) => {
+  try {
+    const { items = [] } = req.body || {};
+    if (!Array.isArray(items) || !items.length) {
+      return res.status(400).json({ error: 'No items' });
+    }
+
+    const line_items = items.map(it => ({
+      price_data: {
+        currency: 'usd',
+        unit_amount: Math.round((Number(it.price) || 5) * 100),
+        product_data: {
+          name: `${String(it.title || 'Xbox 360 Game').slice(0,120)} (Xbox 360)`,
+          metadata: { sku: it.id || '' }
+        }
+      },
+      quantity: 1
+    }));
+
+    const base = process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card', 'link'],
+      line_items,
+      allow_promotion_codes: true,
+      success_url: `${base}/thank-you?store=1&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${base}/x360.html?cancel=1`,
+      metadata: { source: 'x360-store' }
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('stripe store checkout error', err);
+    res.status(500).json({ error: 'stripe_unavailable' });
+  }
+});
+
+
 // Pretty routes for static pages
 app.get('/checkout', (_, res) =>
   res.sendFile(path.join(__dirname, 'public', 'checkout.html'))
@@ -108,6 +147,11 @@ app.get('/checkout', (_, res) =>
 app.get('/thank-you', (_, res) =>
   res.sendFile(path.join(__dirname, 'public', 'thank-you.html'))
 );
+
+app.get('/x360', (_, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'x360.html'))
+);
+
 
 // Demo eligibility endpoint (stub). Swap this logic for a real clearinghouse later.
 app.post('/api/eligibility/check', async (req, res) => {
