@@ -85,8 +85,21 @@
     .includes{display:flex;flex-wrap:wrap;gap:8px}
     .inc{font-size:12px;font-weight:800;background:#f7f9ff;border:1px solid #e6eafb;border-radius:999px;padding:4px 8px;cursor:pointer}
     .cta{display:flex;gap:8px;flex-wrap:wrap}
-    .lvl-icon{position:absolute;right:10px;top:10px;width:56px;height:56px;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,.18))}
-    .sec-thumb{position:absolute;left:10px;bottom:10px;width:68px;height:40px;object-fit:contain;opacity:.85}
+/* Level badge (top-right) */
+.lvl-icon{
+  position:absolute;right:10px;top:10px;width:56px;height:56px;
+  object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,.18));
+  pointer-events:none; /* don't block clicks */
+}
+/* Keep all card content away from the badge */
+.card.pkg{ padding-right: 90px; }
+
+/* Security posture mini-badge (bottom-right) */
+.sec-thumb{
+  position:absolute;right:12px;bottom:10px;left:auto;
+  width:54px;height:32px;object-fit:contain;opacity:.9
+}
+
     .atty-row{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:6px}
     .atty-row img{width:22px;height:22px;border-radius:6px;border:1px solid #e6eafb;background:#fff}
     .atty-more{font-size:12px;font-weight:800;color:#3b3f52;padding:2px 6px;border:1px dashed #dfe6ff;border-radius:999px}
@@ -349,7 +362,8 @@ Security Compliance — Example: ISO/IEC 27001
       <header>
         <div style="font-weight:900">Checkout</div>
         <div class="icons">
-          <img id="modalSec" alt="Security"/>
+          <img id="modalSec" alt="Security" onerror="secFallback(this)"/>
+
           <img id="modalLvl" alt="Level icon"/>
         </div>
         <button id="xClose" class="btn">× Close</button>
@@ -476,16 +490,28 @@ $('#yr').textContent = new Date().getFullYear();
 function r50(n){ return Math.round(n/50)*50; }
 function money(n){ return n.toLocaleString(undefined,{maximumFractionDigits:0}); }
 function sizeMult(n){ return SIZE_MULT.find(x=>n<=x.max).m }
-function secIconPath(val){ return val==='shield' ? 'law/securityP2.png' : (val==='fortress' ? 'law/securityP3.png' : 'law/securityP1.png'); }
+function secIconPath(val){
+  const k = val==='shield' ? '2' : (val==='fortress' ? '3' : '1');
+  return `law/securityP${k}.png`; // correct spelling
+}
+
 function levelIconPath(lvlStr){ const n = (lvlStr.match(/\d+/)||[])[0]; return n ? `law/lvl${n}.png` : 'law/lvl9.png'; }
 function toastMsg(msg, ms=1800){ toast.textContent = msg; toast.style.display='block'; setTimeout(()=>toast.style.display='none', ms); }
 function showPeek(title, desc){ peekTitle.textContent=title; peekDesc.textContent=desc; peek.style.display='block'; }
+  /* fallback for security images -> try older misspelling once, then hide */
+  function secFallback(img){
+    if(img.dataset._tried==='1'){ img.style.display='none'; return; }
+    img.dataset._tried='1';
+    img.src = img.src.replace('securityP','seceurityP');
+  }
+
 $('#peekClose').onclick = ()=> peek.style.display='none';
 peek.onclick = e=>{ if(e.target===peek) peek.style.display='none'; }
 
 /* ==== Robust image fallback for attorney icons (handles filename variants) ==== */
 const MALE_ICON_CANDIDATES   = ['law/maleLawyer.png','law/malelawyer.png','law/male_lawyer.png'];
-const FEMALE_ICON_CANDIDATES = ['law/femaleLawyer.png','law/femalLawyer.png','law/femallawyer.png','law/female_lawyer.png'];
+const FEMALE_ICON_CANDIDATES = ['law/femalLawyer.png','law/femaleLawyer.png','law/femallawyer.png','law/female_lawyer.png'];
+
 function fallbackAtty(img, list){
   const arr = list==='f' ? FEMALE_ICON_CANDIDATES : MALE_ICON_CANDIDATES;
   let i = +(img.dataset.i || 0);
@@ -572,8 +598,9 @@ function render(){
     card.innerHTML = `
       <img class="lvl-icon" src="${lvlIcon}" alt="${p.lvl}"
            onerror="this.onerror=null;this.src='law/lvl9.png'">
-      <img class="sec-thumb" src="${sIcon}" alt="${sec.value}"
-           onerror="this.onerror=null;this.src='law/securityP1.png'">
+<img class="sec-thumb" src="${sIcon}" alt="${sec.value}"
+     onerror="secFallback(this)">
+
       <div class="top">
         <div>
           <div class="lvl">${p.lvl}</div>
