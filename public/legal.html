@@ -119,9 +119,15 @@
 <body>
   <header>
     <div class="logo">
-      <div class="badge"><img src="public/law/justice.png" alt="Justice" class="badge-img"/></div>
+      <!-- badge: uses relative path (we are inside /public) -->
+      <div class="badge">
+        <img src="law/justice.png" alt="Justice" class="badge-img"
+             onerror="this.style.display='none'"/>
+      </div>
       <div>Delco Tech Division<br><small style="color:var(--muted);font-weight:700">Attorney Growth Suite</small></div>
-      <img src="public/image/delco-tech-seal.png" alt="Delco Tech Seal" class="seal"/>
+      <!-- small seal w/ graceful fallback -->
+      <img src="image/delco-tech-seal.png" alt="Delco Tech Seal" class="seal"
+           onerror="this.style.display='none'"/>
     </div>
     <nav>
       <a class="btn ghost" href="#packages">Packages</a>
@@ -135,9 +141,7 @@
       <h1>From Solo to Fortress.</h1>
       <p class="sub">Nine packages that let attorneys shop with intent: more qualified leads, less admin, optional <b>Fortress-grade protection</b> when you scale. Automations make your staff faster—no extra headcount.</p>
 
-      <div class="chips" id="featureChips">
-        <!-- chips are populated by JS to attach descriptions -->
-      </div>
+      <div class="chips" id="featureChips"></div>
 
       <div class="config">
         <div class="tile">
@@ -184,23 +188,139 @@
       <div class="accordion">
         <details>
           <summary>Learning Outcomes (what your team will be able to do)</summary>
-          <pre>... (unchanged content for enterprise buyers) ...</pre>
+          <pre>Learning Outcomes
+After completing this module, you will be able to:
+Analyse security gaps in acquired software and managed services.
+Apply secure coding practices to mitigate vulnerabilities.
+Arrange security controls within CI/CD pipelines effectively.
+Assess risk impacts of COTS and open-source integrations.
+Calculate potential security risks in software development.
+Categorise security standards and regulations for compliance.
+Compare secure APIs with insecure implementations.
+Define secure SDLC practices for software development.
+Discuss the role of secure programming languages in minimising risks.
+Evaluate the effectiveness of penetration testing and code audits.
+Identify threats in API security and apply mitigation techniques.
+Summarise the security implications of cloud services on organisations...
+          </pre>
         </details>
         <details>
           <summary>Security in Development — approaches we align to</summary>
-          <pre>... (unchanged content) ...</pre>
+          <pre>Security in Development
+Integrating security into development methodologies ensures software is safeguarded against vulnerabilities throughout its lifecycle. Various approaches incorporate security measures differently, aligning with their principles to address risks effectively while maintaining efficiency.
+
+Agile and Security
+Agile development prioritises iterative progress and collaboration, embedding security through continuous involvement and feedback.
+• Security requirements are integrated into user stories and acceptance criteria.
+• Regular iterations enable frequent security testing and updates.
+• Collaboration between developers, testers, and security experts ensures shared responsibility for security.
+• Security measures evolve in tandem with functional requirements.
+
+Waterfall and Security
+The Waterfall methodology follows a linear, sequential structure, embedding security into each phase distinctly.
+• Security is planned during the initial requirements gathering stage.
+• Design phases include detailed risk assessments and secure architecture planning.
+• Dedicated testing phases encompass thorough security testing and validation.
+• Compliance with security standards is emphasised through extensive documentation.
+
+DevOps and Security
+DevOps focuses on automation and collaboration, seamlessly integrating security practices within the development pipeline.
+• Automated security tools perform static and dynamic code analysis during CI/CD.
+• Security teams collaborate with developers and operations staff to ensure security is embedded from the outset.
+• Infrastructure as Code (IaC) incorporates secure configurations into deployment scripts.
+• Continuous monitoring and incident response capabilities enhance security post-deployment.
+
+DevSecOps Approach
+DevSecOps extends DevOps by embedding security as a fundamental element at every stage of the development lifecycle.
+• Security tools are integrated into automated workflows and CI/CD pipelines.
+• Developers receive training to adopt secure coding practices and understand security vulnerabilities.
+• Threat modelling and risk assessments occur iteratively alongside development activities.
+• Automated compliance checks ensure adherence to security requirements without impeding delivery.
+
+Scaled Agile Framework (SAFe) and Security
+The Scaled Agile Framework integrates security across enterprise-wide initiatives, aligning with organisational objectives.
+• Security is incorporated into architectural enablers and defined guardrails.
+• PI planning includes risk assessments and compliance reviews.
+• Security specialists contribute expertise within Agile Release Trains.
+• Teams adopt secure coding practices and utilise advanced security tools.
+          </pre>
         </details>
         <details>
           <summary>Software Security Maturity — CMM / SAMM</summary>
-          <pre>... (unchanged content) ...</pre>
+          <pre>Software Security Maturity
+Maturity models like CMM (Capability Maturity Model) and SAMM (Software Assurance Maturity Model) provide structured frameworks to evaluate and enhance software security practices.
+
+Capability Maturity Model (CMM)
+• Structured Framework: five levels from initial to optimising.
+• Process Standardisation: embed consistent security measures.
+• Risk Management: proactive identification and mitigation.
+• Integration with Software Development: align security with delivery.
+
+Software Assurance Maturity Model (SAMM)
+• Domain-Specific Guidance across governance, construction, verification, deployment.
+• Actionable Roadmaps per maturity level.
+• Adaptability for organisations of all sizes.
+• Focus on Measurability: metrics for progress and effectiveness.
+
+Benefits of Using Maturity Models
+• Benchmarking & assessment against industry standards.
+• Continuous improvement over time.
+• Stakeholder alignment on priorities and progress.
+• Compliance and best-practices adoption.
+          </pre>
         </details>
         <details>
           <summary>Software & Third-Party Integration Security</summary>
-          <pre>... (unchanged content) ...</pre>
+          <pre>Software Integration Security
+Integrating commercial off-the-shelf (COTS) and open-source software offers speed and savings but introduces risk.
+
+Risk Assessment of Software
+• Source Code Analysis (open-source) for vulnerabilities and backdoors.
+• Vendor Security Practices (COTS): regular updates and patching.
+• Supply Chain Risk: dependencies and transitive vulns.
+• Licensing Compliance: obligations and restrictions.
+
+Patch Management and Updates
+Access Control and Authentication
+Vulnerability Monitoring
+Data Protection and Privacy
+• Encryption standards for data in transit/at rest.
+• Data minimisation; collect only what’s required.
+• Regulatory compliance (e.g., GDPR, HIPAA) as applicable.
+
+Third-Party Service Risks
+• Data exposure via misconfigurations or weak access controls.
+• Data sovereignty concerns across jurisdictions.
+• Dependency on external security measures and SLAs.
+• Lifecycle management of integrations.
+          </pre>
         </details>
         <details>
           <summary>Secure SDLC & Compliance</summary>
-          <pre>... (unchanged content) ...</pre>
+          <pre>Secure Software Development
+Security is integral to the SDLC — address vulnerabilities at every phase.
+
+Requirements Analysis
+• Define security requirements alongside functional ones.
+• Threat modelling and compliance mapping.
+
+Secure Design Principles
+• Least privilege, defence-in-depth, fail-safe defaults.
+• Secure patterns: input validation, output encoding.
+• Isolation for third-party integrations.
+
+Secure Coding Practices
+• Validate inputs (prevent SQLi/XSS), use prepared statements.
+• Proper authN/authZ; encrypt sensitive data in transit & at rest.
+• Secure error handling; patch dependencies routinely.
+• Follow OWASP & CERT guidance.
+
+Security Compliance — Example: ISO/IEC 27001
+• Risk-based ISMS with objectives and controls.
+• Operational controls incl. access, crypto, incident mgmt.
+• Audits & continuous improvement.
+• Align to data-protection regulations.
+          </pre>
         </details>
       </div>
       <p class="hint" style="margin-top:10px">We keep language high-level here. Enterprise delivery is tailored and under NDA.</p>
@@ -356,12 +476,24 @@ $('#yr').textContent = new Date().getFullYear();
 function r50(n){ return Math.round(n/50)*50; }
 function money(n){ return n.toLocaleString(undefined,{maximumFractionDigits:0}); }
 function sizeMult(n){ return SIZE_MULT.find(x=>n<=x.max).m }
-function secIconPath(val){ return val==='shield' ? 'public/law/seceurityP2.png' : (val==='fortress' ? 'public/law/seceurityP3.png' : 'public/law/seceurityP1.png'); }
-function levelIconPath(lvlStr){ const n = (lvlStr.match(/\d+/)||[])[0]; return n ? `public/law/lvl${n}.png` : 'public/law/lvl9.png'; }
+function secIconPath(val){ return val==='shield' ? 'law/securityP2.png' : (val==='fortress' ? 'law/securityP3.png' : 'law/securityP1.png'); }
+function levelIconPath(lvlStr){ const n = (lvlStr.match(/\d+/)||[])[0]; return n ? `law/lvl${n}.png` : 'law/lvl9.png'; }
 function toastMsg(msg, ms=1800){ toast.textContent = msg; toast.style.display='block'; setTimeout(()=>toast.style.display='none', ms); }
 function showPeek(title, desc){ peekTitle.textContent=title; peekDesc.textContent=desc; peek.style.display='block'; }
 $('#peekClose').onclick = ()=> peek.style.display='none';
 peek.onclick = e=>{ if(e.target===peek) peek.style.display='none'; }
+
+/* ==== Robust image fallback for attorney icons (handles filename variants) ==== */
+const MALE_ICON_CANDIDATES   = ['law/maleLawyer.png','law/malelawyer.png','law/male_lawyer.png'];
+const FEMALE_ICON_CANDIDATES = ['law/femaleLawyer.png','law/femalLawyer.png','law/femallawyer.png','law/female_lawyer.png'];
+function fallbackAtty(img, list){
+  const arr = list==='f' ? FEMALE_ICON_CANDIDATES : MALE_ICON_CANDIDATES;
+  let i = +(img.dataset.i || 0);
+  if (i >= arr.length) { img.style.display='none'; return; }
+  img.src = arr[i];
+  img.dataset.i = i+1;
+  img.onerror = ()=>fallbackAtty(img, list);
+}
 
 /* ===== Price calc ===== */
 function priceFor(pkg, opts={}){
@@ -387,15 +519,15 @@ function priceFor(pkg, opts={}){
 }
 
 /* ===== Attorney icon row (3/4 male, 1/4 female, clamp display) ===== */
-const MALE_ICON = 'public/law/maleLawyer.png';
-const FEMALE_ICON = 'public/law/femalLawyer.png';
 function buildAttys(n){
   const maxShow = 12;
   const show = Math.min(n, maxShow);
   const arr = [];
   for(let i=0;i<show;i++){
     const isFemale = Math.random() < 0.25;
-    arr.push(`<img alt="Attorney" src="${isFemale?FEMALE_ICON:MALE_ICON}">`);
+    const list = isFemale ? 'f' : 'm';
+    const first = (isFemale ? FEMALE_ICON_CANDIDATES : MALE_ICON_CANDIDATES)[0];
+    arr.push(`<img alt="Attorney" data-i="1" data-list="${list}" src="${first}" onerror="fallbackAtty(this,this.dataset.list)">`);
   }
   const extra = n - show;
   return arr.join('') + (extra>0 ? `<span class="atty-more">+${extra}</span>` : '');
@@ -431,7 +563,6 @@ function render(){
   const sIcon = secIconPath(sec.value);
 
   PACKAGES.forEach(p=>{
-    // Custom is rendered last as a special card
     if(p.id==='custom') return;
 
     const pr = priceFor(p);
@@ -439,8 +570,10 @@ function render(){
     card.className = 'card pkg';
     const lvlIcon = levelIconPath(p.lvl);
     card.innerHTML = `
-      <img class="lvl-icon" src="${lvlIcon}" alt="${p.lvl}">
-      <img class="sec-thumb" src="${sIcon}" alt="${sec.value}">
+      <img class="lvl-icon" src="${lvlIcon}" alt="${p.lvl}"
+           onerror="this.onerror=null;this.src='law/lvl9.png'">
+      <img class="sec-thumb" src="${sIcon}" alt="${sec.value}"
+           onerror="this.onerror=null;this.src='law/securityP1.png'">
       <div class="top">
         <div>
           <div class="lvl">${p.lvl}</div>
@@ -471,8 +604,8 @@ function render(){
   const custom = document.createElement('article');
   custom.className='card pkg';
   custom.innerHTML = `
-    <img class="lvl-icon" src="public/law/lvl9.png" alt="Custom">
-    <img class="sec-thumb" src="${sIcon}" alt="${sec.value}">
+    <img class="lvl-icon" src="law/lvl9.png" alt="Custom">
+    <img class="sec-thumb" src="${sIcon}" alt="${sec.value}" onerror="this.onerror=null;this.src='law/securityP1.png'">
     <div class="top">
       <div>
         <div class="lvl">Custom</div>
@@ -524,12 +657,11 @@ function openModal(pkg, opts={}){
   $('#priceBadge').textContent = `${billing.value==='annual'?'$'+money(pr.total)+' /year':'$'+money(pr.total)+' /mo'} • Setup $${money(pr.setup)}`;
   $('#fAtt').value = attRange.value;
   $('#modalSec').src = secIconPath(sec.value);
-  $('#modalLvl').src = pkg.id==='custom' ? 'public/law/lvl9.png' : levelIconPath(pkg.lvl);
+  $('#modalLvl').src = pkg.id==='custom' ? 'law/lvl9.png' : levelIconPath(pkg.lvl);
 
   const cfg = $('#customConfig');
   cfg.style.display = isCustom ? 'block' : 'none';
   if(isCustom){
-    // build/select chips
     const area = $('#customChips'); area.innerHTML='';
     const set = new Set(opts.selectedClasses || [1,2,3,5]); // default selection
     FEATURE_CLASSES.forEach((label, idx)=>{
@@ -583,7 +715,7 @@ function openPeek(pkg){
   showPeek(`${pkg.name} · ${pkg.lvl}`, list || 'Pick any classes you want in Custom Build.');
 }
 
-/* ===== Coupon helper (unchanged rules) ===== */
+/* ===== Coupons / lead beacon (optional) ===== */
 function couponDiscount(code){
   if(!code) return 0; const c = code.trim().toUpperCase();
   if(c==='DELCOPIONEER') return 0.10;
@@ -599,7 +731,7 @@ function beacon(url, data){
   }catch{ return false; }
 }
 
-/* ===== Place Order → Stripe (no browser-alert errors) ===== */
+/* ===== Place Order → Stripe ===== */
 async function startStripeCheckoutDynamic(payload){
   const dueNow = (payload.config.billing === 'annual')
     ? payload.price.total
@@ -674,12 +806,11 @@ function placeOrder(btn){
   startStripeCheckoutDynamic(payload).finally(()=>{ btn.disabled=false; btn.textContent=txt; });
 }
 
-/* ===== Bind “Place order” ===== */
+/* ===== Bind “Place order” & Init ===== */
 document.addEventListener('click', (e)=>{
   if(e.target && e.target.id==='btnPlace'){ placeOrder(e.target); }
 });
 
-/* ===== Init ===== */
 renderFeatureChips();
 render();
 </script>
