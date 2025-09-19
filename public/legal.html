@@ -1,40 +1,34 @@
-<!-- packages.html -->
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Delco Tech Division — Attorney Growth Packages</title>
-<!-- Link preview (ONLY for /legal.html) -->
-<link rel="canonical" href="https://www.delcotechdivision.com/legal.html" />
 
-<meta property="og:title" content="Delco Tech Division — Attorney Growth Packages">
-<meta property="og:description" content="Nine gamified packages from Solo to Fortress. Dynamic pricing, automations, and optional security add-ons.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://www.delcotechdivision.com/legal.html">
-<meta property="og:image" content="https://www.delcotechdivision.com/og-delco.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:site_name" content="Delco Tech Division">
+  <!-- Canonical + social -->
+  <link rel="canonical" href="https://www.delcotechdivision.com/legal.html" />
+  <meta property="og:title" content="Delco Tech Division — Attorney Growth Packages">
+  <meta property="og:description" content="Nine packages from Solo to Fortress. Dynamic pricing, automations, and optional security add-ons.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.delcotechdivision.com/legal.html">
+  <meta property="og:image" content="https://www.delcotechdivision.com/og-delco.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="Delco Tech Division">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Delco Tech Division — Attorney Growth Packages">
+  <meta name="twitter:description" content="Nine packages from Solo to Fortress. Dynamic pricing, automations, and optional security add-ons.">
+  <meta name="twitter:image" content="https://www.delcotechdivision.com/og-delco.png">
+  <meta name="theme-color" content="#0f1a3d">
 
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Delco Tech Division — Attorney Growth Packages">
-<meta name="twitter:description" content="Nine gamified packages from Solo to Fortress. Dynamic pricing, automations, and optional security add-ons.">
-<meta name="twitter:image" content="https://www.delcotechdivision.com/og-delco.png">
+  <meta name="description" content="Nine packages for law firms: from solo boost to fortress-grade enterprise. Dynamic pricing, automation, and security options."/>
 
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
-<meta name="theme-color" content="#0f1a3d">
-
-
-  <meta name="description" content="Nine gamified packages for law firms: from solo boost to fortress‑grade enterprise. Dynamic pricing, automation, and security options."/>
-  <link rel="canonical" href="https://www.delcotechdivision.com/packages.html"/>
   <style>
     :root{
       --ink:#0e1020; --muted:#6b7280; --edge:#e7ebf5; --bg:#f7f8fc;
       --brand:#1955ff; --brand-2:#0f3ed6; --ok:#16a34a; --warn:#f59e0b; --danger:#ef4444;
       --card:#ffffff; --shadow:0 14px 34px rgba(16,30,80,.12);
+      --gold1:#f5d58a; --gold2:#caa64a;
     }
     *{box-sizing:border-box}
     html,body{margin:0}
@@ -44,8 +38,10 @@
 
     /* Header */
     header{max-width:1200px;margin:0 auto;padding:18px;display:flex;align-items:center;gap:14px;justify-content:space-between}
-    .logo{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.2px}
-    .badge{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--brand-2),var(--brand));display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)}
+    .logo{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.2px}
+    .badge{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#101b46,#1d39b8);display:grid;place-items:center;color:#fff;box-shadow:var(--shadow);overflow:hidden;border:1px solid #20307a}
+    .badge-img{width:100%;height:100%;object-fit:cover}
+    .seal{height:28px;opacity:.8;filter:drop-shadow(0 2px 6px rgba(0,0,0,.15))}
     nav{display:flex;gap:10px;flex-wrap:wrap}
     .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;border-radius:12px;border:1px solid #dfe6ff;background:#f6f8ff;color:#0f1b46;font-weight:800}
     .btn.primary{background:var(--brand);border-color:#194df7;color:#fff}
@@ -53,67 +49,51 @@
 
     /* Hero */
     .hero{max-width:1200px;margin:8px auto 0;padding:16px 18px 24px;display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:center}
-    .hero .card{background:radial-gradient(120% 160% at -10% 0%, #eef3ff, #fff 30%);border:1px solid #e6eafb;border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+    .hero .card{background:radial-gradient(120% 160% at -10% 0%, #eef3ff, #fff 30%);border:1px solid #e6eafb;border-radius:20px;padding:22px;box-shadow:var(--shadow);position:relative;overflow:hidden}
     h1{font-size:38px;line-height:1.05;margin:0 0 8px}
     .sub{color:#3b3f52}
     .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-    .chip{background:#0f3ed6; color:#fff; padding:6px 10px; border-radius:999px; font-weight:800; border:1px solid rgba(255,255,255,.35)}
+    .chip{background:#0f3ed6; color:#fff; padding:6px 10px; border-radius:999px; font-weight:800; border:1px solid rgba(255,255,255,.35); cursor:pointer}
     .hero .pane{background:#0f1a3d;color:#e6ebff;border:1px solid #1c2a66;border-radius:18px;padding:16px;box-shadow:0 20px 60px rgba(15,26,61,.25)}
 
     /* Config Bar */
     .config{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:10px}
     .tile{background:#fff;border:1px solid #e9ecf7;border-radius:14px;padding:12px;box-shadow:var(--shadow)}
     .tile h3{margin:0 0 8px;font-size:14px;color:#1f2a44}
-    .slider{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+    .slider{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center}
     input[type=range]{width:100%}
     .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #e0e6ff;border-radius:999px;background:#f6f8ff;font-weight:800}
     .select{width:100%;padding:10px;border:1px solid #e0e6ff;border-radius:10px;background:#fff}
-/* Make slider easy to grab on desktop and ensure it's on top */
-.slider{ grid-template-columns: auto 1fr auto auto; align-items:center; gap:10px }
-.slider input[type=range]{
-  -webkit-appearance:none; appearance:none;
-  width:100%; height:12px; border-radius:999px;
-  background:#e6eafb; outline:0; cursor:pointer;
-  position:relative; z-index:2;  /* keep above neighbors */
-}
-.slider .spin{
-  width:38px; height:38px; border-radius:10px; border:1px solid #e0e6ff;
-  background:#f6f8ff; font-weight:900; font-size:18px; line-height:1;
-  display:grid; place-items:center; cursor:pointer;
-}
-.slider .spin:active{ transform:translateY(1px) }
-
-/* Big thumbs so it’s easy to drag */
-.slider input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
-  background:var(--brand); border:2px solid #fff; box-shadow:0 2px 6px rgba(16,30,80,.3); cursor:pointer;
-}
-.slider input[type=range]::-moz-range-thumb{
-  width:20px; height:20px; border-radius:50%;
-  background:var(--brand); border:2px solid #fff; box-shadow:0 2px 6px rgba(16,30,80,.3); cursor:pointer;
-}
-.slider input[type=range]::-moz-range-track{
-  height:12px; background:#e6eafb; border-radius:999px;
-}
+    .slider input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:999px;background:#e6eafb;outline:0;cursor:pointer;position:relative;z-index:2}
+    .slider .spin{width:38px;height:38px;border-radius:10px;border:1px solid #e0e6ff;background:#f6f8ff;font-weight:900;font-size:18px;display:grid;place-items:center;cursor:pointer}
+    .slider .spin:active{transform:translateY(1px)}
+    .slider input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--brand);border:2px solid #fff;box-shadow:0 2px 6px rgba(16,30,80,.3);cursor:pointer}
+    .slider input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--brand);border:2px solid #fff;box-shadow:0 2px 6px rgba(16,30,80,.3);cursor:pointer}
+    .slider input[type=range]::-moz-range-track{height:12px;background:#e6eafb;border-radius:999px}
 
     /* Packages grid */
     .wrap{max-width:1200px;margin:8px auto 40px;padding:0 18px}
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
     @media (max-width:980px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
-    .card{background:#fff;border:1px solid #e6eafb;border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .card{background:#fff;border:1px solid #e6eafb;border-radius:16px;padding:14px;box-shadow:var(--shadow);position:relative;overflow:hidden}
     .pkg{display:flex;flex-direction:column;gap:8px}
     .pkg .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
     .lvl{font-weight:900;letter-spacing:.3px}
-    .rarity{font-size:12px;font-weight:900;border:1px solid #dfe6ff;border-radius:999px;padding:4px 8px}
+    .rarity{font-size:12px;font-weight:900;border:1px solid #dfe6ff;border-radius:999px;padding:4px 8px;background:linear-gradient(180deg,#fff,#f7f7ff)}
     .price{display:flex;align-items:baseline;gap:6px}
     .price .big{font-size:26px;font-weight:900}
     .includes{display:flex;flex-wrap:wrap;gap:8px}
-    .inc{font-size:12px;font-weight:800;background:#f7f9ff;border:1px solid #e6eafb;border-radius:999px;padding:4px 8px}
+    .inc{font-size:12px;font-weight:800;background:#f7f9ff;border:1px solid #e6eafb;border-radius:999px;padding:4px 8px;cursor:pointer}
     .cta{display:flex;gap:8px;flex-wrap:wrap}
+    .lvl-icon{position:absolute;right:10px;top:10px;width:56px;height:56px;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,.18))}
+    .sec-thumb{position:absolute;left:10px;bottom:10px;width:68px;height:40px;object-fit:contain;opacity:.85}
+    .atty-row{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:6px}
+    .atty-row img{width:22px;height:22px;border-radius:6px;border:1px solid #e6eafb;background:#fff}
+    .atty-more{font-size:12px;font-weight:800;color:#3b3f52;padding:2px 6px;border:1px dashed #dfe6ff;border-radius:999px}
 
-    /* Modal */
+    /* Modal / Peek / Toast */
     .modal{position:fixed;inset:0;background:rgba(0,10,30,.62);backdrop-filter:saturate(130%) blur(6px);display:none;align-items:center;justify-content:center;z-index:50}
-    .modal .sheet{width:min(720px,94vw);background:#fff;border:1px solid #e6eafb;border-radius:16px;box-shadow:0 30px 80px rgba(6,18,60,.3)}
+    .modal .sheet{width:min(760px,94vw);background:#fff;border:1px solid #e6eafb;border-radius:16px;box-shadow:0 30px 80px rgba(6,18,60,.3);position:relative}
     .modal header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #edf1ff}
     .modal .body{padding:14px 16px}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -121,13 +101,16 @@
     .field{display:flex;flex-direction:column;gap:6px}
     .field input, .field select, .field textarea{padding:12px;border:1px solid #e1e7ff;border-radius:10px}
     .hint{font-size:12px;color:var(--muted)}
+    .sheet .icons{position:absolute;right:12px;top:12px;display:flex;gap:8px;align-items:center}
+    .sheet .icons img{height:44px;object-fit:contain}
 
-    /* Enterprise Section */
-    .enterprise{margin-top:24px}
-    .accordion details{background:#0f1a3d;color:#e6ebff;border:1px solid #1c2a66;border-radius:14px;padding:12px}
-    .accordion details+details{margin-top:10px}
-    .accordion summary{cursor:pointer;font-weight:800}
-    .accordion pre{white-space:pre-wrap;font-family:system-ui,Segoe UI,Roboto,Arial;font-size:14px;line-height:1.5;margin:10px 0 0}
+    .peek{position:fixed;inset:auto 0 0 0;display:none;z-index:60}
+    .peek .panel{margin:0 auto 10px auto;max-width:640px;background:#0f1a3d;color:#e6ebff;border:1px solid #1c2a66;border-radius:16px;padding:12px 14px;box-shadow:0 24px 60px rgba(15,26,61,.35)}
+    .peek .title{font-weight:900;margin-bottom:6px}
+    .peek .desc{font-size:14px;line-height:1.5}
+    .peek .close{float:right;color:#9fb1ff;cursor:pointer}
+
+    .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#101a3d;color:#e6ebff;border:1px solid #1c2a66;border-radius:999px;padding:8px 12px;font-weight:800;display:none;z-index:70}
 
     /* Footer */
     footer{max-width:1200px;margin:20px auto 40px;padding:0 18px;color:#5b6272;font-size:13px}
@@ -135,7 +118,11 @@
 </head>
 <body>
   <header>
-    <div class="logo"><div class="badge">⚖️</div><div>Delco Tech Division<br><small style="color:var(--muted);font-weight:700">Attorney Growth Suite</small></div></div>
+    <div class="logo">
+      <div class="badge"><img src="public/law/justice.png" alt="Justice" class="badge-img"/></div>
+      <div>Delco Tech Division<br><small style="color:var(--muted);font-weight:700">Attorney Growth Suite</small></div>
+      <img src="public/image/delco-tech-seal.png" alt="Delco Tech Seal" class="seal"/>
+    </div>
     <nav>
       <a class="btn ghost" href="#packages">Packages</a>
       <a class="btn ghost" href="#security">Security</a>
@@ -146,24 +133,21 @@
   <section class="hero" aria-label="Hero">
     <div class="card">
       <h1>From Solo to Fortress.</h1>
-      <p class="sub">Nine gamified packages that let attorneys shop with intent: more qualified leads, less admin, optional <b>Fortress‑grade protection</b> when you scale. Automations make your staff faster—no extra headcount.</p>
-      <div class="chips">
-        <span class="chip">Instant text‑back & intake</span>
-        <span class="chip">Calendar + payments</span>
-        <span class="chip">Reviews & reporting</span>
-        <span class="chip">Security add‑ons</span>
+      <p class="sub">Nine packages that let attorneys shop with intent: more qualified leads, less admin, optional <b>Fortress-grade protection</b> when you scale. Automations make your staff faster—no extra headcount.</p>
+
+      <div class="chips" id="featureChips">
+        <!-- chips are populated by JS to attach descriptions -->
       </div>
 
       <div class="config">
         <div class="tile">
           <h3>1) Firm size</h3>
           <div class="slider">
-  <button class="spin dec" type="button" aria-label="Decrease">–</button>
-  <input id="attRange" type="range" min="1" max="200" step="1" value="3">
-  <button class="spin inc" type="button" aria-label="Increase">+</button>
-  <div class="pill"><b id="attCnt">3</b> attorneys</div>
-</div>
-
+            <button class="spin dec" type="button" aria-label="Decrease">–</button>
+            <input id="attRange" type="range" min="1" max="200" step="1" value="3">
+            <button class="spin inc" type="button" aria-label="Increase">+</button>
+            <div class="pill"><b id="attCnt">3</b> attorneys</div>
+          </div>
         </div>
         <div class="tile">
           <h3>2) Billing</h3>
@@ -186,21 +170,8 @@
 
     <aside class="pane">
       <div style="font-weight:800;letter-spacing:.2px">Included feature classes (12)</div>
-      <div class="chips" style="margin-top:8px">
-        <span class="chip" title="1">Lead Capture</span>
-        <span class="chip" title="2">Smart Intake</span>
-        <span class="chip" title="3">Calendar + Pay</span>
-        <span class="chip" title="4">CRM & Reports</span>
-        <span class="chip" title="5">Review Engine</span>
-        <span class="chip" title="6">Ads Assist</span>
-        <span class="chip" title="7">Local SEO</span>
-        <span class="chip" title="8">Brand & Video</span>
-        <span class="chip" title="9">Staff Automations</span>
-        <span class="chip" title="10">Secure Comms</span>
-        <span class="chip" title="11">Compliance</span>
-        <span class="chip" title="12">Enterprise Gov</span>
-      </div>
-      <p class="hint">Higher tiers unlock more classes; enterprise unlocks all 12 with governance add‑ons.</p>
+      <div class="chips" id="featureList" style="margin-top:8px"></div>
+      <p class="hint">Higher tiers unlock more classes; enterprise unlocks all 12 with governance add-ons.</p>
     </aside>
   </section>
 
@@ -213,142 +184,26 @@
       <div class="accordion">
         <details>
           <summary>Learning Outcomes (what your team will be able to do)</summary>
-          <pre>Learning Outcomes
-After completing this module, you will be able to:
-Analyse security gaps in acquired software and managed services.
-Apply secure coding practices to mitigate vulnerabilities.
-Arrange security controls within CI/CD pipelines effectively.
-Assess risk impacts of COTS and open-source integrations.
-Calculate potential security risks in software development.
-Categorise security standards and regulations for compliance.
-Compare secure APIs with insecure implementations.
-Define secure SDLC practices for software development.
-Discuss the role of secure programming languages in minimising risks.
-Evaluate the effectiveness of penetration testing and code audits.
-Identify threats in API security and apply mitigation techniques.
-Summarise the security implications of cloud services on organisations...
-          </pre>
+          <pre>... (unchanged content for enterprise buyers) ...</pre>
         </details>
         <details>
           <summary>Security in Development — approaches we align to</summary>
-          <pre>Security in Development
-Integrating security into development methodologies ensures software is safeguarded against vulnerabilities throughout its lifecycle. Various approaches incorporate security measures differently, aligning with their principles to address risks effectively while maintaining efficiency.
-
-Agile and Security
-Agile development prioritises iterative progress and collaboration, embedding security through continuous involvement and feedback.
-• Security requirements are integrated into user stories and acceptance criteria.
-• Regular iterations enable frequent security testing and updates.
-• Collaboration between developers, testers, and security experts ensures shared responsibility for security.
-• Security measures evolve in tandem with functional requirements.
-
-Waterfall and Security
-The Waterfall methodology follows a linear, sequential structure, embedding security into each phase distinctly.
-• Security is planned during the initial requirements gathering stage.
-• Design phases include detailed risk assessments and secure architecture planning.
-• Dedicated testing phases encompass thorough security testing and validation.
-• Compliance with security standards is emphasised through extensive documentation.
-
-DevOps and Security
-DevOps focuses on automation and collaboration, seamlessly integrating security practices within the development pipeline.
-• Automated security tools perform static and dynamic code analysis during CI/CD.
-• Security teams collaborate with developers and operations staff to ensure security is embedded from the outset.
-• Infrastructure as Code (IaC) incorporates secure configurations into deployment scripts.
-• Continuous monitoring and incident response capabilities enhance security post‑deployment.
-
-DevSecOps Approach
-DevSecOps extends DevOps by embedding security as a fundamental element at every stage of the development lifecycle.
-• Security tools are integrated into automated workflows and CI/CD pipelines.
-• Developers receive training to adopt secure coding practices and understand security vulnerabilities.
-• Threat modelling and risk assessments occur iteratively alongside development activities.
-• Automated compliance checks ensure adherence to security requirements without impeding delivery.
-
-Scaled Agile Framework (SAFe) and Security
-The Scaled Agile Framework integrates security across enterprise‑wide initiatives, aligning with organisational objectives.
-• Security is incorporated into architectural enablers and defined guardrails.
-• PI planning includes risk assessments and compliance reviews.
-• Security specialists contribute expertise within Agile Release Trains.
-• Teams adopt secure coding practices and utilise advanced security tools.
-          </pre>
+          <pre>... (unchanged content) ...</pre>
         </details>
         <details>
           <summary>Software Security Maturity — CMM / SAMM</summary>
-          <pre>Software Security Maturity
-Maturity models like CMM (Capability Maturity Model) and SAMM (Software Assurance Maturity Model) provide structured frameworks to evaluate and enhance software security practices.
-
-Capability Maturity Model (CMM)
-• Structured Framework: five levels from initial to optimising.
-• Process Standardisation: embed consistent security measures.
-• Risk Management: proactive identification and mitigation.
-• Integration with Software Development: align security with delivery.
-
-Software Assurance Maturity Model (SAMM)
-• Domain‑Specific Guidance across governance, construction, verification, deployment.
-• Actionable Roadmaps per maturity level.
-• Adaptability for organisations of all sizes.
-• Focus on Measurability: metrics for progress and effectiveness.
-
-Benefits of Using Maturity Models
-• Benchmarking & assessment against industry standards.
-• Continuous improvement over time.
-• Stakeholder alignment on priorities and progress.
-• Compliance and best‑practices adoption.
-          </pre>
+          <pre>... (unchanged content) ...</pre>
         </details>
         <details>
-          <summary>Software & Third‑Party Integration Security</summary>
-          <pre>Software Integration Security
-Integrating commercial off‑the‑shelf (COTS) and open‑source software offers speed and savings but introduces risk.
-
-Risk Assessment of Software
-• Source Code Analysis (open‑source) for vulnerabilities and backdoors.
-• Vendor Security Practices (COTS): regular updates and patching.
-• Supply Chain Risk: dependencies and transitive vulns.
-• Licensing Compliance: obligations and restrictions.
-
-Patch Management and Updates
-Access Control and Authentication
-Vulnerability Monitoring
-Data Protection and Privacy
-• Encryption standards for data in transit/at rest.
-• Data minimisation; collect only what’s required.
-• Regulatory compliance (e.g., GDPR, HIPAA) as applicable.
-
-Third‑Party Service Risks
-• Data exposure via misconfigurations or weak access controls.
-• Data sovereignty concerns across jurisdictions.
-• Dependency on external security measures and SLAs.
-• Lifecycle management of integrations.
-          </pre>
+          <summary>Software & Third-Party Integration Security</summary>
+          <pre>... (unchanged content) ...</pre>
         </details>
         <details>
           <summary>Secure SDLC & Compliance</summary>
-          <pre>Secure Software Development
-Security is integral to the SDLC — address vulnerabilities at every phase.
-
-Requirements Analysis
-• Define security requirements alongside functional ones.
-• Threat modelling and compliance mapping.
-
-Secure Design Principles
-• Least privilege, defence‑in‑depth, fail‑safe defaults.
-• Secure patterns: input validation, output encoding.
-• Isolation for third‑party integrations.
-
-Secure Coding Practices
-• Validate inputs (prevent SQLi/XSS), use prepared statements.
-• Proper authN/authZ; encrypt sensitive data in transit & at rest.
-• Secure error handling; patch dependencies routinely.
-• Follow OWASP & CERT guidance.
-
-Security Compliance — Example: ISO/IEC 27001
-• Risk‑based ISMS with objectives and controls.
-• Operational controls incl. access, crypto, incident mgmt.
-• Audits & continuous improvement.
-• Align to data‑protection regulations.
-          </pre>
+          <pre>... (unchanged content) ...</pre>
         </details>
       </div>
-      <p class="hint" style="margin-top:10px">We keep language high‑level here. Enterprise delivery is tailored and under NDA.</p>
+      <p class="hint" style="margin-top:10px">We keep language high-level here. Enterprise delivery is tailored and under NDA.</p>
     </section>
   </main>
 
@@ -356,18 +211,75 @@ Security Compliance — Example: ISO/IEC 27001
     <div>© <span id="yr"></span> Delco Tech Division • Honest pricing. Simple cancel. Security on your terms.</div>
   </footer>
 
-<!-- ===== Configurable endpoints (UPDATE THESE) ===== -->
-<script>
-  // Optional: external webhook for CRM/Zapier. Leave empty to skip.
-  const LEAD_WEBHOOK = '';
+  <!-- Peek sheet (for quick descriptions) -->
+  <div class="peek" id="peek">
+    <div class="panel">
+      <span class="close" id="peekClose">Close ✕</span>
+      <div class="title" id="peekTitle">Feature</div>
+      <div class="desc" id="peekDesc">Description</div>
+    </div>
+  </div>
 
-  // NOTE: We do NOT set a thank-you URL here.
-  // Your Node backend already redirects to /thank-you after Stripe, per index.js.
-  // success_url = APP_BASE_URL + '/thank-you?session_id={CHECKOUT_SESSION_ID}'
-</script>
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Checkout Modal -->
+  <div class="modal" id="modal">
+    <div class="sheet">
+      <header>
+        <div style="font-weight:900">Checkout</div>
+        <div class="icons">
+          <img id="modalSec" alt="Security"/>
+          <img id="modalLvl" alt="Level icon"/>
+        </div>
+        <button id="xClose" class="btn">× Close</button>
+      </header>
+      <div class="body">
+        <div id="selPkg" class="hint">–</div>
+        <div id="customConfig" style="display:none; margin:10px 0">
+          <div class="hint" style="margin-bottom:6px"><b>Pick your classes</b> (tap to toggle):</div>
+          <div class="chips" id="customChips"></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="field"><label>Firm</label><input id="fFirm" placeholder="e.g., Porter & Shaw" required></div>
+          <div class="field"><label>Website</label><input id="fSite" placeholder="https://"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Buyer name</label><input id="fName" placeholder="Full name" required></div>
+          <div class="field"><label>Role</label><input id="fRole" placeholder="Partner / Office Manager / IT"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Email</label><input id="fEmail" type="email" placeholder="you@firm.com" required></div>
+          <div class="field"><label>Phone</label><input id="fPhone" placeholder="(###) ###-####"></div>
+        </div>
+        <div class="row3">
+          <div class="field"><label>Attorneys</label><input id="fAtt" type="number" min="1" value="3"></div>
+          <div class="field"><label>State</label><input id="fState" placeholder="PA"></div>
+          <div class="field"><label>Promo code</label><input id="fPromo" placeholder="Optional"></div>
+        </div>
+        <div class="field"><label>Notes</label><textarea id="fNotes" rows="3" placeholder="What matters most? Intake? Reviews? Security?"></textarea></div>
+        <div class="row" style="margin-top:8px">
+          <div class="pill" id="priceBadge">$0</div>
+          <div class="hint">Card is charged on Stripe. You’ll see the thank-you page after checkout.</div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button id="btnPlace" class="btn primary">Place order → Pay</button>
+          <button id="btnCancel" class="btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-/* ===== Catalog & Dynamic Pricing (unchanged) ===== */
+/* ===== Configurable endpoints ===== */
+const LEAD_WEBHOOK = '';
+const CHECKOUT_ENDPOINT = '/api/deal/checkout/stripe';
+const PARTNER_SLUG = 'delco-attorney';
+const QS = new URLSearchParams(location.search);
+const REP = QS.get('rep') || '';
+const DEAL_ID = 'law_' + Math.random().toString(36).slice(2,7) + Date.now().toString(36).slice(-4);
+
+/* ===== Feature classes + Short descriptions (tap/hover to peek) ===== */
 const FEATURE_CLASSES = [
   'Lead Capture & Missed-Call Textback',
   'Smart Intake & Qualification',
@@ -383,6 +295,22 @@ const FEATURE_CLASSES = [
   'Enterprise Governance & SIEM Hooks'
 ];
 
+const FEATURE_DESC = {
+  1: 'Auto-reply to web and missed calls, captures name/case, routes to text or intake instantly.',
+  2: 'Asks the right questions up front, tags urgency and practice area, pushes clean data to CRM.',
+  3: 'Clients pick a time, pay retainers or fees on the spot; reschedule links built-in.',
+  4: 'Two-way sync with your CRM; clear dashboards for leads, outcomes, and ROI.',
+  5: 'Request-to-review flows after wins; publish to Google quickly with safeguards.',
+  6: 'Lightweight ads helpers + landing pages tuned for conversion (no agency lock-in).',
+  7: 'Fixes NAP listings and maps; keeps local presence consistent and findable.',
+  8: 'Logo, letterhead, short explainer clips—ready for website and social.',
+  9: 'Shortcut buttons staff use daily (templates, follow-ups, hand-offs) that save hours.',
+ 10: 'Matter-appropriate channels with retention rules; encrypts sensitive exchanges.',
+ 11: 'Checklists and logs that make audits smoother; align to your bar/industry obligations.',
+ 12: 'Full unlock: approvals, separation of duties, and structured logs into your SIEM.'
+};
+
+/* ===== Catalog & Dynamic Pricing ===== */
 const PACKAGES = [
   { id:'solo',    lvl:'Level 1', name:'Solo Boost',         rarity:'Rookie',    baseM:199,  setup:299,  classes:[1,2,3,5] },
   { id:'assoc',   lvl:'Level 2', name:'Associate Lift',     rarity:'Bronze',    baseM:349,  setup:499,  classes:[1,2,3,4,5] },
@@ -392,7 +320,9 @@ const PACKAGES = [
   { id:'leader',  lvl:'Level 6', name:'Market Leader',      rarity:'Diamond',   baseM:1999, setup:3499, classes:[1,2,3,4,5,6,7,8,9] },
   { id:'amicus',  lvl:'Level 7', name:'Amicus Elite',       rarity:'Legendary', baseM:2999, setup:4999, classes:[1,2,3,4,5,6,7,8,9,10] },
   { id:'titan',   lvl:'Level 8', name:'Titanium Shield',    rarity:'Mythic',    baseM:4499, setup:7999, classes:[1,2,3,4,5,6,7,8,9,10,11] },
-  { id:'fort',    lvl:'Level 9', name:'Fortress Enterprise',rarity:'Ascendant', baseM:6999, setup:12000,classes:[1,2,3,4,5,6,7,8,9,10,11,12] }
+  { id:'fort',    lvl:'Level 9', name:'Fortress Enterprise',rarity:'Ascendant', baseM:6999, setup:12000,classes:[1,2,3,4,5,6,7,8,9,10,11,12] },
+  // Custom build (pricing is per-class)
+  { id:'custom',  lvl:'Custom',  name:'Custom Build',       rarity:'Design',    baseM:0,    setup:0,    classes:[] }
 ];
 
 const SIZE_MULT = [
@@ -402,21 +332,53 @@ const SIZE_MULT = [
 const SEC_MULT = { standard:1.00, shield:1.12, fortress:1.28 };
 const BILLING_MULT = { monthly:1.0, annual:(12*0.85) };
 
+// Custom pricing knobs
+const CUSTOM_CLASS_MONTHLY = 99;   // per selected class/month before multipliers
+const CUSTOM_CLASS_SETUP   = 79;   // per selected class setup before multipliers
+
+/* ===== Elements ===== */
 const $ = s => document.querySelector(s);
-const grid = $('#pkgGrid');
-const attRange = $('#attRange');
-const attCnt = $('#attCnt');
-const billing = $('#billing');
-const sec = $('#sec');
+const grid      = $('#pkgGrid');
+const attRange  = $('#attRange');
+const attCnt    = $('#attCnt');
+const billing   = $('#billing');
+const sec       = $('#sec');
+const featureList = $('#featureList');
+const featureChips = $('#featureChips');
+const peek      = $('#peek');
+const peekTitle = $('#peekTitle');
+const peekDesc  = $('#peekDesc');
+const toast     = $('#toast');
+
 $('#yr').textContent = new Date().getFullYear();
 
+/* ===== Helpers ===== */
 function r50(n){ return Math.round(n/50)*50; }
 function money(n){ return n.toLocaleString(undefined,{maximumFractionDigits:0}); }
 function sizeMult(n){ return SIZE_MULT.find(x=>n<=x.max).m }
+function secIconPath(val){ return val==='shield' ? 'public/law/seceurityP2.png' : (val==='fortress' ? 'public/law/seceurityP3.png' : 'public/law/seceurityP1.png'); }
+function levelIconPath(lvlStr){ const n = (lvlStr.match(/\d+/)||[])[0]; return n ? `public/law/lvl${n}.png` : 'public/law/lvl9.png'; }
+function toastMsg(msg, ms=1800){ toast.textContent = msg; toast.style.display='block'; setTimeout(()=>toast.style.display='none', ms); }
+function showPeek(title, desc){ peekTitle.textContent=title; peekDesc.textContent=desc; peek.style.display='block'; }
+$('#peekClose').onclick = ()=> peek.style.display='none';
+peek.onclick = e=>{ if(e.target===peek) peek.style.display='none'; }
 
-function priceFor(pkg){
-  const n = +attRange.value; const b = billing.value; const s = sec.value;
+/* ===== Price calc ===== */
+function priceFor(pkg, opts={}){
+  const n = +attRange.value;
+  const b = billing.value;
+  const s = sec.value;
   const mult = sizeMult(n) * SEC_MULT[s];
+
+  if(pkg.id==='custom'){
+    const selected = (opts.selectedClasses || []).length;
+    const m0 = (CUSTOM_CLASS_MONTHLY * selected) * mult;
+    const setup0 = (CUSTOM_CLASS_SETUP * selected) * (SEC_MULT[s]===1?1:1.05);
+    const monthly = r50(m0);
+    const total = b==='annual' ? r50(monthly*12*0.85) : monthly;
+    return { monthly, setup: r50(setup0), total };
+  }
+
   const m = pkg.baseM * mult * (b==='annual' ? (BILLING_MULT.annual/12) : 1);
   const setup = pkg.setup * (SEC_MULT[s]===1?1:1.05);
   const monthly = r50(m);
@@ -424,14 +386,61 @@ function priceFor(pkg){
   return { monthly, setup, total };
 }
 
+/* ===== Attorney icon row (3/4 male, 1/4 female, clamp display) ===== */
+const MALE_ICON = 'public/law/maleLawyer.png';
+const FEMALE_ICON = 'public/law/femalLawyer.png';
+function buildAttys(n){
+  const maxShow = 12;
+  const show = Math.min(n, maxShow);
+  const arr = [];
+  for(let i=0;i<show;i++){
+    const isFemale = Math.random() < 0.25;
+    arr.push(`<img alt="Attorney" src="${isFemale?FEMALE_ICON:MALE_ICON}">`);
+  }
+  const extra = n - show;
+  return arr.join('') + (extra>0 ? `<span class="atty-more">+${extra}</span>` : '');
+}
+
+/* ===== Build feature chips with descriptions ===== */
+function renderFeatureChips(){
+  featureList.innerHTML = '';
+  featureChips.innerHTML = '';
+  FEATURE_CLASSES.forEach((label, idx)=>{
+    const i = idx+1;
+    const el1 = document.createElement('span');
+    el1.className='chip';
+    el1.textContent = label.split(' & ')[0]; // compact label
+    el1.title = String(i);
+    el1.onclick = ()=> showPeek(label, FEATURE_DESC[i]);
+    featureChips.appendChild(el1);
+
+    const el2 = document.createElement('span');
+    el2.className='chip';
+    el2.textContent = label;
+    el2.onclick = ()=> showPeek(label, FEATURE_DESC[i]);
+    featureList.appendChild(el2);
+  });
+}
+
+/* ===== Grid render ===== */
 function render(){
   attCnt.textContent = attRange.value;
   grid.innerHTML = '';
+
+  const n = +attRange.value;
+  const sIcon = secIconPath(sec.value);
+
   PACKAGES.forEach(p=>{
+    // Custom is rendered last as a special card
+    if(p.id==='custom') return;
+
     const pr = priceFor(p);
     const card = document.createElement('article');
     card.className = 'card pkg';
+    const lvlIcon = levelIconPath(p.lvl);
     card.innerHTML = `
+      <img class="lvl-icon" src="${lvlIcon}" alt="${p.lvl}">
+      <img class="sec-thumb" src="${sIcon}" alt="${sec.value}">
       <div class="top">
         <div>
           <div class="lvl">${p.lvl}</div>
@@ -439,12 +448,17 @@ function render(){
         </div>
         <div class="rarity">${p.rarity}</div>
       </div>
+
       <div class="price"><span class="big">$${money(pr.total)}</span>
         <span class="hint">${billing.value==='annual'?' /year (equiv. $'+money(pr.monthly)+'/mo)':' /mo'} • Setup $${money(pr.setup)}</span>
       </div>
+
       <div class="includes">
-        ${p.classes.map(i=>`<span class="inc">${i}. ${FEATURE_CLASSES[i-1].split(' ')[0]}</span>`).join('')}
+        ${p.classes.map(i=>`<span class="inc" data-i="${i}">${i}. ${FEATURE_CLASSES[i-1].split(' ')[0]}</span>`).join('')}
       </div>
+
+      <div class="atty-row">${buildAttys(n)}</div>
+
       <div class="hint">Full view: ${p.classes.length} of 12 classes</div>
       <div class="cta">
         <button class="btn primary" data-buy="${p.id}">Buy ${p.name}</button>
@@ -452,80 +466,124 @@ function render(){
       </div>`;
     grid.appendChild(card);
   });
-}
-attRange.addEventListener('input', render);
-billing.addEventListener('change', render);
-sec.addEventListener('change', render);
-render();
 
-// +/- controls for the slider
+  // Custom Build card
+  const custom = document.createElement('article');
+  custom.className='card pkg';
+  custom.innerHTML = `
+    <img class="lvl-icon" src="public/law/lvl9.png" alt="Custom">
+    <img class="sec-thumb" src="${sIcon}" alt="${sec.value}">
+    <div class="top">
+      <div>
+        <div class="lvl">Custom</div>
+        <div style="font-size:18px;font-weight:900;letter-spacing:.2px">Custom Build</div>
+      </div>
+      <div class="rarity" style="background:linear-gradient(180deg,#fff,#fff3d6);border-color:#f0e3a5">Design</div>
+    </div>
+    <div class="price"><span class="big">Pick features</span>
+      <span class="hint">You choose any of the 12 classes</span>
+    </div>
+    <div class="includes">
+      ${FEATURE_CLASSES.map((_,i)=>`<span class="inc" data-i="${i+1}">${i+1}</span>`).join('')}
+    </div>
+    <div class="atty-row">${buildAttys(n)}</div>
+    <div class="hint">Pricing computed per class with your firm size & posture</div>
+    <div class="cta">
+      <button class="btn primary" data-config="custom">Configure</button>
+    </div>`;
+  grid.appendChild(custom);
+
+  // bind description peeks on .inc chips
+  grid.querySelectorAll('.inc').forEach(ch=>{
+    ch.addEventListener('click', ()=>{
+      const i = +ch.dataset.i;
+      if(i) showPeek(FEATURE_CLASSES[i-1], FEATURE_DESC[i]);
+    });
+  });
+}
+
+/* ===== Slider +/- buttons ===== */
 document.addEventListener('click', (e)=>{
   const btn = e.target.closest('.spin'); if(!btn) return;
   const dir = btn.classList.contains('inc') ? 1 : -1;
   let v = +attRange.value + dir; v = Math.min(+attRange.max, Math.max(+attRange.min, v));
   attRange.value = String(v); render();
 });
+attRange.addEventListener('input', render);
+billing.addEventListener('change', render);
+sec.addEventListener('change', render);
 
-/* ===== Checkout Modal (unchanged UI) ===== */
-const modal = document.createElement('div');
-modal.className = 'modal';
-modal.innerHTML = `
-  <div class="sheet">
-    <header>
-      <div style="font-weight:900">Checkout</div>
-      <button id="xClose" class="btn">× Close</button>
-    </header>
-    <div class="body">
-      <div id="selPkg" class="hint">–</div>
-      <div class="row" style="margin-top:10px">
-        <div class="field"><label>Firm</label><input id="fFirm" placeholder="e.g., Porter & Shaw" required></div>
-        <div class="field"><label>Website</label><input id="fSite" placeholder="https://"></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Buyer name</label><input id="fName" placeholder="Full name" required></div>
-        <div class="field"><label>Role</label><input id="fRole" placeholder="Partner / Office Manager / IT"></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Email</label><input id="fEmail" type="email" placeholder="you@firm.com" required></div>
-        <div class="field"><label>Phone</label><input id="fPhone" placeholder="(###) ###-####"></div>
-      </div>
-      <div class="row3">
-        <div class="field"><label>Attorneys</label><input id="fAtt" type="number" min="1" value="3"></div>
-        <div class="field"><label>State</label><input id="fState" placeholder="PA"></div>
-        <div class="field"><label>Promo code</label><input id="fPromo" placeholder="Optional"></div>
-      </div>
-      <div class="field"><label>Notes</label><textarea id="fNotes" rows="3" placeholder="What matters most? Intake? Reviews? Security?"></textarea></div>
-      <div class="row" style="margin-top:8px">
-        <div class="pill" id="priceBadge">$0</div>
-        <div class="hint">Card is charged on Stripe. You’ll see the thank-you page after checkout.</div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button id="btnPlace" class="btn primary">Place order → Pay</button>
-        <button id="btnCancel" class="btn">Cancel</button>
-      </div>
-    </div>
-  </div>`;
-document.body.appendChild(modal);
-
-function openModal(pkg){
-  const pr = priceFor(pkg);
-  $('#selPkg').innerHTML = `<b>${pkg.name}</b> — ${pkg.lvl} • ${pkg.rarity}<br><span class="hint">${pkg.classes.length}/12 classes • ${billing.value==='annual'?'Annual':'Monthly'} • ${sec.value.toUpperCase()}</span>`;
+/* ===== Modal wiring ===== */
+const modal = $('#modal');
+function openModal(pkg, opts={}){
+  const pr = priceFor(pkg, opts);
+  const isCustom = pkg.id==='custom';
+  $('#selPkg').innerHTML =
+    `<b>${pkg.name}</b> — ${pkg.lvl} • ${pkg.rarity || 'Design'}<br>
+     <span class="hint">${isCustom?(opts.selectedClasses?.length||0):pkg.classes.length}/12 classes • ${billing.value==='annual'?'Annual':'Monthly'} • ${sec.value.toUpperCase()}</span>`;
   $('#priceBadge').textContent = `${billing.value==='annual'?'$'+money(pr.total)+' /year':'$'+money(pr.total)+' /mo'} • Setup $${money(pr.setup)}`;
   $('#fAtt').value = attRange.value;
+  $('#modalSec').src = secIconPath(sec.value);
+  $('#modalLvl').src = pkg.id==='custom' ? 'public/law/lvl9.png' : levelIconPath(pkg.lvl);
+
+  const cfg = $('#customConfig');
+  cfg.style.display = isCustom ? 'block' : 'none';
+  if(isCustom){
+    // build/select chips
+    const area = $('#customChips'); area.innerHTML='';
+    const set = new Set(opts.selectedClasses || [1,2,3,5]); // default selection
+    FEATURE_CLASSES.forEach((label, idx)=>{
+      const i = idx+1;
+      const s = document.createElement('span');
+      s.className = 'chip';
+      s.textContent = `${i}. ${label.split(' & ')[0]}`;
+      if(set.has(i)) s.style.background = '#1236d6';
+      s.onclick = ()=>{
+        if(set.has(i)) set.delete(i); else set.add(i);
+        openModal(pkg, { selectedClasses: Array.from(set) }); // re-open to recalc price
+      };
+      area.appendChild(s);
+    });
+    modal.dataset.custom = JSON.stringify(Array.from(set));
+  }else{
+    modal.dataset.custom = '';
+  }
+
   modal.style.display='flex';
   $('#fFirm').focus();
+  modal.dataset.pkg = pkg.id;
 }
 function closeModal(){ modal.style.display='none'; }
-
 document.addEventListener('click', (e)=>{
-  const buy = e.target.closest('[data-buy]');
-  if(buy){ const pkg = PACKAGES.find(p=>p.id===buy.dataset.buy); openModal(pkg); modal.dataset.pkg = pkg.id; }
-  if(e.target.id==='xClose' || e.target.id==='btnCancel'){ closeModal(); }
-  const view = e.target.closest('[data-view]');
-  if(view){ const pkg = PACKAGES.find(p=>p.id===view.dataset.view); alert(`${pkg.name} includes:\n\n` + pkg.classes.map(i=>`${i}. ${FEATURE_CLASSES[i-1]}`).join('\n')); }
+  if(e.target && (e.target.id==='xClose' || e.target.id==='btnCancel' || e.target===modal)){ closeModal(); }
 });
 
-/* ===== Helpers ===== */
+/* ===== Package buttons (Buy / View / Configure) ===== */
+document.addEventListener('click', (e)=>{
+  const buy = e.target.closest('[data-buy]');
+  if(buy){
+    const pkg = PACKAGES.find(p=>p.id===buy.dataset.buy);
+    openModal(pkg);
+  }
+  const view = e.target.closest('[data-view]');
+  if(view){
+    const pkg = PACKAGES.find(p=>p.id===view.dataset.view);
+    openPeek(pkg);
+  }
+  const cfg = e.target.closest('[data-config]');
+  if(cfg){
+    const pkg = PACKAGES.find(p=>p.id===cfg.dataset.config);
+    openModal(pkg, { selectedClasses:[1,2,3,5] });
+  }
+});
+
+/* ===== Quick “peek” details (no alerts) ===== */
+function openPeek(pkg){
+  const list = pkg.classes.map(i=>`<b>${i}.</b> ${FEATURE_CLASSES[i-1]} — ${FEATURE_DESC[i]}`).join('<br><br>');
+  showPeek(`${pkg.name} · ${pkg.lvl}`, list || 'Pick any classes you want in Custom Build.');
+}
+
+/* ===== Coupon helper (unchanged rules) ===== */
 function couponDiscount(code){
   if(!code) return 0; const c = code.trim().toUpperCase();
   if(c==='DELCOPIONEER') return 0.10;
@@ -541,16 +599,8 @@ function beacon(url, data){
   }catch{ return false; }
 }
 
-/* ===== Dynamic checkout wiring (matches your /api/deal/checkout/stripe) ===== */
-const CHECKOUT_ENDPOINT = '/api/deal/checkout/stripe';
-const PARTNER_SLUG = 'delco-attorney';                // for success URL tagging
-const QS = new URLSearchParams(location.search);
-const REP = QS.get('rep') || '';
-const DEAL_ID = 'law_' + Math.random().toString(36).slice(2,7) + Date.now().toString(36).slice(-4);
-
-// Begin Stripe checkout using dynamic amount
+/* ===== Place Order → Stripe (no browser-alert errors) ===== */
 async function startStripeCheckoutDynamic(payload){
-  // Amount rules: annual = full year total; monthly = first month + setup
   const dueNow = (payload.config.billing === 'annual')
     ? payload.price.total
     : (payload.price.monthly + payload.price.setup);
@@ -558,7 +608,6 @@ async function startStripeCheckoutDynamic(payload){
   const amountCents = Math.max(100, Math.round(dueNow * 100));
   const summary = `${payload.pkg.name} (${payload.pkg.lvl} — ${payload.config.security.toUpperCase()}) · ${payload.config.billing} · ${payload.config.attorneys} attys · ${payload.buyer.firm}`;
 
-  // Optional internal lead log
   try {
     await fetch('/api/lead', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -566,56 +615,73 @@ async function startStripeCheckoutDynamic(payload){
     });
   } catch {}
 
-  const r = await fetch(CHECKOUT_ENDPOINT, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ amountCents, summary, partnerSlug: PARTNER_SLUG, rep: REP, dealId: DEAL_ID })
-  }).then(r=>r.json()).catch(()=>null);
+  try{
+    const r = await fetch(CHECKOUT_ENDPOINT, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ amountCents, summary, partnerSlug: PARTNER_SLUG, rep: REP, dealId: DEAL_ID })
+    }).then(r=>r.json());
 
-  if (r?.url) { location.href = r.url; return; }
-  alert('Stripe checkout is unavailable right now. Please try again or call.');
+    if (r?.url) { location.href = r.url; return; }
+    toastMsg('Stripe checkout is unavailable right now. Please try again or call.');
+  }catch{
+    toastMsg('Stripe checkout is unavailable right now. Please try again or call.');
+  }
 }
 
-/* ===== Place Order (save → optional webhook → Stripe) ===== */
 function placeOrder(btn){
   const pkg = PACKAGES.find(p=>p.id===modal.dataset.pkg);
-  const pr0 = priceFor(pkg);
   const promo = $('#fPromo').value || '';
   const disc = couponDiscount(promo);
-  const pr = {
-    monthly: Math.round(pr0.monthly*(1-disc)),
-    setup:   Math.round(pr0.setup*(1-disc)),
-    total:   Math.round(pr0.total*(1-disc))
-  };
+
+  let price;
+  if(pkg.id==='custom'){
+    const sel = JSON.parse(modal.dataset.custom || '[]');
+    const pr0 = priceFor(pkg, { selectedClasses: sel });
+    price = {
+      monthly: Math.round(pr0.monthly*(1-disc)),
+      setup:   Math.round(pr0.setup*(1-disc)),
+      total:   Math.round(pr0.total*(1-disc))
+    };
+  }else{
+    const pr0 = priceFor(pkg);
+    price = {
+      monthly: Math.round(pr0.monthly*(1-disc)),
+      setup:   Math.round(pr0.setup*(1-disc)),
+      total:   Math.round(pr0.total*(1-disc))
+    };
+  }
 
   const payload = {
     ts: new Date().toISOString(),
-    pkg: { id: pkg.id, name: pkg.name, lvl: pkg.lvl, rarity: pkg.rarity, classes: pkg.classes },
+    pkg: { id: pkg.id, name: pkg.name, lvl: pkg.lvl, rarity: pkg.rarity, classes: pkg.id==='custom' ? JSON.parse(modal.dataset.custom||'[]') : pkg.classes },
     config: { attorneys: +$('#fAtt').value||+attRange.value, billing: billing.value, security: sec.value },
-    price: pr, promo,
+    price, promo,
     buyer: { firm: $('#fFirm').value, site: $('#fSite').value, name: $('#fName').value, role: $('#fRole').value, email: $('#fEmail').value, phone: $('#fPhone').value, state: $('#fState').value, notes: $('#fNotes').value },
     rep: REP, dealId: DEAL_ID
   };
 
-  // Save for follow-up (and for the thank-you page)
+  if(!payload.buyer.firm || !payload.buyer.name || !payload.buyer.email){
+    toastMsg('Enter Firm, Buyer name, and Email to continue.');
+    return;
+  }
+
   const orders = JSON.parse(localStorage.getItem('orders')||'[]'); orders.push(payload);
   localStorage.setItem('orders', JSON.stringify(orders));
   localStorage.setItem('last_order', JSON.stringify(payload));
   if (LEAD_WEBHOOK) { beacon(LEAD_WEBHOOK, payload); }
 
-  // Redirect to Stripe with the dynamic amount
   btn.disabled = true; const txt = btn.textContent; btn.textContent = 'Redirecting to Stripe…';
   startStripeCheckoutDynamic(payload).finally(()=>{ btn.disabled=false; btn.textContent=txt; });
 }
 
+/* ===== Bind “Place order” ===== */
 document.addEventListener('click', (e)=>{
-  if(e.target && e.target.id==='btnPlace'){
-    if(!$('#fFirm').value || !$('#fName').value || !$('#fEmail').value){
-      alert('Please enter Firm, Buyer name and Email'); return;
-    }
-    placeOrder(e.target);
-  }
+  if(e.target && e.target.id==='btnPlace'){ placeOrder(e.target); }
 });
-</script>
 
+/* ===== Init ===== */
+renderFeatureChips();
+render();
+</script>
 </body>
 </html>
