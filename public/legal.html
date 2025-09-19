@@ -114,6 +114,14 @@
     .price .big{font-size:26px;font-weight:900}
     .includes{display:flex;flex-wrap:wrap;gap:8px}
     .inc{font-size:12px;font-weight:800;background:#f7f9ff;border:1px solid #e6eafb;border-radius:999px;padding:4px 8px;cursor:pointer}
+    /* Custom Build chip toggle styling */
+.inc.toggle.active{
+  background:#1236d6;
+  color:#fff;
+  border-color:#122cc3;
+}
+.pkg.custom .price .big{ font-size:28px; } /* slightly larger price on custom card */
+
     .cta{display:flex;gap:8px;flex-wrap:wrap}
 /* Level badge (top-right) */
 .lvl-icon{
@@ -564,6 +572,9 @@ const peek      = $('#peek');
 const peekTitle = $('#peekTitle');
 const peekDesc  = $('#peekDesc');
 const toast     = $('#toast');
+// ---- Custom Build selection store (persists across re-renders)
+let CUSTOM_SELECTED = new Set(); // starts at 0 selected
+
 
 $('#yr').textContent = new Date().getFullYear();
 
@@ -708,39 +719,66 @@ function render(){
     grid.appendChild(card);
   });
 
-  // Custom Build card
-  const custom = document.createElement('article');
-  custom.className='card pkg';
-  custom.innerHTML = `
-    <img class="lvl-icon" src="law/lvl9.png" alt="Custom">
-    <img class="sec-thumb" src="${sIcon}" alt="${sec.value}" onerror="this.onerror=null;this.src='law/securityP1.png'">
-    <div class="top">
-      <div>
-        <div class="lvl">Custom</div>
-        <div style="font-size:18px;font-weight:900;letter-spacing:.2px">Custom Build</div>
-      </div>
-      <div class="rarity" style="background:linear-gradient(180deg,#fff,#fff3d6);border-color:#f0e3a5">Design</div>
-    </div>
-    <div class="price"><span class="big">Pick features</span>
-      <span class="hint">You choose any of the 12 classes</span>
-    </div>
-    <div class="includes">
-      ${FEATURE_CLASSES.map((_,i)=>`<span class="inc" data-i="${i+1}">${i+1}</span>`).join('')}
-    </div>
-    <div class="atty-row">${buildAttys(n)}</div>
-    <div class="hint">Pricing computed per class with your firm size & posture</div>
-    <div class="cta">
-      <button class="btn primary" data-config="custom">Configure</button>
-    </div>`;
-  grid.appendChild(custom);
+// Custom Build card (live toggles + live price)
+const custom = document.createElement('article');
+custom.className='card pkg custom';
 
-  // bind description peeks on .inc chips
-  grid.querySelectorAll('.inc').forEach(ch=>{
-    ch.addEventListener('click', ()=>{
-      const i = +ch.dataset.i;
-      if(i) showPeek(FEATURE_CLASSES[i-1], FEATURE_DESC[i]);
-    });
+const selectedNow = Array.from(CUSTOM_SELECTED);
+const customPkg   = PACKAGES.find(p=>p.id==='custom');
+const prCustom    = priceFor(customPkg, { selectedClasses: selectedNow });
+const selCount    = selectedNow.length;
+const bigText     = selCount===0 ? 'Pick features' : `$${money(prCustom.total)}`;
+const hintText    = selCount===0
+  ? 'You choose any of the 12 classes'
+  : (billing.value==='annual'
+      ? ` /year (equiv. $${money(prCustom.monthly)}/mo) • Setup $${money(prCustom.setup)}`
+      : ` /mo • Setup $${money(prCustom.setup)}`);
+
+custom.innerHTML = `
+  <img class="lvl-icon" src="law/lvl9.png" alt="Custom">
+  <img class="sec-thumb" src="${sIcon}" alt="${sec.value}" onerror="secFallback(this)">
+  <div class="top">
+    <div>
+      <div class="lvl">Custom</div>
+      <div style="font-size:18px;font-weight:900;letter-spacing:.2px">Custom Build</div>
+    </div>
+    <div class="rarity" style="background:linear-gradient(180deg,#fff,#fff3d6);border-color:#f0e3a5">Design</div>
+  </div>
+  <div class="price">
+    <span class="big">${bigText}</span>
+    <span class="hint">${hintText}</span>
+  </div>
+  <div class="includes">
+    ${FEATURE_CLASSES.map((_,i)=>{
+      const idx=i+1, on= CUSTOM_SELECTED.has(idx) ? 'active' : '';
+      return `<span class="inc toggle ${on}" data-toggle="custom" data-i="${idx}" aria-pressed="${on? 'true':'false'}">${idx}</span>`;
+    }).join('')}
+  </div>
+  <div class="atty-row">${buildAttys(n)}</div>
+  <div class="hint">${selCount||'0'} selected • Pricing computed per class with your firm size & posture</div>
+  <div class="cta">
+    <button class="btn primary" data-config="custom">Configure</button>
+  </div>`;
+grid.appendChild(custom);
+
+
+// bind description peeks for normal package chips (skip custom toggles)
+grid.querySelectorAll('.inc:not([data-toggle])').forEach(ch=>{
+  ch.addEventListener('click', ()=>{
+    const i = +ch.dataset.i;
+    if(i) showPeek(FEATURE_CLASSES[i-1], FEATURE_DESC[i]);
   });
+});
+
+// bind toggles for Custom Build chips, re-render to update price/selection
+grid.querySelectorAll('.inc[data-toggle="custom"]').forEach(ch=>{
+  ch.addEventListener('click', ()=>{
+    const i = +ch.dataset.i;
+    if (CUSTOM_SELECTED.has(i)) CUSTOM_SELECTED.delete(i); else CUSTOM_SELECTED.add(i);
+    render(); // refresh card prices everywhere using current size/billing/posture
+  });
+});
+
 }
 
 /* ===== Slider +/- buttons ===== */
@@ -773,7 +811,7 @@ function openModal(pkg, opts={}){
   cfg.style.display = isCustom ? 'block' : 'none';
   if(isCustom){
     const area = $('#customChips'); area.innerHTML='';
-    const set = new Set(opts.selectedClasses || [1,2,3,5]); // default selection
+const set = new Set(opts.selectedClasses || []); // start at 0 by default
     FEATURE_CLASSES.forEach((label, idx)=>{
       const i = idx+1;
       const s = document.createElement('span');
@@ -795,10 +833,21 @@ function openModal(pkg, opts={}){
   $('#fFirm').focus();
   modal.dataset.pkg = pkg.id;
 }
-function closeModal(){ modal.style.display='none'; }
-unlockZoom();
+// --- replace your existing close + listener block with this ---
+function closeModal(){
+  modal.style.display = 'none';
+  // sync Custom Build selection from the modal back to the grid
+  try{
+    const sel = JSON.parse(modal.dataset.custom || '[]');
+    CUSTOM_SELECTED = new Set(sel);
+  }catch{}
+  unlockZoom();
+}
+
 document.addEventListener('click', (e)=>{
-  if(e.target && (e.target.id==='xClose' || e.target.id==='btnCancel' || e.target===modal)){ closeModal(); }
+  if (e.target && (e.target.id==='xClose' || e.target.id==='btnCancel' || e.target===modal)) {
+    closeModal();
+  }
 });
 
 /* ===== Package buttons (Buy / View / Configure) ===== */
@@ -816,7 +865,7 @@ document.addEventListener('click', (e)=>{
   const cfg = e.target.closest('[data-config]');
   if(cfg){
     const pkg = PACKAGES.find(p=>p.id===cfg.dataset.config);
-    openModal(pkg, { selectedClasses:[1,2,3,5] });
+openModal(pkg, { selectedClasses: Array.from(CUSTOM_SELECTED) });
   }
 });
 
