@@ -605,7 +605,14 @@ function secIconPath(val){
 
 function levelIconPath(lvlStr){ const n = (lvlStr.match(/\d+/)||[])[0]; return n ? `law/lvl${n}.png` : 'law/lvl9.png'; }
 function toastMsg(msg, ms=1800){ toast.textContent = msg; toast.style.display='block'; setTimeout(()=>toast.style.display='none', ms); }
-function showPeek(title, desc){ peekTitle.textContent=title; peekDesc.textContent=desc; peek.style.display='block'; }
+function showPeek(title, descHtml){
+  // title stays as text for safety
+  peekTitle.textContent = title;
+  // description is our own generated HTML -> render it
+  peekDesc.innerHTML = descHtml;
+  peek.style.display = 'block';
+}
+
   /* fallback for security images -> try older misspelling once, then hide */
   function secFallback(img){
     if(img.dataset._tried==='1'){ img.style.display='none'; return; }
