@@ -555,9 +555,25 @@ const SIZE_MULT = [
 const SEC_MULT = { standard:1.00, shield:1.12, fortress:1.28 };
 const BILLING_MULT = { monthly:1.0, annual:(12*0.85) };
 
-// Custom pricing knobs
-const CUSTOM_CLASS_MONTHLY = 99;   // per selected class/month before multipliers
-const CUSTOM_CLASS_SETUP   = 79;   // per selected class setup before multipliers
+// Custom pricing knobs — we’re switching to tier-based pricing with a premium.
+// (Keeping the old constants commented in case you want to revert.)
+// const CUSTOM_CLASS_MONTHLY = 99;
+// const CUSTOM_CLASS_SETUP   = 79;
+
+// Custom premium vs nearest tier (adjust to taste)
+const CUSTOM_PREMIUM_MONTHLY = 1.20; // +20% vs the nearest standard tier monthly
+const CUSTOM_PREMIUM_SETUP   = 1.25; // +25% vs the nearest standard tier setup
+
+// Find the smallest standard package that has >= selected class count
+function basePkgForClasses(cnt){
+  if (!cnt) return null;
+  const std = PACKAGES
+    .filter(p => p.id !== 'custom')
+    .slice()
+    .sort((a,b) => a.classes.length - b.classes.length);
+  for (const p of std){ if (cnt <= p.classes.length) return p; }
+  return std[std.length - 1]; // if > max, use the top tier
+}
 
 /* ===== Elements ===== */
 const $ = s => document.querySelector(s);
@@ -620,14 +636,24 @@ function priceFor(pkg, opts={}){
   const s = sec.value;
   const mult = sizeMult(n) * SEC_MULT[s];
 
-  if(pkg.id==='custom'){
-    const selected = (opts.selectedClasses || []).length;
-    const m0 = (CUSTOM_CLASS_MONTHLY * selected) * mult;
-    const setup0 = (CUSTOM_CLASS_SETUP * selected) * (SEC_MULT[s]===1?1:1.05);
-    const monthly = r50(m0);
-    const total = b==='annual' ? r50(monthly*12*0.85) : monthly;
-    return { monthly, setup: r50(setup0), total };
-  }
+if(pkg.id==='custom'){
+  const selected = (opts.selectedClasses || []).length;
+  if (selected === 0) return { monthly:0, setup:0, total:0 };
+
+  // Map selection to the nearest standard tier (by class count), then add a premium
+  const base = basePkgForClasses(selected);
+  const baseM     = (base ? base.baseM   : 0) * CUSTOM_PREMIUM_MONTHLY;
+  const baseSetup = (base ? base.setup  : 0) * CUSTOM_PREMIUM_SETUP;
+
+  // Apply your existing dynamic multipliers (firm size, posture, billing)
+  const mScaled     = baseM     * mult * (b==='annual' ? (BILLING_MULT.annual/12) : 1);
+  const setupScaled = baseSetup * (SEC_MULT[s]===1 ? 1 : 1.05);
+
+  const monthly = r50(mScaled);
+  const total   = b==='annual' ? r50(monthly*12*0.85) : monthly;
+  return { monthly, setup: r50(setupScaled), total };
+}
+
 
   const m = pkg.baseM * mult * (b==='annual' ? (BILLING_MULT.annual/12) : 1);
   const setup = pkg.setup * (SEC_MULT[s]===1?1:1.05);
