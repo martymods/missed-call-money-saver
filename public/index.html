@@ -253,7 +253,7 @@ const COIN_SRC = '/coins_few_40.wav';
 const SCRIBBLE_SRC = '/scribble.mp3';
 const POOL_SIZE = 4;
 
-// Build small pools so sounds can overlap without errors.
+// Prebuild small pools so sounds can overlap reliably on mobile.
 const coinPool = Array.from({ length: POOL_SIZE }, () => {
   const a = new Audio(COIN_SRC);
   a.preload = 'auto';
@@ -271,31 +271,31 @@ const scribblePool = Array.from({ length: POOL_SIZE }, () => {
 
 let audioUnlocked = false;
 
-// Warm the pool after a user gesture (required by mobile browsers).
+// Warm the pool after a user gesture (required by iOS/Safari).
 function warmAudio() {
   if (audioUnlocked) return;
   audioUnlocked = true;
   const all = [...coinPool, ...scribblePool];
   all.forEach(a => {
     const v = a.volume;
-    a.muted = true;          // play silently once to unlock
+    a.muted = true;                 // silent play to unlock
     a.play().then(() => {
       a.pause();
       a.currentTime = 0;
       a.muted = false;
       a.volume = v;
     }).catch(() => {
-      a.muted = false;       // if warm-up fails, we’ll still be fine after next tap
+      a.muted = false;              // best effort; next tap will unlock
     });
   });
 }
 
-// Re-arm the warm-up if user backgrounded and returned later
+// Re-arm unlock after tab returns to foreground
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') audioUnlocked = false;
 });
 
-// Accept many gesture types to maximize unlock reliability
+// Many gesture types to maximize unlock reliability
 ['pointerdown','touchstart','click','keydown'].forEach(ev =>
   document.addEventListener(ev, warmAudio, { passive: true })
 );
@@ -312,8 +312,6 @@ function playScribble() {
   const a = scribblePool[scribbleIdx]; scribbleIdx = (scribbleIdx + 1) % scribblePool.length;
   try { a.currentTime = 0; a.play(); } catch {}
 }
-function playCoin(){ playOnce(COIN_SRC, 0.6); }
-function playScribble(){ playOnce(SCRIBBLE_SRC, 0.5); }
 
 /* ===== Live feed (with $$$ + commercial & gov) ===== */
 const feed = $('#feed');
