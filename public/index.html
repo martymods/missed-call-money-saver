@@ -248,19 +248,69 @@ $('#bookBtn').onclick = (e)=>{ e.preventDefault(); openCalendly(); };
 $('#talkBtn').onclick = (e)=>{ e.preventDefault(); openCalendly(); };
 $('#bookStickyBtn').onclick = (e)=>{ e.preventDefault(); openCalendly(); };
 
-/* ===== SOUND: one-time unlock on user gesture ===== */
+/* ===== SOUND: Robust mobile pools (iOS/Safari friendly) ===== */
 const COIN_SRC = '/coins_few_40.wav';
 const SCRIBBLE_SRC = '/scribble.mp3';
-let soundReady = false;
-function unlockAudio(){ soundReady = true; }
-['click','touchstart','keydown'].forEach(ev => {
-  document.addEventListener(ev, unlockAudio, { once:true, passive:true });
+const POOL_SIZE = 4;
+
+// Build small pools so sounds can overlap without errors.
+const coinPool = Array.from({ length: POOL_SIZE }, () => {
+  const a = new Audio(COIN_SRC);
+  a.preload = 'auto';
+  a.setAttribute('playsinline', '');
+  a.volume = 0.6;
+  return a;
 });
-function playOnce(src, vol=0.6){
-  if(!soundReady) return;
-  const a = new Audio(src);
-  a.volume = vol;
-  a.play().catch(()=>{});
+const scribblePool = Array.from({ length: POOL_SIZE }, () => {
+  const a = new Audio(SCRIBBLE_SRC);
+  a.preload = 'auto';
+  a.setAttribute('playsinline', '');
+  a.volume = 0.5;
+  return a;
+});
+
+let audioUnlocked = false;
+
+// Warm the pool after a user gesture (required by mobile browsers).
+function warmAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  const all = [...coinPool, ...scribblePool];
+  all.forEach(a => {
+    const v = a.volume;
+    a.muted = true;          // play silently once to unlock
+    a.play().then(() => {
+      a.pause();
+      a.currentTime = 0;
+      a.muted = false;
+      a.volume = v;
+    }).catch(() => {
+      a.muted = false;       // if warm-up fails, we’ll still be fine after next tap
+    });
+  });
+}
+
+// Re-arm the warm-up if user backgrounded and returned later
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') audioUnlocked = false;
+});
+
+// Accept many gesture types to maximize unlock reliability
+['pointerdown','touchstart','click','keydown'].forEach(ev =>
+  document.addEventListener(ev, warmAudio, { passive: true })
+);
+
+// Round-robin players
+let coinIdx = 0, scribbleIdx = 0;
+function playCoin() {
+  if (!audioUnlocked) return;
+  const a = coinPool[coinIdx]; coinIdx = (coinIdx + 1) % coinPool.length;
+  try { a.currentTime = 0; a.play(); } catch {}
+}
+function playScribble() {
+  if (!audioUnlocked) return;
+  const a = scribblePool[scribbleIdx]; scribbleIdx = (scribbleIdx + 1) % scribblePool.length;
+  try { a.currentTime = 0; a.play(); } catch {}
 }
 function playCoin(){ playOnce(COIN_SRC, 0.6); }
 function playScribble(){ playOnce(SCRIBBLE_SRC, 0.5); }
