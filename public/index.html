@@ -21,8 +21,7 @@
     .top{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,rgba(10,15,37,.9),rgba(10,15,37,.6));backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.08)}
     .nav{display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:auto;padding:12px 16px;gap:12px}
     .brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.2px}
-    .brand i{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:inline-grid;place-items:center;box-shadow:0 8px 28px rgba(75,98,255,.35)}
-    .brand i svg{width:18px;height:18px;fill:#fff}
+    .logo{width:34px;height:34px;object-fit:contain;border-radius:8px;background:#0b1230;border:1px solid rgba(255,255,255,.12);padding:2px;box-shadow:0 8px 28px rgba(75,98,255,.22)}
     .nav a.small{font-size:14px;color:#c6cbea;opacity:.9}
     .cta{display:flex;gap:10px}
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,var(--brand),var(--brand2));color:#fff;font-weight:800;cursor:pointer;box-shadow:0 10px 30px rgba(58,84,255,.35)}
@@ -40,9 +39,12 @@
     .hero-card{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
     .phoneframe{aspect-ratio:16/9;border-radius:14px;background:radial-gradient(90% 120% at 0% 0%,rgba(90,124,255,.25),transparent),linear-gradient(180deg,#0d1433,#0a0f25);border:1px solid rgba(255,255,255,.12);overflow:hidden;position:relative}
     .tag{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.14);padding:6px 9px;border-radius:999px;font-size:12px}
+    .promo{position:absolute;top:10px;right:10px;width:135px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:#0a0f25;box-shadow:0 16px 40px rgba(0,0,0,.45);transform:rotate(-2deg)}
     .livefeed{position:absolute;inset:auto 8px 8px 8px;display:flex;flex-direction:column;gap:8px;max-height:70%;overflow:auto}
     .tile{display:flex;gap:10px;align-items:center;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(6px);animation:slide .35s ease}
     .ico{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#71ffa7,#14c67a);display:grid;place-items:center;font-weight:900;color:#0a0f25}
+    .ico.comm{background:linear-gradient(135deg,#ffd86f,#ff9d1c)}
+    .ico.gov{background:linear-gradient(135deg,#9ee1ff,#5ab4ff)}
     @keyframes slide{from{transform:translateY(6px);opacity:.0}to{transform:translateY(0);opacity:1}}
 
     /* KPIs */
@@ -74,6 +76,7 @@
       .grid3{grid-template-columns:1.1fr 1fr .9fr}
       .kpis{grid-template-columns:repeat(4,1fr)}
       .h1{font-size:44px}
+      .promo{width:160px;transform:rotate(-3deg)}
       .sticky-cta{display:none}
     }
   </style>
@@ -84,11 +87,9 @@
 <div class="top">
   <div class="nav">
     <div class="brand">
-      <i aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M12 2l7 3v6c0 5-3.5 9.5-7 11-3.5-1.5-7-6-7-11V5l7-3zM8.5 11.5h7l-3.5 7-3.5-7z"/></svg>
-      </i>
+      <img src="public/image/delco-tech-seal.png" alt="Delco Tech Division" class="logo">
       <span>Delco Tech Division</span>
-      <span class="pill" style="margin-left:6px">Delaware County Special</span>
+      <!-- Removed: Delaware County Special -->
     </div>
     <div class="cta">
       <a href="#pricing" class="btn ghost sm">Pricing</a>
@@ -128,6 +129,8 @@
       <div class="hero-card">
         <div class="phoneframe">
           <div class="tag">Live feed</div>
+          <!-- Added your $7,200 lead capture phone art -->
+          <img class="promo" src="public/A_2D_digital_illustration_in_this_graphic_design_p.png" alt="Lead capture $7,200">
           <div id="feed" class="livefeed" aria-live="polite"></div>
         </div>
       </div>
@@ -227,41 +230,48 @@ $('#bookBtn').onclick = (e)=>{ e.preventDefault(); openCalendly(); };
 $('#talkBtn').onclick = (e)=>{ e.preventDefault(); openCalendly(); };
 $('#callBtn').onclick = (e)=>{ e.preventDefault(); window.location.href='tel:+12677733561'; };
 
-/* ===== Live feed simulator (feels like a busy network) ===== */
+/* ===== Live feed (now with $$$ thousands + commercial & gov) ===== */
 const feed = $('#feed');
 const names = ['Ridley','Drexel Hill','Upper Darby','Springfield','Havertown','Folsom','Secane','Brookhaven'];
 const jobs  = ['water heater replacement','AC tune-up','boiler repair','leak call','drain clean','mini-split install'];
-const icons = { ok:'✓', book:'📅', pay:'💳', msg:'✉️' };
-function addTile(kind, text){
+const bigJobs  = ['rooftop unit install','full repipe','boiler plant replacement','package units x3','chiller service','parking garage drains'];
+const govJobs  = ['municipal building HVAC','firehouse HVAC','school wing AC','library plumbing overhaul','water authority pump room'];
+const icons = { ok:'✓', book:'📅', pay:'💳', msg:'✉️', comm:'🏢', gov:'🏛️' };
+
+function addTile(kind, text, cls=''){
   const d = document.createElement('div');
   d.className='tile';
-  const i = document.createElement('div'); i.className='ico'; i.textContent = (icons[kind]||'✓');
+  const i = document.createElement('div'); i.className='ico ' + cls; i.textContent = (icons[kind]||'✓');
   const p = document.createElement('div'); p.innerHTML = text;
   d.append(i,p);
   feed.prepend(d);
-  // Trim
   while(feed.children.length > 7) feed.removeChild(feed.lastChild);
 }
-function rand(a){ return a[Math.floor(Math.random()*a.length)]}
-function dollars(min,max){ return '$'+(Math.floor(Math.random()*(max-min))+min).toLocaleString(); }
+const rand = a => a[Math.floor(Math.random()*a.length)];
+const money = (minK,maxK) => '$' + (Math.floor(Math.random()*(maxK-minK+1))+minK).toLocaleString() + ',000';
 
-// Boot with a few items
-addTile('msg', `<b>Lead captured</b> — ${rand(names)} — 0 min after missed call`);
+// Boot items (thousands)
+addTile('msg', `<b>Lead captured</b> — ${rand(names)} — “Need ${rand(jobs)}” &nbsp; <b>${money(6,12)}</b>`);
 addTile('book', `<b>Booked 9:30 AM</b> — ${rand(names)} — <i>via Calendly</i>`);
-addTile('pay', `<b>Deposit paid</b> — ${dollars(99,399)} — Apple Pay`);
+addTile('pay', `<b>Deposit paid</b> — <b>${money(1,4)}</b> — Apple Pay`);
 
 setInterval(()=>{
   const r = Math.random();
-  if (r < .4) addTile('msg', `<b>Lead captured</b> — ${rand(names)} — “Need ${rand(jobs)}”`);
-  else if (r < .7) addTile('book', `<b>Booked</b> — ${rand(names)} — ${['today','tomorrow','Thu'][Math.floor(Math.random()*3)]}`);
-  else addTile('pay', `<b>Paid</b> — ${dollars(149,799)} — checkout`);
+  if (r < .35) {
+    addTile('msg', `<b>Lead captured</b> — ${rand(names)} — “Need ${rand(jobs)}” &nbsp; <b>${money(5,15)}</b>`);
+  } else if (r < .65) {
+    addTile('book', `<b>Booked</b> — ${rand(names)} — ${['today','tomorrow','Thu'][Math.floor(Math.random()*3)]}`);
+  } else if (r < .85) {
+    addTile('comm', `<b>Commercial bid requested</b> — ${rand(names)} — ${rand(bigJobs)} &nbsp; <b>${money(20,80)}</b>`, 'comm');
+  } else {
+    addTile('gov', `<b>Gov contract RFP</b> — ${rand(names)} — ${rand(govJobs)} &nbsp; <b>${money(100,350)}</b>`, 'gov');
+  }
 }, 3500);
 
 /* ===== KPIs with CountAPI fallback ===== */
 async function bump(key){
   const ns = 'delco-tech-division';
   try{
-    // create namespace lazily; get won't increment; hit will
     const r = await fetch(`https://api.countapi.xyz/hit/${ns}/${key}`).then(r=>r.json());
     return r.value || 0;
   }catch{ return Math.floor(Math.random()*50)+20; }
@@ -294,7 +304,6 @@ const data = { labels:[], datasets:[{
   borderWidth:2,
   pointRadius:0
 }]};
-// gradient fill
 data.datasets[0].backgroundColor.addColorStop(0,'rgba(111,139,255,.35)');
 data.datasets[0].backgroundColor.addColorStop(1,'rgba(111,139,255,0)');
 
