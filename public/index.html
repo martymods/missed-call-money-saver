@@ -39,7 +39,6 @@
     .hero-card{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
     .phoneframe{aspect-ratio:16/9;border-radius:14px;background:radial-gradient(90% 120% at 0% 0%,rgba(90,124,255,.25),transparent),linear-gradient(180deg,#0d1433,#0a0f25);border:1px solid rgba(255,255,255,.12);overflow:hidden;position:relative}
     .tag{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.14);padding:6px 9px;border-radius:999px;font-size:12px}
-    .promo{position:absolute;top:10px;right:10px;width:135px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:#0a0f25;box-shadow:0 16px 40px rgba(0,0,0,.45);transform:rotate(-2deg)}
     .livefeed{position:absolute;inset:auto 8px 8px 8px;display:flex;flex-direction:column;gap:8px;max-height:70%;overflow:auto}
     .tile{display:flex;gap:10px;align-items:center;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(6px);animation:slide .35s ease}
     .ico{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#71ffa7,#14c67a);display:grid;place-items:center;font-weight:900;color:#0a0f25}
@@ -64,6 +63,21 @@
     /* ===== Chart ===== */
     .chartCard{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px}
 
+    /* ===== New promo card ===== */
+    .promo-card{
+      margin-top:12px;
+      display:flex; gap:12px; align-items:center;
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:16px; padding:10px;
+    }
+    .promo-card img{
+      width:120px; height:auto;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow:0 12px 30px rgba(0,0,0,.35);
+    }
+
     /* ===== Footer & sticky CTA ===== */
     .foot{border-top:1px solid rgba(255,255,255,.1);color:#c6cbea}
     .sticky-cta{position:fixed;inset:auto 12px 12px 12px;display:flex;gap:10px}
@@ -76,7 +90,7 @@
       .grid3{grid-template-columns:1.1fr 1fr .9fr}
       .kpis{grid-template-columns:repeat(4,1fr)}
       .h1{font-size:44px}
-      .promo{width:160px;transform:rotate(-3deg)}
+      .promo-card img{ width:160px; }
       .sticky-cta{display:none}
     }
   </style>
@@ -89,7 +103,6 @@
     <div class="brand">
       <img src="/image/delco-tech-seal.png" alt="Delco Tech Division" class="logo" onerror="this.style.display='none'">
       <span>Delco Tech Division</span>
-      <!-- Removed: Delaware County Special -->
     </div>
     <div class="cta">
       <a href="#pricing" class="btn ghost sm">Pricing</a>
@@ -123,14 +136,22 @@
           <a href="/checkout.html" class="btn">Activate now</a>
           <a href="#" class="btn ghost" id="bookBtn">Book a 15-min setup call</a>
         </div>
+
+        <!-- New: phone promo card, outside the live feed -->
+        <div class="promo-card">
+          <img src="/A_2D_digital_illustration_in_this_graphic_design_p.png" alt="Lead capture $7,200" loading="lazy" onerror="this.style.display='none'">
+          <div>
+            <div style="font-weight:900">Lead captured • $7,200</div>
+            <div class="tiny">Instant text-back → qualify → book. Real screenshot style (you can swap this image later).</div>
+          </div>
+        </div>
       </div>
 
       <!-- Live phone panel -->
       <div class="hero-card">
         <div class="phoneframe">
           <div class="tag">Live feed</div>
-          <!-- Added your $7,200 lead capture phone art -->
-          <img class="promo" src="/A_2D_digital_illustration_in_this_graphic_design_p.png" alt="Lead capture $7,200" onerror="this.style.display='none'">
+          <!-- promo image removed from here -->
           <div id="feed" class="livefeed" aria-live="polite"></div>
         </div>
       </div>
@@ -202,13 +223,14 @@
   <div class="wrap" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
     <div class="tiny">© <span id="y"></span> Delco Tech Division</div>
     <div class="tiny">SMS opt-out: Reply STOP. Help: HELP. Msg/data rates may apply.</div>
+    <div class="tiny">Need help? Email <a href="mailto:support@delcotechdivision.com">support@delcotechdivision.com</a>.</div>
   </div>
 </footer>
 
 <!-- Sticky CTA (mobile) -->
 <div class="sticky-cta">
   <a href="/checkout.html" class="btn">Activate now</a>
-  <a href="#" class="btn ghost" id="callBtn">Call us</a>
+  <a href="#" class="btn ghost" id="bookStickyBtn">Book a 15-min setup call</a>
 </div>
 
 <!-- Calendly -->
@@ -228,7 +250,7 @@ const CAL_URL = 'https://calendly.com/rb-dreamworld/15-minute-setup-call';
 function openCalendly(){ if (window.Calendly?.initPopupWidget) Calendly.initPopupWidget({ url: CAL_URL }); else window.open(CAL_URL,'_blank'); }
 $('#bookBtn').onclick = (e)=>{ e.preventDefault(); openCalendly(); };
 $('#talkBtn').onclick = (e)=>{ e.preventDefault(); openCalendly(); };
-$('#callBtn').onclick = (e)=>{ e.preventDefault(); window.location.href='tel:+12677733561'; };
+$('#bookStickyBtn').onclick = (e)=>{ e.preventDefault(); openCalendly(); };
 
 /* ===== Live feed (now with $$$ thousands + commercial & gov) ===== */
 const feed = $('#feed');
