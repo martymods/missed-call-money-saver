@@ -151,7 +151,6 @@
       <div class="hero-card">
         <div class="phoneframe">
           <div class="tag">Live feed</div>
-          <!-- promo image removed from here -->
           <div id="feed" class="livefeed" aria-live="polite"></div>
         </div>
       </div>
@@ -169,7 +168,6 @@
 <!-- Main content -->
 <section class="wrap">
   <div class="grid3">
-    <!-- How it works -->
     <div class="card steps">
       <h3 style="margin:0 0 8px">How it works</h3>
       <div class="row"><div class="dot">1</div><div><b>Missed call ➝ instant SMS.</b> “Sorry we missed you… What’s your name?”</div></div>
@@ -180,7 +178,6 @@
       <div class="tiny" style="margin-top:6px">Typical lift for shops that miss multiple calls/day. Results vary.</div>
     </div>
 
-    <!-- Why us -->
     <div class="card">
       <h3 style="margin:0 0 8px">Why this beats free or cheap apps</h3>
       <ul class="why">
@@ -191,7 +188,6 @@
       </ul>
     </div>
 
-    <!-- Pricing -->
     <div id="pricing" class="card pricebox">
       <h3 style="margin:0 0 10px">Simple pricing</h3>
       <ul style="list-style:none;padding:0;margin:0 0 10px">
@@ -252,7 +248,24 @@ $('#bookBtn').onclick = (e)=>{ e.preventDefault(); openCalendly(); };
 $('#talkBtn').onclick = (e)=>{ e.preventDefault(); openCalendly(); };
 $('#bookStickyBtn').onclick = (e)=>{ e.preventDefault(); openCalendly(); };
 
-/* ===== Live feed (now with $$$ thousands + commercial & gov) ===== */
+/* ===== SOUND: one-time unlock on user gesture ===== */
+const COIN_SRC = '/coins_few_40.wav';
+const SCRIBBLE_SRC = '/scribble.mp3';
+let soundReady = false;
+function unlockAudio(){ soundReady = true; }
+['click','touchstart','keydown'].forEach(ev => {
+  document.addEventListener(ev, unlockAudio, { once:true, passive:true });
+});
+function playOnce(src, vol=0.6){
+  if(!soundReady) return;
+  const a = new Audio(src);
+  a.volume = vol;
+  a.play().catch(()=>{});
+}
+function playCoin(){ playOnce(COIN_SRC, 0.6); }
+function playScribble(){ playOnce(SCRIBBLE_SRC, 0.5); }
+
+/* ===== Live feed (with $$$ + commercial & gov) ===== */
 const feed = $('#feed');
 const names = ['Ridley','Drexel Hill','Upper Darby','Springfield','Havertown','Folsom','Secane','Brookhaven'];
 const jobs  = ['water heater replacement','AC tune-up','boiler repair','leak call','drain clean','mini-split install'];
@@ -268,7 +281,12 @@ function addTile(kind, text, cls=''){
   d.append(i,p);
   feed.prepend(d);
   while(feed.children.length > 7) feed.removeChild(feed.lastChild);
+
+  // --- Sound triggers ---
+  if (/\$[\d]/.test(text)) playCoin();               // any money value
+  if (kind === 'book' || /Booked/i.test(text)) playScribble(); // booking
 }
+
 const rand = a => a[Math.floor(Math.random()*a.length)];
 const money = (minK,maxK) => '$' + (Math.floor(Math.random()*(maxK-minK+1))+minK).toLocaleString() + ',000';
 
