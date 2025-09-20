@@ -2,95 +2,112 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>Get started — Missed-Call Money Saver</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Get started — Delco Tech Division</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <style>
-    :root{ --brand:#1955ff; --ink:#101215; --muted:#6e6e6e; --ok:#20a055; --bg:#f7f9fc; }
-    *{ box-sizing:border-box }
-    body{ margin:0; font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif; color:var(--ink); background:#fff }
-    .wrap{ max-width:960px; margin:auto; padding:28px 20px }
-    .crumbs{ font-size:13px; color:var(--muted); }
-    h1{ font-size:32px; margin:8px 0 4px }
-    .sub{ color:var(--muted); margin-bottom:20px }
-    .steps{ display:grid; grid-template-columns:1fr; gap:14px; margin:18px 0 26px }
-    .step{ background:var(--bg); border:1px solid #e6ebf2; border-radius:14px; padding:14px }
-    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
-    .card{ border:1px solid #e9e9e9; border-radius:14px; padding:18px }
-    .brand{ font-weight:800; color:#0f3ed6; font-size:13px; display:inline-block; padding:4px 8px; background:#eef3ff; border:1px solid #dbe6ff; border-radius:999px; margin-bottom:10px}
-    .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:10px; padding:12px 16px; font-weight:700; cursor:pointer; border:1px solid #d9e1ff; background:#1955ff; color:#fff; width:100%; }
-    .secure{ font-size:12px; color:var(--muted); margin-top:8px }
-    .badge{ display:inline-block; background:#f1fff6; color:#0a6c3a; border:1px solid #def7e6; border-radius:12px; padding:4px 8px; font-weight:700; font-size:12px; }
-    .tiny{ font-size:12px; color:var(--muted); }
-    @media (max-width:900px){ .grid{ grid-template-columns:1fr } }
+    :root{ --bg:#0a0f25; --card:#0f1631; --edge:rgba(255,255,255,.14); --ink:#f4f6ff; --muted:#aeb7d8; --brand:#5a7cff; --brand2:#3b53ff; --ok:#1cd182; }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial}
+    a{color:#cfe0ff;text-decoration:none}
+    .top{position:sticky;top:0;background:linear-gradient(180deg,rgba(10,15,37,.9),rgba(10,15,37,.6));backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.08)}
+    .nav{max-width:980px;margin:auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900}
+    .brand i{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center}
+    .wrap{max-width:980px;margin:auto;padding:20px 16px}
+    h1{font-size:28px;line-height:1.15;margin:8px 0}
+    .sub{color:var(--muted);margin-bottom:12px}
+    .grid{display:grid;grid-template-columns:1fr;gap:14px}
+    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+    .brandpill{display:inline-block;padding:5px 9px;border-radius:999px;border:1px solid var(--edge);background:rgba(255,255,255,.06);font-size:12px;font-weight:800;color:#dfe5ff}
+    .btn{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,var(--brand),var(--brand2));color:#fff;font-weight:900;cursor:pointer}
+    .secure{font-size:12px;color:var(--muted);margin-top:6px}
+    .tiny{font-size:12px;color:var(--muted)}
+    .steps{display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0 18px}
+    .step{background:rgba(255,255,255,.05);border:1px solid var(--edge);padding:10px;border-radius:12px}
+    @media (min-width:900px){ .grid{grid-template-columns:1.1fr .9fr} }
   </style>
 </head>
 <body>
+  <div class="top">
+    <div class="nav">
+      <div class="brand">
+        <i>✓</i><span>Delco Tech Division</span>
+      </div>
+      <a href="/" style="font-size:14px;color:#cfe0ff">← Back to site</a>
+    </div>
+  </div>
+
   <div class="wrap">
-    <div class="crumbs">Step <b>1</b> of 3 • <span class="badge">Reserve your spot</span></div>
-    <h1>Lock in the setup + subscription</h1>
-    <p class="sub">Secure your account now. You’ll instantly get a receipt and a link to book onboarding (Step 2). We only open a few Delco spots at a time.</p>
+    <div class="brandpill">Secure checkout</div>
+    <h1>Lock in the setup + first month</h1>
+    <p class="sub">You’ll get an instant receipt, then a link to book onboarding. We only open a few Delco spots at a time.</p>
 
     <div class="steps">
-      <div class="step"><b>Step 1:</b> Pay the <b>setup + first month</b> (Apple Pay / card or PayPal).</div>
-      <div class="step"><b>Step 2:</b> Book your <b>15-min onboarding</b> to connect your number, Calendly, and Google Sheet.</div>
-      <div class="step"><b>Step 3:</b> We run a <b>live missed-call test</b> and you’re live.</div>
+      <div class="step"><b>1)</b> Pay the <b>setup + first month</b> (Apple Pay/cards or PayPal).</div>
+      <div class="step"><b>2)</b> Book your <b>15-min onboarding</b> to connect your number, Calendly, and Google Sheet.</div>
+      <div class="step"><b>3)</b> We run a <b>live missed-call test</b> and you’re live.</div>
     </div>
 
     <div class="grid">
       <!-- Stripe / Apple Pay -->
       <div class="card">
-        <span class="brand">Recommended</span>
-        <h3>Pay with Card / Apple&nbsp;Pay (Stripe)</h3>
-        <p class="tiny">Stripe Checkout supports Apple&nbsp;Pay on iPhone/Mac, plus all major cards. Fully secure.</p>
+        <div class="brandpill">Recommended</div>
+        <h3 style="margin:10px 0 8px">Pay with Apple&nbsp;Pay or card (Stripe)</h3>
+        <p class="tiny">Fastest setup. Apple Pay on iPhone/Mac plus all major cards.</p>
 
         <label class="tiny" for="promo">Have a promo code?</label>
         <input id="promo" placeholder="e.g. DELCO150"
-               style="width:100%;padding:10px;border:1px solid #e0e6ff;border-radius:10px;margin:6px 0 10px"/>
+               style="width:100%;padding:10px;border:1px solid var(--edge);border-radius:10px;margin:6px 0 12px;background:rgba(255,255,255,.03);color:#fff"/>
 
         <button id="stripeBtn" class="btn">Pay with Apple&nbsp;Pay / Card</button>
-        <div class="secure">Payments are processed by Stripe. We never see your card details.</div>
+        <div class="secure">Processed by Stripe. We never see your card details.</div>
       </div>
 
       <!-- PayPal -->
       <div class="card">
-        <span class="brand">Alternative</span>
-        <h3>Pay with PayPal</h3>
+        <div class="brandpill">Alternative</div>
+        <h3 style="margin:10px 0 8px">Pay with PayPal</h3>
         <div id="paypal-buttons" style="margin-top:10px"></div>
-        <div class="secure">You can use your PayPal balance or a saved card.</div>
+        <div class="secure">Use your PayPal balance or a saved card.</div>
+        <div class="tiny" style="margin-top:12px;color:#9fe5c0">Founders in Delco: $149 setup (first 3)</div>
       </div>
     </div>
 
-    <p class="tiny" style="margin-top:16px">By proceeding you agree to the standard STOP/HELP SMS terms used in the product.</p>
+    <p class="tiny" style="margin-top:16px">By proceeding you agree to STOP/HELP SMS terms used in the product. Msg & data rates may apply.</p>
   </div>
 
+  <!-- Keep your existing checkout logic intact -->
   <script src="https://js.stripe.com/v3/"></script>
   <script>
     (async () => {
-      const cfg = await fetch('/config').then(r=>r.json());
-      const stripe = Stripe(cfg.stripePk);
+      // Expecting your backend to provide the same /config JSON as before
+      const cfg = await fetch('/config').then(r=>r.json()).catch(()=>({}));
+      const stripe = cfg.stripePk ? Stripe(cfg.stripePk) : null;
 
-      // Prefill promo from ?promo=DELCO150
+      // Prefill promo from ?promo=
       const urlPromo = new URLSearchParams(location.search).get('promo') || '';
       const promoInput = document.getElementById('promo');
       if (promoInput && urlPromo) promoInput.value = urlPromo;
 
-      // Create Stripe Checkout Session (send promo to backend)
+      // Stripe Checkout Session
       document.getElementById('stripeBtn').addEventListener('click', async () => {
         const promo = (promoInput?.value || '').trim();
         const sess = await fetch('/api/create-checkout-session', {
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
           body: JSON.stringify({ promo })
-        }).then(r=>r.json());
+        }).then(r=>r.json()).catch(()=>null);
 
-        if (sess.id) {
+        if (sess?.id && stripe) {
           await stripe.redirectToCheckout({ sessionId: sess.id });
+        } else if (sess?.url) {
+          // fallback if server returns URL instead of sessionId
+          location.href = sess.url;
         } else {
           alert('Could not start Stripe checkout. Please try again or contact support.');
         }
       });
 
-      // PayPal – load SDK dynamically (subscription)
+      // PayPal – load SDK dynamically if configured
       if (cfg.paypalClientId && cfg.paypalPlanId) {
         const s = document.createElement('script');
         s.src = `https://www.paypal.com/sdk/js?client-id=${cfg.paypalClientId}&vault=true&intent=subscription`;
