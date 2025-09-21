@@ -42,10 +42,11 @@ const MENU = [
   { id:'pretzel_chicken_cheesesteak', name:'Pretzel Chicken Cheesesteak', price:11.00 },
 ];
 
+const app = express();
+
 app.get('/api/food/menu', (_req,res)=> res.json({ items: MENU, taxRate: TAX_RATE }));
 
 
-const app = express();
 app.use(express.urlencoded({ extended: true })); // Twilio posts form-url-encoded
 app.use(express.json());
 
