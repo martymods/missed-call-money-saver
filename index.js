@@ -14,6 +14,256 @@ const { upsertByPhone, findAll } = require('./services/sheets');
 const { subscribeCalendlyWebhook } = require('./services/calendly');
 const { setStep, setField, get: getState } = require('./lib/leadStore');
 
+/* ======================= HIRE CATALOG + PRICING ======================= */
+
+const HIRE_SERVICES = [
+  {
+    key: 'discord_server',
+    title: 'Discord Server — 24h Setup/Overhaul',
+    tagline: 'Bots • Roles • Automations • Clean structure',
+    blurb: 'Sleek, organized, bot-enhanced setup to engage members and keep mods in control.',
+    tiers: [
+      { key:'starter',  label:'Starter',  price:  30 },
+      { key:'standard', label:'Standard', price:  40 },
+      { key:'advanced', label:'Advanced', price:  50 },
+    ],
+    addons: [
+      { key:'extra_rev',        label:'Additional Revision', price:25 },
+      { key:'db_integration',   label:'Database Integration', price:25 },
+      { key:'ai_faq',           label:'AI FAQ Bot',           price:15 },
+      { key:'ai_welcome',       label:'AI Welcome Bot',       price:10 },
+      { key:'npc_crystal',      label:'24/7 Crystal NPC Bot', price:20 },
+    ]
+  },
+  {
+    key: 'viewer_prediction',
+    title: 'Skill-Based Viewer Prediction Game (PvP Wagers)',
+    tagline: 'TikTok/Twitch/YT chat picks • wallets • payouts • OBS overlay',
+    blurb: 'Plug-and-play engine for AI-vs-AI shows with odds, streak bonuses, auto-settlement, ledgers.',
+    tiers: [
+      { key:'starter',  label:'Starter',  price:  499 },
+      { key:'standard', label:'Standard', price: 1199 },
+      { key:'advanced', label:'Advanced', price: 2499 },
+    ],
+    addons: [
+      { key:'fast',           label:'Fast Delivery', price:250 },
+      { key:'extra_platform', label:'Extra Platform (TikTok/Twitch/YT)', price:150 },
+      { key:'stripe_paypal',  label:'Stripe/PayPal Payments', price:400 },
+      { key:'discord_bot',    label:'Discord Bot Integration', price:300 },
+    ]
+  },
+  {
+    key: 'ai_quote_pay_book',
+    title: 'AI Quote → Pay → Book (Stripe • Calendly • Twilio)',
+    tagline: 'Turn visits into scheduled, paid jobs',
+    blurb: 'Asks smart questions, calculates price, collects payment, locks the appointment, logs to Sheets.',
+    tiers: [
+      { key:'starter',  label:'Starter',  price:  299 },
+      { key:'standard', label:'Standard', price:  699 },
+      { key:'advanced', label:'Advanced', price: 1199 },
+    ],
+    addons: [
+      { key:'add_platform',    label:'Add a messaging platform', price:200 },
+      { key:'sms_compliance',  label:'SMS Compliant Registration', price:250 },
+      { key:'custom_calc',     label:'Custom calculator fields', price:150 },
+    ]
+  },
+  {
+    key: 'discord_arena',
+    title: 'Discord AI Arena — PvP Bets & Leaderboards',
+    tagline: 'Virtual wagers • roles via Stripe • scheduled fights',
+    blurb: 'Challenge/accept bets, auto-resolve results, standings in embeds with buttons. Admin tools included.',
+    tiers: [
+      { key:'starter',  label:'Starter',  price:  299 },
+      { key:'standard', label:'Standard', price:  699 },
+      { key:'advanced', label:'Advanced', price: 1299 },
+    ],
+    addons: [
+      { key:'extra_server', label:'+1 Discord Server',    price: 99  },
+      { key:'paypal',       label:'Add PayPal Checkout',  price: 150 },
+      { key:'dashboard',    label:'Admin Web Dashboard',  price: 300 },
+    ]
+  },
+  {
+    key: 'crypto_frontend',
+    title: 'Crypto Exchange Frontend (Next.js + Charts)',
+    tagline: 'Candles + volume • EMA/SMA • crosshair • wagmi/viem opt-in',
+    blurb: 'Performance-oriented, mobile-first token market + detail pages with trader-grade UX.',
+    tiers: [
+      { key:'starter',  label:'Starter',  price:  349 },
+      { key:'standard', label:'Standard', price:  799 },
+      { key:'advanced', label:'Advanced', price: 1299 },
+    ],
+    addons: [
+      { key:'fast',        label:'Fast Delivery',           price: 99  },
+      { key:'extra_rev',   label:'Additional Revision',     price: 49  },
+      { key:'branding',    label:'Branding & Theme Pack',   price: 150 },
+      { key:'wallet',      label:'Wallet Layer (wagmi/viem)', price:200 },
+      { key:'api',         label:'API/Data Integration',    price: 300 },
+    ]
+  },
+  {
+    key: 'web_rescue',
+    title: 'Rapid Recovery: Site/Email • DNS/SSL/MX',
+    tagline: 'Fix downtime • restore email • secure HTTPS',
+    blurb: 'Triage + verified fix with proof (validation screenshots & tests).',
+    tiers: [
+      { key:'starter',  label:'Starter',  price:   60 },
+      { key:'standard', label:'Standard', price:  160 },
+      { key:'advanced', label:'Advanced', price:  320 },
+    ],
+    addons: [
+      { key:'extra_rev',     label:'Additional Revision',         price: 24.99 },
+      { key:'urgent4',       label:'Urgent 4-hour response',      price: 75    },
+      { key:'cloudflare',    label:'Migrate DNS to Cloudflare',   price: 120   },
+      { key:'email_migrate', label:'Email migration (Google/M365)', price: 250 },
+    ]
+  },
+  {
+    key: 'hubspot_email',
+    title: 'HubSpot Email Template — Polished & Tested',
+    tagline: 'Responsive • modules • bulletproof buttons',
+    blurb: 'Hand-coded, table-based HTML with inline styles, retina images, and Litmus-tested tweaks.',
+    tiers: [
+      { key:'starter',  label:'Starter',  price:  49.99 },
+      { key:'standard', label:'Standard', price: 119.99 },
+      { key:'advanced', label:'Advanced', price: 349.99 },
+    ],
+    addons: [
+      { key:'fast',       label:'Fast Delivery',         price: 85  },
+      { key:'extra_rev',  label:'Additional Revision',   price: 29.99 },
+      { key:'editable',   label:'Editable Template',     price: 85  },
+      { key:'darkmode',   label:'Dark mode optimization',price: 45  },
+      { key:'gif_hero',   label:'Animated GIF hero',     price: 65  },
+      { key:'variant',    label:'Extra variant',         price: 75  },
+    ]
+  }
+];
+
+// helpful rounding
+function round(n, step=1){ return Math.round(n/step)*step; }
+function roundMoney(n){ return Math.round(n*100)/100; } // keep cents where used
+
+function baseTierPrice(serviceKey, tierKey){
+  const svc = HIRE_SERVICES.find(s=>s.key===serviceKey);
+  const t = svc?.tiers.find(t=>t.key===tierKey);
+  return t ? Number(t.price) : 0;
+}
+function addonsSum(serviceKey, addonKeys=[]){
+  const svc = HIRE_SERVICES.find(s=>s.key===serviceKey);
+  const map = new Map((svc?.addons||[]).map(a=>[a.key, Number(a.price)]));
+  return (addonKeys||[]).reduce((s,k)=> s + (map.get(k)||0), 0);
+}
+
+function hireModifiersMultiplier(mod={}) {
+  // urgency
+  const u = (mod.urgency||'standard');
+  let m = (u==='rush') ? 1.20 : (u==='ultra' ? 1.35 : 1.00);
+  // complexity
+  const c = (mod.complexity||'basic');
+  m *= (c==='moderate') ? 1.12 : (c==='advanced' ? 1.25 : 1.00);
+  return m;
+}
+
+async function aiHireAdjust(anchor, selection, mod){
+  // Optional AI “nudge” ±10% based on stack/constraints if OpenAI is configured
+  if (!OpenAIClient || !process.env.OPENAI_API_KEY) return anchor;
+  try{
+    const openai = new OpenAIClient({ apiKey: process.env.OPENAI_API_KEY });
+    const sys = 'You adjust quotes for software/game gigs. Given a base USD price, apply a small rational adjustment within ±10% based on risk and scope. Return ONLY a number.';
+    const usr = `Base: ${anchor}. Service: ${selection.serviceKey}, Tier: ${selection.tierKey}, Addons: ${selection.addons?.join(',')||'none'}. Modifiers: ${JSON.stringify(mod)}.`;
+    const r = await openai.chat.completions.create({ model: process.env.OPENAI_MODEL||'gpt-4o-mini', temperature:0.2, messages:[{role:'system',content:sys},{role:'user',content:usr}]});
+    const txt = (r.choices?.[0]?.message?.content||'').trim();
+    const val = Number(String(txt).replace(/[^\d.]/g,''));
+    if (!isNaN(val) && val>0) return val;
+  }catch(e){ /* silent */ }
+  return anchor;
+}
+
+function priceEnvelope(anchor){
+  const payNow = round(anchor * 0.95, 1);
+  const deposit = Math.max(49, round(anchor * 0.20, 1));
+  return { anchor: roundMoney(anchor), payNow: roundMoney(payNow), deposit: roundMoney(deposit), currency:'usd' };
+}
+
+// Compute single selection OR whole cart
+async function computeHirePrice(payload={}){
+  let sum = 0;
+  const mod = payload.modifiers || {};
+  if (payload.selection){
+    const s = payload.selection;
+    const base = baseTierPrice(s.serviceKey, s.tierKey) + addonsSum(s.serviceKey, s.addons);
+    const withMods = base * hireModifiersMultiplier(mod);
+    const adjusted = await aiHireAdjust(withMods, s, mod);
+    sum += adjusted;
+  } else if (Array.isArray(payload.cart)){
+    for(const it of payload.cart){
+      // cart items already include .amount (anchor) per selection,
+      // but we still apply cart-level modifiers (urgency/complexity)
+      sum += Number(it.amount) || 0;
+    }
+    sum *= hireModifiersMultiplier(mod);
+    // small cart discount when buying multiple items
+    if (payload.cart.length >= 3) sum *= 0.97;
+  }
+  return priceEnvelope(sum);
+}
+
+// Catalog
+app.get('/api/hire/services', (req,res)=> res.json({ services: HIRE_SERVICES }));
+
+// Quote (single selection OR whole cart)
+app.post('/api/hire/quote', async (req,res)=>{
+  try{
+    const { selection=null, cart=null, modifiers={} } = req.body||{};
+    const pricing = await computeHirePrice({ selection, cart, modifiers });
+    const summary = selection
+      ? `${selection.serviceKey} • ${selection.tierKey}${(selection.addons?.length? ' • +' + selection.addons.length + ' add-on(s)':'')}`
+      : `Cart (${(cart||[]).length} item${(cart||[]).length===1?'':'s'})`;
+    const breakdown = selection
+      ? `Tier + add-ons × urgency/complexity`
+      : `Sum of items × urgency/complexity`;
+    res.json({ pricing, summary, breakdown });
+  }catch(e){
+    console.error('hire quote error', e.message);
+    res.status(500).json({ error:'hire_quote_failed' });
+  }
+});
+
+// Multi-item Stripe checkout
+app.post('/api/hire/checkout', async (req,res)=>{
+  try{
+    const { items=[] } = req.body||{};
+    if (!process.env.STRIPE_SECRET_KEY) return res.status(400).json({ error:'stripe_not_configured' });
+    if (!Array.isArray(items) || !items.length) return res.status(400).json({ error:'no_items' });
+
+    const line_items = items.map(it => ({
+      price_data:{
+        currency:'usd',
+        unit_amount: Math.max(100, Math.round(Number(it.amountCents)||0)),
+        product_data:{ name: String(it.label||'Service') }
+      },
+      quantity:1
+    }));
+
+    const session = await stripe.checkout.sessions.create({
+      mode:'payment',
+      payment_method_types:['card'],
+      line_items,
+      billing_address_collection:'required',
+      success_url:`${process.env.PUBLIC_BASE_URL}/thank-you.html`,
+      cancel_url:`${process.env.PUBLIC_BASE_URL}/hire.html?canceled=1`,
+      metadata:{ source:'hire_shop' }
+    });
+    res.json({ url: session.url });
+  }catch(e){
+    console.error('hire checkout error', e.message);
+    res.status(500).json({ error:'stripe_error', detail:e.message });
+  }
+});
+/* ===================================================================== */
+
+
 const app = express();
 app.use(express.urlencoded({ extended: true })); // Twilio posts form-url-encoded
 app.use(express.json());
