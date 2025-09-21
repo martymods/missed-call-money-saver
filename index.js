@@ -14,6 +14,35 @@ const { upsertByPhone, findAll } = require('./services/sheets');
 const { subscribeCalendlyWebhook } = require('./services/calendly');
 const { setStep, setField, get: getState } = require('./lib/leadStore');
 
+const jwt = require('jsonwebtoken');
+
+// DoorDash Drive credentials (create in the Developer Portal)
+const DD_DEVELOPER_ID  = process.env.DD_DEVELOPER_ID  || '';
+const DD_KEY_ID        = process.env.DD_KEY_ID        || '';
+const DD_SIGNING_B64   = process.env.DD_SIGNING_SECRET || ''; // base64 string
+
+// Pickup (your store) — used for all quotes
+const STORE_NAME   = process.env.STORE_NAME   || 'Delco Kitchen';
+const STORE_PHONE  = process.env.STORE_PHONE_E164 || '+16105550123'; // E.164 required
+const STORE_ADDR   = process.env.STORE_ADDRESS || '123 Market St';
+const STORE_CITY   = process.env.STORE_CITY    || 'Philadelphia';
+const STORE_STATE  = process.env.STORE_STATE   || 'PA';
+const STORE_ZIP    = process.env.STORE_ZIP     || '19106';
+const TAX_RATE     = Number(process.env.TAX_RATE || '0.00'); // e.g. 0.06
+const MENU = [
+  { id:'wing_ding', name:'Wing Ding', price:11.00 },
+  { id:'hot_chicken', name:'Hot Chicken', price:16.00 },
+  { id:'chicken_boi', name:'Chicken Boi', price:11.00 },
+  { id:'wing_party', name:'Wing Party', price:18.00 },
+  { id:'big_wingers', name:'Big Wingers', price:19.00 },
+  { id:'no_chicken_burger', name:'No Chicken Burger', price:11.00 },
+  { id:'fries', name:'Fries', price:9.00 },
+  { id:'onion_rings', name:'Onion Rings', price:9.00 },
+  { id:'pretzel_cheesesteak', name:'Pretzel Cheesesteak', price:11.00 },
+  { id:'pretzel_chicken_cheesesteak', name:'Pretzel Chicken Cheesesteak', price:11.00 },
+];
+
+app.get('/api/food/menu', (_req,res)=> res.json({ items: MENU, taxRate: TAX_RATE }));
 
 
 const app = express();
@@ -510,6 +539,132 @@ const HIRE_SERVICES = [
     ]
   }
 ];
+
+function ddJwt(){
+  const now = Math.floor(Date.now()/1000);
+  const payload = { iss: DD_DEVELOPER_ID, aud: 'doordash', iat: now, exp: now + 60, kid: DD_KEY_ID };
+  const header  = { 'dd-ver': 'DD-JWT-V1' };
+  const secret  = Buffer.from(DD_SIGNING_B64, 'base64');
+  return jwt.sign(payload, secret, { algorithm: 'HS256', header });
+}
+
+async function ddPost(path, body){
+  const r = await fetch(`https://openapi.doordash.com${path}`, {
+    method:'POST',
+    headers:{ 'Authorization': `Bearer ${ddJwt()}`, 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  const json = await r.json().catch(()=> ({}));
+  if(!r.ok) throw new Error(`DoorDash ${r.status}: ${JSON.stringify(json)}`);
+  return json;
+}
+
+function cents(n){ return Math.max(0, Math.round(Number(n||0)*100)); }
+function toE164Maybe(usPhone){ const d = String(usPhone||'').replace(/\D/g,''); return d.startsWith('1')? `+${d}` : `+1${d}`; }
+
+app.post('/api/food/quote', async (req,res)=>{
+  try{
+    const { items=[], address={} } = req.body||{};
+    const subtotalCents = items.reduce((s,it)=> s + (Number(it.priceCents)||0)*(Number(it.qty)||0), 0);
+    const external_delivery_id = `FOOD-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+
+    const pickup_address = `${STORE_ADDR}, ${STORE_CITY}, ${STORE_STATE} ${STORE_ZIP}`;
+    const dropoff_address = `${address.addr1}${address.addr2? (', '+address.addr2):''}, ${address.city}, ${address.state} ${address.zip}`;
+
+    const quote = await ddPost('/drive/v2/quotes', {
+      external_delivery_id,
+      pickup_address,
+      pickup_business_name: STORE_NAME,
+      pickup_phone_number: STORE_PHONE,
+      dropoff_address,
+      dropoff_contact_given_name: address.first || '',
+      dropoff_contact_family_name: address.last  || '',
+      dropoff_phone_number: toE164Maybe(address.phone),
+      dropoff_instructions: address.notes || '',
+      order_value: subtotalCents,
+      items: items.map(it=>({ name: it.name, quantity: it.qty }))
+    });
+
+    res.json({ quote });
+  }catch(e){
+    res.status(400).json({ error:'quote_failed' });
+  }
+});
+
+app.post('/api/food/checkout', async (req,res)=>{
+  try{
+    const { items=[], tipCents=0, quote={}, address={} } = req.body||{};
+    if(!Array.isArray(items) || !items.length) return res.status(400).json({ error:'no_items' });
+    if(!quote?.externalId || !quote?.feeCents) return res.status(400).json({ error:'no_quote' });
+
+    const line_items = [];
+
+    // Food items
+    for(const it of items){
+      const unit = Math.max(100, Math.round(Number(it.priceCents)||0));
+      const qty  = Math.max(1, Number(it.qty)||1);
+      line_items.push({
+        price_data:{ currency:'usd', unit_amount: unit, product_data:{ name: it.name } },
+        quantity: qty
+      });
+    }
+
+    // Tax (simple: subtotal * TAX_RATE)
+    const subtotalCents = items.reduce((s,it)=> s + (Number(it.priceCents)||0)*(Number(it.qty)||0), 0);
+    const taxCents = Math.round(subtotalCents * TAX_RATE);
+    if (taxCents > 0){
+      line_items.push({ price_data:{ currency:'usd', unit_amount: taxCents, product_data:{ name:'Sales Tax' } }, quantity:1 });
+    }
+
+    // Delivery + Tip
+    line_items.push({ price_data:{ currency:'usd', unit_amount: Math.max(100, Number(quote.feeCents)||0), product_data:{ name:'Delivery (DoorDash)' } }, quantity:1 });
+    if (tipCents > 0){
+      line_items.push({ price_data:{ currency:'usd', unit_amount: Math.round(Number(tipCents)||0), product_data:{ name:'Dasher Tip' } }, quantity:1 });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode:'payment',
+      payment_method_types:['card','link'],
+      line_items,
+      success_url:`${APP_BASE_URL}/food-confirm?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:`${APP_BASE_URL}/food.html?canceled=1`,
+      metadata:{
+        flow:'food',
+        dd_ext_id: quote.externalId,
+        dd_fee: String(quote.feeCents||0),
+        cust_phone_e164: toE164Maybe(address.phone||''),
+        tip_cents: String(tipCents||0),
+        drop_addr: `${address.addr1}${address.addr2?(', '+address.addr2):''}, ${address.city}, ${address.state} ${address.zip}`,
+        drop_name: `${address.first||''} ${address.last||''}`.trim()
+      }
+    });
+
+    res.json({ url: session.url });
+  }catch(e){
+    res.status(500).json({ error:'stripe_error' });
+  }
+});
+
+// After Stripe redirect, accept the quote (start delivery) and send them to Thank You
+app.get('/food-confirm', async (req,res)=>{
+  try{
+    const sid = String(req.query.session_id||'');
+    const sess = await stripe.checkout.sessions.retrieve(sid);
+    if (sess.payment_status !== 'paid') return res.redirect('/food.html?canceled=1');
+
+    const ext = sess.metadata?.dd_ext_id;
+    const tip = Number(sess.metadata?.tip_cents||0);
+    const phone = sess.metadata?.cust_phone_e164 || '';
+
+    // Accept quote (creates the delivery). You can also capture track URL from response.
+    const resp = await ddPost(`/drive/v2/quotes/${ext}/accept`, { tip, dropoff_phone_number: phone });
+
+    const track = encodeURIComponent(resp.tracking_url || '');
+    return res.redirect(`/thank-you?food=1${track?('&track='+track):''}`);
+  }catch(e){
+    res.redirect('/thank-you?food=1');
+  }
+});
 
 function roundMoney(n){ return Math.round(n*100)/100; }
 function baseTierPrice(serviceKey, tierKey){
