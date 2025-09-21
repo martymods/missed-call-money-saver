@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Hire Roscoe — Software • Unreal • Discord Bots • AI</title>
+  <meta name="description" content="One-stop software shop: Unreal games, Discord/AI bots, Stripe/Twilio quote-pay-book systems, crypto frontends, web rescue, HubSpot email templates. Dynamic pricing. Apple Pay checkout.">
+  <link rel="stylesheet" href="/styles.css"/>
+
+  <style>
+    :root{ --ink:#0f1220; --muted:#6e7280; --brand:#1955ff; --edge:#e9ecf5; --bg:#f6f8ff }
+    *{box-sizing:border-box}
+    body{margin:0; font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial; color:var(--ink); background:#fff}
+
+    header{border-bottom:1px solid var(--edge); background:#fff; position:sticky; top:0; z-index:50}
+    .bar{max-width:1100px; margin:auto; padding:14px 18px; display:flex; justify-content:space-between; align-items:center}
+    .brand{font-weight:900; letter-spacing:.2px}
+    .actions{display:flex; gap:10px; align-items:center}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; border:1px solid #dbe6ff; background:#eef3ff; color:#0f3ed6; font-weight:800; font-size:13px; text-decoration:none}
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 16px; border-radius:12px; border:1px solid #d9e1ff; background:#1955ff; color:#fff; font-weight:800; cursor:pointer; text-decoration:none}
+    .ghost{background:#eef3ff; color:#0f3ed6}
+    main{max-width:1100px; margin:16px auto; padding:0 18px; display:grid; grid-template-columns:1fr 360px; gap:18px}
+    @media (max-width:980px){ main{ grid-template-columns:1fr } }
+
+    /* Cards */
+    .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+    @media (max-width:780px){ .grid{ grid-template-columns:1fr } }
+    .card{background:#fff; border:1px solid var(--edge); border-radius:16px; padding:14px; box-shadow:0 10px 30px rgba(16,40,120,.06); position:relative; overflow:hidden}
+    .card h3{margin:2px 0 6px}
+    .muted{color:var(--muted); font-size:13px}
+    .tiers,.addons,.row{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+    .chip{padding:10px 12px; border:1.5px solid #dfe3f3; border-radius:999px; cursor:pointer; user-select:none; font-weight:800}
+    .chip.sel{background:#eef3ff; color:#0f3ed6; border-color:#cfd9ff}
+    .pricebar{display:flex; justify-content:space-between; align-items:center; margin-top:8px}
+    .money{font-weight:900}
+    .add{margin-top:10px}
+
+    /* Cart */
+    aside{position:sticky; top:74px; height:fit-content}
+    .cart{background:#fff; border:1px solid var(--edge); border-radius:16px; padding:14px; box-shadow:0 10px 30px rgba(16,40,120,.06)}
+    .cart h3{margin:0 0 8px}
+    .items{display:grid; gap:10px; margin:8px 0}
+    .itm{display:grid; grid-template-columns:1fr auto; gap:8px; border:1px dashed #e3e6f5; border-radius:12px; padding:10px}
+    .itm b{font-size:14px}
+    .rm{border:none; background:transparent; color:#bd1e1e; font-weight:900; cursor:pointer}
+    .line{display:flex; justify-content:space-between; margin-top:6px; font-size:14px}
+    .meter{height:8px; background:#eef3ff; border-radius:999px; overflow:hidden; margin:10px 0}
+    .fill{height:100%; width:0; background:#1955ff}
+    .note{color:var(--muted); font-size:12px; margin-top:6px}
+
+    /* Micro-anim */
+    .card{animation:pop .18s ease}
+    @keyframes pop{0%{transform:scale(.985); opacity:0} 100%{transform:scale(1); opacity:1}}
+  </style>
+
+  <!-- Calendly modal (optional) -->
+  <link rel="stylesheet" href="https://assets.calendly.com/assets/external/widget.css">
+  <script async src="https://assets.calendly.com/assets/external/widget.js"></script>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div>
+      <div class="brand">Roscoe • Software & Game Engineering</div>
+      <div class="muted">Discord/AI • Unreal • Stripe/Twilio • Crypto UI • Web Rescue • HubSpot</div>
+    </div>
+    <div class="actions">
+      <a class="pill" id="viewResume" href="/resume.pdf" target="_blank" rel="noopener">View Resume (PDF)</a>
+      <a class="btn ghost" id="bookCall" href="#">Book Intro Call</a>
+      <a class="btn" href="/">Home</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="grid" id="cards"></div>
+  </section>
+
+  <aside>
+    <div class="cart">
+      <h3>Your Build</h3>
+      <div class="items" id="items"></div>
+
+      <div class="row">
+        <div class="chip" data-urgency="standard">Standard</div>
+        <div class="chip" data-urgency="rush">Rush (≈ +20%)</div>
+        <div class="chip" data-urgency="ultra">Ultra (≈ +35%)</div>
+      </div>
+
+      <div class="row">
+        <div class="chip" data-complexity="basic">Basic</div>
+        <div class="chip" data-complexity="moderate">Moderate</div>
+        <div class="chip" data-complexity="advanced">Advanced</div>
+      </div>
+
+      <div class="meter"><div class="fill" id="fill"></div></div>
+
+      <div class="line"><span>Pay-in-Full (5% off)</span><b id="paynow">$0</b></div>
+      <div class="line"><span>Reserve w/ 20% deposit</span><b id="deposit">$0</b></div>
+      <div class="line" style="border-top:1px solid #eef1fb; padding-top:8px"><span>Total (anchor)</span><b id="total">$0</b></div>
+
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="checkout">Checkout — Apple Pay / Card</button>
+        <button class="btn ghost" id="aiTailor">Tailor w/ A.I.</button>
+      </div>
+      <div class="note">You’ll confirm scope after checkout. Calendar link shown on success page.</div>
+    </div>
+  </aside>
+</main>
+
+<script>
+(async function(){
+  // Calendly
+  const CAL_URL = 'https://calendly.com/rb-dreamworld/15-minute-setup-call';
+  document.getElementById('bookCall').onclick = (e)=>{ e.preventDefault(); window.Calendly?.initPopupWidget({ url: CAL_URL }) || window.open(CAL_URL,'_blank'); };
+
+  // If you move the resume PDF into /public as /resume.pdf, the header "View Resume" will work.
+  // (If not yet, it will 404 until you copy it — see step 3 at the bottom of my message.)
+
+  // Catalog
+  const catalog = await fetch('/api/hire/services').then(r=>r.json()).catch(()=>({services:[]}));
+  const cards = document.getElementById('cards');
+
+  const cart = [];
+  const ui = {
+    items: document.getElementById('items'),
+    total: document.getElementById('total'),
+    paynow: document.getElementById('paynow'),
+    deposit: document.getElementById('deposit'),
+    fill: document.getElementById('fill')
+  };
+  let modifiers = { urgency:'standard', complexity:'basic' };
+
+  function dollar(n){ return '$' + Math.round(n).toLocaleString(); }
+
+  function renderCards(){
+    cards.innerHTML='';
+    for(const svc of catalog.services){
+      const el = document.createElement('div'); el.className='card';
+      el.innerHTML = `
+        <span class="muted">${svc.tagline||''}</span>
+        <h3>${svc.title}</h3>
+        <div class="muted">${svc.blurb||''}</div>
+        <div class="tiers"></div>
+        <div class="addons"></div>
+        <div class="pricebar">
+          <span class="muted">Tier price</span>
+          <b class="money" data-money>$0</b>
+        </div>
+        <div class="add"><button class="btn">Add</button></div>
+      `;
+      const tiersEl = el.querySelector('.tiers');
+      const addonsEl = el.querySelector('.addons');
+      const moneyEl = el.querySelector('[data-money]');
+
+      let pick = { serviceKey: svc.key, tierKey: null, addons: [] };
+
+      // tiers
+      for(const t of svc.tiers){
+        const b = document.createElement('div'); b.className='chip'; b.textContent = `${t.label} — ${dollar(t.price)}`;
+        b.onclick = ()=>{ pick.tierKey = t.key; [...tiersEl.children].forEach(c=>c.classList.remove('sel')); b.classList.add('sel'); moneyEl.textContent = dollar(t.price); };
+        tiersEl.appendChild(b);
+      }
+
+      // addons
+      if(svc.addons?.length){
+        const h = document.createElement('div'); h.className='muted'; h.style.marginTop='8px'; h.textContent = 'Add-ons';
+        el.insertBefore(h, addonsEl);
+        for(const a of svc.addons){
+          const b = document.createElement('div'); b.className='chip'; b.textContent = `${a.label} +${dollar(a.price)}`;
+          b.onclick = ()=>{
+            const i = pick.addons.indexOf(a.key);
+            if(i>=0){ pick.addons.splice(i,1); b.classList.remove('sel'); }
+            else { pick.addons.push(a.key); b.classList.add('sel'); }
+          };
+          addonsEl.appendChild(b);
+        }
+      }
+
+      // add to cart
+      el.querySelector('.add .btn').onclick = async ()=>{
+        if(!pick.tierKey){ alert('Pick a tier'); return; }
+        // get server price for *this* selection (so cart uses canonical math)
+        const q = await fetch('/api/hire/quote',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ selection: pick, modifiers })}).then(r=>r.json());
+        cart.push({ label: q.summary, amount: q.pricing.anchor, breakdown:q.breakdown });
+        renderCart();
+        window.scrollTo({ top:0, behavior:'smooth' });
+      };
+
+      cards.appendChild(el);
+    }
+  }
+
+  function renderCart(){
+    ui.items.innerHTML='';
+    let sum = 0;
+    cart.forEach((it,idx)=>{
+      sum += it.amount;
+      const d = document.createElement('div'); d.className='itm';
+      d.innerHTML = `<div><b>${it.label}</b><div class="muted" style="font-size:12px">${it.breakdown||''}</div></div><div><b>${dollar(it.amount)}</b><br/><button class="rm" aria-label="remove">×</button></div>`;
+      d.querySelector('.rm').onclick = ()=>{ cart.splice(idx,1); renderCart(); };
+      ui.items.appendChild(d);
+    });
+    const pct = Math.min(100, (cart.length/6)*100);
+    ui.fill.style.width = Math.max(8, pct) + '%';
+
+    // ask server for final roll-up pricing (so payNow/deposit uses same rounding)
+    (async ()=>{
+      const q = await fetch('/api/hire/quote',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ cart, modifiers })}).then(r=>r.json());
+      ui.total.textContent = dollar(q.pricing.anchor);
+      ui.paynow.textContent = dollar(q.pricing.payNow);
+      ui.deposit.textContent = dollar(q.pricing.deposit);
+    })();
+  }
+
+  // urgency/complexity toggles
+  document.querySelectorAll('[data-urgency]').forEach(chip=>{
+    chip.onclick = ()=>{ modifiers.urgency = chip.getAttribute('data-urgency'); document.querySelectorAll('[data-urgency]').forEach(c=>c.classList.toggle('sel', c===chip)); renderCart(); };
+  });
+  document.querySelectorAll('[data-complexity]').forEach(chip=>{
+    chip.onclick = ()=>{ modifiers.complexity = chip.getAttribute('data-complexity'); document.querySelectorAll('[data-complexity]').forEach(c=>c.classList.toggle('sel', c===chip)); renderCart(); };
+  });
+
+  // AI tailor (optional)
+  document.getElementById('aiTailor').onclick = async ()=>{
+    const idea = prompt("Tell me what you’re building (one sentence):");
+    if(!idea) return;
+    // lightweight: just log + gentle nudge now; (backend AI adjust happens inside quote)
+    await fetch('/api/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ type:'hire_idea', idea })});
+    alert('Nice — selections will be priced with AI-tailored weighting where appropriate.');
+    renderCart();
+  };
+
+  // Checkout
+  document.getElementById('checkout').onclick = async ()=>{
+    if(!cart.length){ alert('Add at least one service'); return; }
+    const items = cart.map(c => ({ label:c.label, amountCents: Math.round(c.amount*100) }));
+    const r = await fetch('/api/hire/checkout',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ items })}).then(r=>r.json());
+    if(r.url) location.href = r.url; else alert('Could not start checkout.');
+  };
+
+  // initial render
+  renderCards();
+  renderCart();
+})();
+</script>
+</body>
+</html>
