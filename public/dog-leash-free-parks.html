@@ -128,7 +128,7 @@
     <div class="wrap">
       <div class="results-meta">
         <div id="count">Loading parks…</div>
-        <div class="download"><a href="/data/dog-off-leash-parks.json" download>⬇️ Download data (JSON)</a></div>
+        <div class="download"><a href="./data/dog-off-leash-parks.json" download>⬇️ Download data (JSON)</a></div>
       </div>
       <div id="grid" class="grid" aria-live="polite"></div>
     </div>
@@ -139,7 +139,7 @@
   </footer>
 
   <script>
-    const dataUrl = '/data/dog-off-leash-parks.json';
+    const dataUrl = new URL('./data/dog-off-leash-parks.json', window.location.href).toString();
     const gridEl = document.getElementById('grid');
     const countEl = document.getElementById('count');
     const searchEl = document.getElementById('search');
