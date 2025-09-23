@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,69 +5,77 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Leash-Free Dog Parks Finder | Off-Leash Parks Across the USA</title>
   <meta name="description" content="Search a curated directory of leash-free and off-leash dog parks across the United States. Filter by state, region, amenities, and fees to plan your next dog adventure."/>
+  <link rel="icon" href="/favicon-32.png" type="image/png"/>
   <style>
     :root{
       color-scheme: light dark;
-      --bg:#0f172a;--surface:#162446;--ink:#f8fafc;--muted:#cbd5f5;
-      --accent:#38bdf8;--accent-soft:rgba(56,189,248,.16);--border:rgba(255,255,255,.14);
+      --bg:#0f172a;
+      --card:#111b36;
+      --surface:#162446;
+      --ink:#f8fafc;
+      --muted:#cbd5f5;
+      --accent:#38bdf8;
+      --accent-soft:rgba(56,189,248,.16);
+      --accent-strong:#0ea5e9;
+      --border:rgba(255,255,255,.14);
       --shadow:0 20px 50px rgba(15,23,42,.32);
-      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
     }
     *,*::before,*::after{box-sizing:border-box}
     body{margin:0;background:linear-gradient(180deg,#0b1430 0%,#020617 65%);color:var(--ink);min-height:100vh;display:flex;flex-direction:column}
-    header{position:sticky;top:0;z-index:20;background:rgba(8,14,30,.85);backdrop-filter:blur(16px);border-bottom:1px solid rgba(148,163,184,.15)}
-    .wrap{max-width:1100px;margin:0 auto;padding:20px 18px}
-    .hero{display:grid;gap:12px}
-    h1{margin:0;font-size:2.2rem;font-weight:800;letter-spacing:-.02em}
-    p.lead{margin:0;color:var(--muted)}
-    .tag{display:inline-block;margin-top:8px;padding:6px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:.85rem}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    header{position:sticky;top:0;z-index:10;background:rgba(8,14,30,.85);backdrop-filter:blur(16px);border-bottom:1px solid rgba(148,163,184,.15)}
+    .wrap{max-width:1080px;margin:0 auto;padding:20px 18px}
+    .hero{display:grid;gap:16px}
+    h1{font-size:2.6rem;line-height:1.1;margin:0;font-weight:800;letter-spacing:-.02em}
+    p.lead{font-size:1.05rem;color:var(--muted);margin:8px 0 0}
+    .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:.85rem;margin-top:12px}
 
     main{flex:1}
-    .filters{margin-top:16px;display:grid;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
-    .filters .inputs{display:grid;gap:14px}
-    .field label{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:6px}
-    input[type="search"],select{padding:12px 14px;border-radius:12px;border:1px solid rgba(148,163,184,.2);background:rgba(15,23,42,.82);color:var(--ink)}
-    .toggles{display:flex;flex-wrap:wrap;gap:10px}
-    .toggle{display:flex;align-items:center;gap:8px;background:rgba(15,23,42,.72);border:1px solid rgba(148,163,184,.24);padding:8px 12px;border-radius:12px}
-    .results-meta{margin:18px 0 10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted)}
+    .filters{margin-top:26px;display:grid;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+    .filters label{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:6px}
+    .filters .inputs{display:grid;gap:18px}
+    .field{display:flex;flex-direction:column}
+    input[type="search"],select{padding:12px 14px;border-radius:12px;border:1px solid rgba(148,163,184,.2);background:rgba(15,23,42,.82);color:var(--ink);font-size:1rem;box-shadow:inset 0 0 0 1px rgba(15,23,42,.2)}
+    input[type="search"]::placeholder{color:rgba(203,213,225,.7)}
+    .toggles{display:flex;flex-wrap:wrap;gap:12px}
+    .toggle{display:flex;align-items:center;gap:10px;background:rgba(15,23,42,.72);border:1px solid rgba(148,163,184,.24);padding:10px 14px;border-radius:12px;font-size:.95rem}
+    .toggle input{width:18px;height:18px}
+    .results-meta{margin:24px 0 12px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;color:var(--muted)}
+    .download{margin-left:auto}
+    .download a{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:999px;border:1px solid rgba(148,163,184,.2);background:rgba(15,23,42,.6);color:var(--muted);font-size:.9rem}
 
     .grid{display:grid;gap:18px}
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:grid;gap:10px}
-    .title{display:flex;gap:10px;align-items:center;justify-content:space-between}
-    .card h2{margin:0;font-size:1.25rem}
-    .meta{color:var(--muted);font-size:.95rem}
-    .badges{display:flex;flex-wrap:wrap;gap:8px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow);display:grid;gap:10px;transition:transform .15s ease,box-shadow .2s ease}
+    .card:hover{transform:translateY(-3px);box-shadow:0 26px 60px rgba(8,47,73,.45)}
+    .card h2{margin:0;font-size:1.4rem;font-weight:800}
+    .card .location{display:flex;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:.95rem}
+    .badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
     .badge{background:rgba(148,163,184,.14);color:var(--muted);padding:5px 10px;border-radius:999px;font-size:.78rem;font-weight:600}
-
-    /* media */
-    .media{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:16/9;background:linear-gradient(180deg,rgba(2,8,23,.5),rgba(2,8,23,.8))}
-    .media img{width:100%;height:100%;object-fit:cover;display:block}
-    .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:.9rem;border:1px dashed rgba(148,163,184,.28)}
-    .img-fade{opacity:0;transition:opacity .35s ease}
-    .img-fade.loaded{opacity:1}
-
-    /* small map chip */
-    .chip{position:absolute;right:10px;bottom:10px;border:1px solid rgba(255,255,255,.35);border-radius:10px;overflow:hidden;box-shadow:0 8px 16px rgba(0,0,0,.35)}
-    .chip img{width:160px;height:100px;object-fit:cover;display:block}
-
-    .actions{display:flex;flex-wrap:wrap;gap:10px}
-    .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;font-weight:600;font-size:.9rem;background:rgba(56,189,248,.16);color:#0ea5e9;border:1px solid rgba(56,189,248,.24);text-decoration:none}
-    .btn.secondary{background:rgba(15,23,42,.68);border-color:rgba(148,163,184,.28);color:var(--muted)}
+    .amenities{color:var(--muted);font-size:.95rem;line-height:1.5;margin:4px 0 0;padding-left:18px}
+    .notes{margin:0;color:#e2e8f0;font-size:.95rem;line-height:1.55}
+    .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+    .actions a{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;font-weight:600;font-size:.9rem;background:var(--accent-soft);color:var(--accent-strong);border:1px solid rgba(56,189,248,.24)}
+    .actions a.secondary{background:rgba(15,23,42,.68);border-color:rgba(148,163,184,.28);color:var(--muted)}
     footer{border-top:1px solid rgba(148,163,184,.2);padding:24px 18px;color:var(--muted);text-align:center;font-size:.85rem}
 
     @media (min-width:720px){
+      .hero{grid-template-columns:minmax(0,1fr) minmax(0,320px);align-items:center}
       .filters .inputs{grid-template-columns:repeat(4,minmax(0,1fr))}
       .grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
-      .card{padding:18px}
+      .card{padding:22px}
     }
     @media (prefers-color-scheme:light){
-      :root{--bg:#f8fafc;--surface:#ffffff;--ink:#0f172a;--muted:#475569;--accent:#0284c7;--accent-soft:rgba(2,132,199,.12);--border:rgba(15,23,42,.10);--shadow:0 18px 50px rgba(15,23,42,.12)}
+      :root{--bg:#f8fafc;--card:#ffffff;--surface:#ffffff;--ink:#0f172a;--muted:#475569;--accent:#0284c7;--accent-strong:#0369a1;--border:rgba(15,23,42,.08);--shadow:0 18px 50px rgba(15,23,42,.12)}
       body{background:linear-gradient(180deg,#e0f2fe 0%,#f8fafc 30%,#f1f5f9 100%)}
       header{background:rgba(248,250,252,.95)}
       input[type="search"],select{background:#f8fafc;color:#0f172a}
       .toggle{background:#f8fafc;border-color:rgba(148,163,184,.32)}
       .card{background:#ffffff}
-      .btn.secondary{background:#f8fafc;color:#0f172a}
+      .actions a.secondary{background:#f8fafc;color:#0f172a}
+      .download a{background:#f8fafc;color:#0f172a}
     }
   </style>
 </head>
@@ -76,15 +83,15 @@
   <header>
     <div class="wrap hero">
       <div>
-        <div class="tag">Nationwide directory • Updated from public open data</div>
-        <h1>Find leash-free & off-leash dog parks</h1>
-        <p class="lead">Filter by location, amenities, and fees. Always verify park rules before visiting.</p>
+        <div class="tag">Nationwide directory • Updated manually from public open data</div>
+        <h1>Find leash-free &amp; off-leash dog parks across the USA</h1>
+        <p class="lead">Browse a curated dataset of municipal, county, and state-managed off-leash areas. Filter by location, amenities, or cost to plan your next dog adventure. Always double-check park rules before you go.</p>
       </div>
       <div class="filters">
         <div class="inputs">
           <div class="field">
             <label for="search">Search</label>
-            <input type="search" id="search" placeholder="Park name, city, amenity…"/>
+            <input type="search" id="search" placeholder="Search by park name, city, or feature" autocomplete="off"/>
           </div>
           <div class="field">
             <label for="state">State</label>
@@ -110,202 +117,855 @@
           </div>
         </div>
         <div class="toggles">
-          <label class="toggle"><input type="checkbox" id="freeOnly"/> Only free parks</label>
+          <label class="toggle"><input type="checkbox" id="freeOnly"/> Only show free parks</label>
           <label class="toggle"><input type="checkbox" id="waterOnly"/> Must have water access</label>
         </div>
       </div>
     </div>
   </header>
 
-  <main class="wrap">
-    <div class="results-meta">
-      <div id="count">Loading parks…</div>
-      <div style="margin-left:auto"><a class="btn secondary" href="./dog-off-leash-parks.json" download>Download JSON</a></div>
+  <main>
+    <div class="wrap">
+      <div class="results-meta">
+        <div id="count">Loading parks…</div>
+        <div class="download"><a href="./data/dog-off-leash-parks.json" download>⬇️ Download data (JSON)</a></div>
+      </div>
+      <div id="grid" class="grid" aria-live="polite"></div>
     </div>
-    <div id="grid" class="grid" aria-live="polite"></div>
   </main>
 
   <footer>
-    Photos via Openverse (Wikimedia/Flickr) + Unsplash fallback. Map thumbs via OpenStreetMap Static. Verify rules and hours with the official park. Corrections: info@delcotech.us
+    Data compiled from municipal and state open data portals (2024). Verify rules, hours, and fees directly with the park before visiting; leash laws can change seasonally. Contributions &amp; corrections: <a href="mailto:info@delcotech.us">info@delcotech.us</a>.
   </footer>
 
   <script>
-    // --- Config ---
-    const dataUrl = new URL('./dog-off-leash-parks.json', location.href).toString(); // same folder as HTML
-    const MAX_CONCURRENCY = 6;
-    const MAP_ZOOM = 16;
-
-    // --- DOM ---
+    const dataUrl = new URL('./data/dog-off-leash-parks.json', window.location.href).toString();
     const gridEl = document.getElementById('grid');
     const countEl = document.getElementById('count');
     const searchEl = document.getElementById('search');
-    const stateEl  = document.getElementById('state');
+    const stateEl = document.getElementById('state');
     const regionEl = document.getElementById('region');
-    const sortEl   = document.getElementById('sort');
-    const freeOnlyEl  = document.getElementById('freeOnly');
+    const sortEl = document.getElementById('sort');
+    const freeOnlyEl = document.getElementById('freeOnly');
     const waterOnlyEl = document.getElementById('waterOnly');
 
-    // --- State ---
     let parks = [];
-    let lastFiltered = [];
-    const imgCache = JSON.parse(localStorage.getItem('parkPhotos') || '{}');
 
-    // --- Init ---
-    fetch(dataUrl, { cache: 'no-store' })
-      .then(r => { if(!r.ok) throw new Error('Unable to load park data'); return r.json(); })
-      .then(data => {
-        parks = data;
-        populateStates(parks);
-        render();
-      })
-      .catch(err => { console.error(err); countEl.textContent = 'Park data failed to load.'; });
+// --- resilient data loader: URLs -> inline fallback ---
+const CANDIDATE_URLS = [
+  new URL('./dog-off-leash-parks.json', location.href).toString(),   // same folder as HTML
+  new URL('./data/dog-off-leash-parks.json', location.href).toString(), // ./data/ subfolder
+  `${location.origin}/dog-off-leash-parks.json`,                      // site root
+  `${location.origin}/data/dog-off-leash-parks.json`                  // /data at site root
+];
 
-    function populateStates(data){
-      const states = Array.from(new Set(data.map(d => d.state))).sort();
-      stateEl.innerHTML = '<option value="">All states</option>' + states.map(s => `<option value="${s}">${s}</option>`).join('');
+loadParks()
+  .then((data) => {
+    parks = data;
+    populateStates(parks);
+    if (typeof buildMoodbar === 'function') buildMoodbar();
+    render();
+  })
+  .catch((err) => {
+    console.error('Park data failed to load from all sources.', err);
+    countEl.textContent = 'Park data failed to load.';
+  });
+
+async function loadParks() {
+  // 1) Try all likely URLs
+  for (const u of CANDIDATE_URLS) {
+    try {
+      const r = await fetch(u, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+      return await r.json();
+    } catch (_) {}
+  }
+  // 2) Fallback: inline JSON <script id="parks-json">
+  const inline = document.getElementById('parks-json');
+  if (inline && inline.textContent.trim()) {
+    return JSON.parse(inline.textContent);
+  }
+  throw new Error('No dataset available');
+}
+
+
+    function populateStates(data) {
+      const states = Array.from(new Set(data.map((d) => d.state))).sort();
+      stateEl.innerHTML = '<option value="">All states</option>' + states.map((st) => `<option value="${st}">${st}</option>`).join('');
     }
 
-    // --- Render ---
-    function render(){
+    function render() {
       const term = searchEl.value.trim().toLowerCase();
-      const st   = stateEl.value;
-      const reg  = regionEl.value;
-      const free = freeOnlyEl.checked;
-      const needWater = waterOnlyEl.checked;
-      const sortBy = sortEl.value;
+      const state = stateEl.value;
+      const region = regionEl.value;
+      const freeOnly = freeOnlyEl.checked;
+      const waterOnly = waterOnlyEl.checked;
+      const sort = sortEl.value;
 
-      let filtered = parks.filter(p => {
-        const amenities = Array.isArray(p.amenities) ? p.amenities : [];
-        const hay = `${p.name} ${p.city} ${p.state} ${p.notes} ${amenities.join(' ')}`.toLowerCase();
-        const hasWater = /water|lake|beach|river|pond|stream|creek|shoreline|swim/i.test(`${p.notes} ${amenities.join(' ')}`);
-        return (term? hay.includes(term):true)
-          && (st? p.state===st:true)
-          && (reg? p.region===reg:true)
-          && (free? /free/i.test(p.fee):true)
-          && (needWater? hasWater:true);
+      let filtered = parks.filter((park) => {
+        const amenities = Array.isArray(park.amenities) ? park.amenities : [];
+        const haystack = `${park.name} ${park.city} ${park.state} ${park.notes} ${amenities.join(' ')}`.toLowerCase();
+        const matchesTerm = term ? haystack.includes(term) : true;
+        const matchesState = state ? park.state === state : true;
+        const matchesRegion = region ? park.region === region : true;
+        const matchesFree = freeOnly ? /free/i.test(park.fee) : true;
+        const hasWater = /water|lake|beach|river|pond|stream|creek|shoreline|swim/i.test(`${park.notes} ${amenities.join(' ')}`);
+        const matchesWater = waterOnly ? hasWater : true;
+        return matchesTerm && matchesState && matchesRegion && matchesFree && matchesWater;
       });
 
-      filtered.sort((a,b)=>{
-        if (sortBy==='name') return a.name.localeCompare(b.name);
-        if (sortBy==='state'){ const s=a.state.localeCompare(b.state); return s||a.name.localeCompare(b.name); }
-        if (sortBy==='size') return (b.size_acres||0)-(a.size_acres||0);
+      filtered = filtered.sort((a, b) => {
+        if (sort === 'name') {
+          return a.name.localeCompare(b.name);
+        }
+        if (sort === 'state') {
+          const stateCompare = a.state.localeCompare(b.state);
+          return stateCompare !== 0 ? stateCompare : a.name.localeCompare(b.name);
+        }
+        if (sort === 'size') {
+          return (b.size_acres || 0) - (a.size_acres || 0);
+        }
         return 0;
       });
 
-      lastFiltered = filtered;
-      gridEl.innerHTML = filtered.map(renderCard).join('');
-      countEl.textContent = `${filtered.length} ${filtered.length===1?'park':'parks'} shown`;
-
-      hydrateImages(filtered);
+      gridEl.innerHTML = filtered.map((park) => renderCard(park)).join('');
+      const noun = filtered.length === 1 ? 'park' : 'parks';
+      countEl.textContent = `${filtered.length} ${noun} shown`;
     }
 
-    function renderCard(p){
-      const slug = slugify(`${p.name}-${p.city}-${p.state}`);
-      const amenities = (p.amenities||[]);
-      const badges = [`${p.city}, ${p.state}`, p.size_acres?`${p.size_acres} acres`:null].filter(Boolean).map(x=>`<span class="badge">${x}</span>`).join('');
-
-      const osmThumb = (p.lat && p.lon)
-        ? `https://staticmap.openstreetmap.de/staticmap.php?center=${p.lat},${p.lon}&zoom=${MAP_ZOOM}&size=320x200&markers=${p.lat},${p.lon},lightblue1`
-        : null;
-
-      const gmaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name+' '+p.city+', '+p.state)}`;
-      const amaps = (p.lat && p.lon) ? `https://maps.apple.com/?ll=${p.lat},${p.lon}&q=${encodeURIComponent(p.name)}` : gmaps;
-
+    function renderCard(park) {
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(park.name + ' ' + park.city + ', ' + park.state)}&query_place_id=`;
+      const coordsUrl = park.lat && park.lon ? `https://maps.apple.com/?ll=${park.lat},${park.lon}&q=${encodeURIComponent(park.name)}` : null;
+      const amenitiesList = Array.isArray(park.amenities) ? park.amenities : [];
+      const amenities = amenitiesList.length ? `<ul class="amenities">${amenitiesList.map((item) => `<li>${item}</li>`).join('')}</ul>` : '';
+      const badges = [`${park.city}, ${park.state}`, `${park.region} region`, park.size_acres ? `${park.size_acres} acres` : null].filter(Boolean);
       return `
-        <article class="card" data-slug="${slug}">
-          <div class="media">
-            <div class="ph">Finding a good photo…</div>
-            <img id="img-${slug}" class="img-fade" alt="${escapeHtml(p.name)} photo" loading="lazy" referrerpolicy="no-referrer"/>
-            ${osmThumb ? `<a class="chip" href="${amaps}" target="_blank" rel="noopener"><img alt="Map" src="${osmThumb}"></a>`:''}
-          </div>
-
-          <div class="title"><h2>${p.name}</h2></div>
-          <div class="meta">${p.city}, ${p.state} · ${p.region} · ${p.fee}</div>
-          <div class="badges">${badges}</div>
-          ${amenities.length? `<ul class="meta" style="margin:.2rem 0 0 1rem">${amenities.map(a=>`<li>${a}</li>`).join('')}</ul>`:''}
-          <p class="meta" style="margin:.4rem 0 0">${p.notes||''}</p>
-
-          <div class="actions" style="margin-top:6px">
-            <a class="btn" href="${gmaps}" target="_blank" rel="noopener">📍 Google Maps</a>
-            <a class="btn secondary" href="${amaps}" target="_blank" rel="noopener">🧭 Apple Maps</a>
-            ${p.website? `<a class="btn secondary" href="${p.website}" target="_blank" rel="noopener">📑 Official site</a>`:''}
+        <article class="card">
+          <h2>${park.name}</h2>
+          <div class="location">${park.city}, ${park.state} · ${park.region} · ${park.fee}</div>
+          <div class="badge-row">${badges.map((item) => `<span class="badge">${item}</span>`).join('')}</div>
+          ${amenities}
+          <p class="notes">${park.notes}</p>
+          <div class="actions">
+            <a href="${googleMapsUrl}" target="_blank" rel="noopener">📍 Open in Google Maps</a>
+            ${coordsUrl ? `<a class="secondary" href="${coordsUrl}" target="_blank" rel="noopener">🧭 Apple Maps</a>` : ''}
+            <a class="secondary" href="${park.website}" target="_blank" rel="noopener">📑 Official info</a>
           </div>
         </article>
       `;
     }
 
-    // --- Image pipeline: JSON override → Openverse → Wikimedia → Unsplash fallback ---
-    async function hydrateImages(list){
-      const q = list.slice();
-      const workers = Array.from({length: Math.min(MAX_CONCURRENCY, q.length)}, ()=> worker());
-      async function worker(){
-        while(q.length){
-          const p = q.shift();
-          const slug = slugify(`${p.name}-${p.city}-${p.state}`);
-          const img = document.getElementById(`img-${slug}`);
-          const ph  = img?.previousElementSibling;
-          try{
-            const url = await getBestPhoto(p);
-            if(img){
-              img.addEventListener('load',()=>{ img.classList.add('loaded'); if(ph) ph.style.display='none'; }, {once:true});
-              img.src = url;
-            }
-          }catch(e){
-            if(ph) ph.textContent = 'No photo available';
-            console.warn('Photo failed', p.name, e);
-          }
-        }
-      }
-      await Promise.all(workers);
-    }
-
-    async function getBestPhoto(p){
-      const key = `${p.name}|${p.city}|${p.state}`;
-      if (imgCache[key]) return imgCache[key];
-      // 0) Manual override from JSON
-      if (p.photo) return cache(key, p.photo);
-
-      // 1) Openverse (no key, CC-friendly)
-      try{
-        const q = encodeURIComponent(`${p.name} ${p.city} ${p.state} dog park`);
-        const ov = await fetch(`https://api.openverse.engineering/v1/images/?q=${q}&page_size=1&license_type=cc0,by&source=flickr,wikimedia,stocksnap`);
-        if (ov.ok){
-          const data = await ov.json();
-          const hit = data?.results?.[0];
-          const img = hit?.url || hit?.thumbnail;
-          if (img) return cache(key, img);
-        }
-      }catch(e){}
-
-      // 2) Wikimedia Commons by name (often has official/place images)
-      try{
-        const commons = `https://commons.wikimedia.org/w/api.php?origin=*&action=query&format=json&prop=imageinfo&generator=search&gsrnamespace=6&gsrlimit=1&gsrsearch=${encodeURIComponent(`${p.name} ${p.city} ${p.state} dog park`)}&iiprop=url|extmetadata&iiurlwidth=1200`;
-        const res = await fetch(commons);
-        if(res.ok){
-          const j = await res.json();
-          const pages = j?.query?.pages || {};
-          const k = Object.keys(pages)[0];
-          const image = k ? pages[k]?.imageinfo?.[0] : null;
-          const candidate = image?.thumburl || image?.url;
-          if(candidate) return cache(key, candidate);
-        }
-      }catch(e){}
-
-      // 3) Unsplash Source fallback (fast, no key)
-      return cache(key, `https://source.unsplash.com/1000x620/?dog,park,${encodeURIComponent(p.city)}`);
-    }
-
-    function cache(k, url){ imgCache[k]=url; try{localStorage.setItem('parkPhotos', JSON.stringify(imgCache));}catch(_){} return url; }
-
-    // --- Helpers ---
-    function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
-    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
-    // events
-    [searchEl,stateEl,regionEl,sortEl,freeOnlyEl,waterOnlyEl].forEach(el=>{
-      el.addEventListener('input',render);
-      el.addEventListener('change',render);
+    [searchEl, stateEl, regionEl, sortEl, freeOnlyEl, waterOnlyEl].forEach((input) => {
+      input.addEventListener('input', render);
+      input.addEventListener('change', render);
     });
   </script>
+  
+<script id="parks-json" type="application/json">[
+  {
+    "name": "Remy's Dog Park at Red Mountain Park",
+    "city": "Birmingham",
+    "state": "AL",
+    "region": "South",
+    "lat": 33.4569,
+    "lon": -86.8316,
+    "size_acres": 6,
+    "amenities": ["Separate small-dog area", "Shaded trails", "Water fountains"],
+    "fee": "Free",
+    "website": "https://redmountainpark.org/remysdogpark/",
+    "notes": "Large wooded dog park with natural-surface trails and multiple fenced paddocks inside Red Mountain Park."
+  },
+  {
+    "name": "Connor's Bog Off-Leash Dog Park",
+    "city": "Anchorage",
+    "state": "AK",
+    "region": "West",
+    "lat": 61.1623,
+    "lon": -149.9782,
+    "size_acres": 30,
+    "amenities": ["Open meadows", "Wooded trails", "Water nearby (seasonal)"],
+    "fee": "Free",
+    "website": "https://www.muni.org/Departments/parks/Pages/DogParks.aspx",
+    "notes": "Expansive off-leash area with wide open fields and soft trails; moose can be present—stay alert."
+  },
+  {
+    "name": "University Lake Off-Leash Area",
+    "city": "Anchorage",
+    "state": "AK",
+    "region": "West",
+    "lat": 61.1842,
+    "lon": -149.8156,
+    "size_acres": 20,
+    "amenities": ["Lake loop trail", "Natural shoreline access"],
+    "fee": "Free",
+    "website": "https://www.muni.org/Departments/parks/Pages/DogParks.aspx",
+    "notes": "Popular loop around the lake with off-leash allowance in designated zones; wildlife common."
+  },
+  {
+    "name": "Seward Dog Park",
+    "city": "Seward",
+    "state": "AK",
+    "region": "West",
+    "lat": 60.1153,
+    "lon": -149.4386,
+    "size_acres": 1.5,
+    "amenities": ["Fenced", "Benches", "Double-gated entry"],
+    "fee": "Free",
+    "website": "https://www.cityofseward.us/",
+    "notes": "Small fenced dog area near community recreation spaces."
+  },
+  {
+    "name": "Tempe Sports Complex Dog Park",
+    "city": "Tempe",
+    "state": "AZ",
+    "region": "West",
+    "lat": 33.3397,
+    "lon": -111.9588,
+    "size_acres": 2.5,
+    "amenities": ["Fenced", "Separate small-dog area", "Water", "Lighting"],
+    "fee": "Free",
+    "website": "https://www.tempe.gov/government/community-services/tempe-parks/parks-and-recreation/parks/tempe-sports-complex",
+    "notes": "Multiple fenced runs with lights and water spigots; adjacent to sports complex."
+  },
+  {
+    "name": "Cosmo Dog Park",
+    "city": "Gilbert",
+    "state": "AZ",
+    "region": "West",
+    "lat": 33.3501,
+    "lon": -111.7435,
+    "size_acres": 17,
+    "amenities": ["Fenced", "Lake for swimming", "Agility area", "Separate small-dog area", "Lighting"],
+    "fee": "Free",
+    "website": "https://www.gilbertaz.gov/departments/parks-and-recreation/parks/cosmo-dog-park",
+    "notes": "Huge dog park with a swimming lake, agility equipment, and multiple sections; one of the largest in AZ."
+  },
+  {
+    "name": "Chaparral Dog Park",
+    "city": "Scottsdale",
+    "state": "AZ",
+    "region": "West",
+    "lat": 33.5225,
+    "lon": -111.9206,
+    "size_acres": 3,
+    "amenities": ["Fenced", "Water", "Lighting", "Separate small-dog area"],
+    "fee": "Free",
+    "website": "https://www.scottsdaleaz.gov/parks/dog-parks",
+    "notes": "Large and well-lit dog park with several enclosures; popular in the heart of Scottsdale."
+  },
+  {
+    "name": "Eldorado Dog Park",
+    "city": "Scottsdale",
+    "state": "AZ",
+    "region": "West",
+    "lat": 33.4668,
+    "lon": -111.9201,
+    "size_acres": 2,
+    "amenities": ["Fenced", "Water", "Shade", "Benches"],
+    "fee": "Free",
+    "website": "https://www.scottsdaleaz.gov/parks/dog-parks",
+    "notes": "Smaller community dog park option within Eldorado Park complex."
+  },
+  {
+    "name": "Shawnee Mission Park Off-Leash Area",
+    "city": "Shawnee",
+    "state": "KS",
+    "region": "Midwest",
+    "lat": 39.0153,
+    "lon": -94.8117,
+    "size_acres": 53,
+    "amenities": ["Fenced", "Lake access", "Trails", "Woodlands"],
+    "fee": "Permit/Pass",
+    "website": "https://jcprd.com/Facilities/Facility/Details/Dog-Off-Leash-Area-9",
+    "notes": "Massive off-leash area with lake and wooded trails; county pet permit typically required."
+  },
+  {
+    "name": "Waggy World Bark Park",
+    "city": "Tuscaloosa",
+    "state": "AL",
+    "region": "South",
+    "lat": 33.1929,
+    "lon": -87.5672,
+    "size_acres": 1.5,
+    "amenities": ["Fenced", "Benches", "Water"],
+    "fee": "Membership/Pass",
+    "website": "https://www.tcpara.org/facilities/waggy-world-bark-park",
+    "notes": "Membership-based dog park with water access and benches."
+  },
+  {
+    "name": "Bark Park at Veterans Park",
+    "city": "Alabaster",
+    "state": "AL",
+    "region": "South",
+    "lat": 33.2287,
+    "lon": -86.8166,
+    "size_acres": 2,
+    "amenities": ["Fenced", "Separate small-dog area", "Water"],
+    "fee": "Free",
+    "website": "https://cityofalabaster.com/Facilities/Facility/Details/Veterans-Park-2",
+    "notes": "Two separate runs with water; part of a larger community park."
+  },
+  {
+    "name": "Mardi Gras Dog Park",
+    "city": "Mobile",
+    "state": "AL",
+    "region": "South",
+    "lat": 30.6954,
+    "lon": -88.0399,
+    "size_acres": 1,
+    "amenities": ["Fenced", "Water"],
+    "fee": "Free",
+    "website": "https://www.cityofmobile.org/parks-recreation/",
+    "notes": "Small city-run dog area with fountains and shade."
+  },
+  {
+    "name": "Bark Park at Ward Park",
+    "city": "Montgomery",
+    "state": "AL",
+    "region": "South",
+    "lat": 32.3668,
+    "lon": -86.3,
+    "size_acres": 2,
+    "amenities": ["Fenced", "Shaded seating"],
+    "fee": "Free",
+    "website": "https://www.funinmontgomery.com/parks",
+    "notes": "Open off-leash area with shade and benches."
+  },
+  {
+    "name": "Huntsville Dogspot at Creekwood Park",
+    "city": "Huntsville",
+    "state": "AL",
+    "region": "South",
+    "lat": 34.7079,
+    "lon": -86.7227,
+    "size_acres": 1.3,
+    "amenities": ["Fenced", "Water", "Small-dog section"],
+    "fee": "Free",
+    "website": "https://www.huntsvilleal.gov/environment/animal-services/dogspot/",
+    "notes": "Popular fenced runs with water and separate area for small dogs."
+  },
+  {
+    "name": "University Lake Dog Park",
+    "city": "Tuscaloosa",
+    "state": "AL",
+    "region": "South",
+    "lat": 33.205,
+    "lon": -87.545,
+    "size_acres": 2,
+    "amenities": ["Fenced", "Water", "Nearby trails"],
+    "fee": "Free",
+    "website": "https://www.tcpara.org/",
+    "notes": "Off-leash area near the lake with walking trail access."
+  },
+  {
+    "name": "Fairhope Dog Park",
+    "city": "Fairhope",
+    "state": "AL",
+    "region": "South",
+    "lat": 30.523,
+    "lon": -87.9036,
+    "size_acres": 1,
+    "amenities": ["Fenced", "Water", "Shade"],
+    "fee": "Free",
+    "website": "https://www.fairhopeal.gov/",
+    "notes": "Community dog park with shaded seating and water spigots."
+  },
+  {
+    "name": "Bark Park at Vaughan Regional Medical Center",
+    "city": "Selma",
+    "state": "AL",
+    "region": "South",
+    "lat": 32.4118,
+    "lon": -87.0336,
+    "size_acres": 1,
+    "amenities": ["Fenced", "Water"],
+    "fee": "Free",
+    "website": "https://selma-al.gov/parks",
+    "notes": "Small fenced dog run with basic amenities."
+  },
+  {
+    "name": "Minnehaha Off-Leash Dog Park",
+    "city": "Minneapolis",
+    "state": "MN",
+    "region": "Midwest",
+    "lat": 44.9138,
+    "lon": -93.21,
+    "size_acres": 6.6,
+    "amenities": ["River access", "Natural trails", "Woodlands"],
+    "fee": "Permit/Pass",
+    "website": "https://www.minneapolisparks.org/parks__destinations/dog_parks/",
+    "notes": "Forest-and-beach style off-leash along the Mississippi; very popular in summer."
+  },
+  {
+    "name": "Hidden Falls Regional Park Off-Leash Area",
+    "city": "Saint Paul",
+    "state": "MN",
+    "region": "Midwest",
+    "lat": 44.9134,
+    "lon": -93.1919,
+    "size_acres": 7.5,
+    "amenities": ["Fenced sections", "River access", "Trails"],
+    "fee": "Permit/Pass",
+    "website": "https://www.stpaul.gov/parks-recreation/parks/dog-parks",
+    "notes": "Mississippi River access; city/regional permit typically required."
+  },
+  {
+    "name": "Warren G. Magnuson Park Off-Leash Area",
+    "city": "Seattle",
+    "state": "WA",
+    "region": "West",
+    "lat": 47.6897,
+    "lon": -122.2637,
+    "size_acres": 8.6,
+    "amenities": ["Lake access", "Agility area", "Small-dog section"],
+    "fee": "Free",
+    "website": "https://www.seattle.gov/parks/find/dog-off-leash-areas/magnuson-park",
+    "notes": "Large off-leash complex with direct access to Lake Washington."
+  },
+  {
+    "name": "Marymoor Off-Leash Dog Park",
+    "city": "Redmond",
+    "state": "WA",
+    "region": "West",
+    "lat": 47.67,
+    "lon": -122.117,
+    "size_acres": 40,
+    "amenities": ["River shoreline", "Open fields", "Trails"],
+    "fee": "Parking/Donation",
+    "website": "https://www.kingcounty.gov/services/parks-recreation/parks/parks-and-natural-lands/parks/marymoor/dog-off-leash.aspx",
+    "notes": "One of the most-loved off-leash parks in the country; river access and expansive open space."
+  },
+  {
+    "name": "Dogwood Play Park (Private)",
+    "city": "Seattle",
+    "state": "WA",
+    "region": "West",
+    "lat": 47.6881,
+    "lon": -122.3453,
+    "size_acres": 1,
+    "amenities": ["Indoor/outdoor", "Agility", "Membership"],
+    "fee": "Paid/Private",
+    "website": "https://dogwoodplaypark.com/",
+    "notes": "Private indoor/outdoor off-leash facility; membership or day pass required."
+  },
+  {
+    "name": "Point Isabel Regional Shoreline Dog Park",
+    "city": "Richmond",
+    "state": "CA",
+    "region": "West",
+    "lat": 37.9007,
+    "lon": -122.315,
+    "size_acres": 23,
+    "amenities": ["Bay views", "Trails", "Multiple access points"],
+    "fee": "Free",
+    "website": "https://www.ebparks.org/parks/point-isabel",
+    "notes": "Huge bayside off-leash area with shoreline paths and views of SF Bay."
+  },
+  {
+    "name": "Fort Funston Off-Leash Area",
+    "city": "San Francisco",
+    "state": "CA",
+    "region": "West",
+    "lat": 37.7213,
+    "lon": -122.505,
+    "size_acres": 12,
+    "amenities": ["Beach trails", "Coastal bluffs", "Sand dunes"],
+    "fee": "Free",
+    "website": "https://www.nps.gov/goga/planyourvisit/fortfunston.htm",
+    "notes": "Iconic oceanfront area where many dogs hike off-leash; windy and sandy—bring water."
+  },
+  {
+    "name": "Huntington Dog Beach",
+    "city": "Huntington Beach",
+    "state": "CA",
+    "region": "West",
+    "lat": 33.655,
+    "lon": -118.005,
+    "size_acres": 30,
+    "amenities": ["Beach access", "Restrooms nearby"],
+    "fee": "Free (parking fees nearby)",
+    "website": "https://dogbeach.org/",
+    "notes": "Popular stretch of sandy beach where dogs can play off-leash in the surf; check tide/wave conditions."
+  },
+  {
+    "name": "Run-A-Muk Dog Park",
+    "city": "Park City",
+    "state": "UT",
+    "region": "West",
+    "lat": 40.7309,
+    "lon": -111.5447,
+    "size_acres": 43,
+    "amenities": ["Trails", "Hills", "Open meadow"],
+    "fee": "Free",
+    "website": "https://www.summitcounty.org/Facilities/Facility/Details/RunAMuk-Dog-Park-30",
+    "notes": "Large high-country meadow and trail network designated for off-leash use."
+  },
+  {
+    "name": "Barkin' Basin Dog Park at Wayne Bunker Park",
+    "city": "Las Vegas",
+    "state": "NV",
+    "region": "West",
+    "lat": 36.2288,
+    "lon": -115.2492,
+    "size_acres": 5,
+    "amenities": ["Fenced", "Lighting", "Water", "Small-dog area"],
+    "fee": "Free",
+    "website": "https://www.lasvegasnevada.gov/Residents/Parks-Facilities/Dog-Parks",
+    "notes": "Popular multi-enclosure dog park in Wayne Bunker Park."
+  },
+  {
+    "name": "Red Rock Canyon - Off-Leash Trails (Designated)",
+    "city": "Las Vegas",
+    "state": "NV",
+    "region": "West",
+    "lat": 36.135,
+    "lon": -115.427,
+    "size_acres": 100,
+    "amenities": ["Trails", "Desert terrain"],
+    "fee": "Pass/Entry",
+    "website": "https://www.redrockcanyonlv.org/",
+    "notes": "Some designated off-leash/trail areas—check the current maps and seasonal restrictions."
+  },
+  {
+    "name": "Paw Park at Sunset Park",
+    "city": "Las Vegas",
+    "state": "NV",
+    "region": "West",
+    "lat": 36.068,
+    "lon": -115.118,
+    "size_acres": 4,
+    "amenities": ["Fenced", "Water", "Shade"],
+    "fee": "Free",
+    "website": "https://www.clarkcountynv.gov/parks/",
+    "notes": "Fenced dog park within large county park; water and shade structures provided."
+  },
+  {
+    "name": "Willow Creek Dog Park",
+    "city": "Prescott",
+    "state": "AZ",
+    "region": "West",
+    "lat": 34.5855,
+    "lon": -112.454,
+    "size_acres": 1.5,
+    "amenities": ["Fenced", "Shaded seating", "Water"],
+    "fee": "Free",
+    "website": "https://www.prescott-az.gov/recreation-events/recreation-areas/dog-parks/",
+    "notes": "Community dog park with separate areas and shade in the high desert."
+  },
+  {
+    "name": "Ticonderoga Off-Leash Area",
+    "city": "San Diego",
+    "state": "CA",
+    "region": "West",
+    "lat": 32.853,
+    "lon": -117.211,
+    "size_acres": 2,
+    "amenities": ["Fenced", "Benches", "Water"],
+    "fee": "Free",
+    "website": "https://www.sandiego.gov/park-and-recreation/parks/dogs/leashfree",
+    "notes": "One of several leash-free zones the city manages."
+  },
+  {
+    "name": "Nate's Point Off-Leash Area (Balboa Park)",
+    "city": "San Diego",
+    "state": "CA",
+    "region": "West",
+    "lat": 32.7415,
+    "lon": -117.1602,
+    "size_acres": 2.3,
+    "amenities": ["Fenced", "Large open lawn", "Benches"],
+    "fee": "Free",
+    "website": "https://www.sandiego.gov/park-and-recreation/parks/dogs/leashfree",
+    "notes": "Historic off-leash area inside Balboa Park with big open field."
+  },
+  {
+    "name": "Fiesta Island Off-Leash Dog Park",
+    "city": "San Diego",
+    "state": "CA",
+    "region": "West",
+    "lat": 32.784,
+    "lon": -117.217,
+    "size_acres": 90,
+    "amenities": ["Beach", "Bay shoreline", "Trails"],
+    "fee": "Free",
+    "website": "https://www.sandiego.gov/park-and-recreation/parks/dogs/leashfree",
+    "notes": "Huge sandy island in Mission Bay with massive off-leash area and water access."
+  },
+  {
+    "name": "Cherry Creek State Park Off-Leash Area",
+    "city": "Aurora",
+    "state": "CO",
+    "region": "West",
+    "lat": 39.63,
+    "lon": -104.83,
+    "size_acres": 107,
+    "amenities": ["Fenced", "Creek access", "Trails"],
+    "fee": "Paid/Permit",
+    "website": "https://cpw.state.co.us/placestogo/parks/CherryCreek/Pages/DogOffLeashArea.aspx",
+    "notes": "Massive state-managed off-leash zone with water and long loop trails; permit and state park entry fees apply."
+  },
+  {
+    "name": "Chatfield State Park Off-Leash Area",
+    "city": "Littleton",
+    "state": "CO",
+    "region": "West",
+    "lat": 39.533,
+    "lon": -105.053,
+    "size_acres": 69,
+    "amenities": ["Fenced", "Ponds", "Trails"],
+    "fee": "Paid/Permit",
+    "website": "https://cpw.state.co.us/placestogo/parks/Chatfield/Pages/DogOffLeashArea.aspx",
+    "notes": "Large fenced off-leash tract with water features and open fields; popular year-round."
+  },
+  {
+    "name": "Bear Creek Dog Park",
+    "city": "Colorado Springs",
+    "state": "CO",
+    "region": "West",
+    "lat": 38.8338,
+    "lon": -104.879,
+    "size_acres": 25,
+    "amenities": ["Fenced", "Creek", "Trails", "Agility"],
+    "fee": "Free",
+    "website": "https://communityservices.elpasoco.com/parks-and-recreation/bear-creek-dog-park/",
+    "notes": "Regional favorite with creek access, hills, and agility features; separate small-dog area."
+  },
+  {
+    "name": "Millie Bush Dog Park",
+    "city": "Houston",
+    "state": "TX",
+    "region": "South",
+    "lat": 29.694,
+    "lon": -95.648,
+    "size_acres": 13,
+    "amenities": ["Ponds", "Fenced", "Benches", "Shade structures"],
+    "fee": "Free",
+    "website": "https://www.pct3.com/Parks/Millie-Bush-Dog-Park",
+    "notes": "Multiple ponds and fields for dogs to explore; one of Houston’s largest off-leash parks."
+  },
+  {
+    "name": "Danny Jackson Family Bark Park",
+    "city": "Houston",
+    "state": "TX",
+    "region": "South",
+    "lat": 29.732,
+    "lon": -95.477,
+    "size_acres": 2.8,
+    "amenities": ["Fenced", "Water features", "Small-dog area"],
+    "fee": "Free",
+    "website": "https://www.houstontx.gov/parks/parksites/dogparks.html",
+    "notes": "City-run favorite with water features; separate areas by dog size."
+  },
+  {
+    "name": "White Rock Lake Dog Park",
+    "city": "Dallas",
+    "state": "TX",
+    "region": "South",
+    "lat": 32.823,
+    "lon": -96.718,
+    "size_acres": 3,
+    "amenities": ["Lake access", "Fenced", "Benches"],
+    "fee": "Free",
+    "website": "https://www.dallasparks.org/Facilities/Facility/Details/White-Rock-Lake-Dog-Park-208",
+    "notes": "Lakefront dog park with piers and shoreline areas for water-loving pups."
+  },
+  {
+    "name": "Red Bud Isle Off-Leash Area",
+    "city": "Austin",
+    "state": "TX",
+    "region": "South",
+    "lat": 30.284,
+    "lon": -97.773,
+    "size_acres": 13,
+    "amenities": ["Island park", "Lake Austin access", "Trails"],
+    "fee": "Free",
+    "website": "https://www.austintexas.gov/department/parks-and-recreation",
+    "notes": "Small island with water access; can flood—check status after heavy rain."
+  },
+  {
+    "name": "Zilker Metropolitan Park Off-Leash Areas",
+    "city": "Austin",
+    "state": "TX",
+    "region": "South",
+    "lat": 30.266,
+    "lon": -97.772,
+    "size_acres": 10,
+    "amenities": ["Open lawns", "Trails", "Creek nearby"],
+    "fee": "Free",
+    "website": "https://www.austintexas.gov/department/parks-and-recreation",
+    "notes": "Several designated areas within Zilker allow off-leash; look for signage."
+  },
+  {
+    "name": "Shelby Farms Park Off-Leash Area",
+    "city": "Memphis",
+    "state": "TN",
+    "region": "South",
+    "lat": 35.149,
+    "lon": -89.832,
+    "size_acres": 120,
+    "amenities": ["Lakes", "Trails", "Open fields"],
+    "fee": "Free (parking donations encouraged)",
+    "website": "https://www.shelbyfarmspark.org/dog-park",
+    "notes": "One of the largest urban off-leash areas in the U.S.; lake access and miles of paths."
+  },
+  {
+    "name": "Warner Dog Park",
+    "city": "Nashville",
+    "state": "TN",
+    "region": "South",
+    "lat": 36.053,
+    "lon": -86.86,
+    "size_acres": 1.5,
+    "amenities": ["Fenced", "Water", "Shaded benches"],
+    "fee": "Free",
+    "website": "https://www.nashville.gov/departments/parks/dog-parks",
+    "notes": "Neighborhood off-leash with separate areas for small/large dogs."
+  },
+  {
+    "name": "Two Rivers Dog Park",
+    "city": "Nashville",
+    "state": "TN",
+    "region": "South",
+    "lat": 36.186,
+    "lon": -86.673,
+    "size_acres": 7.5,
+    "amenities": ["Fenced fields", "Trails"],
+    "fee": "Free",
+    "website": "https://www.nashville.gov/departments/parks/dog-parks",
+    "notes": "Large open runs connected to the greenway system."
+  },
+  {
+    "name": "Graves Park Dog Exercise Area",
+    "city": "Louisville",
+    "state": "KY",
+    "region": "South",
+    "lat": 38.282,
+    "lon": -85.53,
+    "size_acres": 4,
+    "amenities": ["Fenced", "Shade", "Water"],
+    "fee": "Membership/Pass",
+    "website": "https://louisvilleky.gov/government/parks/dog-parks",
+    "notes": "Part of the Louisville Dog Run Association network; membership required for gate access."
+  },
+  {
+    "name": "Waverly Dog Run",
+    "city": "Louisville",
+    "state": "KY",
+    "region": "South",
+    "lat": 38.167,
+    "lon": -85.801,
+    "size_acres": 2.5,
+    "amenities": ["Fenced", "Water", "Shade"],
+    "fee": "Membership/Pass",
+    "website": "https://louisvilleky.gov/government/parks/dog-parks",
+    "notes": "Another L-DRA location with ample shade and benches."
+  },
+  {
+    "name": "Tom Sawyer Dog Park",
+    "city": "Louisville",
+    "state": "KY",
+    "region": "South",
+    "lat": 38.286,
+    "lon": -85.556,
+    "size_acres": 3,
+    "amenities": ["Fenced", "Benches", "Water"],
+    "fee": "Membership/Pass",
+    "website": "https://louisvilleky.gov/government/parks/dog-parks",
+    "notes": "Grassy runs within EP Tom Sawyer State Park."
+  },
+  {
+    "name": "Freedom Bark Park",
+    "city": "Lowell",
+    "state": "IN",
+    "region": "Midwest",
+    "lat": 41.291,
+    "lon": -87.417,
+    "size_acres": 4,
+    "amenities": ["Fenced", "Agility", "Shade"],
+    "fee": "Membership/Pass",
+    "website": "https://www.freedombarkpark.org/",
+    "notes": "Volunteer-run membership park with agility equipment and shade."
+  },
+  {
+    "name": "Harrison Park Dog Run",
+    "city": "Chicago",
+    "state": "IL",
+    "region": "Midwest",
+    "lat": 41.856,
+    "lon": -87.675,
+    "size_acres": 1,
+    "amenities": ["Fenced", "Play surface", "Benches"],
+    "fee": "Free",
+    "website": "https://www.chicagoparkdistrict.com/parks-facilities/dog-friendly-areas",
+    "notes": "Neighborhood DFA with durable surfacing and seating."
+  },
+  {
+    "name": "Jackson Bark (Community Dog Park)",
+    "city": "Chicago",
+    "state": "IL",
+    "region": "Midwest",
+    "lat": 41.783,
+    "lon": -87.58,
+    "size_acres": 1.3,
+    "amenities": ["Agility", "Fenced", "Benches"],
+    "fee": "Free",
+    "website": "https://jacksonbark.com/",
+    "notes": "Beloved community-built agility-focused off-leash area in Jackson Park."
+  },
+  {
+    "name": "Iroquois Park Dog Run",
+    "city": "Louisville",
+    "state": "KY",
+    "region": "South",
+    "lat": 38.145,
+    "lon": -85.782,
+    "size_acres": 2.2,
+    "amenities": ["Fenced", "Shaded", "Water"],
+    "fee": "Membership/Pass",
+    "website": "https://louisvilleky.gov/government/parks/dog-parks",
+    "notes": "Shaded runs connected to the Olmsted park system."
+  },
+  {
+    "name": "Sharon Woods Dog Park",
+    "city": "Cincinnati",
+    "state": "OH",
+    "region": "Midwest",
+    "lat": 39.288,
+    "lon": -84.412,
+    "size_acres": 3,
+    "amenities": ["Fenced", "Water", "Shade"],
+    "fee": "Free",
+    "website": "https://www.greatparks.org/parks/sharon-woods",
+    "notes": "Nice wooded dog park within the Great Parks system."
+  },
+  {
+    "name": "Washington Park Dog Park",
+    "city": "Cincinnati",
+    "state": "OH",
+    "region": "Midwest",
+    "lat": 39.109,
+    "lon": -84.519,
+    "size_acres": 0.8,
+    "amenities": ["Fenced", "Urban setting", "Water"],
+    "fee": "Free",
+    "website": "https://washingtonpark.org/",
+    "notes": "Urban dog run in the heart of OTR with water features."
+  },
+  {
+    "name": "Bark Park (James H. Penick / Murray Park)",
+    "city": "Little Rock",
+    "state": "AR",
+    "region": "South",
+    "lat": 34.7622,
+    "lon": -92.3316,
+    "size_acres": 2,
+    "amenities": ["Double-gated entries", "Benches", "Lighting"],
+    "fee": "Free",
+    "website": "https://www.littlerock.gov/residents/parks-and-recreation/parks/paws-park/",
+    "notes": "Fenced off-leash area with separate small dog zone inside James H. Penick Park (Murray Park)."
+  }
+]</script>
+
+  
 </body>
 </html>
