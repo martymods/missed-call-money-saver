@@ -33,6 +33,10 @@
     p.lead{font-size:1.05rem;color:var(--muted);margin:8px 0 0}
     .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:.85rem;margin-top:12px}
 
+    /* Mood strip (dogs + nature) */
+    .moodbar{margin-top:16px;display:grid;grid-auto-flow:column;grid-auto-columns:220px;gap:12px;overflow-x:auto;padding-bottom:8px}
+    .moodbar img{display:block;width:100%;height:140px;object-fit:cover;border-radius:14px;border:1px solid rgba(148,163,184,.25);background:#0b1430}
+
     main{flex:1}
     .filters{margin-top:26px;display:grid;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
     .filters label{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:6px}
@@ -61,8 +65,15 @@
     .actions a.secondary{background:rgba(15,23,42,.68);border-color:rgba(148,163,184,.28);color:var(--muted)}
     footer{border-top:1px solid rgba(148,163,184,.2);padding:24px 18px;color:var(--muted);text-align:center;font-size:.85rem}
 
+    /* Media block inside cards */
+    .media{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:16/9;background:linear-gradient(180deg,rgba(2,8,23,.5),rgba(2,8,23,.8))}
+    .media img{width:100%;height:100%;object-fit:cover;display:block}
+    .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:.9rem;border:1px dashed rgba(148,163,184,.28)}
+    .img-fade{opacity:0;transition:opacity .4s ease}
+    .img-fade.loaded{opacity:1}
+
     @media (min-width:720px){
-      .hero{grid-template-columns:minmax(0,1fr) minmax(0,320px);align-items:center}
+      .hero{grid-template-columns:minmax(0,1fr) minmax(0,360px);align-items:center}
       .filters .inputs{grid-template-columns:repeat(4,minmax(0,1fr))}
       .grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
       .card{padding:22px}
@@ -76,6 +87,7 @@
       .card{background:#ffffff}
       .actions a.secondary{background:#f8fafc;color:#0f172a}
       .download a{background:#f8fafc;color:#0f172a}
+      .moodbar img{background:#e2e8f0}
     }
   </style>
 </head>
@@ -86,7 +98,11 @@
         <div class="tag">Nationwide directory • Updated manually from public open data</div>
         <h1>Find leash-free &amp; off-leash dog parks across the USA</h1>
         <p class="lead">Browse a curated dataset of municipal, county, and state-managed off-leash areas. Filter by location, amenities, or cost to plan your next dog adventure. Always double-check park rules before you go.</p>
+
+        <!-- Mood bar: dog + nature images from free APIs -->
+        <div id="moodbar" class="moodbar" aria-hidden="true"></div>
       </div>
+
       <div class="filters">
         <div class="inputs">
           <div class="field">
@@ -135,11 +151,16 @@
   </main>
 
   <footer>
-    Data compiled from municipal and state open data portals (2024). Verify rules, hours, and fees directly with the park before visiting; leash laws can change seasonally. Contributions &amp; corrections: <a href="mailto:info@delcotech.us">info@delcotech.us</a>.
+    Photos via Wikimedia Commons &amp; Unsplash/Picsum (free sources). Data compiled from municipal and state open data portals (2024). Verify rules, hours, and fees directly with the park before visiting; leash laws can change seasonally. Contributions &amp; corrections: <a href="mailto:info@delcotech.us">info@delcotech.us</a>.
   </footer>
 
   <script>
-    const dataUrl = new URL('./data/dog-off-leash-parks.json', window.location.href).toString();
+    /* ---------- Config ---------- */
+    const dataUrl    = new URL('./data/dog-off-leash-parks.json', window.location.href).toString();
+    const IMG_WIDTH  = 1200; // request size from Commons
+    const MAX_CONCURRENCY = 6; // limit parallel image lookups per render
+
+    /* ---------- DOM ---------- */
     const gridEl = document.getElementById('grid');
     const countEl = document.getElementById('count');
     const searchEl = document.getElementById('search');
@@ -148,10 +169,16 @@
     const sortEl = document.getElementById('sort');
     const freeOnlyEl = document.getElementById('freeOnly');
     const waterOnlyEl = document.getElementById('waterOnly');
+    const moodbarEl = document.getElementById('moodbar');
 
+    /* ---------- State ---------- */
     let parks = [];
+    let lastFiltered = [];
+    const imgCache = JSON.parse(localStorage.getItem('parkImages') || '{}');
 
-    fetch(dataUrl)
+    /* ---------- Init ---------- */
+    // Load dataset
+    fetch(dataUrl, { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error('Unable to load park data');
         return res.json();
@@ -160,6 +187,7 @@
         parks = data;
         populateStates(data);
         render();
+        buildMoodbar();
       })
       .catch((err) => {
         console.error(err);
@@ -171,6 +199,7 @@
       stateEl.innerHTML = '<option value="">All states</option>' + states.map((st) => `<option value="${st}">${st}</option>`).join('');
     }
 
+    /* ---------- Rendering ---------- */
     function render() {
       const term = searchEl.value.trim().toLowerCase();
       const state = stateEl.value;
@@ -192,32 +221,39 @@
       });
 
       filtered = filtered.sort((a, b) => {
-        if (sort === 'name') {
-          return a.name.localeCompare(b.name);
-        }
+        if (sort === 'name') return a.name.localeCompare(b.name);
         if (sort === 'state') {
-          const stateCompare = a.state.localeCompare(b.state);
-          return stateCompare !== 0 ? stateCompare : a.name.localeCompare(b.name);
+          const s = a.state.localeCompare(b.state);
+          return s !== 0 ? s : a.name.localeCompare(b.name);
         }
-        if (sort === 'size') {
-          return (b.size_acres || 0) - (a.size_acres || 0);
-        }
+        if (sort === 'size') return (b.size_acres || 0) - (a.size_acres || 0);
         return 0;
       });
 
+      lastFiltered = filtered;
       gridEl.innerHTML = filtered.map((park) => renderCard(park)).join('');
       const noun = filtered.length === 1 ? 'park' : 'parks';
       countEl.textContent = `${filtered.length} ${noun} shown`;
+
+      // After cards are in the DOM, hydrate images
+      hydrateImages(filtered);
     }
 
     function renderCard(park) {
+      const slug = slugify(`${park.name}-${park.city}-${park.state}`);
       const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(park.name + ' ' + park.city + ', ' + park.state)}&query_place_id=`;
       const coordsUrl = park.lat && park.lon ? `https://maps.apple.com/?ll=${park.lat},${park.lon}&q=${encodeURIComponent(park.name)}` : null;
       const amenitiesList = Array.isArray(park.amenities) ? park.amenities : [];
       const amenities = amenitiesList.length ? `<ul class="amenities">${amenitiesList.map((item) => `<li>${item}</li>`).join('')}</ul>` : '';
       const badges = [`${park.city}, ${park.state}`, `${park.region} region`, park.size_acres ? `${park.size_acres} acres` : null].filter(Boolean);
+
       return `
-        <article class="card">
+        <article class="card" data-slug="${slug}">
+          <div class="media">
+            <div class="ph">Loading photo…</div>
+            <img id="img-${slug}" class="img-fade" alt="${escapeHtml(park.name)} photo" loading="lazy" referrerpolicy="no-referrer" />
+          </div>
+
           <h2>${park.name}</h2>
           <div class="location">${park.city}, ${park.state} · ${park.region} · ${park.fee}</div>
           <div class="badge-row">${badges.map((item) => `<span class="badge">${item}</span>`).join('')}</div>
@@ -232,6 +268,104 @@
       `;
     }
 
+    /* ---------- Image fetching (Wikimedia -> Unsplash fallback) ---------- */
+    async function hydrateImages(list) {
+      // Throttle lookups so we don't create a huge burst
+      const queue = list.slice();
+      const workers = Array.from({length: Math.min(MAX_CONCURRENCY, queue.length)}, () => worker());
+
+      async function worker() {
+        while (queue.length) {
+          const park = queue.shift();
+          try {
+            const url = await getParkImage(park);
+            const id = `img-${slugify(`${park.name}-${park.city}-${park.state}`)}`;
+            const img = document.getElementById(id);
+            const ph = img?.previousElementSibling;
+            if (img) {
+              img.addEventListener('load', () => {
+                img.classList.add('loaded');
+                if (ph) ph.style.display = 'none';
+              }, { once:true });
+              img.src = url;
+            }
+          } catch (e) {
+            // If absolutely nothing worked, hide placeholder gracefully
+            console.warn('Image load failed for', park.name, e);
+          }
+        }
+      }
+      await Promise.all(workers);
+    }
+
+    async function getParkImage(park) {
+      const key = `${park.name}|${park.city}|${park.state}`;
+      if (imgCache[key]) return imgCache[key];
+
+      // 1) Wikimedia Commons search (no API key, CORS enabled via origin=*)
+      const q = `${park.name} ${park.city} ${park.state} dog park`;
+      const commonsURL =
+        `https://commons.wikimedia.org/w/api.php?` +
+        `origin=*` +
+        `&action=query&format=json` +
+        `&prop=imageinfo&generator=search` +
+        `&gsrnamespace=6&gsrlimit=1` +
+        `&gsrsearch=${encodeURIComponent(q)}` +
+        `&iiprop=url&iiurlwidth=${IMG_WIDTH}`;
+
+      try {
+        const res = await fetch(commonsURL, { cache: 'force-cache' });
+        if (res.ok) {
+          const json = await res.json();
+          const pages = json?.query?.pages || {};
+          const firstKey = Object.keys(pages)[0];
+          const item = firstKey ? pages[firstKey] : null;
+          const image = item?.imageinfo?.[0];
+          const candidate = image?.thumburl || image?.url;
+          if (candidate) return cacheImage(key, candidate);
+        }
+      } catch (e) {
+        // ignore, we'll fall back
+      }
+
+      // 2) Unsplash Source fallback (no key): dog+park+city
+      const unsplash = `https://source.unsplash.com/800x500/?dog,park,${encodeURIComponent(park.city)}`;
+      return cacheImage(key, unsplash);
+    }
+
+    function cacheImage(key, url) {
+      imgCache[key] = url;
+      try { localStorage.setItem('parkImages', JSON.stringify(imgCache)); } catch (_) {}
+      return url;
+    }
+
+    /* ---------- Moodbar builder (dogs + nature) ---------- */
+    function buildMoodbar() {
+      const terms = [
+        'dog,playing,park','dogs,park', 'puppy,grass', 'dog,trail', 'dog,beach',
+        'forest,trail', 'trees,park', 'lake,park', 'river,trail', 'meadow,park',
+      ];
+
+      const imgs = terms.map((t, i) => {
+        // Mix Unsplash + Picsum to diversify sources
+        const src = i % 3 === 0
+          ? `https://picsum.photos/seed/park${i}/600/400`
+          : `https://source.unsplash.com/600x400/?${encodeURIComponent(t)}`;
+        return `<img loading="lazy" alt="" referrerpolicy="no-referrer" src="${src}">`;
+      });
+
+      moodbarEl.innerHTML = imgs.join('');
+    }
+
+    /* ---------- Helpers ---------- */
+    function slugify(s) {
+      return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    /* ---------- Events ---------- */
     [searchEl, stateEl, regionEl, sortEl, freeOnlyEl, waterOnlyEl].forEach((input) => {
       input.addEventListener('input', render);
       input.addEventListener('change', render);
