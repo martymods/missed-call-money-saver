@@ -1,0 +1,152 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 3871 >>
+stream
+BT
+/F1 18 Tf
+1 0 0 1 72 770 Tm
+(Missed Call Money Saver  How It Works) Tj
+/F1 12 Tf
+16 TL
+0 -36 Td
+(CALL FLOW OVERVIEW) Tj
+T*
+T*
+(When someone dials your Twilio number, the Express server immediately creates a TwiML Dial) Tj
+T*
+(verb that forwards the call to your real business line. The timeout is controlled by the) Tj
+T*
+(DIAL_TIMEOUT environment variable so you can decide how long to ring before failing over.) Tj
+T*
+T*
+(After the dial attempt finishes, Twilio posts back to /voice/after with the final status.) Tj
+T*
+(If the status indicates the call was not answered \(busy, no-answer, or failed\), the app) Tj
+T*
+(kicks off the SMS follow-up workflow.) Tj
+T*
+T*
+(AUTOMATIC SMS CONCIERGE) Tj
+T*
+T*
+(The /sms endpoint uses a lightweight state machine stored in lib/leadStore.js to remember) Tj
+T*
+(each caller. The first message asks for their name, the second asks what they need, and) Tj
+T*
+(the third shares your Calendly scheduling link. Every reply is also written to Google) Tj
+T*
+(Sheets so your team can see the lead history instantly.) Tj
+T*
+T*
+(Built-in responses make it compliant: the bot accepts HELP to reiterate commands and STOP) Tj
+T*
+(to opt out automatically. If a lead keeps texting after the booking link is sent, they) Tj
+T*
+(receive a friendly confirmation and another copy of the self-service booking link.) Tj
+T*
+T*
+(LEAD LOGGING IN GOOGLE SHEETS) Tj
+T*
+T*
+(The services/sheets.js helper connects with the Google Sheets API using a service account.) Tj
+T*
+(Each interaction calls upsertByPhone to insert or update a row keyed by the caller's phone) Tj
+T*
+(number. It tracks fields like timestamp, name, stated need, status, appointment start and) Tj
+T*
+(end times, and the Calendly event URI so your team has a single source of truth.) Tj
+T*
+T*
+(CALENDLY + REVIEW AUTOMATION) Tj
+T*
+T*
+(When you provide a Calendly API token, the server subscribes to webhook events at) Tj
+T*
+(/calendly/webhook. A new booking flips the lead status to booked and logs the appointment) Tj
+T*
+(window; cancellations mark the row as canceled.) Tj
+T*
+T*
+(A cron job runs every five minutes. Two hours after an appointment end time it will text) Tj
+T*
+(the lead a customizable review link and update the Sheet so you never send duplicate) Tj
+T*
+(reminders.) Tj
+T*
+T*
+(WEB EXPERIENCE & PAYMENTS) Tj
+T*
+T*
+(The Express app also serves the marketing site from /public and exposes helper APIs.) Tj
+T*
+(/config shares publishable Stripe and PayPal keys with the browser,) Tj
+T*
+(/api/create-checkout-session handles the $150/mo subscription plus one-time setup fee, and) Tj
+T*
+(optional store routes demonstrate how to sell add-on products through Stripe Checkout.) Tj
+T*
+T*
+(Front-end pages like /checkout and /thank-you are static HTML files, making it easy to) Tj
+T*
+(host the whole stack on a single Node process or behind a platform like Render, Fly.io, or) Tj
+T*
+(Railway.) Tj
+T*
+T*
+(AI ASSISTANTS FOR SALES TEAMS) Tj
+T*
+T*
+(Two OpenAI-powered endpoints give your team superpowers. /api/chat lets prospects chat) Tj
+T*
+(with Mikey from Delco Tech, a persona tuned to close deals and drop your checkout link) Tj
+T*
+(when someone is ready to buy. /api/real-estate-script drafts personalized cold-call) Tj
+T*
+(scripts for acquisitions teams when you supply tone, market focus, and desired) Tj
+T*
+(call-to-action.) Tj
+T*
+T*
+(LAUNCH CHECKLIST) Tj
+T*
+T*
+(1\) Install dependencies with npm install.) Tj
+T*
+(2\) Copy .env.example to .env and fill in the required credentials for Twilio, Google) Tj
+T*
+(Sheets, Stripe, Calendly, and any optional integrations.) Tj
+T*
+(3\) Run npm run start locally or deploy to your preferred host.) Tj
+T*
+(4\) Use ngrok or your production domain to configure Twilio webhooks for /voice and /sms.) Tj
+T*
+(5\) Place a test call, walk through the SMS prompts, and confirm the Google Sheet updates) Tj
+T*
+(before going live.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer << /Size 6 /Root 1 0 R >>
+startxref
+4228
+%%EOF
