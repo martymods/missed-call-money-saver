@@ -18,7 +18,7 @@
     .wrap{max-width:1280px;margin:10px auto 40px;padding:0 18px;display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;min-width:0}
     @media (max-width:980px){.wrap{grid-template-columns:1fr}}
 
-    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:14px;box-shadow:var(--shadow);position:relative;z-index:0}
     .card>*{min-width:0}
 
     h1{font-size:24px;margin:0} h2{font-size:16px;margin:0 0 8px}
@@ -62,7 +62,7 @@
     .priceCtl input[type=range]{flex:1}
 
     /* WEATHER ROW */
-    .wx{display:grid;grid-template-columns:360px minmax(0,1fr);gap:12px;min-width:0}
+    .wx{display:grid;grid-template-columns:360px minmax(0,1fr);gap:12px;min-width:0;position:relative;z-index:1}
     @media (max-width:1000px){.wx{grid-template-columns:1fr}}
     .wx>*{min-width:0}
     .wxNow{display:flex;gap:12px;align-items:center;border:1px solid var(--edge);border-radius:12px;padding:12px;background:#fff}
@@ -605,15 +605,15 @@ async function fetchUSGSWater(lat, lon, hours=24){
   }
 
   async function fetchUSGSWater(lat, lon, hours){
-    // USGS 'site' service uses lat & long (NOT latitude/longitude); 400s were from wrong param names.
+    // USGS 'site' service expects latitude/longitude query params; wrong names were causing 400s.
     async function findSite(params){
       const url = new URL('https://waterservices.usgs.gov/nwis/site/');
-      url.search = new URLSearchParams({
+      const search = new URLSearchParams({
         format:'json', siteType:'ST', siteStatus:'active',
-        lat:String(lat), long:String(lon), distance:'50', // miles
+        latitude:String(lat), longitude:String(lon), distance:'50',
         ...params
-      }).toString();
-      const r = await fetch(url);
+      });
+      const r = await fetch(url + '?' + search.toString());
       if(!r.ok) return null;
       const j = await r.json();
       const sites = j?.value?.site || [];
@@ -658,19 +658,25 @@ async function fetchUSGSWater(lat, lon, hours=24){
 
   // EPA ECHO TRI count — many endpoints don’t allow browser CORS. We try modern API; if blocked/404, return null gracefully.
   async function fetchTRICount(lat, lon, radiusKm=25){
-    try{
-      // try modern ECHO Facilities API (may 404 in some regions)
-      const url = new URL('https://echo.epa.gov/echoapi/json/facilities');
-      url.search = new URLSearchParams({ p_program:'TRI', p_lat:lat, p_long:lon, p_radius:radiusKm, output:'JSON' }).toString();
-      const r = await fetch(url);
-      if(!r.ok) throw new Error('ECHO fail');
-      const j = await r.json();
-      const c = Number(j?.Results?.Facilities?.length || 0);
-      return c;
-    }catch(e){
-      console.warn('ECHO unavailable from browser (CORS/404). Showing n/a.');
-      return null; // don’t throw; don’t block UI
+    const base = new URL('https://echo.epa.gov/echoapi/json/facilities');
+    base.search = new URLSearchParams({ p_program:'TRI', p_lat:lat, p_long:lon, p_radius:radiusKm, output:'JSON' }).toString();
+    const urls = [base.toString(),
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(base.toString())}`,
+      `https://cors.isomorphic-git.org/${base.toString()}`];
+    for(const url of urls){
+      try{
+        const r = await fetch(url);
+        if(!r.ok) continue;
+        const text = await r.text();
+        const j = JSON.parse(text);
+        const c = Number(j?.Results?.Facilities?.length || 0);
+        if(Number.isFinite(c)) return c;
+      }catch(err){
+        continue;
+      }
     }
+        console.warn('ECHO unavailable from browser (CORS/404). Showing n/a.');
+        return null; // don’t throw; don’t block UI
   }
 
   // DOT Noise via ArcGIS JSONP (optional toggle)
@@ -785,13 +791,31 @@ async function fetchUSGSWater(lat, lon, hours=24){
 // ---------- Citizens (county snapshot) — same as your working build
 // FCC county FIPS via JSONP (avoids CORS in browser)
 async function fetchCountyFIPS(lat, lon){
-  try{
-    const j = await jsonp(`https://geo.fcc.gov/api/census/block/find?latitude=${lat}&longitude=${lon}&showall=false&format=jsonp`);
+  const base = `https://geo.fcc.gov/api/census/block/find?latitude=${lat}&longitude=${lon}&showall=false&format=json`;
+  async function parse(j){
+    if(!j) return null;
+    const block = j?.Block || {};
+    const firstResult = Array.isArray(j?.results) ? j.results[0] : null;
+    const county = block.County || block.county || j?.County || j?.county || firstResult?.County || firstResult?.county;
+    const state = block.State || block.state || j?.State || j?.state || firstResult?.State || firstResult?.state;
     return {
-      countyFips: j?.County?.FIPS || null,
-      countyName: j?.County?.name || null,
-      state: j?.State?.code || null
+      countyFips: county?.FIPS || county?.fips || null,
+      countyName: county?.name || null,
+      stateFips: state?.FIPS || state?.fips || null,
+      stateCode: state?.code || state?.abbr || null
     };
+      }
+  try{
+    const r = await fetch(base);
+    if(r.ok){
+      const j = await r.json();
+      const res = await parse(j);
+      if(res) return res;
+    }
+  }catch(e){ console.warn('FCC fetch failed, retrying with JSONP', e); }
+  try{
+    const j = await jsonp(base.replace('format=json','format=jsonp'));
+    return await parse(j);
   }catch(e){ console.warn('FCC (JSONP) failed', e); return null; }
 }
 
@@ -910,6 +934,7 @@ const FIPS_TO_USPS = {
 };
 
 async function fetchPoliceCrime(stateFips){
+  if(stateFips==null) return null;
   try{
     const st = FIPS_TO_USPS[String(stateFips).padStart(2,'0')];
     if(!st) return null;
@@ -945,6 +970,7 @@ async function fetchRoadIncidents(lat, lon){
 
 // Education (Urban Institute API)
 async function fetchSchoolCount(statefp){
+  if(!statefp) return null;
   try{
     const url = `https://educationdata.urban.org/api/v1/schools/ccd/directory/2020/?state_fips=${statefp}`;
     const r = await fetch(url);
@@ -1123,8 +1149,10 @@ renderServices();
 
 // Citizens snapshot (county)
 const fips = await fetchCountyFIPS(loc.lat, loc.lon);
-const civ  = fips ? await fetchACSCounty(fips.state, fips.county) : null;
-renderCitizens(civ, fips?.name || '—');
+const civ  = (fips?.stateFips && fips?.countyFips)
+  ? await fetchACSCounty(fips.stateFips, fips.countyFips).catch(()=>null)
+  : null;
+renderCitizens(civ, fips?.countyName || '—');
 
 // ---------- City Services (live stats — national sources)
 try{
@@ -1133,10 +1161,10 @@ try{
   setServiceMeta('garbage', garbage==null? '—' : `${garbage} landfills nearby`);
 
   // Fire — USFA registry is a national CSV; until you preload it, keep the county pointer
-  setServiceMeta('fire', fips?.name ? `See registry for ${fips.name}` : '—');
+  setServiceMeta('fire', fips?.countyName ? `See registry for ${fips.countyName}` : '—');
 
   // Police — FBI summarized by state (national)
-  const police = await fetchPoliceCrime(fips?.state);
+  const police = await fetchPoliceCrime(fips?.stateFips);
   setServiceMeta('police', police || '—');
 
   // Road — national OSM roadworks
@@ -1144,7 +1172,7 @@ try{
   setServiceMeta('road', roadworks==null? '—' : `${roadworks} roadworks nearby`);
 
   // Education — Urban Institute (national)
-  const edu = await fetchSchoolCount(fips?.state);
+  const edu = await fetchSchoolCount(fips?.stateFips);
   setServiceMeta('edu', edu==null? '—' : `${edu.toLocaleString()} schools in state`);
 
   // Parks — ParkServe (ArcGIS) with OSM fallback (both national)
