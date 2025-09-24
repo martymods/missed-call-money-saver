@@ -1,29 +1,30 @@
+
 const express = require('express');
 const { getCollection, ObjectId } = require('../services/mongo');
 const { authenticate } = require('./users');
 const { encryptString, decryptString } = require('../lib/crypto');
 
 const CATALOG = [
-  { id: 'google-workspace', name: 'Google Workspace', category: 'Productivity', oneClick: true, scopes: ['Gmail', 'Sheets', 'Calendar'], docs: 'https://developers.google.com/workspace' },
-  { id: 'microsoft-365', name: 'Microsoft 365', category: 'Productivity', oneClick: true, scopes: ['Outlook', 'Teams', 'SharePoint'], docs: 'https://learn.microsoft.com/graph/' },
-  { id: 'slack', name: 'Slack', category: 'Messaging', oneClick: true, scopes: ['Channels', 'Slash Commands'], docs: 'https://api.slack.com/' },
-  { id: 'twilio', name: 'Twilio', category: 'Telephony', oneClick: false, scopes: ['Voice', 'SMS'], docs: 'https://www.twilio.com/docs/' },
-  { id: 'shopify', name: 'Shopify', category: 'Commerce', oneClick: true, scopes: ['Orders', 'Inventory', 'Fulfillment'], docs: 'https://shopify.dev/' },
-  { id: 'amazon-seller', name: 'Amazon Seller Central', category: 'Marketplace', oneClick: true, scopes: ['Orders', 'Catalog'], docs: 'https://developer.amazonservices.com/' },
-  { id: 'ebay', name: 'eBay', category: 'Marketplace', oneClick: true, scopes: ['Orders', 'Inventory'], docs: 'https://developer.ebay.com/' },
-  { id: 'faire', name: 'Faire Wholesale', category: 'Marketplace', oneClick: false, scopes: ['Orders', 'Inventory'], docs: 'https://docs.faire.com/' },
-  { id: 'quickbooks', name: 'QuickBooks Online', category: 'Accounting', oneClick: true, scopes: ['Invoices', 'Customers'], docs: 'https://developer.intuit.com/' },
-  { id: 'xero', name: 'Xero', category: 'Accounting', oneClick: true, scopes: ['Bills', 'Banking'], docs: 'https://developer.xero.com/' },
-  { id: 'netsuite', name: 'NetSuite', category: 'ERP', oneClick: false, scopes: ['Records', 'Fulfillment'], docs: 'https://www.netsuite.com/' },
-  { id: 'zapier', name: 'Zapier', category: 'Automation', oneClick: true, scopes: ['Triggers', 'Actions'], docs: 'https://platform.zapier.com/' },
-  { id: 'make', name: 'Make (Integromat)', category: 'Automation', oneClick: true, scopes: ['Scenarios'], docs: 'https://www.make.com/en/integrations' },
-  { id: 'servicetitan', name: 'ServiceTitan', category: 'Field Service', oneClick: false, scopes: ['Jobs', 'Dispatch'], docs: 'https://developer.servicetitan.io/' },
-  { id: 'salesforce', name: 'Salesforce', category: 'CRM', oneClick: true, scopes: ['Objects', 'Events'], docs: 'https://developer.salesforce.com/' },
-  { id: 'hubspot', name: 'HubSpot', category: 'CRM', oneClick: true, scopes: ['Contacts', 'Tickets'], docs: 'https://developers.hubspot.com/' },
-  { id: 'zendesk', name: 'Zendesk', category: 'Support', oneClick: true, scopes: ['Tickets', 'Users'], docs: 'https://developer.zendesk.com/' },
-  { id: 'airtable', name: 'Airtable', category: 'Databases', oneClick: true, scopes: ['Bases', 'Automations'], docs: 'https://airtable.com/developers' },
-  { id: 'box', name: 'Box', category: 'Content', oneClick: true, scopes: ['Files', 'Events'], docs: 'https://developer.box.com/' },
-  { id: 'dropbox', name: 'Dropbox', category: 'Content', oneClick: true, scopes: ['Files'], docs: 'https://www.dropbox.com/developers' },
+  { id: 'google-workspace', name: 'Google Workspace', category: 'Productivity', oneClick: true, scopes: ['Gmail', 'Sheets', 'Calendar'], docs: 'https://developers.google.com/workspace', icon: '/image/apiLogos/Google_Workspace.png' },
+  { id: 'microsoft-365', name: 'Microsoft 365', category: 'Productivity', oneClick: true, scopes: ['Outlook', 'Teams', 'SharePoint'], docs: 'https://learn.microsoft.com/graph/', icon: '/image/apiLogos/microsoft_365.png' },
+  { id: 'slack', name: 'Slack', category: 'Messaging', oneClick: true, scopes: ['Channels', 'Slash Commands'], docs: 'https://api.slack.com/', icon: '/image/apiLogos/slack.png' },
+  { id: 'twilio', name: 'Twilio', category: 'Telephony', oneClick: false, scopes: ['Voice', 'SMS'], docs: 'https://www.twilio.com/docs/', icon: '/image/apiLogos/twilio_Symbol.png' },
+  { id: 'shopify', name: 'Shopify', category: 'Commerce', oneClick: true, scopes: ['Orders', 'Inventory', 'Fulfillment'], docs: 'https://shopify.dev/', icon: '/image/apiLogos/shopify.png' },
+  { id: 'amazon-seller', name: 'Amazon Seller Central', category: 'Marketplace', oneClick: true, scopes: ['Orders', 'Catalog'], docs: 'https://developer.amazonservices.com/', icon: '/image/apiLogos/amazon_Seller_Central.png' },
+  { id: 'ebay', name: 'eBay', category: 'Marketplace', oneClick: true, scopes: ['Orders', 'Inventory'], docs: 'https://developer.ebay.com/', icon: '/image/apiLogos/eBay.png' },
+  { id: 'faire', name: 'Faire Wholesale', category: 'Marketplace', oneClick: false, scopes: ['Orders', 'Inventory'], docs: 'https://docs.faire.com/', icon: '/image/apiLogos/faire_Wholesale.png' },
+  { id: 'quickbooks', name: 'QuickBooks Online', category: 'Accounting', oneClick: true, scopes: ['Invoices', 'Customers'], docs: 'https://developer.intuit.com/', icon: '/image/apiLogos/quickBooks_Online.png' },
+  { id: 'xero', name: 'Xero', category: 'Accounting', oneClick: true, scopes: ['Bills', 'Banking'], docs: 'https://developer.xero.com/', icon: '/image/apiLogos/xero.png' },
+  { id: 'netsuite', name: 'NetSuite', category: 'ERP', oneClick: false, scopes: ['Records', 'Fulfillment'], docs: 'https://www.netsuite.com/', icon: '/image/apiLogos/netSuite.png' },
+  { id: 'zapier', name: 'Zapier', category: 'Automation', oneClick: true, scopes: ['Triggers', 'Actions'], docs: 'https://platform.zapier.com/', icon: '/image/apiLogos/zapier.png' },
+  { id: 'make', name: 'Make (Integromat)', category: 'Automation', oneClick: true, scopes: ['Scenarios'], docs: 'https://www.make.com/en/integrations', icon: '/image/apiLogos/make.png' },
+  { id: 'servicetitan', name: 'ServiceTitan', category: 'Field Service', oneClick: false, scopes: ['Jobs', 'Dispatch'], docs: 'https://developer.servicetitan.io/', icon: '/image/apiLogos/serviceTitan.png' },
+  { id: 'salesforce', name: 'Salesforce', category: 'CRM', oneClick: true, scopes: ['Objects', 'Events'], docs: 'https://developer.salesforce.com/', icon: '/image/apiLogos/salesforce.png' },
+  { id: 'hubspot', name: 'HubSpot', category: 'CRM', oneClick: true, scopes: ['Contacts', 'Tickets'], docs: 'https://developers.hubspot.com/', icon: '/image/apiLogos/hubSpot.png' },
+  { id: 'zendesk', name: 'Zendesk', category: 'Support', oneClick: true, scopes: ['Tickets', 'Users'], docs: 'https://developer.zendesk.com/', icon: '/image/apiLogos/Zendesk.png' },
+  { id: 'airtable', name: 'Airtable', category: 'Databases', oneClick: true, scopes: ['Bases', 'Automations'], docs: 'https://airtable.com/developers', icon: '/image/apiLogos/airtable.png' },
+  { id: 'box', name: 'Box', category: 'Content', oneClick: true, scopes: ['Files', 'Events'], docs: 'https://developer.box.com/', icon: '/image/apiLogos/box.png' },
+  { id: 'dropbox', name: 'Dropbox', category: 'Content', oneClick: true, scopes: ['Files'], docs: 'https://www.dropbox.com/developers', icon: '/image/apiLogos/dropbox.png' },
 ];
 
 function maskCredential(credentials = {}){
