@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Jordan Pierce",
+    "phone": "+12155550123",
+    "city": "Philadelphia, PA",
+    "leadType": "buyer",
+    "source": "Zillow saved search",
+    "motivation": "Needs 4BR near good schools before August",
+    "budget": "$520k",
+    "lastSeen": "2024-05-30",
+    "stage": "New",
+    "notes": "Reached out via inquiry form about East Falls properties"
+  },
+  {
+    "name": "Selena Ortiz",
+    "phone": "+12675559888",
+    "city": "Camden, NJ",
+    "leadType": "seller",
+    "source": "Craigslist FSBO",
+    "motivation": "Relocating for work, wants quick close",
+    "budget": "$365k list",
+    "lastSeen": "2024-05-28",
+    "stage": "Follow-up",
+    "notes": "Ready to hear cash-offer options; prefers text"
+  },
+  {
+    "name": "Nate Robinson",
+    "phone": "+14845550144",
+    "city": "Phoenixville, PA",
+    "leadType": "buyer",
+    "source": "Facebook marketplace",
+    "motivation": "Looking for investment duplex under 400k",
+    "budget": "$390k",
+    "lastSeen": "2024-05-27",
+    "stage": "Qualified",
+    "notes": "Said he can show proof of funds on next call"
+  },
+  {
+    "name": "Aria Chen",
+    "phone": "+17175558801",
+    "city": "Jersey City, NJ",
+    "leadType": "buyer",
+    "source": "Google pay-per-click",
+    "motivation": "Moving from out of state; wants remote video tours",
+    "budget": "$680k",
+    "lastSeen": "2024-05-31",
+    "stage": "New",
+    "notes": "Requested calendar link; likes evening calls"
+  },
+  {
+    "name": "Marcus Greene",
+    "phone": "+16175553456",
+    "city": "Upper Darby, PA",
+    "leadType": "seller",
+    "source": "Public notice list",
+    "motivation": "Pre-foreclosure; open to assignment",
+    "budget": "$255k ask",
+    "lastSeen": "2024-05-24",
+    "stage": "Research",
+    "notes": "Needs updated payoff statement; send doc checklist"
+  },
+  {
+    "name": "Priya Patel",
+    "phone": "+14405551234",
+    "city": "Baltimore, MD",
+    "leadType": "buyer",
+    "source": "Google Business Profile",
+    "motivation": "First-time buyer seeking down-payment grants",
+    "budget": "$310k",
+    "lastSeen": "2024-05-26",
+    "stage": "Follow-up",
+    "notes": "Asked about lender partners; ready for intake form"
+  },
+  {
+    "name": "Elijah Brooks",
+    "phone": "+13025557654",
+    "city": "Washington, DC",
+    "leadType": "seller",
+    "source": "MLS expired",
+    "motivation": "Listing expired; wants new marketing plan",
+    "budget": "$815k list",
+    "lastSeen": "2024-05-20",
+    "stage": "Qualified",
+    "notes": "Send net sheet and book strategy call"
+  }
+]
