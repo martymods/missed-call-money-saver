@@ -2186,7 +2186,7 @@
       }
     }
 
-    function handleNavigation() {
+   function handleNavigation() {
       const nav = document.querySelector('header nav');
       if (!nav) return;
       const buttons = Array.from(nav.querySelectorAll('button'));
@@ -2244,7 +2244,7 @@
         activateSection(defaultBtn.dataset.target, defaultBtn);
       }
     }
-
+    
     function parseLines(text) {
       return text
         .split('\n')
