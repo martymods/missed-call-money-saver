@@ -255,6 +255,79 @@ Keep replies 1–3 sentences, practical, Delco-casual unless they ask for detail
 
 
 // ---------------------------------------------------------------------
+// Real estate script generator (OpenAI-powered)
+// ---------------------------------------------------------------------
+const buildRealEstateFallback = ({ tone, focus, location, nextAction }) => {
+  const ctaMap = {
+    checkout: 'I can text you a secure Stripe link to lock in the spot right now.',
+    book: 'I can drop my booking calendar in your text so you can pick a time that works.',
+    transfer: 'Let me patch in my senior closer so you can dive into the numbers together.'
+  };
+  return [
+    `Opening: Hi, this is the Delco Tech real estate desk checking in about ${focus || 'your plans'} in ${location || 'the area'}.`,
+    'Discovery: Confirm timeline, financing, and any hurdles that might slow you down.',
+    'Value: Remind them we work free-first with public data, comps, and vetted vendor partners.',
+    `CTA: ${ctaMap[nextAction] || ctaMap.checkout}`,
+    `Tone: ${tone || 'friendly'} and compliance-first (respect DNC & fair housing).`
+  ].join('\n');
+};
+
+app.post('/api/real-estate-script', async (req, res) => {
+  try {
+    const { leadType = 'buyer', tone = 'friendly', location = '', focus = '', nextAction = 'checkout' } = req.body || {};
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.json({
+        script: buildRealEstateFallback({ tone, focus, location, nextAction }),
+        note: 'OpenAI not configured on this deployment. Showing template copy instead.'
+      });
+    }
+
+    const nextActionText = {
+      checkout: `Offer to text them the secure Stripe checkout at ${(process.env.APP_BASE_URL || APP_BASE_URL)}/checkout so they can lock in the spot without fees.`,
+      book: `Drive to the Calendly link ${(process.env.APP_BASE_URL || APP_BASE_URL)}/book for a live consult — mention evening slots too.`,
+      transfer: 'Let them know you can transfer them to the live acquisitions floor immediately for deeper numbers.'
+    };
+
+    const systemPersona = `
+You are "Skye" — an inside sales agent for a real estate investment team. You're sharp, empathetic, and stay compliant with DNC and fair-housing rules.
+Keep scripts under 220 words. Use short paragraphs or bullet points.
+Mention that we start with free public data sources (FSBO, MLS expired, notices) before any paid leads.
+Always end with one clear call-to-action based on the option provided.
+Reference secure payments via Stripe Checkout and scheduling via Calendly when relevant.
+Speak confidently, but stay human — no AI disclaimers.
+`;
+
+    const userPrompt = `Lead type: ${leadType}\nTone: ${tone}\nMarket focus: ${location || 'general market'}\nKey pain point: ${focus || 'not provided'}\nCTA instruction: ${nextActionText[nextAction] || nextActionText.checkout}\n\nCraft a quick cold-call script with sections for Opening, Discovery, Value, and Close. Include an objection-handling tip. Mention that data comes from public/free sources where it fits.`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0.65,
+      max_tokens: 350,
+      messages: [
+        { role: 'system', content: systemPersona },
+        { role: 'user', content: userPrompt }
+      ],
+    });
+
+    const script = completion.choices?.[0]?.message?.content?.trim() || buildRealEstateFallback({ tone, focus, location, nextAction });
+
+    res.json({
+      script,
+      note: `Generated with OpenAI for a ${tone} ${leadType}.`
+    });
+  } catch (err) {
+    console.error('Real estate script error:', err?.message || err);
+    const { leadType = 'buyer', tone = 'friendly', location = '', focus = '', nextAction = 'checkout' } = req.body || {};
+    res.status(200).json({
+      script: buildRealEstateFallback({ tone, focus, location, nextAction }),
+      note: 'OpenAI unavailable right now — fallback copy provided.'
+    });
+  }
+});
+
+
+// ---------------------------------------------------------------------
 // Twilio Voice: forward, then detect missed calls
 // ---------------------------------------------------------------------
 app.post('/voice', (req, res) => {
