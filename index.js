@@ -13,6 +13,9 @@ const { sendSMS } = require('./services/twilioClient');
 const { upsertByPhone, findAll } = require('./services/sheets');
 const { subscribeCalendlyWebhook } = require('./services/calendly');
 const { setStep, setField, get: getState } = require('./lib/leadStore');
+const { createUserRouter } = require('./routes/users');
+const createIntegrationsRouter = require('./routes/integrations');
+const createSupportRouter = require('./routes/support');
 
 const jwt = require('jsonwebtoken');
 
@@ -49,6 +52,10 @@ app.get('/api/food/menu', (_req,res)=> res.json({ items: MENU, taxRate: TAX_RATE
 
 app.use(express.urlencoded({ extended: true })); // Twilio posts form-url-encoded
 app.use(express.json());
+
+app.use('/api/users', createUserRouter());
+app.use('/api/integrations', createIntegrationsRouter());
+app.use('/api/support', createSupportRouter(openai));
 
 // 👉 Serve the landing page & assets from /public
 app.use(express.static(path.join(__dirname, 'public')));
