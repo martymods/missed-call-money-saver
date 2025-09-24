@@ -2187,15 +2187,62 @@
     }
 
     function handleNavigation() {
-      document.querySelectorAll('nav button').forEach(btn => {
+      const nav = document.querySelector('header nav');
+      if (!nav) return;
+      const buttons = Array.from(nav.querySelectorAll('button'));
+      const sections = Array.from(document.querySelectorAll('main section'));
+
+      const activateSection = (targetId, triggerBtn) => {
+        const section = document.getElementById(targetId?.trim?.() ?? '');
+        if (!section) {
+          console.warn('Requested section not found in Warehouse HQ navigation:', targetId);
+          return;
+        }
+        buttons
+          .filter(b => b.dataset.target)
+          .forEach(b => b.classList.remove('active'));
+        triggerBtn?.classList.add('active');
+        sections.forEach(sec => sec.classList.remove('active'));
+        section.classList.add('active');
+      };
+
+      buttons.forEach(btn => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
+          const linkAttr = btn.getAttribute('data-link');
+          if (linkAttr) {
+            const resolved = (() => {
+              if (linkAttr.startsWith('http')) {
+                return linkAttr;
+              }
+              if (linkAttr.startsWith('/')) {
+                if (window.location.origin && window.location.origin !== 'null') {
+                  return `${window.location.origin}${linkAttr}`;
+                }
+                const url = new URL(window.location.href);
+                url.pathname = linkAttr;
+                url.search = '';
+                url.hash = '';
+                return url.href;
+              }
+              return new URL(linkAttr, window.location.href).href;
+            })();
+            window.location.href = resolved;
+            return;
+          }
+
           const target = btn.dataset.target;
-          document.querySelectorAll('main section').forEach(sec => sec.classList.remove('active'));
-          document.getElementById(target).classList.add('active');
+          if (!target) {
+            return;
+          }
+
+          activateSection(target, btn);
         });
       });
+
+      const defaultBtn = buttons.find(b => b.dataset.target && b.classList.contains('active'));
+      if (defaultBtn) {
+        activateSection(defaultBtn.dataset.target, defaultBtn);
+      }
     }
 
     function parseLines(text) {
