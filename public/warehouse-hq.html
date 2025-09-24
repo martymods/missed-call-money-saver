@@ -406,6 +406,30 @@
       cursor: pointer;
     }
 
+    .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    canvas.stat-chart { background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 0.85rem; padding: 0.75rem; }
+    .integrations-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .integration-card { border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 1rem; padding: 1rem; background: rgba(15, 23, 42, 0.82); box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25); display: flex; flex-direction: column; gap: 0.6rem; }
+    .integration-card img { width: 46px; height: 46px; border-radius: 0.75rem; background: rgba(56, 189, 248, 0.12); padding: 0.4rem; }
+    .integration-card .tagline { font-size: 0.8rem; color: var(--text-muted); }
+    .integration-card button { align-self: flex-start; }
+    .account-status { margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-muted); }
+    .account-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    .brand-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .brand-preview { border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 1rem; padding: 1rem; background: rgba(15, 23, 42, 0.75); display: flex; flex-direction: column; gap: 0.75rem; min-height: 200px; }
+    .brand-preview .preview-card { border: 1px solid rgba(148, 163, 184, 0.18); border-radius: 0.85rem; padding: 0.75rem; background: rgba(56, 189, 248, 0.08); }
+    .brand-preview .preview-hero { font-weight: 700; font-size: 1.05rem; }
+    .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin-top: 0.75rem; }
+    .gallery img { width: 100%; height: 110px; object-fit: cover; border-radius: 0.85rem; border: 1px solid rgba(148, 163, 184, 0.25); box-shadow: 0 18px 30px rgba(2, 6, 23, 0.35); }
+    .reward-badge { margin-top: 1rem; display: none; align-items: center; gap: 0.6rem; font-weight: 600; background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(99, 102, 241, 0.2)); border: 1px solid rgba(56, 189, 248, 0.4); padding: 0.75rem 1rem; border-radius: 0.9rem; box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35); }
+    .reward-badge.show { display: flex; animation: pop 0.6s ease; }
+    @keyframes pop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .support-response { margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-muted); }
+    .one-click-tag { font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 999px; background: rgba(56, 189, 248, 0.16); color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; }
+    .integration-table-empty { color: var(--text-muted); text-align: center; padding: 1rem 0; }
+    .badge-emoji { font-size: 2rem; }
+    .mini-input { font-size: 0.8rem; color: var(--text-muted); }
+
     .toolbar input[type="file"] {
       display: none;
     }
@@ -477,6 +501,7 @@
       }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
 </head>
 <body>
   <header>
@@ -496,6 +521,7 @@
         <button data-target="shipping">Shipping & Returns</button>
         <button data-target="labor">Teams & Tasks</button>
         <button data-target="settings">Data & Settings</button>
+        <button data-target="account">My Account</button>
       </nav>
     </div>
   </header>
@@ -537,6 +563,16 @@
             </ul>
           </div>
           <p class="hint">Stripe-powered marketplace makes upgrades feel like a game night.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Ops Visualizer</h3>
+        <p class="hint">See stocking, sorting and labeling in living color. Powered by your command center telemetry.</p>
+        <div class="chart-grid">
+          <canvas id="inventoryChart" class="stat-chart" height="180" aria-label="Inventory velocity chart"></canvas>
+          <canvas id="orderChart" class="stat-chart" height="180" aria-label="Order status chart"></canvas>
+          <canvas id="missionChart" class="stat-chart" height="180" aria-label="Mission energy chart"></canvas>
         </div>
       </div>
     </section>
@@ -1005,7 +1041,173 @@
             </div>
             <button class="cta" type="button" id="checkout-bundle">Checkout via Stripe</button>
           </div>
+       </div>
+      </div>
+    </section>
+
+    <section id="account">
+      <div class="panel">
+        <h2>Commander Access & Security</h2>
+        <p>Log in to sync integrations, personalize the interface, and unlock the RTS-style automations built for your brand.</p>
+        <div class="grid grid-2">
+          <form id="register-form" class="panel light">
+            <h3>Create Command Seat</h3>
+            <label>Work Email
+              <input type="email" name="email" required placeholder="you@warehouse.com" />
+            </label>
+            <label>Display Name
+              <input type="text" name="name" placeholder="Fleet Captain" />
+            </label>
+            <label>Password
+              <input type="password" name="password" minlength="8" required placeholder="At least 8 characters" />
+            </label>
+            <label class="mini-input"><input type="checkbox" name="enableTotp" /> Enable authenticator set up right away</label>
+            <button class="cta" type="submit">Register &amp; Launch</button>
+          </form>
+
+          <form id="login-form" class="panel light">
+            <h3>Log In</h3>
+            <label>Email
+              <input type="email" name="email" required placeholder="you@warehouse.com" />
+            </label>
+            <label>Password
+              <input type="password" name="password" required />
+            </label>
+            <label>Authenticator Code <span class="hint">Only if you enabled 2FA</span>
+              <input type="text" name="totpToken" placeholder="123 456" />
+            </label>
+            <button class="cta" type="submit">Sign In</button>
+          </form>
         </div>
+        <div class="account-status" id="account-status">Not signed in.</div>
+        <div class="account-actions">
+          <button class="secondary" type="button" id="logout-btn" style="display:none;">Sign out</button>
+        </div>
+      </div>
+
+      <div class="panel light" id="totp-panel" style="display:none;">
+        <h3>Authenticator Shield</h3>
+        <p class="hint">Protect access with a second verification step. Works with Google Authenticator, 1Password, Authy and more.</p>
+        <div id="totp-content">
+          <button class="cta" type="button" id="enable-totp">Generate authenticator secret</button>
+          <p class="hint">Scan the QR code we provide or copy the secret into your authenticator app.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Integration Vault</h3>
+        <p>Connect the systems you already use. Paste API keys, set webhooks, or trigger one-click OAuth flows.</p>
+        <div class="integrations-grid" id="integration-catalog"></div>
+        <div class="panel light" id="integration-form-wrapper" style="display:none;">
+          <h4 id="integration-form-title">Connect integration</h4>
+          <form id="integration-form">
+            <input type="hidden" name="serviceId" id="integration-service-id" />
+            <label>Friendly label
+              <input type="text" name="label" id="integration-label" placeholder="HQ Shopify North America" />
+            </label>
+            <label>API key or login token
+              <input type="text" name="apiKey" id="integration-api-key" placeholder="Paste API key, PAT or login email" />
+            </label>
+            <label>Secret / Password
+              <input type="text" name="secret" id="integration-secret" placeholder="Optional secret or password" />
+            </label>
+            <label>Webhook URL (optional)
+              <input type="url" name="webhook" id="integration-webhook" placeholder="https://your-domain.com/webhooks/provider" />
+            </label>
+            <label>Notes for your team
+              <textarea name="notes" id="integration-notes" placeholder="Share login context, rate limits, etc."></textarea>
+            </label>
+            <button class="cta" type="submit">Save integration</button>
+          </form>
+          <p class="hint">Have a one-click button from the provider? Hit “One-click link” on the card to finalize tokens.</p>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Status</th>
+                <th>Credentials</th>
+                <th>Updated</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="integration-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Brand Lab</h3>
+        <p>Make the HQ feel like your own RTS hub. Colors, badges and copy sync across every device once you save.</p>
+        <div class="brand-grid">
+          <form id="brand-form" class="panel light">
+            <label>Accent color
+              <input type="color" id="brand-accent" name="accent" value="#38bdf8" />
+            </label>
+            <label>Background theme
+              <select id="brand-background" name="background">
+                <option value="nebula">Nebula Grid</option>
+                <option value="sunrise">Sunrise Deck</option>
+                <option value="midnight">Midnight Ops</option>
+                <option value="summit">Summit Frost</option>
+              </select>
+            </label>
+            <label>Call sign headline
+              <input type="text" id="brand-call-sign" name="callSign" placeholder="Delco Logistics Fleet" />
+            </label>
+            <label>Badge emoji
+              <input type="text" id="brand-emoji" name="emoji" maxlength="2" placeholder="🚚" />
+            </label>
+            <button class="cta" type="submit">Save brand preset</button>
+            <p class="hint">Brand presets persist locally and, when signed in, sync to the cloud for your whole squad.</p>
+          </form>
+          <div class="brand-preview" id="brand-preview">
+            <div class="preview-hero" id="brand-preview-title">Delco Logistics Fleet</div>
+            <div class="preview-card">
+              <div id="brand-preview-badge" class="badge-emoji" aria-hidden="true">🚚</div>
+              <div class="mini-input" id="brand-preview-caption">Realtime inventory + AI slotting in your colors.</div>
+            </div>
+            <div class="preview-card">
+              <strong>Squad bonuses active</strong>
+              <p class="mini-input">Deploy pick-pack boosts, loyalty banners and warehouse skins that mirror your brand.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel light">
+        <h3>Operations Gallery</h3>
+        <p class="hint">Live visuals from community logistics floors. Mix them into your updates to make sorting &amp; labeling feel like a co-op mission.</p>
+        <div class="gallery" id="ops-gallery"></div>
+      </div>
+
+      <div class="panel light">
+        <h3>Report an Issue</h3>
+        <p>Our OpenAI co-pilot guides the report and launches an email to rb@dreamworld.co so nothing gets lost in transit.</p>
+        <form id="support-form">
+          <label>Subject
+            <input type="text" name="subject" required placeholder="Packing station tablet offline" />
+          </label>
+          <label>Category
+            <select name="category">
+              <option value="inventory">Inventory &amp; slotting</option>
+              <option value="orders">Orders &amp; fulfillment</option>
+              <option value="integrations">Integrations</option>
+              <option value="billing">Billing</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>Description
+            <textarea name="description" required placeholder="Share what happened, any order IDs, and when you noticed it."></textarea>
+          </label>
+          <label>Your email (for updates)
+            <input type="email" name="email" placeholder="you@warehouse.com" />
+          </label>
+          <button class="cta" type="submit">Send report</button>
+        </form>
+        <div id="support-response" class="support-response" style="display:none;"></div>
+        <div id="support-reward" class="reward-badge" role="status" aria-live="polite"></div>
       </div>
     </section>
   </main>
@@ -1022,20 +1224,48 @@
     const STORAGE_KEY = 'warehouse-hq-state-v1';
     const state = loadState();
     const warehouseSelects = ['item-warehouse', 'order-warehouse', 'receipt-warehouse', 'cycle-warehouse'];
+    const AUTH_KEY = 'warehouse-hq-auth-v1';
+    let authState = loadAuth();
+    let integrationCatalog = [];
+    const chartInstances = {};
 
     function loadState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) return JSON.parse(raw);
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (!data.branding) {
+            data.branding = seedState().branding;
+          }
+          return data;
+        }
       } catch (err) {
         console.warn('Failed to load state', err);
       }
       return seedState();
     }
 
+    function loadAuth(){
+      try {
+        const raw = localStorage.getItem(AUTH_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (err){
+        console.warn('Failed to load auth state', err);
+      }
+      return { token: null, user: null };
+    }
+
+    function persistAuth(){
+      try {
+        localStorage.setItem(AUTH_KEY, JSON.stringify(authState));
+      } catch (err){
+        console.warn('Failed to persist auth', err);
+      }
+    }
+
     function seedState() {
       const now = new Date().toISOString();
-      return {
+          return {
         generatedAt: now,
         warehouses: [
           { id: crypto.randomUUID(), name: 'Delco Fulfillment East', type: 'Fulfillment Center', capacity: 1200, notes: 'Philadelphia, PA – robotics ready' },
@@ -1050,7 +1280,13 @@
         gamification: [
           { id: crypto.randomUUID(), message: '🏅 Team Inbound earned "5-Star Receiver" for 99.6% accuracy this week.' },
           { id: crypto.randomUUID(), message: '🚀 Picking squad unlocked Rush Wave Boost after meeting SLA five days straight.' }
-        ]
+        ],
+        branding: {
+          accent: '#38bdf8',
+          background: 'nebula',
+          callSign: 'Delco Logistics Fleet',
+          emoji: '🚚',
+        }
       };
     }
 
@@ -1059,6 +1295,64 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch (err) {
         console.warn('Failed to persist state', err);
+      }
+    }
+
+    function hexToRgba(hex, alpha) {
+      const clean = hex.replace('#', '');
+      if (clean.length !== 6) return `rgba(56,189,248,${alpha})`;
+      const r = parseInt(clean.slice(0, 2), 16);
+      const g = parseInt(clean.slice(2, 4), 16);
+      const b = parseInt(clean.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function applyBranding() {
+      const branding = state.branding || {};
+      const accent = branding.accent || '#38bdf8';
+      document.documentElement.style.setProperty('--accent', accent);
+      document.documentElement.style.setProperty('--accent-soft', hexToRgba(accent, 0.18));
+      document.documentElement.style.setProperty('--accent-strong', hexToRgba(accent, 0.36));
+      document.documentElement.style.setProperty('--accent-border', hexToRgba(accent, 0.6));
+
+      const theme = branding.background || 'nebula';
+      const body = document.body;
+      if (theme === 'sunrise') {
+        body.style.background = 'radial-gradient(circle at top, rgba(255, 140, 66, 0.18), transparent 55%), radial-gradient(circle at 80% 20%, rgba(255, 203, 105, 0.18), transparent 60%), #0f172a';
+      } else if (theme === 'midnight') {
+        body.style.background = 'radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 45%), radial-gradient(circle at center, rgba(12, 74, 110, 0.18), transparent 65%), #020617';
+      } else if (theme === 'summit') {
+        body.style.background = 'radial-gradient(circle at top, rgba(148, 163, 184, 0.15), transparent 50%), radial-gradient(circle at 30% 70%, rgba(226, 232, 240, 0.1), transparent 65%), #0f172a';
+      } else {
+        body.style.background = 'radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 55%), radial-gradient(circle at center, rgba(14, 116, 144, 0.1), transparent 65%), radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.12), transparent 70%), #020617';
+      }
+
+      const callSign = branding.callSign || 'Delco Logistics Fleet';
+      const emoji = branding.emoji || '🚚';
+      const previewTitle = document.getElementById('brand-preview-title');
+      if (previewTitle) previewTitle.textContent = callSign;
+      const previewBadge = document.getElementById('brand-preview-badge');
+      if (previewBadge) previewBadge.textContent = emoji;
+      const previewCaption = document.getElementById('brand-preview-caption');
+      if (previewCaption) {
+        previewCaption.textContent = `Personalized ops skin active • ${callSign}`;
+      }
+
+      const callSignInput = document.getElementById('brand-call-sign');
+      if (callSignInput && callSignInput.value !== callSign) {
+        callSignInput.value = callSign;
+      }
+      const accentInput = document.getElementById('brand-accent');
+      if (accentInput && accentInput.value !== accent) {
+        accentInput.value = accent;
+      }
+      const emojiInput = document.getElementById('brand-emoji');
+      if (emojiInput && emojiInput.value !== emoji) {
+        emojiInput.value = emoji;
+      }
+      const backgroundSelect = document.getElementById('brand-background');
+      if (backgroundSelect && backgroundSelect.value !== theme) {
+        backgroundSelect.value = theme;
       }
     }
 
@@ -1291,6 +1585,604 @@
       if (openOrders > 0) missions.push('Wave plan next picking batch to hit SLA.');
       if (!missions.length) missions.push('All clear! Review analytics or schedule a cycle count.');
       priorities.innerHTML = missions.map(m => `<li>${m}</li>`).join('');
+
+      renderCharts();
+    }
+
+    function ensureChart(id, config){
+      if (!window.Chart) {
+        setTimeout(renderCharts, 400);
+        return;
+      }
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      if (chartInstances[id]){
+        chartInstances[id].data = config.data;
+        chartInstances[id].options = config.options;
+        chartInstances[id].update();
+      } else {
+        chartInstances[id] = new Chart(canvas, config);
+      }
+    }
+
+    function renderCharts(){
+      if (!window.Chart) return;
+      const accent = state.branding?.accent || '#38bdf8';
+
+      const items = state.items.slice().sort((a, b) => (Number(b.quantity) || 0) - (Number(a.quantity) || 0)).slice(0, 5);
+      const invLabels = items.length ? items.map(it => it.sku) : ['Ready'];
+      const invData = items.length ? items.map(it => Number(it.quantity) || 0) : [5];
+      ensureChart('inventoryChart', {
+        type: 'bar',
+        data: {
+          labels: invLabels,
+          datasets: [{
+            label: 'Units on hand',
+            data: invData,
+            backgroundColor: invData.map(() => hexToRgba(accent, 0.35)),
+            borderColor: invData.map(() => accent),
+            borderWidth: 1.5,
+            borderRadius: 8,
+          }],
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#cbd5f5' } },
+            y: { ticks: { color: '#cbd5f5' }, beginAtZero: true },
+          },
+        },
+      });
+
+      const orderStatuses = ['open', 'picking', 'packed', 'shipped', 'cancelled'];
+      const orderCounts = orderStatuses.map(status => state.orders.filter(o => o.status === status).length);
+      ensureChart('orderChart', {
+        type: 'doughnut',
+        data: {
+          labels: orderStatuses.map(s => s.charAt(0).toUpperCase() + s.slice(1)),
+          datasets: [{
+            data: orderCounts.map(count => count || 1),
+            backgroundColor: [
+              hexToRgba(accent, 0.6),
+              'rgba(129, 140, 248, 0.6)',
+              'rgba(59, 130, 246, 0.6)',
+              'rgba(34, 197, 94, 0.6)',
+              'rgba(239, 68, 68, 0.4)',
+            ],
+            borderColor: 'rgba(15, 23, 42, 0.8)',
+            borderWidth: 2,
+          }],
+        },
+        options: {
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: { color: '#cbd5f5', boxWidth: 16 },
+            },
+          },
+        },
+      });
+
+      const missionTotals = {
+        Stocking: state.receipts.length || 1,
+        Sorting: state.orders.filter(o => ['open', 'picking'].includes(o.status)).length || 1,
+        Labeling: state.tasks.filter(t => t.type === 'Packing').length + state.orders.filter(o => o.status === 'packed').length || 1,
+        Dispatch: state.shipments.length || 1,
+        Returns: state.returns.length || 1,
+      };
+      ensureChart('missionChart', {
+        type: 'radar',
+        data: {
+          labels: Object.keys(missionTotals),
+          datasets: [{
+            label: 'Mission energy',
+            data: Object.values(missionTotals),
+            backgroundColor: hexToRgba(accent, 0.25),
+            borderColor: accent,
+            borderWidth: 2,
+            pointBackgroundColor: accent,
+          }],
+        },
+        options: {
+          scales: {
+            r: {
+              angleLines: { color: 'rgba(148, 163, 184, 0.25)' },
+              grid: { color: 'rgba(148, 163, 184, 0.2)' },
+              pointLabels: { color: '#cbd5f5' },
+              ticks: { display: false },
+            },
+          },
+          plugins: { legend: { display: false } },
+        },
+      });
+    }
+
+    function authHeaders(){
+      return authState?.token ? { Authorization: `Bearer ${authState.token}` } : {};
+    }
+
+    function setAuthState({ token = null, user = null }){
+      authState = { token, user };
+      persistAuth();
+      if (user && user.brandTheme){
+        state.branding = { ...state.branding, ...user.brandTheme };
+        persist();
+        applyBranding();
+      }
+      updateAccountStatus();
+      if (authState.token){
+        loadIntegrations();
+      }
+      renderTotpUi();
+    }
+
+    async function hydrateAuth(){
+      if (!authState.token || (authState.user && authState.user.email)) return;
+      try {
+        const res = await fetch('/api/users/me', { headers: authHeaders() });
+        const data = await res.json();
+        if (res.ok && data.user){
+          setAuthState({ token: authState.token, user: data.user });
+        }
+      } catch (err){
+        console.warn('Auth hydrate skipped', err);
+      }
+    }
+
+    function updateAccountStatus(){
+      const status = document.getElementById('account-status');
+      const logoutBtn = document.getElementById('logout-btn');
+      if (!status || !logoutBtn) return;
+      if (authState && authState.user){
+        const parts = [`Signed in as ${authState.user.email}`];
+        if (authState.user.totpEnabled) parts.push('2FA enabled');
+        status.textContent = parts.join(' • ');
+        logoutBtn.style.display = 'inline-flex';
+      } else {
+        status.textContent = 'Not signed in.';
+        logoutBtn.style.display = 'none';
+      }
+    }
+
+    function renderTotpUi(extra){
+      const panel = document.getElementById('totp-panel');
+      const container = document.getElementById('totp-content');
+      if (!panel || !container) return;
+      if (!authState || !authState.user){
+        panel.style.display = 'none';
+        container.innerHTML = '<p class="hint">Sign in to enable authenticator protection.</p>';
+        return;
+      }
+      panel.style.display = '';
+      if (extra && extra.secret){
+        container.innerHTML = `
+          <p><strong>Secret:</strong> <code>${extra.secret}</code></p>
+          <p class="hint">Add this to your authenticator. URL: <a href="${extra.otpauth}" target="_blank" rel="noopener">${extra.otpauth}</a></p>
+          <button class="secondary" type="button" id="totp-done">Done</button>
+        `;
+        container.querySelector('#totp-done').addEventListener('click', () => renderTotpUi());
+        authState.user.totpEnabled = true;
+        persistAuth();
+        updateAccountStatus();
+        return;
+      }
+      if (authState.user.totpEnabled){
+        container.innerHTML = `
+          <p class="hint">Authenticator active. Use your rotating code when logging in.</p>
+          <button class="secondary" type="button" id="disable-totp">Disable 2FA</button>
+        `;
+        container.querySelector('#disable-totp').addEventListener('click', disableTotp);
+      } else {
+        container.innerHTML = `
+          <button class="cta" type="button" id="enable-totp">Generate authenticator secret</button>
+          <p class="hint">Scan the QR we generate or copy the secret into your authenticator app.</p>
+        `;
+        container.querySelector('#enable-totp').addEventListener('click', enableTotp);
+      }
+    }
+
+    async function registerAccount(evt){
+      evt.preventDefault();
+      const form = evt.target;
+      const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
+      payload.enableTotp = formData.get('enableTotp') === 'on';
+      payload.brandTheme = { ...state.branding };
+      try {
+        const res = await fetch('/api/users/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok){
+          showToast(data.error || 'Unable to register');
+          return;
+        }
+        setAuthState({ token: data.token, user: data.user });
+        renderTotpUi(data.totp);
+        showToast('Account created. Welcome aboard!');
+        form.reset();
+      } catch (err){
+        showToast('Registration failed. Try again shortly.');
+      }
+    }
+
+    async function loginAccount(evt){
+      evt.preventDefault();
+      const form = evt.target;
+      const payload = Object.fromEntries(new FormData(form).entries());
+      try {
+        const res = await fetch('/api/users/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok){
+          const message = data.error === 'totp_required' ? 'Enter your authenticator code.' : (data.error || 'Login failed');
+          showToast(message);
+          return;
+        }
+        setAuthState({ token: data.token, user: data.user });
+        showToast('Logged in. Systems synced.');
+        form.reset();
+      } catch (err){
+        showToast('Login unavailable right now.');
+      }
+    }
+
+    function logoutAccount(){
+      authState = { token: null, user: null };
+      persistAuth();
+      updateAccountStatus();
+      renderTotpUi();
+      loadIntegrations();
+      showToast('Signed out.');
+    }
+
+    async function enableTotp(){
+      try {
+        const res = await fetch('/api/users/totp/enable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ label: authState.user?.email || 'Warehouse HQ' }),
+        });
+        const data = await res.json();
+        if (!res.ok){
+          showToast(data.error || 'Unable to enable 2FA');
+          return;
+        }
+        authState.user.totpEnabled = true;
+        persistAuth();
+        renderTotpUi(data);
+      } catch (err){
+        showToast('Authenticator setup failed.');
+      }
+    }
+
+    async function disableTotp(){
+      try {
+        const res = await fetch('/api/users/totp/disable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        });
+        if (!res.ok){
+          const data = await res.json();
+          showToast(data.error || 'Unable to disable 2FA');
+          return;
+        }
+        authState.user.totpEnabled = false;
+        persistAuth();
+        renderTotpUi();
+        updateAccountStatus();
+      } catch (err){
+        showToast('Disable failed.');
+      }
+    }
+
+    async function fetchIntegrationCatalog(){
+      try {
+        const res = await fetch('/api/integrations/catalog');
+        const data = await res.json();
+        integrationCatalog = data.catalog || [];
+      } catch (err){
+        integrationCatalog = [];
+      }
+      renderIntegrationCatalog();
+    }
+
+    function renderIntegrationCatalog(){
+      const container = document.getElementById('integration-catalog');
+      if (!container) return;
+      if (!integrationCatalog.length){
+        container.innerHTML = '<div class="integration-table-empty">Catalog loading...</div>';
+        return;
+      }
+      container.innerHTML = integrationCatalog.map(item => `
+        <div class="integration-card">
+          <img src="https://api.dicebear.com/7.x/icons/svg?seed=${encodeURIComponent(item.id)}&backgroundColor=transparent" alt="${item.name} icon" loading="lazy" />
+          <div><strong>${item.name}</strong><br><span class="hint">${item.category}</span></div>
+          <div class="tagline">${(item.scopes || []).join(' • ')}</div>
+          ${item.oneClick ? '<span class="one-click-tag">One-click ready</span>' : ''}
+          <div class="account-actions">
+            <button class="cta" type="button" data-action="connect" data-id="${item.id}">Add credentials</button>
+            ${item.oneClick ? `<button class="secondary" type="button" data-action="oneclick" data-id="${item.id}">One-click link</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+      container.querySelectorAll('button[data-action="connect"]').forEach(btn => {
+        btn.addEventListener('click', () => showIntegrationForm(btn.dataset.id));
+      });
+      container.querySelectorAll('button[data-action="oneclick"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (!authState.token){
+            showToast('Sign in to complete one-click links.');
+            return;
+          }
+          showIntegrationForm(btn.dataset.id, true);
+        });
+      });
+    }
+
+    function showIntegrationForm(serviceId, focusOauth = false){
+      if (!authState.token){
+        showToast('Sign in first to save integrations.');
+        return;
+      }
+      const wrapper = document.getElementById('integration-form-wrapper');
+      const title = document.getElementById('integration-form-title');
+      const inputId = document.getElementById('integration-service-id');
+      const labelInput = document.getElementById('integration-label');
+      if (!wrapper || !inputId) return;
+      const meta = integrationCatalog.find(item => item.id === serviceId) || { name: serviceId };
+      wrapper.style.display = '';
+      title.textContent = `Connect ${meta.name}`;
+      inputId.value = serviceId;
+      if (labelInput && !labelInput.value) labelInput.value = meta.name;
+      if (focusOauth){
+        const note = document.getElementById('integration-notes');
+        if (note) note.placeholder = 'Paste tokens from the provider after approving the connection.';
+      }
+    }
+
+    async function loadIntegrations(){
+      const tbody = document.getElementById('integration-table');
+      if (!tbody) return;
+      if (!authState.token){
+        tbody.innerHTML = '<tr><td colspan="5" class="integration-table-empty">Sign in to manage integrations.</td></tr>';
+        return;
+      }
+      try {
+        const res = await fetch('/api/integrations', { headers: authHeaders() });
+        const data = await res.json();
+        if (!res.ok){
+          throw new Error(data.error || 'Failed');
+        }
+        renderIntegrations(data.integrations || []);
+      } catch (err){
+        tbody.innerHTML = '<tr><td colspan="5" class="integration-table-empty">Unable to load integrations.</td></tr>';
+      }
+    }
+
+    function renderIntegrations(rows){
+      const tbody = document.getElementById('integration-table');
+      if (!tbody) return;
+      if (!rows.length){
+        tbody.innerHTML = '<tr><td colspan="5" class="integration-table-empty">No integrations yet. Connect your first platform.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(row => {
+        const meta = integrationCatalog.find(item => item.id === row.serviceId) || {};
+        const creds = Object.entries(row.credentials || {}).map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`).join('');
+        const actions = [];
+        if (meta.oneClick){
+          actions.push(`<button data-action="complete-oauth" data-id="${row.id}">One-click link</button>`);
+        }
+        actions.push(`<button data-action="delete" data-id="${row.id}">Remove</button>`);
+        return `
+          <tr>
+            <td><strong>${meta.name || row.serviceId}</strong><br><span class="hint">${meta.category || ''}</span></td>
+            <td>${row.status}</td>
+            <td>${creds || '<span class="hint">Credentials hidden</span>'}</td>
+            <td>${row.updatedAt ? formatDate(row.updatedAt) : '—'}</td>
+            <td class="actions">${actions.join(' ')}</td>
+          </tr>
+        `;
+      }).join('');
+      tbody.querySelectorAll('button[data-action="delete"]').forEach(btn => btn.addEventListener('click', () => deleteIntegration(btn.dataset.id)));
+      tbody.querySelectorAll('button[data-action="complete-oauth"]').forEach(btn => btn.addEventListener('click', () => completeOneClick(btn.dataset.id)));
+    }
+
+    async function saveIntegration(evt){
+      evt.preventDefault();
+      if (!authState.token){
+        showToast('Sign in to save integrations.');
+        return;
+      }
+      const form = evt.target;
+      const { serviceId, label, apiKey, secret, webhook, notes } = form.elements;
+      const payload = {
+        serviceId: serviceId.value,
+        label: label.value,
+        credentials: {
+          apiKey: apiKey.value,
+          secret: secret.value,
+          webhook: webhook.value,
+        },
+        notes: notes.value,
+      };
+      try {
+        const res = await fetch('/api/integrations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok){
+          showToast(data.error || 'Could not save integration');
+          return;
+        }
+        showToast('Integration stored.');
+        form.reset();
+        document.getElementById('integration-form-wrapper').style.display = 'none';
+        loadIntegrations();
+      } catch (err){
+        showToast('Integration save failed.');
+      }
+    }
+
+    async function completeOneClick(id){
+      const accessToken = prompt('Paste the access token from the provider (demo tokens accepted).');
+      if (!accessToken) return;
+      try {
+        const res = await fetch(`/api/integrations/${id}/one-click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ accessToken, refreshToken: 'refresh-demo', expiresAt: new Date(Date.now() + 3600 * 1000).toISOString() }),
+        });
+        const data = await res.json();
+        if (!res.ok){
+          showToast(data.error || 'One-click linking failed.');
+          return;
+        }
+        showToast('One-click tokens saved.');
+        loadIntegrations();
+      } catch (err){
+        showToast('Unable to store tokens.');
+      }
+    }
+
+    async function deleteIntegration(id){
+      if (!confirm('Remove this integration?')) return;
+      try {
+        const res = await fetch(`/api/integrations/${id}`, {
+          method: 'DELETE',
+          headers: authHeaders(),
+        });
+        if (!res.ok){
+          showToast('Unable to remove integration.');
+          return;
+        }
+        showToast('Integration removed.');
+        loadIntegrations();
+      } catch (err){
+        showToast('Network issue removing integration.');
+      }
+    }
+
+    let brandSyncTimer = null;
+    function scheduleBrandSync(){
+      if (!authState.token) return;
+      clearTimeout(brandSyncTimer);
+      brandSyncTimer = setTimeout(syncBrandToServer, 600);
+    }
+
+    async function syncBrandToServer(){
+      if (!authState.token) return;
+      try {
+        await fetch('/api/users/brand', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ brandTheme: state.branding }),
+        });
+      } catch (err){
+        console.warn('Brand sync skipped', err);
+      }
+    }
+
+    function initBrandingControls(){
+      const form = document.getElementById('brand-form');
+      if (!form) return;
+      form.addEventListener('submit', evt => {
+        evt.preventDefault();
+        persist();
+        scheduleBrandSync();
+        showToast('Brand preset saved.');
+      });
+      const accentInput = document.getElementById('brand-accent');
+      const backgroundSelect = document.getElementById('brand-background');
+      const callSignInput = document.getElementById('brand-call-sign');
+      const emojiInput = document.getElementById('brand-emoji');
+      [accentInput, backgroundSelect, callSignInput, emojiInput].forEach(input => {
+        if (!input) return;
+        input.addEventListener('input', () => {
+          state.branding = {
+            accent: accentInput?.value || state.branding.accent,
+            background: backgroundSelect?.value || state.branding.background,
+            callSign: callSignInput?.value || state.branding.callSign,
+            emoji: emojiInput?.value || state.branding.emoji,
+          };
+          applyBranding();
+          persist();
+          scheduleBrandSync();
+        });
+      });
+    }
+
+    async function loadOperationsGallery(){
+      const container = document.getElementById('ops-gallery');
+      if (!container) return;
+      container.innerHTML = '<div class="integration-table-empty">Loading gallery…</div>';
+      try {
+        const res = await fetch('https://picsum.photos/v2/list?limit=6');
+        const data = await res.json();
+        if (!Array.isArray(data) || !data.length) throw new Error('empty');
+        container.innerHTML = data.map((img, idx) => {
+          const url = `${img.download_url}?w=260&h=260&fit=crop`;
+          return `<img src="${url}" alt="Warehouse inspiration ${idx + 1}" loading="lazy" />`;
+        }).join('');
+      } catch (err){
+        const fallback = [
+          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=400&q=80',
+          'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=400&q=80',
+          'https://images.unsplash.com/photo-1581579186989-421b5f70e22e?auto=format&fit=crop&w=400&q=80',
+          'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=400&q=80',
+          'https://images.unsplash.com/photo-1515169067865-5387ec356754?auto=format&fit=crop&w=400&q=80',
+          'https://images.unsplash.com/photo-1603180465537-0fd7a7d98bc5?auto=format&fit=crop&w=400&q=80',
+        ];
+        container.innerHTML = fallback.map((url, idx) => `<img src="${url}" alt="Warehouse scene ${idx + 1}" loading="lazy" />`).join('');
+      }
+    }
+
+    async function submitSupportReport(evt){
+      evt.preventDefault();
+      const form = evt.target;
+      const payload = Object.fromEntries(new FormData(form).entries());
+      payload.metadata = {
+        warehouses: state.warehouses.length,
+        openOrders: state.orders.length,
+        branding: state.branding.callSign,
+      };
+      try {
+        const res = await fetch('/api/support/report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok){
+          showToast(data.error || 'Could not send report');
+          return;
+        }
+        const response = document.getElementById('support-response');
+        const reward = document.getElementById('support-reward');
+        if (response){
+          response.style.display = 'block';
+          response.textContent = data.assistant || 'Report received.';
+        }
+        if (reward){
+          reward.innerHTML = `<span class="badge-emoji">${data.reward?.icon || '✨'}</span><div>${data.reward?.title || 'Great scout!'}<br><span class="mini-input">${data.reward?.message || ''}</span></div>`;
+          reward.classList.add('show');
+        }
+        const mailLink = `mailto:rb@dreamworld.co?subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(payload.description)}`;
+        window.open(mailLink, '_blank');
+        showToast('Report sent — thank you!');
+        form.reset();
+      } catch (err){
+        showToast('Support request failed.');
+      }
     }
 
     function handleNavigation() {
@@ -1687,7 +2579,7 @@
       alert('Stripe checkout flows live in production. For now, track selections as part of your upgrade strategy.');
     });
 
-    document.getElementById('bundle-body').addEventListener('click', evt => {
+   document.getElementById('bundle-body').addEventListener('click', evt => {
       if (evt.target.tagName === 'INPUT') {
         showToast('Bundle updated. AI will recommend savings once usage is detected.');
       }
@@ -1696,6 +2588,12 @@
     document.getElementById('order-health').addEventListener('click', () => {
       showToast('Tip: Create wave picks from the Orders tab to auto-assign teams.');
     });
+
+    document.getElementById('register-form').addEventListener('submit', registerAccount);
+    document.getElementById('login-form').addEventListener('submit', loginAccount);
+    document.getElementById('logout-btn').addEventListener('click', logoutAccount);
+    document.getElementById('integration-form').addEventListener('submit', saveIntegration);
+    document.getElementById('support-form').addEventListener('submit', submitSupportReport);
 
     function initializeUI() {
       updateWarehouseSelects();
@@ -1708,6 +2606,15 @@
       renderStats();
       renderBundler();
     }
+
+    applyBranding();
+    initBrandingControls();
+    updateAccountStatus();
+    renderTotpUi();
+    fetchIntegrationCatalog();
+    loadIntegrations();
+    loadOperationsGallery();
+    hydrateAuth();
 
     handleNavigation();
     initializeUI();
