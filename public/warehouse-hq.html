@@ -364,17 +364,20 @@
       height: 2.5rem;
       border-radius: 0.75rem;
       border: 1px solid var(--border);
-      background: var(--bg-panel);
+      background: rgba(2, 6, 23, 0.96);
       color: inherit;
       position: relative;
       cursor: pointer;
       transition: border 0.2s ease, background 0.2s ease;
+      box-shadow: 0 10px 24px rgba(2, 6, 23, 0.45);
+      backdrop-filter: blur(6px);
+      z-index: 1;
     }
 
     .menu-toggle:hover,
     .menu-toggle:focus-visible {
       border-color: rgba(56, 189, 248, 0.7);
-      background: rgba(56, 189, 248, 0.1);
+      background: rgba(56, 189, 248, 0.16);
       outline: none;
     }
 
