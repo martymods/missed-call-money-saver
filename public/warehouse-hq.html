@@ -508,7 +508,25 @@
     .support-response { margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-muted); }
     .one-click-tag { font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 999px; background: rgba(56, 189, 248, 0.16); color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; }
     .integration-table-empty { color: var(--text-muted); text-align: center; padding: 1rem 0; }
-    .badge-emoji { font-size: 2rem; }
+    .brand-identity { display: flex; gap: 1rem; align-items: center; }
+    .brand-logo-shell { width: 68px; height: 68px; border-radius: 1.1rem; background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(99, 102, 241, 0.22)); border: 1px solid rgba(148, 163, 184, 0.35); display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 45px rgba(2, 6, 23, 0.35); overflow: hidden; flex-shrink: 0; }
+    .brand-logo-shell[hidden] { display: none; }
+    .brand-logo-shell img { width: 100%; height: 100%; object-fit: cover; }
+    .badge-emoji { width: 3.25rem; height: 3.25rem; border-radius: 0.9rem; background: rgba(56, 189, 248, 0.14); display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; overflow: hidden; position: relative; box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.2); }
+    .badge-emoji[data-has-logo="true"] { background: rgba(15, 23, 42, 0.9); box-shadow: 0 18px 32px rgba(2, 6, 23, 0.45); }
+    .badge-emoji img { width: 100%; height: 100%; object-fit: cover; }
+    .badge-emoji span { display: inline-flex; }
+    .badge-emoji[data-has-logo="true"] span { display: none; }
+    .brand-upload { position: relative; overflow: hidden; border-radius: 1rem; border: 1px dashed rgba(148, 163, 184, 0.45); padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.85rem; cursor: pointer; background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(14, 116, 144, 0.18)); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+    .brand-upload:hover { transform: translateY(-2px); box-shadow: 0 18px 38px rgba(2, 6, 23, 0.35); border-color: rgba(56, 189, 248, 0.55); }
+    .brand-upload:focus-within { outline: 2px solid rgba(56, 189, 248, 0.6); outline-offset: 3px; border-color: rgba(56, 189, 248, 0.6); }
+    .brand-upload input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .brand-upload-icon { font-size: 1.75rem; line-height: 1; }
+    .brand-upload strong { display: block; font-size: 0.95rem; }
+    .brand-upload small { display: block; font-size: 0.75rem; color: var(--text-muted); }
+    .brand-upload-hint { margin-top: 0.35rem; }
+    .link-button { background: none; border: none; color: var(--accent); padding: 0; font-size: 0.8rem; cursor: pointer; text-decoration: underline; margin-top: 0.25rem; }
+    .link-button:hover { color: #e0f2fe; }
     .mini-input { font-size: 0.8rem; color: var(--text-muted); }
 
     .toolbar input[type="file"] {
@@ -623,9 +641,14 @@
   <header>
     <div class="wrap">
       <div class="flex-space">
-        <div>
-          <h1>Warehouse HQ</h1>
-          <p>The logistics mission control for omni-channel merchants, from indie resellers to enterprise hubs.</p>
+        <div class="brand-identity">
+          <div class="brand-logo-shell" id="brand-logo-shell" hidden>
+            <img id="brand-logo-display" alt="Brand logo" />
+          </div>
+          <div>
+            <h1 id="brand-heading">Warehouse HQ</h1>
+            <p>The logistics mission control for omni-channel merchants, from indie resellers to enterprise hubs.</p>
+          </div>
         </div>
         <div class="flex header-actions">
           <div class="badge">Multi-tenant • Cloud-Ready • Free Forever Core</div>
@@ -1282,21 +1305,27 @@
             <label>Call sign headline
               <input type="text" id="brand-call-sign" name="callSign" placeholder="Delco Logistics Fleet" />
             </label>
-            <label>Badge emoji
-              <input type="text" id="brand-emoji" name="emoji" maxlength="2" placeholder="🚚" />
+            <label class="brand-upload">
+              <input type="file" id="brand-logo-input" name="logo" accept="image/*" capture="environment" />
+              <span class="brand-upload-icon" aria-hidden="true">📸</span>
+              <span>
+                <strong>Brand logo</strong>
+                <small>Snap a fresh badge or pick from your camera roll.</small>
+              </span>
             </label>
+            <p class="hint brand-upload-hint" id="brand-logo-hint">PNG, JPG, or SVG up to 2MB.</p>
+            <button type="button" class="link-button" id="brand-logo-clear">Remove logo</button>
             <button class="cta" type="submit">Save brand preset</button>
             <p class="hint">Brand presets persist locally and, when signed in, sync to the cloud for your whole squad.</p>
           </form>
           <div class="brand-preview" id="brand-preview">
-            <div class="preview-hero" id="brand-preview-title">Delco Logistics Fleet</div>
+            <div class="preview-hero" id="brand-preview-title">Warehouse HQ</div>
             <div class="preview-card">
-              <div id="brand-preview-badge" class="badge-emoji" aria-hidden="true">🚚</div>
-              <div class="mini-input" id="brand-preview-caption">Realtime inventory + AI slotting in your colors.</div>
-            </div>
-            <div class="preview-card">
-              <strong>Squad bonuses active</strong>
-              <p class="mini-input">Deploy pick-pack boosts, loyalty banners and warehouse skins that mirror your brand.</p>
+              <div id="brand-preview-badge" class="badge-emoji" aria-hidden="true">
+                <img id="brand-preview-logo" alt="Brand logo preview" hidden />
+                <span id="brand-preview-fallback">🚚</span>
+              </div>
+              <div class="mini-input" id="brand-preview-caption">Personalized ops skin active • Warehouse HQ</div>
             </div>
           </div>
         </div>
@@ -1410,8 +1439,9 @@
         branding: {
           accent: '#38bdf8',
           background: 'nebula',
-          callSign: 'Delco Logistics Fleet',
+          callSign: 'Warehouse HQ',
           emoji: '🚚',
+          logoData: '',
         }
       };
     }
@@ -1453,15 +1483,51 @@
         body.style.background = 'radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 55%), radial-gradient(circle at center, rgba(14, 116, 144, 0.1), transparent 65%), radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.12), transparent 70%), #020617';
       }
 
-      const callSign = branding.callSign || 'Delco Logistics Fleet';
+      const callSign = branding.callSign || 'Warehouse HQ';
       const emoji = branding.emoji || '🚚';
+      const logoData = branding.logoData || '';
       const previewTitle = document.getElementById('brand-preview-title');
       if (previewTitle) previewTitle.textContent = callSign;
       const previewBadge = document.getElementById('brand-preview-badge');
-      if (previewBadge) previewBadge.textContent = emoji;
+      const previewLogo = document.getElementById('brand-preview-logo');
+      const previewFallback = document.getElementById('brand-preview-fallback');
+      if (previewBadge) {
+        previewBadge.dataset.hasLogo = logoData ? 'true' : 'false';
+      }
+      if (previewLogo) {
+        if (logoData) {
+          previewLogo.src = logoData;
+          previewLogo.alt = `${callSign} logo preview`;
+          previewLogo.hidden = false;
+        } else {
+          previewLogo.hidden = true;
+          previewLogo.removeAttribute('src');
+        }
+      }
+      if (previewFallback) {
+        previewFallback.textContent = emoji;
+      }
       const previewCaption = document.getElementById('brand-preview-caption');
       if (previewCaption) {
         previewCaption.textContent = `Personalized ops skin active • ${callSign}`;
+      }
+
+      const headerHeading = document.getElementById('brand-heading');
+      if (headerHeading) {
+        headerHeading.textContent = callSign;
+      }
+      const headerLogoShell = document.getElementById('brand-logo-shell');
+      const headerLogo = document.getElementById('brand-logo-display');
+      if (headerLogoShell && headerLogo) {
+        if (logoData) {
+          headerLogo.src = logoData;
+          headerLogo.alt = `${callSign} logo`;
+          headerLogoShell.hidden = false;
+        } else {
+          headerLogo.src = '';
+          headerLogo.alt = 'Brand logo';
+          headerLogoShell.hidden = true;
+        }
       }
 
       const callSignInput = document.getElementById('brand-call-sign');
@@ -1472,9 +1538,13 @@
       if (accentInput && accentInput.value !== accent) {
         accentInput.value = accent;
       }
-      const emojiInput = document.getElementById('brand-emoji');
-      if (emojiInput && emojiInput.value !== emoji) {
-        emojiInput.value = emoji;
+      const logoHint = document.getElementById('brand-logo-hint');
+      if (logoHint) {
+        logoHint.textContent = logoData ? 'Logo active. Tap upload to replace or remove.' : 'PNG, JPG, or SVG up to 2MB.';
+      }
+      const logoClearBtn = document.getElementById('brand-logo-clear');
+      if (logoClearBtn) {
+        logoClearBtn.style.display = logoData ? 'inline-flex' : 'none';
       }
       const backgroundSelect = document.getElementById('brand-background');
       if (backgroundSelect && backgroundSelect.value !== theme) {
@@ -2233,21 +2303,67 @@
       const accentInput = document.getElementById('brand-accent');
       const backgroundSelect = document.getElementById('brand-background');
       const callSignInput = document.getElementById('brand-call-sign');
-      const emojiInput = document.getElementById('brand-emoji');
-      [accentInput, backgroundSelect, callSignInput, emojiInput].forEach(input => {
+      const logoInput = document.getElementById('brand-logo-input');
+      const logoClear = document.getElementById('brand-logo-clear');
+      [accentInput, backgroundSelect, callSignInput].forEach(input => {
         if (!input) return;
         input.addEventListener('input', () => {
           state.branding = {
+            ...state.branding,
             accent: accentInput?.value || state.branding.accent,
             background: backgroundSelect?.value || state.branding.background,
             callSign: callSignInput?.value || state.branding.callSign,
-            emoji: emojiInput?.value || state.branding.emoji,
           };
           applyBranding();
           persist();
           scheduleBrandSync();
         });
       });
+      if (logoInput) {
+        logoInput.addEventListener('change', () => {
+          const file = logoInput.files?.[0];
+          if (!file) {
+            return;
+          }
+          if (!file.type.startsWith('image/')) {
+            showToast('Please choose an image file.');
+            logoInput.value = '';
+            return;
+          }
+          if (file.size > 2 * 1024 * 1024) {
+            showToast('Logo must be 2MB or less.');
+            logoInput.value = '';
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (typeof reader.result !== 'string') return;
+            state.branding = {
+              ...state.branding,
+              logoData: reader.result,
+            };
+            applyBranding();
+            persist();
+            scheduleBrandSync();
+            logoInput.value = '';
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      if (logoClear) {
+        logoClear.addEventListener('click', () => {
+          state.branding = {
+            ...state.branding,
+            logoData: '',
+          };
+          if (logoInput) {
+            logoInput.value = '';
+          }
+          applyBranding();
+          persist();
+          scheduleBrandSync();
+        });
+      }
     }
 
     async function loadOperationsGallery(){
