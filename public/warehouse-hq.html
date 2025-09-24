@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Warehouse HQ – Logistics Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f172a;
+      --bg-panel: rgba(15, 23, 42, 0.85);
+      --bg-panel-light: rgba(248, 250, 252, 0.9);
+      --bg-surface: rgba(15, 23, 42, 0.95);
+      --bg-surface-light: rgba(255, 255, 255, 0.95);
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --accent-strong: rgba(56, 189, 248, 0.35);
+      --border: rgba(148, 163, 184, 0.2);
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --danger: #f87171;
+      --success: #4ade80;
+      --warning: #facc15;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 55%),
+        radial-gradient(circle at center, rgba(14, 116, 144, 0.1), transparent 65%),
+        radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.12), transparent 70%),
+        #020617;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(16px);
+      background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.8));
+      border-bottom: 1px solid var(--border);
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem;
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 2.2vw, 2.5rem);
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    h2 {
+      margin: 1.5rem 0 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    p {
+      color: var(--text-muted);
+    }
+
+    nav {
+      margin-top: 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+
+    nav button {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease, border 0.2s;
+    }
+
+    nav button:hover,
+    nav button.active {
+      background: var(--accent-strong);
+      border-color: rgba(56, 189, 248, 0.6);
+      transform: translateY(-1px);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+    }
+
+    section {
+      display: none;
+      animation: fade 0.3s ease forwards;
+    }
+
+    section.active {
+      display: block;
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.35);
+      backdrop-filter: blur(12px);
+    }
+
+    .panel.light {
+      background: var(--bg-panel-light);
+      color: #0f172a;
+      border-color: rgba(30, 41, 59, 0.15);
+      box-shadow: 0 18px 32px rgba(15, 23, 42, 0.18);
+    }
+
+    .grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .stat-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 0.9rem;
+      padding: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent, rgba(56, 189, 248, 0.15));
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .stat-card:hover::after {
+      opacity: 1;
+    }
+
+    .stat-card h3 {
+      margin: 0 0 0.25rem;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .stat-card strong {
+      font-size: 1.65rem;
+      font-weight: 700;
+      display: block;
+    }
+
+    .stat-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    form {
+      display: grid;
+      gap: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    input, select, textarea {
+      border-radius: 0.7rem;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.8);
+      color: inherit;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    button.cta {
+      background: linear-gradient(135deg, #38bdf8, #2563eb);
+      border: none;
+      color: white;
+      padding: 0.65rem 1.1rem;
+      border-radius: 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      justify-self: start;
+      box-shadow: 0 15px 30px rgba(37, 99, 235, 0.35);
+    }
+
+    button.secondary {
+      background: transparent;
+      color: inherit;
+      border: 1px solid var(--border);
+      padding: 0.6rem 1rem;
+      border-radius: 0.75rem;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+    }
+
+    th, td {
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tbody tr:hover {
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.15rem 0.55rem;
+      font-size: 0.75rem;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .tag.low { color: var(--warning); border-color: rgba(250, 204, 21, 0.6); }
+    .tag.ok { color: var(--success); border-color: rgba(74, 222, 128, 0.6); }
+    .tag.risk { color: var(--danger); border-color: rgba(248, 113, 113, 0.6); }
+
+    .table-scroll {
+      overflow-x: auto;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .flex {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .flex-space {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      border-radius: 999px;
+      padding: 0.3rem 0.85rem;
+      font-size: 0.75rem;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .actions button:hover {
+      border-color: rgba(56, 189, 248, 0.7);
+      color: var(--accent);
+    }
+
+    .summary-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      margin-top: 1.2rem;
+    }
+
+    .summary-tile {
+      padding: 1rem;
+      border-radius: 0.9rem;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.75);
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .summary-tile h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .summary-tile p {
+      margin: 0.2rem 0 0;
+      font-size: 0.85rem;
+    }
+
+    .list {
+      margin: 0;
+      padding-left: 1.25rem;
+      font-size: 0.9rem;
+    }
+
+    .list li {
+      margin-bottom: 0.3rem;
+    }
+
+    footer {
+      padding: 2rem 1.25rem 3rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    footer small {
+      color: var(--text-muted);
+    }
+
+    .toolbar {
+      display: inline-flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .toolbar button,
+    button.toolbar {
+      padding: 0.55rem 0.85rem;
+      border-radius: 0.7rem;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.75);
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .toolbar input[type="file"] {
+      display: none;
+    }
+
+    .upload-label {
+      border: 1px dashed rgba(148, 163, 184, 0.4);
+      padding: 0.65rem 0.9rem;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+    }
+
+    .callout {
+      border-left: 3px solid var(--accent);
+      padding-left: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .status-pill {
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-open { background: rgba(56, 189, 248, 0.18); color: #38bdf8; }
+    .status-picking { background: rgba(129, 140, 248, 0.2); color: #818cf8; }
+    .status-packed { background: rgba(45, 212, 191, 0.2); color: #14b8a6; }
+    .status-shipped { background: rgba(22, 163, 74, 0.2); color: #22c55e; }
+    .status-cancelled { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+    .toast {
+      position: fixed;
+      right: 1.5rem;
+      bottom: 2rem;
+      padding: 0.85rem 1.1rem;
+      background: rgba(15, 23, 42, 0.92);
+      border-radius: 0.8rem;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #f1f5f9;
+      box-shadow: 0 20px 40px rgba(2, 6, 23, 0.45);
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform 0.35s ease, opacity 0.35s ease;
+      z-index: 20;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    @media (max-width: 720px) {
+      nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .wrap {
+        padding: 1rem 1rem 1.5rem;
+      }
+
+      table {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="flex-space">
+        <div>
+          <h1>Warehouse HQ</h1>
+          <p>The logistics mission control for omni-channel merchants, from indie resellers to enterprise hubs.</p>
+        </div>
+        <div class="badge">Multi-tenant • Cloud-Ready • Free Forever Core</div>
+      </div>
+      <nav>
+        <button data-target="overview" class="active">Mission Control</button>
+        <button data-target="inventory">Inventory</button>
+        <button data-target="orders">Orders & Fulfillment</button>
+        <button data-target="receiving">Inbound</button>
+        <button data-target="shipping">Shipping & Returns</button>
+        <button data-target="labor">Teams & Tasks</button>
+        <button data-target="settings">Data & Settings</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="overview" class="active">
+      <div class="panel">
+        <h2>Live Command Dashboard</h2>
+        <p>Stay ahead of the floor: review health signals, SLA watch-outs, and AI nudges to guide your next move.</p>
+        <div class="stats" id="stat-cards"></div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-tile">
+          <div>
+            <h3>Today&apos;s Priorities</h3>
+            <ul class="list" id="priority-list"></ul>
+          </div>
+          <p class="hint">Automated by your Warehouse HQ assistant. Refresh as priorities evolve.</p>
+        </div>
+        <div class="summary-tile">
+          <div>
+            <h3>Integration Pulse</h3>
+            <ul class="list">
+              <li><strong>Commerce:</strong> Shopify, Amazon, eBay, Faire, POS</li>
+              <li><strong>Accounting:</strong> QuickBooks, Xero, NetSuite, Odoo</li>
+              <li><strong>Automation:</strong> Zebra scanners, RFID gateways, Locus bots</li>
+            </ul>
+          </div>
+          <p class="hint">Connect via Settings → Integrations. No-code connectors included.</p>
+        </div>
+        <div class="summary-tile">
+          <div>
+            <h3>Monetize & Gamify</h3>
+            <ul class="list">
+              <li>Dynamic subscription bundler for your ops scale.</li>
+              <li>Unlock premium AI slotting when KPIs trend up.</li>
+              <li>Seasonal power-ups keep teams motivated.</li>
+            </ul>
+          </div>
+          <p class="hint">Stripe-powered marketplace makes upgrades feel like a game night.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="inventory">
+      <div class="panel">
+        <div class="flex-space">
+          <div>
+            <h2>Inventory Catalogue</h2>
+            <p>Unified visibility by warehouse, zone, variant and compliance lot.</p>
+          </div>
+          <div class="toolbar">
+            <label class="upload-label">
+              <span>⬆︎ Import JSON</span>
+              <input type="file" id="import-input" accept="application/json" />
+            </label>
+            <button class="toolbar" id="export-btn">⬇︎ Export Backup</button>
+            <button class="toolbar" id="reset-btn">Reset Workspace</button>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <form id="warehouse-form" class="panel light">
+            <h3>New Warehouse / Zone</h3>
+            <label>Name
+              <input type="text" name="name" required placeholder="Delco Fulfillment East" />
+            </label>
+            <label>Type
+              <select name="type">
+                <option value="Fulfillment Center">Fulfillment Center</option>
+                <option value="3PL Client">3PL Client</option>
+                <option value="Retail Store">Retail Store</option>
+                <option value="Pop-up">Pop-up</option>
+                <option value="Cold Storage">Cold Storage</option>
+              </select>
+            </label>
+            <label>Capacity (pallets)
+              <input type="number" name="capacity" min="0" placeholder="1200" />
+            </label>
+            <label>Address / Notes
+              <textarea name="notes" placeholder="123 Market St, Philadelphia, PA"></textarea>
+            </label>
+            <button class="cta" type="submit">Add Warehouse</button>
+          </form>
+
+          <form id="item-form" class="panel light">
+            <h3>Create / Update SKU</h3>
+            <label>SKU / Barcode
+              <input type="text" name="sku" required placeholder="SKU-ABC-001" />
+            </label>
+            <label>Product Name
+              <input type="text" name="name" required placeholder="Wing Ding Hoodie" />
+            </label>
+            <label>Variant (size, color, etc.)
+              <input type="text" name="variant" placeholder="XL / Black" />
+            </label>
+            <label>Category
+              <input type="text" name="category" placeholder="Apparel" />
+            </label>
+            <label>Warehouse
+              <select name="warehouse" id="item-warehouse"></select>
+            </label>
+            <label>Bin / Location
+              <input type="text" name="location" placeholder="Aisle 4 → Bay B → Level 2" />
+            </label>
+            <label>On-hand Qty
+              <input type="number" name="quantity" min="0" value="0" />
+            </label>
+            <label>Reorder Point
+              <input type="number" name="reorder" min="0" value="10" />
+            </label>
+            <label>Lot / Batch
+              <input type="text" name="lot" placeholder="LOT-2025-04" />
+            </label>
+            <label>Expiry (if applicable)
+              <input type="date" name="expiry" />
+            </label>
+            <label>Unit Cost (optional)
+              <input type="number" name="unitCost" min="0" step="0.01" placeholder="12.50" />
+            </label>
+            <button class="cta" type="submit">Save SKU</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="flex-space">
+            <h3>Inventory Snapshot</h3>
+            <div class="flex">
+              <input type="search" id="inventory-search" placeholder="Search SKU, name, lot…" />
+              <select id="warehouse-filter"></select>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Product</th>
+                  <th>Warehouse</th>
+                  <th>Location</th>
+                  <th>Qty</th>
+                  <th>Reorder</th>
+                  <th>Lot / Exp</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="orders">
+      <div class="panel">
+        <h2>Orders & Fulfillment</h2>
+        <p>Unify B2C drops, wholesale and store replenishment. Control picking waves and shipping promises from one screen.</p>
+        <div class="grid grid-2">
+          <form id="order-form" class="panel light">
+            <h3>Create Order</h3>
+            <label>Order ID / Reference
+              <input type="text" name="orderId" required placeholder="WEB-10045" />
+            </label>
+            <label>Customer / Channel
+              <input type="text" name="customer" placeholder="Shopify – Jane Smith" />
+            </label>
+            <label>Warehouse Fulfilling
+              <select name="warehouse" id="order-warehouse"></select>
+            </label>
+            <label>Due Date
+              <input type="date" name="dueDate" />
+            </label>
+            <label>Priority
+              <select name="priority">
+                <option value="Standard">Standard</option>
+                <option value="Rush">Rush</option>
+                <option value="Same Day">Same Day</option>
+              </select>
+            </label>
+            <label>Shipping Method
+              <input type="text" name="shipping" placeholder="UPS Ground" />
+            </label>
+            <label>Items (SKU:Qty per line)
+              <textarea name="lines" required placeholder="SKU-ABC-001:3\nSKU-FTW-002:1"></textarea>
+            </label>
+            <button class="cta" type="submit">Create Order</button>
+          </form>
+
+          <div class="panel light">
+            <h3>Mobile Pick Assist</h3>
+            <label>Scan / Enter SKU
+              <input type="text" id="pick-scan" placeholder="Scan barcode" />
+            </label>
+            <div id="pick-result" class="callout">Awaiting scan…</div>
+            <h4>Order Queue Health</h4>
+            <ul class="list" id="order-health"></ul>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="flex-space">
+            <h3>Open Orders</h3>
+            <div class="flex">
+              <select id="order-status-filter">
+                <option value="all">All</option>
+                <option value="open">Open</option>
+                <option value="picking">Picking</option>
+                <option value="packed">Packed</option>
+                <option value="shipped">Shipped</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Warehouse</th>
+                  <th>Lines</th>
+                  <th>Due</th>
+                  <th>Status</th>
+                  <th>Progress</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="order-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="receiving">
+      <div class="panel">
+        <h2>Inbound, Put-away & Compliance</h2>
+        <p>Automate ASN matching, directed put-away and QA holds. Cycle counts and audits stay synced.</p>
+        <div class="grid grid-2">
+          <form id="receipt-form" class="panel light">
+            <h3>Receive Inventory</h3>
+            <label>Reference / ASN
+              <input type="text" name="reference" placeholder="ASN-5541" />
+            </label>
+            <label>Supplier
+              <input type="text" name="supplier" placeholder="Delco Apparel Mfg" />
+            </label>
+            <label>Warehouse
+              <select name="warehouse" id="receipt-warehouse"></select>
+            </label>
+            <label>SKU
+              <input type="text" name="sku" required placeholder="SKU-ABC-001" />
+            </label>
+            <label>Quantity Received
+              <input type="number" name="quantity" min="1" required value="1" />
+            </label>
+            <label>Put-away Location
+              <input type="text" name="location" placeholder="Aisle 5 → Bay C → Level 1" />
+            </label>
+            <label>Lot / Batch
+              <input type="text" name="lot" placeholder="LOT-APR-2025" />
+            </label>
+            <label>Expiry Date
+              <input type="date" name="expiry" />
+            </label>
+            <label>Notes
+              <textarea name="notes" placeholder="QA hold for inspection"></textarea>
+            </label>
+            <button class="cta" type="submit">Receive & Put-away</button>
+          </form>
+
+          <div class="panel light">
+            <h3>Cycle Count Scheduler</h3>
+            <label>Warehouse / Zone
+              <select id="cycle-warehouse"></select>
+            </label>
+            <label>Count Focus
+              <select id="cycle-focus">
+                <option value="velocity">High velocity SKUs</option>
+                <option value="aging">Aging / slow movers</option>
+                <option value="highValue">High value items</option>
+                <option value="compliance">Compliance (lot / expiry)</option>
+              </select>
+            </label>
+            <button class="cta" type="button" id="plan-cycle">Plan Cycle Count</button>
+            <div class="callout" id="cycle-plan">Plan a cycle count to reduce stockouts by 22%.</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Inbound Activity Log</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Reference</th>
+                  <th>Warehouse</th>
+                  <th>SKU</th>
+                  <th>Qty</th>
+                  <th>Location</th>
+                  <th>Lot / Exp</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody id="receipts-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="shipping">
+      <div class="panel">
+        <h2>Shipping Control & Reverse Logistics</h2>
+        <p>Confirm labels, track carrier SLAs and manage returns without leaving the cockpit.</p>
+        <div class="grid grid-2">
+          <form id="shipment-form" class="panel light">
+            <h3>Confirm Shipment</h3>
+            <label>Order ID
+              <input type="text" name="orderId" required placeholder="WEB-10045" />
+            </label>
+            <label>Carrier / Service
+              <input type="text" name="carrier" placeholder="UPS Ground" />
+            </label>
+            <label>Tracking #
+              <input type="text" name="tracking" placeholder="1Z999AA10123456784" />
+            </label>
+            <label>Packages
+              <input type="number" name="packages" min="1" value="1" />
+            </label>
+            <label>Freight Cost
+              <input type="number" name="cost" min="0" step="0.01" placeholder="12.45" />
+            </label>
+            <button class="cta" type="submit">Close Shipment</button>
+          </form>
+
+          <form id="return-form" class="panel light">
+            <h3>Process Return</h3>
+            <label>Order ID
+              <input type="text" name="orderId" placeholder="WEB-10045" />
+            </label>
+            <label>SKU
+              <input type="text" name="sku" placeholder="SKU-ABC-001" />
+            </label>
+            <label>Quantity
+              <input type="number" name="quantity" min="1" value="1" />
+            </label>
+            <label>Reason
+              <select name="reason">
+                <option value="damaged">Damaged</option>
+                <option value="wrongItem">Wrong Item</option>
+                <option value="buyerRemorse">Buyer Remorse</option>
+                <option value="warranty">Warranty / Repair</option>
+              </select>
+            </label>
+            <label>Disposition
+              <select name="disposition">
+                <option value="restock">Restock</option>
+                <option value="scrap">Scrap</option>
+                <option value="refurbish">Refurbish</option>
+                <option value="rtv">Return to Vendor</option>
+              </select>
+            </label>
+            <button class="cta" type="submit">Record Return</button>
+          </form>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="panel">
+            <h3>Shipments</h3>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Order</th>
+                    <th>Carrier</th>
+                    <th>Tracking</th>
+                    <th>Packages</th>
+                    <th>Cost</th>
+                  </tr>
+                </thead>
+                <tbody id="shipments-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Returns</h3>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Order</th>
+                    <th>SKU</th>
+                    <th>Qty</th>
+                    <th>Reason</th>
+                    <th>Disposition</th>
+                  </tr>
+                </thead>
+                <tbody id="returns-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="labor">
+      <div class="panel">
+        <h2>Teams, Labor & Playbooks</h2>
+        <p>Drive productivity with mission-based tasks, performance insights and gamified rewards.</p>
+        <div class="grid grid-2">
+          <form id="task-form" class="panel light">
+            <h3>Assign Task</h3>
+            <label>Task Title
+              <input type="text" name="title" placeholder="Cycle count Aisle 4" required />
+            </label>
+            <label>Owner / Team
+              <input type="text" name="owner" placeholder="Alicia (Inbound)" />
+            </label>
+            <label>Type
+              <select name="type">
+                <option value="Receiving">Receiving</option>
+                <option value="Picking">Picking</option>
+                <option value="Packing">Packing</option>
+                <option value="Cycle Count">Cycle Count</option>
+                <option value="QA">QA / Compliance</option>
+              </select>
+            </label>
+            <label>Due Date
+              <input type="date" name="dueDate" />
+            </label>
+            <label>Linked Order / SKU
+              <input type="text" name="link" placeholder="WEB-10045 / SKU-ABC-001" />
+            </label>
+            <button class="cta" type="submit">Dispatch Mission</button>
+          </form>
+
+          <div class="panel light">
+            <h3>Engagement & Gamification</h3>
+            <ul class="list" id="gamification-feed"></ul>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Mission Board</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Owner</th>
+                  <th>Type</th>
+                  <th>Due</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tasks-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="settings">
+      <div class="panel">
+        <h2>Data Governance & Marketplace</h2>
+        <p>Control tenant-level settings, integrations and growth modules. All core tooling remains free forever.</p>
+        <div class="grid grid-3">
+          <div class="summary-tile">
+            <h3>Marketplace Builder</h3>
+            <p>Curate add-ons à la carte. From $5 barcode packs to $5K autonomous robotics orchestration.</p>
+            <button class="cta" type="button" id="open-bundler">Launch Dynamic Bundler</button>
+          </div>
+          <div class="summary-tile">
+            <h3>API & Webhooks</h3>
+            <p>REST + GraphQL + EDI. Push real-time events to your stack. Docs ready for dev hand-off.</p>
+            <button class="secondary" type="button" onclick="alert('API docs open-source: /public/data/api-spec.json')">Download Spec</button>
+          </div>
+          <div class="summary-tile">
+            <h3>Data Residency</h3>
+            <p>US, EU, APAC regions with geo-fenced storage. SOC2 Type II on roadmap.</p>
+            <span class="hint">Contact support for dedicated clusters.</span>
+          </div>
+        </div>
+        <div class="panel light" id="bundler" style="display:none;margin-top:1.5rem;">
+          <h3>Dynamic Pricing Bundler</h3>
+          <p class="hint">Toggle modules to craft the perfect stack. Total adjusts with usage-aware AI guardrails.</p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Module</th>
+                  <th>Description</th>
+                  <th>Monthly</th>
+                  <th>Add</th>
+                </tr>
+              </thead>
+              <tbody id="bundle-body"></tbody>
+            </table>
+          </div>
+          <div class="flex-space" style="margin-top:1rem;">
+            <div>
+              <strong>Total Monthly:</strong> <span id="bundle-total">$0</span><br />
+              <span class="hint" id="bundle-note"></span>
+            </div>
+            <button class="cta" type="button" id="checkout-bundle">Checkout via Stripe</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <small>Warehouse HQ is a free-to-use command center. Export your data anytime, integrate with your existing tech stack, and upgrade only when you&apos;re ready for more automation.</small>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'warehouse-hq-state-v1';
+    const state = loadState();
+    const warehouseSelects = ['item-warehouse', 'order-warehouse', 'receipt-warehouse', 'cycle-warehouse'];
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (err) {
+        console.warn('Failed to load state', err);
+      }
+      return seedState();
+    }
+
+    function seedState() {
+      const now = new Date().toISOString();
+      return {
+        generatedAt: now,
+        warehouses: [
+          { id: crypto.randomUUID(), name: 'Delco Fulfillment East', type: 'Fulfillment Center', capacity: 1200, notes: 'Philadelphia, PA – robotics ready' },
+          { id: crypto.randomUUID(), name: 'SoCal Climate Hub', type: 'Cold Storage', capacity: 600, notes: 'Los Angeles, CA – FEFO picking enforced' }
+        ],
+        items: [],
+        orders: [],
+        receipts: [],
+        shipments: [],
+        returns: [],
+        tasks: [],
+        gamification: [
+          { id: crypto.randomUUID(), message: '🏅 Team Inbound earned "5-Star Receiver" for 99.6% accuracy this week.' },
+          { id: crypto.randomUUID(), message: '🚀 Picking squad unlocked Rush Wave Boost after meeting SLA five days straight.' }
+        ]
+      };
+    }
+
+    function persist() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (err) {
+        console.warn('Failed to persist state', err);
+      }
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      const date = new Date(dateStr);
+      if (Number.isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString();
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    function getWarehouseName(id) {
+      const warehouse = state.warehouses.find(w => w.id === id);
+      return warehouse ? warehouse.name : 'Unassigned';
+    }
+
+    function findOrCreateItem({ sku, name = '', variant = '', category = '' }) {
+      let item = state.items.find(it => it.sku.toLowerCase() === sku.toLowerCase());
+      if (!item) {
+        item = {
+          id: crypto.randomUUID(),
+          sku,
+          name: name || sku,
+          variant,
+          category,
+          warehouseId: state.warehouses[0]?.id || '',
+          location: '',
+          quantity: 0,
+          reorder: 0,
+          lot: '',
+          expiry: '',
+          unitCost: 0
+        };
+        state.items.push(item);
+      }
+      return item;
+    }
+
+    function updateWarehouseSelects() {
+      const options = state.warehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+      warehouseSelects.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = '<option value="">Select…</option>' + options;
+        }
+      });
+      const filter = document.getElementById('warehouse-filter');
+      if (filter) {
+        filter.innerHTML = '<option value="all">All warehouses</option>' + state.warehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+      }
+    }
+
+    function renderInventory() {
+      const tbody = document.getElementById('inventory-body');
+      const search = document.getElementById('inventory-search').value.toLowerCase();
+      const warehouseFilter = document.getElementById('warehouse-filter').value;
+      tbody.innerHTML = '';
+      const rows = state.items
+        .filter(item => {
+          const matchesSearch = [item.sku, item.name, item.variant, item.lot].some(val => (val || '').toLowerCase().includes(search));
+          const matchesWarehouse = warehouseFilter === 'all' || warehouseFilter === '' || item.warehouseId === warehouseFilter;
+          return matchesSearch && matchesWarehouse;
+        })
+        .sort((a, b) => a.sku.localeCompare(b.sku));
+      rows.forEach(item => {
+        const status = item.quantity <= (item.reorder || 0)
+          ? '<span class="tag low">Reorder</span>'
+          : item.quantity < (item.reorder || 0) * 1.5
+            ? '<span class="tag risk">Monitor</span>'
+            : '<span class="tag ok">Healthy</span>';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${item.sku}</strong><br><span class="hint">${item.category || '—'}</span></td>
+          <td>${item.name}<br><span class="hint">${item.variant || ''}</span></td>
+          <td>${getWarehouseName(item.warehouseId)}</td>
+          <td>${item.location || '—'}</td>
+          <td>${item.quantity}</td>
+          <td>${item.reorder}</td>
+          <td>${item.lot || '—'}<br><span class="hint">${item.expiry ? formatDate(item.expiry) : ''}</span></td>
+          <td>${status}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderOrders() {
+      const tbody = document.getElementById('order-body');
+      const filter = document.getElementById('order-status-filter').value;
+      tbody.innerHTML = '';
+      state.orders
+        .filter(order => filter === 'all' || order.status === filter)
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        .forEach(order => {
+          const lines = order.lines.map(line => `${line.sku} × ${line.qty}`).join('<br>');
+          const statusClass = `status-${order.status}`;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${order.orderId}</strong><br><span class="hint">${order.customer || '—'}</span></td>
+            <td>${getWarehouseName(order.warehouseId)}</td>
+            <td>${lines}</td>
+            <td>${formatDate(order.dueDate)}</td>
+            <td><span class="status-pill ${statusClass}">${order.status}</span></td>
+            <td>${order.progress}%</td>
+            <td class="actions">
+              <button data-action="advance" data-id="${order.id}">Advance</button>
+              <button data-action="cancel" data-id="${order.id}">Cancel</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+    }
+
+    function renderReceipts() {
+      const tbody = document.getElementById('receipts-body');
+      tbody.innerHTML = '';
+      state.receipts.slice().reverse().forEach(receipt => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatDate(receipt.date)}</td>
+          <td>${receipt.reference || '—'}</td>
+          <td>${getWarehouseName(receipt.warehouseId)}</td>
+          <td>${receipt.sku}</td>
+          <td>${receipt.quantity}</td>
+          <td>${receipt.location || '—'}</td>
+          <td>${receipt.lot || '—'}<br><span class="hint">${receipt.expiry ? formatDate(receipt.expiry) : ''}</span></td>
+          <td>${receipt.notes || '—'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderShipments() {
+      const tbody = document.getElementById('shipments-body');
+      tbody.innerHTML = '';
+      state.shipments.slice().reverse().forEach(shipment => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatDate(shipment.date)}</td>
+          <td>${shipment.orderId}</td>
+          <td>${shipment.carrier || '—'}</td>
+          <td>${shipment.tracking || '—'}</td>
+          <td>${shipment.packages || 1}</td>
+          <td>${shipment.cost ? '$' + shipment.cost.toFixed(2) : '—'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderReturns() {
+      const tbody = document.getElementById('returns-body');
+      tbody.innerHTML = '';
+      state.returns.slice().reverse().forEach(ret => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatDate(ret.date)}</td>
+          <td>${ret.orderId || '—'}</td>
+          <td>${ret.sku || '—'}</td>
+          <td>${ret.quantity}</td>
+          <td>${ret.reason}</td>
+          <td>${ret.disposition}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderTasks() {
+      const tbody = document.getElementById('tasks-body');
+      tbody.innerHTML = '';
+      state.tasks.slice().reverse().forEach(task => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${task.title}<br><span class="hint">${task.link || ''}</span></td>
+          <td>${task.owner || '—'}</td>
+          <td>${task.type}</td>
+          <td>${formatDate(task.dueDate)}</td>
+          <td><span class="status-pill status-${task.status}">${task.status}</span></td>
+          <td class="actions">
+            <button data-action="progress-task" data-id="${task.id}">Advance</button>
+            <button data-action="close-task" data-id="${task.id}">Complete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      const feed = document.getElementById('gamification-feed');
+      feed.innerHTML = state.gamification.map(entry => `<li>${entry.message}</li>`).join('');
+    }
+
+    function renderStats() {
+      const totalSkus = state.items.length;
+      const totalUnits = state.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+      const lowStock = state.items.filter(item => item.quantity <= (item.reorder || 0)).length;
+      const openOrders = state.orders.filter(o => ['open', 'picking', 'packed'].includes(o.status)).length;
+      const shippedOrders = state.orders.filter(o => o.status === 'shipped').length;
+      const returnsRate = shippedOrders ? Math.round((state.returns.length / shippedOrders) * 100) : 0;
+      const statCards = [
+        { title: 'Active SKUs', value: totalSkus, meta: 'Variants live across your network.' },
+        { title: 'Units on Hand', value: totalUnits, meta: 'Aggregate across all facilities.' },
+        { title: 'Below Reorder', value: lowStock, meta: 'Automate purchase plans to stay ahead.' },
+        { title: 'Open Orders', value: openOrders, meta: 'Includes picking, packing & staging.' },
+        { title: 'Return Rate', value: returnsRate + '%', meta: 'Rolling ratio of returns vs shipped.' }
+      ];
+      const container = document.getElementById('stat-cards');
+      container.innerHTML = statCards.map(card => `
+        <div class="stat-card">
+          <h3>${card.title}</h3>
+          <strong>${card.value}</strong>
+          <div class="stat-meta">${card.meta}</div>
+        </div>
+      `).join('');
+
+      const health = document.getElementById('order-health');
+      health.innerHTML = state.orders.slice(0, 5).map(order => {
+        const due = order.dueDate ? new Date(order.dueDate) : null;
+        const now = new Date();
+        let status = 'On track';
+        if (due && due.getTime() < now.getTime() && order.status !== 'shipped') status = '⚠️ Past due';
+        if (order.priority === 'Rush' && order.status === 'open') status = '🚀 Rush: assign picker';
+        return `<li><strong>${order.orderId}</strong> → ${status}</li>`;
+      }).join('');
+
+      const priorities = document.getElementById('priority-list');
+      const missions = [];
+      if (lowStock > 0) missions.push('Trigger replenishment for low stock SKUs.');
+      if (openOrders > 0) missions.push('Wave plan next picking batch to hit SLA.');
+      if (!missions.length) missions.push('All clear! Review analytics or schedule a cycle count.');
+      priorities.innerHTML = missions.map(m => `<li>${m}</li>`).join('');
+    }
+
+    function handleNavigation() {
+      document.querySelectorAll('nav button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const target = btn.dataset.target;
+          document.querySelectorAll('main section').forEach(sec => sec.classList.remove('active'));
+          document.getElementById(target).classList.add('active');
+        });
+      });
+    }
+
+    function parseLines(text) {
+      return text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => {
+          const [sku, qty] = line.split(':');
+          return { sku: sku.trim(), qty: Number(qty || 0) };
+        })
+        .filter(line => line.sku && line.qty > 0);
+    }
+
+    function advanceOrder(id) {
+      const order = state.orders.find(o => o.id === id);
+      if (!order) return;
+      const transitions = ['open', 'picking', 'packed', 'shipped'];
+      const idx = transitions.indexOf(order.status);
+      if (idx < transitions.length - 1) {
+        order.status = transitions[idx + 1];
+        if (order.status === 'picking') order.progress = 40;
+        if (order.status === 'packed') order.progress = 80;
+        if (order.status === 'shipped') {
+          order.progress = 100;
+          order.shippedAt = new Date().toISOString();
+          order.lines.forEach(line => {
+            const item = findOrCreateItem({ sku: line.sku });
+            item.quantity = Math.max(0, (Number(item.quantity) || 0) - line.qty);
+          });
+          renderInventory();
+        }
+        persist();
+        renderOrders();
+        renderStats();
+        showToast(`Order ${order.orderId} advanced to ${order.status}.`);
+      }
+    }
+
+    function cancelOrder(id) {
+      const order = state.orders.find(o => o.id === id);
+      if (!order) return;
+      order.status = 'cancelled';
+      order.progress = 0;
+      persist();
+      renderOrders();
+      renderStats();
+      showToast(`Order ${order.orderId} cancelled.`);
+    }
+
+    function progressTask(id) {
+      const task = state.tasks.find(t => t.id === id);
+      if (!task) return;
+      const transitions = ['open', 'picking', 'packed', 'shipped'];
+      const idx = transitions.indexOf(task.status);
+      if (idx < transitions.length - 1) {
+        task.status = transitions[idx + 1];
+        persist();
+        renderTasks();
+        showToast(`Task ${task.title} set to ${task.status}.`);
+      }
+    }
+
+    function closeTask(id) {
+      const task = state.tasks.find(t => t.id === id);
+      if (!task) return;
+      task.status = 'shipped';
+      persist();
+      renderTasks();
+      showToast(`Mission completed: ${task.title}.`);
+    }
+
+    document.getElementById('warehouse-form').addEventListener('submit', evt => {
+      evt.preventDefault();
+      const form = evt.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      state.warehouses.push({
+        id: crypto.randomUUID(),
+        name: data.name,
+        type: data.type,
+        capacity: Number(data.capacity) || 0,
+        notes: data.notes
+      });
+      form.reset();
+      persist();
+      updateWarehouseSelects();
+      renderStats();
+      showToast('Warehouse added.');
+    });
+
+    document.getElementById('item-form').addEventListener('submit', evt => {
+      evt.preventDefault();
+      const form = evt.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      const sku = data.sku.trim();
+      if (!sku) return;
+      const item = findOrCreateItem({ sku });
+      item.name = data.name;
+      item.variant = data.variant;
+      item.category = data.category;
+      item.warehouseId = data.warehouse || item.warehouseId;
+      item.location = data.location;
+      item.quantity = Number(data.quantity) || 0;
+      item.reorder = Number(data.reorder) || 0;
+      item.lot = data.lot;
+      item.expiry = data.expiry;
+      item.unitCost = Number(data.unitCost) || 0;
+      persist();
+      renderInventory();
+      renderStats();
+      showToast('SKU saved.');
+      form.reset();
+    });
+
+    document.getElementById('order-form').addEventListener('submit', evt => {
+      evt.preventDefault();
+      const form = evt.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      const lines = parseLines(data.lines);
+      if (!lines.length) {
+        alert('Add at least one item line (SKU:Qty).');
+        return;
+      }
+      const order = {
+        id: crypto.randomUUID(),
+        orderId: data.orderId,
+        customer: data.customer,
+        warehouseId: data.warehouse,
+        dueDate: data.dueDate,
+        priority: data.priority,
+        shipping: data.shipping,
+        lines,
+        status: 'open',
+        progress: 10,
+        createdAt: new Date().toISOString()
+      };
+      state.orders.push(order);
+      form.reset();
+      persist();
+      renderOrders();
+      renderStats();
+      showToast('Order created. Assign a picker to start.');
+    });
+
+    document.getElementById('order-body').addEventListener('click', evt => {
+      const btn = evt.target.closest('button');
+      if (!btn) return;
+      const { action, id } = btn.dataset;
+      if (action === 'advance') advanceOrder(id);
+      if (action === 'cancel') cancelOrder(id);
+    });
+
+    document.getElementById('inventory-search').addEventListener('input', renderInventory);
+    document.getElementById('warehouse-filter').addEventListener('change', renderInventory);
+    document.getElementById('order-status-filter').addEventListener('change', renderOrders);
+
+    document.getElementById('receipt-form').addEventListener('submit', evt => {
+      evt.preventDefault();
+      const form = evt.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      const item = findOrCreateItem({ sku: data.sku });
+      item.quantity = (Number(item.quantity) || 0) + (Number(data.quantity) || 0);
+      item.lot = data.lot || item.lot;
+      item.expiry = data.expiry || item.expiry;
+      if (data.warehouse) item.warehouseId = data.warehouse;
+      item.location = data.location || item.location;
+      state.receipts.push({
+        id: crypto.randomUUID(),
+        reference: data.reference,
+        supplier: data.supplier,
+        warehouseId: data.warehouse,
+        sku: data.sku,
+        quantity: Number(data.quantity) || 0,
+        location: data.location,
+        lot: data.lot,
+        expiry: data.expiry,
+        notes: data.notes,
+        date: new Date().toISOString()
+      });
+      persist();
+      renderInventory();
+      renderReceipts();
+      renderStats();
+      showToast('Inventory received and added to stock.');
+      form.reset();
+    });
+
+    document.getElementById('shipment-form').addEventListener('submit', evt => {
+      evt.preventDefault();
+      const form = evt.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      state.shipments.push({
+        id: crypto.randomUUID(),
+        orderId: data.orderId,
+        carrier: data.carrier,
+        tracking: data.tracking,
+        packages: Number(data.packages) || 1,
+        cost: Number(data.cost) || 0,
+        date: new Date().toISOString()
+      });
+      const order = state.orders.find(o => o.orderId === data.orderId);
+      if (order && order.status !== 'shipped') {
+        order.status = 'shipped';
+        order.progress = 100;
+      }
+      persist();
+      renderShipments();
+      renderOrders();
+      renderStats();
+      showToast('Shipment confirmed and order closed.');
+      form.reset();
+    });
+
+    document.getElementById('return-form').addEventListener('submit', evt => {
+      evt.preventDefault();
+      const form = evt.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      state.returns.push({
+        id: crypto.randomUUID(),
+        orderId: data.orderId,
+        sku: data.sku,
+        quantity: Number(data.quantity) || 0,
+        reason: data.reason,
+        disposition: data.disposition,
+        date: new Date().toISOString()
+      });
+      if (data.disposition === 'restock' && data.sku) {
+        const item = findOrCreateItem({ sku: data.sku });
+        item.quantity = (Number(item.quantity) || 0) + (Number(data.quantity) || 0);
+      }
+      persist();
+      renderReturns();
+      renderInventory();
+      renderStats();
+      showToast('Return recorded.');
+      form.reset();
+    });
+
+    document.getElementById('tasks-body').addEventListener('click', evt => {
+      const btn = evt.target.closest('button');
+      if (!btn) return;
+      const { action, id } = btn.dataset;
+      if (action === 'progress-task') progressTask(id);
+      if (action === 'close-task') closeTask(id);
+    });
+
+    document.getElementById('task-form').addEventListener('submit', evt => {
+      evt.preventDefault();
+      const form = evt.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      state.tasks.push({
+        id: crypto.randomUUID(),
+        title: data.title,
+        owner: data.owner,
+        type: data.type,
+        dueDate: data.dueDate,
+        link: data.link,
+        status: 'open'
+      });
+      persist();
+      renderTasks();
+      showToast('Task dispatched to floor.');
+      form.reset();
+    });
+
+    document.getElementById('plan-cycle').addEventListener('click', () => {
+      const warehouseId = document.getElementById('cycle-warehouse').value;
+      const focus = document.getElementById('cycle-focus').value;
+      const warehouseName = warehouseId ? getWarehouseName(warehouseId) : 'all warehouses';
+      const messages = {
+        velocity: 'Prioritize top sellers to catch velocity drift.',
+        aging: 'Audit slow movers to reclaim capacity.',
+        highValue: 'Double-count high value inventory for shrink control.',
+        compliance: 'Ensure lot & expiry data is ready for auditors.'
+      };
+      document.getElementById('cycle-plan').textContent = `Cycle count scheduled for ${warehouseName}: ${messages[focus]}`;
+      showToast('Cycle count playbook generated.');
+    });
+
+    document.getElementById('pick-scan').addEventListener('keyup', evt => {
+      if (evt.key === 'Enter') {
+        const sku = evt.target.value.trim();
+        if (!sku) return;
+        const item = state.items.find(it => it.sku.toLowerCase() === sku.toLowerCase());
+        const el = document.getElementById('pick-result');
+        if (!item) {
+          el.textContent = 'SKU not found. Consider creating the item first.';
+        } else {
+          el.innerHTML = `<strong>${item.name}</strong><br>Location: ${item.location || '—'} | On-hand: ${item.quantity}`;
+        }
+        evt.target.value = '';
+      }
+    });
+
+    document.getElementById('import-input').addEventListener('change', evt => {
+      const file = evt.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = event => {
+        try {
+          const data = JSON.parse(event.target.result);
+          Object.assign(state, data);
+          persist();
+          initializeUI();
+          showToast('Workspace imported.');
+        } catch (err) {
+          alert('Invalid JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('export-btn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `warehouse-hq-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Backup exported.');
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      if (confirm('Reset workspace to starter data?')) {
+        Object.assign(state, seedState());
+        persist();
+        initializeUI();
+        showToast('Workspace reset.');
+      }
+    });
+
+    const bundleModules = [
+      { id: 'ai-slotting', name: 'AI Slotting Optimization', price: 249, description: 'Adaptive storage recommendations using velocity & demand forecasting.' },
+      { id: 'labor-gamification', name: 'Labor Gamification Suite', price: 99, description: 'XP points, leaderboards and streak-based incentives for teams.' },
+      { id: 'rfid', name: 'RFID Control Tower', price: 189, description: 'Real-time read events, zone tracking and EPC compliance exports.' },
+      { id: 'automation', name: 'Automation Orchestrator', price: 499, description: 'Connect AMRs, conveyors and sorters with drag-and-drop flows.' },
+      { id: 'analytics', name: 'Executive Analytics Pack', price: 79, description: 'Cohort KPIs, demand planning, CFO-ready financial dashboards.' },
+      { id: 'edi', name: 'Retail EDI Gateway', price: 149, description: 'Send/receive 850, 856, 940/945 and compliance scorecards.' }
+    ];
+
+    const bundleState = { selections: new Set(), total: 0 };
+
+    function renderBundler() {
+      const tbody = document.getElementById('bundle-body');
+      tbody.innerHTML = bundleModules.map(mod => {
+        const checked = bundleState.selections.has(mod.id) ? 'checked' : '';
+        return `
+          <tr>
+            <td>${mod.name}</td>
+            <td>${mod.description}</td>
+            <td>$${mod.price}</td>
+            <td><input type="checkbox" data-module="${mod.id}" ${checked}></td>
+          </tr>
+        `;
+      }).join('');
+      document.getElementById('bundle-total').textContent = `$${bundleState.total}`;
+      document.getElementById('bundle-note').textContent = bundleState.selections.size
+        ? 'Nice build! Stripe-ready checkout when you connect billing.'
+        : 'Core platform remains free. Add power-ups when you are ready.';
+    }
+
+    document.getElementById('open-bundler').addEventListener('click', () => {
+      const panel = document.getElementById('bundler');
+      const visible = panel.style.display === 'block';
+      panel.style.display = visible ? 'none' : 'block';
+      renderBundler();
+    });
+
+    document.getElementById('bundle-body').addEventListener('change', evt => {
+      const id = evt.target.dataset.module;
+      if (!id) return;
+      if (evt.target.checked) bundleState.selections.add(id);
+      else bundleState.selections.delete(id);
+      bundleState.total = Array.from(bundleState.selections)
+        .map(sel => bundleModules.find(m => m.id === sel)?.price || 0)
+        .reduce((a, b) => a + b, 0);
+      renderBundler();
+    });
+
+    document.getElementById('checkout-bundle').addEventListener('click', () => {
+      alert('Stripe checkout flows live in production. For now, track selections as part of your upgrade strategy.');
+    });
+
+    document.getElementById('bundle-body').addEventListener('click', evt => {
+      if (evt.target.tagName === 'INPUT') {
+        showToast('Bundle updated. AI will recommend savings once usage is detected.');
+      }
+    });
+
+    document.getElementById('order-health').addEventListener('click', () => {
+      showToast('Tip: Create wave picks from the Orders tab to auto-assign teams.');
+    });
+
+    function initializeUI() {
+      updateWarehouseSelects();
+      renderInventory();
+      renderOrders();
+      renderReceipts();
+      renderShipments();
+      renderReturns();
+      renderTasks();
+      renderStats();
+      renderBundler();
+    }
+
+    handleNavigation();
+    initializeUI();
+  </script>
+</body>
+</html>
