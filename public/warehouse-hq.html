@@ -2026,9 +2026,11 @@
         container.innerHTML = '<div class="integration-table-empty">Catalog loading...</div>';
         return;
       }
-      container.innerHTML = integrationCatalog.map(item => `
+      container.innerHTML = integrationCatalog.map(item => {
+        const iconSrc = item.icon || `https://api.dicebear.com/7.x/icons/svg?seed=${encodeURIComponent(item.id)}&backgroundColor=transparent`;
+        return `
         <div class="integration-card">
-          <img src="https://api.dicebear.com/7.x/icons/svg?seed=${encodeURIComponent(item.id)}&backgroundColor=transparent" alt="${item.name} icon" loading="lazy" />
+          <img src="${iconSrc}" alt="${item.name} icon" loading="lazy" />
           <div><strong>${item.name}</strong><br><span class="hint">${item.category}</span></div>
           <div class="tagline">${(item.scopes || []).join(' • ')}</div>
           ${item.oneClick ? '<span class="one-click-tag">One-click ready</span>' : ''}
@@ -2037,7 +2039,8 @@
             ${item.oneClick ? `<button class="secondary" type="button" data-action="oneclick" data-id="${item.id}">One-click link</button>` : ''}
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
       container.querySelectorAll('button[data-action="connect"]').forEach(btn => {
         btn.addEventListener('click', () => showIntegrationForm(btn.dataset.id));
       });
