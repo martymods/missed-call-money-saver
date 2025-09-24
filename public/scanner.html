@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Warehouse HQ Scanner – Scan Anything</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #020617;
+      --bg-alt: rgba(15, 23, 42, 0.8);
+      --bg-panel: rgba(15, 23, 42, 0.92);
+      --glass: rgba(15, 23, 42, 0.7);
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.25);
+      --accent-strong: rgba(56, 189, 248, 0.45);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: rgba(148, 163, 184, 0.25);
+      --success: #4ade80;
+      --warning: #facc15;
+      --danger: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 20% -10%, rgba(56, 189, 248, 0.18), transparent 55%),
+        radial-gradient(circle at 110% 10%, rgba(165, 180, 252, 0.18), transparent 60%),
+        linear-gradient(135deg, #020617, #0f172a 65%, #1e293b);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header.top {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(16px);
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.72));
+      border-bottom: 1px solid var(--border);
+    }
+
+    .wrap {
+      width: min(1200px, 100%);
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .brand a {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .brand a:hover {
+      color: var(--text);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.85rem, 4vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .lead {
+      color: var(--muted);
+      margin: 0.75rem 0 0;
+      max-width: 720px;
+      line-height: 1.55;
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+    }
+
+    .layout {
+      display: grid;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    @media (min-width: 1100px) {
+      .layout {
+        grid-template-columns: 1.25fr 0.85fr;
+        align-items: flex-start;
+      }
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 1.2rem;
+      box-shadow: 0 24px 50px rgba(15, 23, 42, 0.45);
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .scanner-stage {
+      position: relative;
+      border-radius: 1.1rem;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      aspect-ratio: 3 / 4;
+    }
+
+    video#camera {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      background: #000;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .overlay::before {
+      content: "";
+      position: absolute;
+      width: 72%;
+      height: 46%;
+      border: 3px solid var(--accent);
+      border-radius: 1.75rem;
+      box-shadow: 0 0 0 120vmax rgba(2, 6, 23, 0.55);
+      mix-blend-mode: screen;
+      transition: border-color 0.25s ease;
+    }
+
+    .overlay.lowlight::before {
+      border-color: var(--warning);
+    }
+
+    .overlay span {
+      position: absolute;
+      bottom: 14%;
+      background: rgba(2, 6, 23, 0.65);
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
+    .status-badge {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: rgba(2, 6, 23, 0.7);
+      padding: 0.4rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      backdrop-filter: blur(12px);
+      transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+    }
+
+    .status-badge[data-variant="success"] {
+      background: rgba(34, 197, 94, 0.18);
+      color: var(--success);
+      border-color: rgba(74, 222, 128, 0.55);
+    }
+
+    .status-badge[data-variant="warning"] {
+      background: rgba(250, 204, 21, 0.15);
+      color: var(--warning);
+      border-color: rgba(250, 204, 21, 0.5);
+    }
+
+    .status-badge[data-variant="danger"] {
+      background: rgba(248, 113, 113, 0.18);
+      color: var(--danger);
+      border-color: rgba(248, 113, 113, 0.55);
+    }
+
+    .controls {
+      margin-top: 1rem;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.6rem;
+    }
+
+    button.action {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--text);
+      padding: 0.75rem 0.8rem;
+      border-radius: 0.9rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: transform 0.15s ease, background 0.15s ease, border 0.15s ease;
+    }
+
+    button.action:hover {
+      transform: translateY(-1px);
+      background: rgba(56, 189, 248, 0.22);
+    }
+
+    button.action.secondary {
+      background: rgba(148, 163, 184, 0.12);
+      border-color: rgba(148, 163, 184, 0.35);
+    }
+
+    button.action.danger {
+      background: rgba(248, 113, 113, 0.12);
+      border-color: rgba(248, 113, 113, 0.45);
+    }
+
+    button.action.active {
+      background: var(--accent-strong);
+      border-color: rgba(56, 189, 248, 0.65);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+    }
+
+    .hint {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0 0.75rem;
+    }
+
+    .stat-card {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 0.9rem;
+      padding: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .stat-card strong {
+      font-size: 1.55rem;
+      font-weight: 700;
+    }
+
+    .mission-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .mission {
+      background: rgba(2, 6, 23, 0.6);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 0.85rem;
+      padding: 0.75rem;
+    }
+
+    .mission-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+    }
+
+    .mission-progress {
+      margin-top: 0.45rem;
+      height: 6px;
+      background: rgba(148, 163, 184, 0.22);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .mission-progress span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #22d3ee);
+      transition: width 0.25s ease;
+    }
+
+    .mission.complete {
+      border-color: rgba(74, 222, 128, 0.45);
+      box-shadow: 0 0 20px rgba(74, 222, 128, 0.25);
+    }
+
+    .logs {
+      max-height: 400px;
+      overflow: auto;
+      display: grid;
+      gap: 0.6rem;
+      padding-right: 0.25rem;
+    }
+
+    .log-entry {
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 0.85rem;
+      background: rgba(15, 23, 42, 0.78);
+      padding: 0.75rem;
+      display: grid;
+      gap: 0.4rem;
+    }
+
+    .log-entry header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .log-entry code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 0.5rem;
+      padding: 0.45rem 0.55rem;
+      font-size: 0.85rem;
+      word-break: break-all;
+    }
+
+    .log-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      border: 1px dashed rgba(148, 163, 184, 0.35);
+      border-radius: 0.9rem;
+    }
+
+    footer {
+      padding: 1.25rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      border-radius: 999px;
+      padding: 0.35rem 0.6rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      font-size: 0.75rem;
+    }
+
+    .chip.success {
+      border-color: rgba(74, 222, 128, 0.5);
+      color: var(--success);
+    }
+
+    .chip.warning {
+      border-color: rgba(250, 204, 21, 0.5);
+      color: var(--warning);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      padding: 0.75rem 1rem;
+      border-radius: 0.85rem;
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: 0 20px 40px rgba(2, 6, 23, 0.4);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .history {
+      margin-top: 1rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .history button {
+      justify-content: flex-start;
+      font-size: 0.85rem;
+    }
+
+    canvas#captureCanvas {
+      display: none;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap brand">
+      <a href="/warehouse-hq.html" aria-label="Back to Warehouse HQ">← Back to Warehouse HQ</a>
+      <div>
+        <h1>Scan Anything HQ</h1>
+        <p class="lead">Use the on-device camera to capture barcodes, QR codes, labels, and even objects — all in a single,
+          game-ready workflow that keeps your ops moving.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="layout">
+      <section class="panel" aria-labelledby="scanner-title">
+        <h2 id="scanner-title">Live Scanner</h2>
+        <div class="scanner-stage">
+          <video id="camera" autoplay playsinline muted></video>
+          <div class="overlay" id="roiOverlay">
+            <span>Align item here</span>
+          </div>
+          <div class="status-badge" id="statusBadge">Waiting for camera…</div>
+        </div>
+
+        <div class="controls">
+          <div class="btn-row">
+            <button class="action" id="startScan" type="button">▶️ Start scanning</button>
+            <button class="action secondary" id="stopScan" type="button">⏸ Pause</button>
+            <button class="action secondary" id="toggleLight" type="button">🔆 Low light boost</button>
+            <button class="action" id="saveSession" type="button">💾 Save session</button>
+          </div>
+          <div class="btn-row">
+            <button class="action" id="snapOcr" type="button">📄 Capture text (OCR)</button>
+            <button class="action" id="identifyObject" type="button">🧠 Identify object</button>
+            <button class="action secondary" id="clearLog" type="button">🗑 Clear log</button>
+          </div>
+          <p class="hint">Tip: Hold your iPhone steady, keep items inside the neon frame, and move between barcode, QR, and
+            document modes without leaving this screen.</p>
+        </div>
+      </section>
+
+      <aside class="panel" aria-labelledby="session-title">
+        <h2 id="session-title">Mission Stats</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="muted">Scans logged</span>
+            <strong id="scanCount">0</strong>
+            <span class="muted" id="comboLabel">Combo ready.</span>
+          </div>
+          <div class="stat-card">
+            <span class="muted">Unique items</span>
+            <strong id="uniqueCount">0</strong>
+            <span class="muted">Cycle-count safety net.</span>
+          </div>
+          <div class="stat-card">
+            <span class="muted">OCR captures</span>
+            <strong id="ocrCount">0</strong>
+            <span class="muted">Invoices & labels.</span>
+          </div>
+          <div class="stat-card">
+            <span class="muted">Object lookups</span>
+            <strong id="objectCount">0</strong>
+            <span class="muted">AI hints on demand.</span>
+          </div>
+          <div class="stat-card">
+            <span class="muted">Session timer</span>
+            <strong id="sessionTimer">00:00</strong>
+            <span class="muted">Gamified sprint.</span>
+          </div>
+        </div>
+
+        <ul class="mission-list" id="missionList" aria-live="polite"></ul>
+
+        <div class="history">
+          <button class="action secondary" id="loadHistory" type="button">📦 Load last saved session</button>
+          <button class="action secondary" id="exportJson" type="button">📤 Export session JSON</button>
+        </div>
+      </aside>
+    </div>
+
+    <section class="panel" style="margin-top:1.5rem" aria-labelledby="log-title">
+      <h2 id="log-title">Activity Log</h2>
+      <div id="log" class="logs" aria-live="polite">
+        <div class="empty" id="emptyState">No scans yet — press “Start scanning” and line up your first barcode.</div>
+      </div>
+    </section>
+  </main>
+
+  <canvas id="captureCanvas" width="640" height="360"></canvas>
+  <div class="toast" id="toast" role="status" aria-live="assertive"></div>
+
+  <footer>
+    Runs entirely on-device with free libraries: ZXing for barcodes, jsQR for backup QR reads, Tesseract.js for OCR, and
+    TensorFlow.js Coco-SSD for object detection.
+  </footer>
+
+  <script type="module">
+    import {
+      BrowserMultiFormatReader,
+      DecodeHintType,
+      BarcodeFormat,
+      NotFoundException
+    } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/+esm';
+
+    const video = document.getElementById('camera');
+    const overlay = document.getElementById('roiOverlay');
+    const statusBadge = document.getElementById('statusBadge');
+    const captureCanvas = document.getElementById('captureCanvas');
+    const captureCtx = captureCanvas.getContext('2d', { willReadFrequently: true });
+    const logContainer = document.getElementById('log');
+    const emptyState = document.getElementById('emptyState');
+    const toastEl = document.getElementById('toast');
+
+    const scanCountEl = document.getElementById('scanCount');
+    const uniqueCountEl = document.getElementById('uniqueCount');
+    const ocrCountEl = document.getElementById('ocrCount');
+    const objectCountEl = document.getElementById('objectCount');
+    const sessionTimerEl = document.getElementById('sessionTimer');
+    const comboLabelEl = document.getElementById('comboLabel');
+
+    const missionList = document.getElementById('missionList');
+
+    const startBtn = document.getElementById('startScan');
+    const stopBtn = document.getElementById('stopScan');
+    const lightBtn = document.getElementById('toggleLight');
+    const saveBtn = document.getElementById('saveSession');
+    const loadBtn = document.getElementById('loadHistory');
+    const exportBtn = document.getElementById('exportJson');
+    const ocrBtn = document.getElementById('snapOcr');
+    const objectBtn = document.getElementById('identifyObject');
+    const clearBtn = document.getElementById('clearLog');
+
+    const STORAGE_KEY = 'warehouse-hq-scanner-sessions';
+
+    const ZXING_HINTS = new Map();
+    ZXING_HINTS.set(DecodeHintType.POSSIBLE_FORMATS, [
+      BarcodeFormat.QR_CODE,
+      BarcodeFormat.DATA_MATRIX,
+      BarcodeFormat.AZTEC,
+      BarcodeFormat.PDF_417,
+      BarcodeFormat.CODE_128,
+      BarcodeFormat.CODE_39,
+      BarcodeFormat.CODE_93,
+      BarcodeFormat.ITF,
+      BarcodeFormat.EAN_13,
+      BarcodeFormat.EAN_8,
+      BarcodeFormat.UPC_A,
+      BarcodeFormat.UPC_E
+    ]);
+
+    const codeReader = new BrowserMultiFormatReader(ZXING_HINTS, 500);
+
+    const state = {
+      scanning: false,
+      stream: null,
+      detections: [],
+      uniqueSet: new Set(),
+      sessionStartedAt: null,
+      timerHandle: null,
+      failStreak: 0,
+      combo: 0,
+      lastScanAt: 0,
+      prevScanAt: 0,
+      lowLight: false,
+      ocrCount: 0,
+      objectCount: 0
+    };
+
+    const missions = [
+      { id: 'inbound', label: 'Scan 5 inbound items', goal: 5, progress: 0 },
+      { id: 'cycle', label: 'Verify 3 unique SKUs', goal: 3, progress: 0 },
+      { id: 'ocr', label: 'OCR 2 documents', goal: 2, progress: 0 }
+    ];
+
+    renderMissions();
+
+    let jsQrReady = typeof window.jsQR === 'function';
+    function setStatus(text, variant = 'info') {
+      statusBadge.textContent = text;
+      if (variant === 'info') {
+        statusBadge.removeAttribute('data-variant');
+      } else {
+        statusBadge.dataset.variant = variant;
+      }
+    }
+
+    function showToast(message) {
+      toastEl.textContent = message;
+      toastEl.classList.add('show');
+      setTimeout(() => toastEl.classList.remove('show'), 2200);
+    }
+
+    function updateStats() {
+      scanCountEl.textContent = state.detections.length;
+      uniqueCountEl.textContent = state.uniqueSet.size;
+      ocrCountEl.textContent = state.ocrCount;
+      objectCountEl.textContent = state.objectCount;
+      comboLabelEl.textContent = state.combo > 1
+        ? `Combo x${state.combo} — keep the streak!`
+        : 'Combo ready.';
+    }
+
+    function renderMissions() {
+      missionList.innerHTML = '';
+      missions.forEach(mission => {
+        const pct = Math.min(100, Math.round((mission.progress / mission.goal) * 100));
+        const li = document.createElement('li');
+        li.className = 'mission' + (pct >= 100 ? ' complete' : '');
+        li.innerHTML = `
+          <div class="mission-header">
+            <span>${mission.label}</span>
+            <span class="chip${pct >= 100 ? ' success' : ''}">${Math.min(mission.progress, mission.goal)}/${mission.goal}</span>
+          </div>
+          <div class="mission-progress"><span style="width:${pct}%;"></span></div>
+        `;
+        missionList.appendChild(li);
+      });
+    }
+
+    function appendLogEntry(entry) {
+      if (emptyState) {
+        emptyState.remove();
+      }
+      const el = document.createElement('article');
+      el.className = 'log-entry';
+      el.innerHTML = `
+        <header>
+          <span>${entry.type}</span>
+          <span class="log-meta">
+            <span class="chip">${entry.engine}</span>
+            <span class="chip">${entry.format}</span>
+            <span>${new Date(entry.timestamp).toLocaleTimeString()}</span>
+          </span>
+        </header>
+        <code>${entry.text}</code>
+      `;
+      if (entry.details) {
+        const detail = document.createElement('div');
+        detail.className = 'log-meta';
+        detail.textContent = entry.details;
+        el.appendChild(detail);
+      }
+      logContainer.prepend(el);
+    }
+
+    function captureFrame(targetWidth = 640, roi = { x: 0.14, y: 0.2, width: 0.72, height: 0.46 }) {
+      if (!video.videoWidth || !video.videoHeight) {
+        return null;
+      }
+      const sourceWidth = video.videoWidth * roi.width;
+      const sourceHeight = video.videoHeight * roi.height;
+      const sourceX = video.videoWidth * roi.x;
+      const sourceY = video.videoHeight * roi.y;
+      const aspect = sourceHeight / sourceWidth;
+      const width = targetWidth;
+      const height = Math.round(targetWidth * aspect);
+      captureCanvas.width = width;
+      captureCanvas.height = height;
+      captureCtx.drawImage(
+        video,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        width,
+        height
+      );
+      return captureCanvas;
+    }
+
+    function playFeedback() {
+      if (typeof window.AudioContext !== 'function') {
+        navigator.vibrate?.(60);
+        return;
+      }
+      if (!playFeedback.ctx) {
+        playFeedback.ctx = new AudioContext();
+      }
+      const ctx = playFeedback.ctx;
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(880, now);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.2);
+      navigator.vibrate?.([40, 40]);
+    }
+
+    function updateSessionTimer() {
+      if (!state.sessionStartedAt) {
+        sessionTimerEl.textContent = '00:00';
+        return;
+      }
+      const elapsed = Math.floor((Date.now() - state.sessionStartedAt) / 1000);
+      const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const seconds = String(elapsed % 60).padStart(2, '0');
+      sessionTimerEl.textContent = `${minutes}:${seconds}`;
+    }
+    async function startCamera() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setStatus('Camera access not supported on this device.', 'danger');
+        return;
+      }
+      if (state.stream) {
+        state.stream.getTracks().forEach(track => track.stop());
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+        state.stream = stream;
+        video.srcObject = stream;
+        await video.play();
+        setStatus('Camera ready. Tap start to begin scanning.');
+      } catch (err) {
+        console.error('Camera error', err);
+        const text = err.name === 'NotAllowedError'
+          ? 'Camera permission denied. Enable it in Safari settings.'
+          : 'Unable to access camera. Try reloading.';
+        setStatus(text, 'danger');
+      }
+    }
+
+    async function ensureJsQr() {
+      if (!jsQrReady) {
+        try {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+            script.async = true;
+            script.onload = () => resolve();
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+          jsQrReady = typeof window.jsQR === 'function';
+        } catch (err) {
+          console.warn('Failed to load jsQR fallback', err);
+        }
+      }
+      return jsQrReady;
+    }
+
+    async function decodeFrame(canvas) {
+      try {
+        const result = await codeReader.decodeFromCanvas(canvas);
+        if (result) {
+          state.failStreak = 0;
+          return {
+            text: result.getText(),
+            format: result.getBarcodeFormat()?.toString?.() ?? 'Unknown',
+            engine: 'ZXing'
+          };
+        }
+      } catch (err) {
+        if (err instanceof NotFoundException) {
+          state.failStreak += 1;
+        } else {
+          console.warn('Decode error', err);
+        }
+      }
+
+      if (state.failStreak >= 4 && await ensureJsQr()) {
+        const imageData = captureCtx.getImageData(0, 0, canvas.width, canvas.height);
+        const qr = window.jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+        if (qr) {
+          state.failStreak = 0;
+          return {
+            text: qr.data,
+            format: 'QR_CODE',
+            engine: 'jsQR fallback'
+          };
+        }
+      }
+      return null;
+    }
+    async function scanLoop() {
+      state.scanning = true;
+      state.sessionStartedAt = state.sessionStartedAt ?? Date.now();
+      updateSessionTimer();
+      if (!state.timerHandle) {
+        state.timerHandle = setInterval(updateSessionTimer, 1000);
+      }
+      setStatus('Scanning… move items through the frame.');
+      startBtn.classList.add('active');
+      stopBtn.classList.remove('active');
+      while (state.scanning) {
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        if (!state.scanning) break;
+        if (video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) {
+          continue;
+        }
+        const canvas = captureFrame();
+        if (!canvas) {
+          continue;
+        }
+        const decoded = await decodeFrame(canvas);
+        if (decoded) {
+          handleDetection(decoded);
+          await new Promise(resolve => setTimeout(resolve, 160));
+        }
+      }
+      startBtn.classList.remove('active');
+      setStatus('Scanner paused. Tap start when you are ready.', 'warning');
+    }
+
+    function stopScanning() {
+      state.scanning = false;
+      stopBtn.classList.add('active');
+      startBtn.classList.remove('active');
+    }
+
+    function resetSessionTimer() {
+      if (state.timerHandle) {
+        clearInterval(state.timerHandle);
+        state.timerHandle = null;
+      }
+      state.sessionStartedAt = null;
+      updateSessionTimer();
+    }
+
+    function handleDetection(decoded) {
+      const now = Date.now();
+      if (now - state.lastScanAt < 350) {
+        return;
+      }
+      state.lastScanAt = now;
+      state.combo = now - (state.prevScanAt || 0) < 8000 ? state.combo + 1 : 1;
+      state.prevScanAt = now;
+
+      playFeedback();
+
+      const entry = {
+        id: crypto.randomUUID(),
+        type: 'Barcode / QR',
+        text: decoded.text,
+        format: decoded.format,
+        engine: decoded.engine,
+        timestamp: now
+      };
+      state.detections.push(entry);
+      state.uniqueSet.add(decoded.text);
+      missions[0].progress += 1;
+      missions[1].progress = Math.min(missions[1].goal, state.uniqueSet.size);
+      renderMissions();
+      appendLogEntry(entry);
+      updateStats();
+      setStatus(`Captured ${decoded.format} via ${decoded.engine}.`, 'success');
+      showToast('Scan locked — keep the flow going!');
+    }
+    async function runOcrCapture() {
+      if (!video.srcObject) {
+        await startCamera();
+      }
+      const canvas = captureFrame(1024, { x: 0.08, y: 0.12, width: 0.84, height: 0.72 });
+      if (!canvas) {
+        setStatus('Camera not ready yet for OCR.', 'warning');
+        return;
+      }
+      setStatus('Running OCR… stay steady.', 'warning');
+      try {
+        const worker = await ensureOcrWorker();
+        const { data } = await worker.recognize(canvas);
+        const clean = data.text.trim();
+        if (clean) {
+          state.ocrCount += 1;
+          missions[2].progress += 1;
+          renderMissions();
+          appendLogEntry({
+            id: crypto.randomUUID(),
+            type: 'OCR',
+            text: clean,
+            format: `Confidence ${(data.confidence || 0).toFixed(1)}%`,
+            engine: 'Tesseract.js',
+            details: 'Tap to copy',
+            timestamp: Date.now()
+          });
+          updateStats();
+          setStatus('OCR complete — text captured.', 'success');
+          showToast('Document captured. Data ready to paste.');
+        } else {
+          setStatus('No readable text detected.', 'warning');
+        }
+      } catch (err) {
+        console.error('OCR error', err);
+        setStatus('OCR failed — try brighter lighting.', 'danger');
+      }
+    }
+
+    let ocrWorkerPromise = null;
+    async function ensureOcrWorker() {
+      if (!ocrWorkerPromise) {
+        ocrWorkerPromise = (async () => {
+          const mod = await import('https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.esm.min.js');
+          const worker = await mod.createWorker();
+          await worker.load();
+          await worker.loadLanguage('eng');
+          await worker.initialize('eng');
+          return worker;
+        })();
+      }
+      return ocrWorkerPromise;
+    }
+
+    let objectModelPromise = null;
+    async function ensureObjectModel() {
+      if (!objectModelPromise) {
+        objectModelPromise = (async () => {
+          const tfMod = await import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js');
+          window.tf = tfMod;
+          await window.tf.setBackend('webgl');
+          await window.tf.ready();
+          const coco = await import('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2');
+          return coco.load();
+        })();
+      }
+      return objectModelPromise;
+    }
+
+    async function runObjectDetect() {
+      const canvas = captureFrame(640, { x: 0.05, y: 0.1, width: 0.9, height: 0.8 });
+      if (!canvas) {
+        setStatus('Camera not ready for object hints yet.', 'warning');
+        return;
+      }
+      setStatus('Analyzing object…', 'warning');
+      try {
+        const model = await ensureObjectModel();
+        const predictions = await model.detect(canvas);
+        if (predictions && predictions.length) {
+          const best = predictions
+            .filter(pred => pred.score >= 0.35)
+            .slice(0, 3)
+            .map(pred => `${pred.class} ${(pred.score * 100).toFixed(0)}%`);
+          state.objectCount += 1;
+          updateStats();
+          appendLogEntry({
+            id: crypto.randomUUID(),
+            type: 'Object ID',
+            text: best.join(' • '),
+            format: 'Coco-SSD',
+            engine: 'TensorFlow.js',
+            timestamp: Date.now()
+          });
+          setStatus(`Looks like: ${best[0]}`, 'success');
+          showToast('AI spotter says: ' + best[0]);
+        } else {
+          setStatus('No confident objects detected — adjust framing.', 'warning');
+        }
+      } catch (err) {
+        console.error('Object detect error', err);
+        setStatus('Object lookup failed — retry in a moment.', 'danger');
+      }
+    }
+    function persistSession(manual = false) {
+      const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const payload = {
+        savedAt: new Date().toISOString(),
+        detections: state.detections.slice(-100),
+        ocrCount: state.ocrCount,
+        objectCount: state.objectCount
+      };
+      history.unshift(payload);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(0, 10)));
+      if (manual) {
+        showToast('Session saved locally.');
+      }
+    }
+
+    function loadLastSession() {
+      const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      if (!history.length) {
+        showToast('No previous session stored yet.');
+        return;
+      }
+      const last = history[0];
+      state.detections = [...last.detections];
+      state.uniqueSet = new Set(last.detections.map(d => d.text));
+      state.ocrCount = last.ocrCount || 0;
+      state.objectCount = last.objectCount || 0;
+      missions.forEach(m => m.progress = 0);
+      missions[0].progress = Math.min(missions[0].goal, state.detections.length);
+      missions[1].progress = Math.min(missions[1].goal, state.uniqueSet.size);
+      missions[2].progress = Math.min(missions[2].goal, state.ocrCount);
+      renderMissions();
+      logContainer.innerHTML = '';
+      state.detections.slice().reverse().forEach(appendLogEntry);
+      updateStats();
+      showToast('Loaded last saved session.');
+    }
+
+    function exportSession() {
+      if (!state.detections.length) {
+        showToast('Nothing to export yet.');
+        return;
+      }
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        scans: state.detections,
+        ocrCount: state.ocrCount,
+        objectCount: state.objectCount
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `warehouse-hq-session-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Session exported as JSON.');
+    }
+
+    function clearLog() {
+      state.detections = [];
+      state.uniqueSet = new Set();
+      state.ocrCount = 0;
+      state.objectCount = 0;
+      state.combo = 0;
+      state.lastScanAt = 0;
+      missions.forEach(m => m.progress = 0);
+      renderMissions();
+      logContainer.innerHTML = '';
+      const placeholder = document.createElement('div');
+      placeholder.className = 'empty';
+      placeholder.id = 'emptyState';
+      placeholder.textContent = 'Log cleared — ready for a new mission.';
+      logContainer.appendChild(placeholder);
+      updateStats();
+      showToast('Session log cleared.');
+    }
+
+    function toggleLowLight() {
+      state.lowLight = !state.lowLight;
+      overlay.classList.toggle('lowlight', state.lowLight);
+      video.style.filter = state.lowLight ? 'brightness(1.35) contrast(1.2) saturate(1.2)' : '';
+      lightBtn.classList.toggle('active', state.lowLight);
+      setStatus(state.lowLight ? 'Low-light boost enabled — consider turning on the flashlight.' : 'Low-light boost off.');
+    }
+
+    startBtn.addEventListener('click', async () => {
+      if (!video.srcObject) {
+        await startCamera();
+      }
+      if (!state.scanning) {
+        scanLoop();
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      stopScanning();
+    });
+
+    lightBtn.addEventListener('click', toggleLowLight);
+
+    ocrBtn.addEventListener('click', () => {
+      runOcrCapture();
+    });
+
+    objectBtn.addEventListener('click', () => {
+      runObjectDetect();
+    });
+
+    saveBtn.addEventListener('click', () => persistSession(true));
+    loadBtn.addEventListener('click', loadLastSession);
+    exportBtn.addEventListener('click', exportSession);
+    clearBtn.addEventListener('click', clearLog);
+
+    window.addEventListener('beforeunload', () => {
+      persistSession();
+      stopScanning();
+      if (state.stream) {
+        state.stream.getTracks().forEach(track => track.stop());
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopScanning();
+      }
+    });
+
+    startCamera();
+    updateStats();
+  </script>
+</body>
+</html>
