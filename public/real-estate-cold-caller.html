@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Real Estate Cold Caller + AI Concierge</title>
+  <meta name="description" content="AI-assisted real estate cold calling desk: scrape leads, auto-dial, collect payments with Stripe, book live appointments, and handoff to closers."/>
+  <link rel="icon" href="/favicon-32.png" sizes="32x32"/>
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+  <style>
+    :root{
+      --ink:#0c1220; --muted:#69708a; --bg:#040815; --card:#0c1327; --glass:rgba(255,255,255,.05);
+      --accent:#46c2ff; --accent2:#5468ff; --hot:#f77066; --ok:#16d196; --line:rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:radial-gradient(circle at top,#08112d 0%,#030614 55%,#01030b 100%);color:#f4f7ff;font:16px/1.65 "Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+    a{color:#b6d4ff;text-decoration:none}
+    img{max-width:100%;display:block}
+    h1,h2,h3{margin:0;font-weight:800;color:#fff}
+    p{margin:0;color:#dce2ff}
+    button,input,select,textarea{font:inherit}
+
+    header{position:sticky;top:0;z-index:20;background:rgba(4,8,21,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+    .nav{max-width:1100px;margin:auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;gap:12px;align-items:center;font-weight:900;letter-spacing:.3px}
+    .brand span{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 14px 30px rgba(70,108,255,.35);font-size:18px;color:#020612}
+    .nav-links{display:flex;gap:16px;flex-wrap:wrap}
+    .nav-links a{font-size:14px;color:rgba(214,222,255,.85)}
+    .btn{display:inline-flex;align-items:center;gap:10px;padding:12px 18px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(135deg,var(--accent),var(--accent2));color:#00122a;font-weight:800;cursor:pointer;box-shadow:0 16px 35px rgba(59,102,255,.35);transition:transform .2s}
+    .btn:hover{transform:translateY(-2px)}
+    .btn.ghost{background:transparent;color:#e8ecff;border-color:rgba(255,255,255,.2);box-shadow:none}
+
+    .wrap{max-width:1100px;margin:auto;padding:28px 18px}
+    .hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px;padding:36px 0 22px}
+    .hero-card{background:linear-gradient(180deg,rgba(84,104,255,.18),rgba(84,104,255,.04));border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:22px;box-shadow:0 30px 70px rgba(9,16,43,.6);position:relative;overflow:hidden}
+    .hero-card::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 15% 15%,rgba(70,194,255,.28),transparent 55%);mix-blend-mode:screen;pointer-events:none}
+    .h1{font-size:34px;line-height:1.15;margin-bottom:14px}
+    .sub{color:#b8c4f5;font-size:18px;max-width:520px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:26px}
+    .stat{padding:16px;border-radius:16px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+    .stat strong{font-size:22px;color:#fff}
+    .stat span{font-size:13px;color:#9aa4c9;text-transform:uppercase;letter-spacing:.4px}
+
+    .section{margin-top:58px}
+    .section h2{font-size:28px;margin-bottom:14px}
+    .section p.lead{font-size:17px;color:#cdd6ff;margin-bottom:22px}
+    .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+    .card::after{content:"";position:absolute;inset:auto 12px -36px -12px;height:120px;background:linear-gradient(135deg,rgba(70,194,255,.16),transparent);pointer-events:none}
+    .tag{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(84,104,255,.12);border:1px solid rgba(84,104,255,.3);font-size:12px;font-weight:700;color:#c8d6ff;letter-spacing:.3px;text-transform:uppercase}
+    ul{margin:0;padding-left:18px;color:#d8defc}
+    li{margin-bottom:8px}
+
+    .pipeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;counter-reset:step}
+    .pipeline .stage{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;position:relative;display:flex;flex-direction:column;gap:8px;min-height:200px}
+    .pipeline .stage::before{counter-increment:step;content:"0" counter(step);position:absolute;top:16px;right:16px;font-weight:900;font-size:32px;color:rgba(70,194,255,.16)}
+    .stage span{font-size:13px;color:#8e97b6;text-transform:uppercase;letter-spacing:.3px}
+
+    .leads-table{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;overflow:hidden}
+    .filters{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+    .filters label{display:flex;flex-direction:column;font-size:12px;color:#8e97b6;text-transform:uppercase;letter-spacing:.3px;gap:6px}
+    .filters select,.filters input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:#f4f7ff;border-radius:10px;padding:8px 10px;min-width:160px}
+    table{width:100%;border-collapse:collapse;font-size:14px;color:#dce2ff}
+    thead{background:rgba(255,255,255,.04);text-transform:uppercase;letter-spacing:.4px;color:#9ea9d4}
+    th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
+    tbody tr:hover{background:rgba(84,104,255,.08)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.07);font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+
+    .ai-lab{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;margin-top:22px}
+    .ai-lab form{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px}
+    .ai-lab label{font-size:13px;color:#9aa4c9;text-transform:uppercase;letter-spacing:.3px}
+    .ai-lab input,.ai-lab select,.ai-lab textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:10px;color:#f6f8ff;resize:vertical}
+    .ai-lab textarea{min-height:180px}
+    .ai-output{background:linear-gradient(180deg,rgba(14,18,43,.65),rgba(14,18,43,.35));border:1px solid rgba(84,104,255,.28);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px}
+    .ai-output pre{margin:0;white-space:pre-wrap;word-break:break-word;font-family:"JetBrains Mono",Menlo,Consolas,monospace;font-size:14px;color:#d8e5ff}
+    .status{font-size:13px;color:#8fa0d8}
+    .copy-btn{align-self:flex-start;padding:10px 14px;border-radius:10px;background:rgba(70,194,255,.16);color:#cfe7ff;border:1px solid rgba(70,194,255,.4);cursor:pointer}
+
+    .cta-panel{margin-top:48px;background:linear-gradient(135deg,rgba(70,194,255,.25),rgba(84,104,255,.35));border-radius:22px;padding:28px;border:1px solid rgba(255,255,255,.2);display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));align-items:center}
+    .cta-panel h3{font-size:26px}
+    .cta-panel p{color:#0c1327;font-weight:600}
+    .cta-panel .btn{box-shadow:0 20px 40px rgba(4, 13, 40, .45)}
+
+    footer{margin-top:60px;padding:30px 18px;border-top:1px solid rgba(255,255,255,.08);background:#040813;color:#8e97b6;font-size:13px}
+    footer .footer-wrap{max-width:1100px;margin:auto;display:flex;flex-direction:column;gap:12px}
+
+    @media (max-width:720px){
+      .hero{padding-top:18px}
+      .h1{font-size:30px}
+      header{position:relative}
+      .cta-panel{grid-template-columns:1fr;padding:26px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="brand"><span>RE</span> Real Estate Money Saver</div>
+      <div class="nav-links">
+        <a href="#workflow">Workflow</a>
+        <a href="#leads">Lead Desk</a>
+        <a href="#ai">AI Lab</a>
+      </div>
+      <div class="nav-links">
+        <a class="btn ghost" href="/book">Book Live Strategist</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <div class="tag">Cold-Calling Command Center</div>
+        <h1 class="h1">AI-powered cold calling for agents who close</h1>
+        <p class="sub">Scrape motivated buyer & seller lists from free public sources, launch compliant outreach, and drive every interested caller straight to payment, booking, or a live closer. Stripe, Calendly, and Twilio are already wired in.</p>
+        <div class="hero-actions">
+          <a class="btn" href="/checkout">Launch Stripe Checkout</a>
+          <a class="btn ghost" href="tel:+16105550123">Transfer to Live Floor</a>
+        </div>
+        <div class="stat-grid">
+          <div class="stat"><strong>3x</strong><span>Faster list qualification</span></div>
+          <div class="stat"><strong>&lt;90 sec</strong><span>To send pay link</span></div>
+          <div class="stat"><strong>24/7</strong><span>AI concierge coverage</span></div>
+        </div>
+      </div>
+      <div class="hero-card">
+        <h3>Inbound rescue + outbound hustle</h3>
+        <p>Missed call? We text back instantly with your Calendly. Fresh lead from Zillow or MLS expired feed? The dialer queues it, logs the call, and the AI concierge drafts the follow-up text in your voice.</p>
+        <ul>
+          <li>Imports CSV from Zillow, Redfin, county notice portals</li>
+          <li>Works with your existing Twilio number & recordings</li>
+          <li>Stripe Link & Apple Pay ready for reservation fees</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="workflow">
+      <h2>Free-first lead engine</h2>
+      <p class="lead">Start with public data: FSBO listings, saved searches, probate and pre-foreclosure rolls, and social signals. Our fetchers respect rate limits, dedupe duplicates, and score leads for motivation.</p>
+      <div class="grid">
+        <div class="card">
+          <span class="tag">Leads</span>
+          <h3>Scrape + sync</h3>
+          <p>Connect saved-search RSS feeds, Craigslist FSBO pages, or government CSV drops. We normalize phone numbers, add DNC status, and push the hottest records to the dialer first.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Dial</span>
+          <h3>Power hour queue</h3>
+          <p>Auto-create call sheets with scripts, objections, and SMS follow-ups. Every contact can be moved to <em>booked</em>, <em>offer sent</em>, or <em>nurture</em> in two taps.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Collect</span>
+          <h3>Stripe-ready</h3>
+          <p>Charge reservation deposits, inspection retainers, or skip-trace fees right away with Link, Apple Pay, or ACH—using the same Stripe Checkout already running across the Delco stack.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Assist</span>
+          <h3>AI script coach</h3>
+          <p>Feed the concierge a lead persona and it returns a compliant, high-converting talk track that gets to the appointment fast. Copy, edit, or fire it straight into your dialer.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="leads">
+      <h2>Live lead desk</h2>
+      <p class="lead">Filter the hottest prospects, click to call, and hand off to payments or booking in one view. Data below ships with the template—swap the JSON for your own feed or Google Sheet.</p>
+      <div class="leads-table">
+        <div class="filters">
+          <label>Stage
+            <select id="stageFilter">
+              <option value="">All</option>
+              <option>New</option>
+              <option>Qualified</option>
+              <option>Follow-up</option>
+              <option>Research</option>
+            </select>
+          </label>
+          <label>Source
+            <select id="sourceFilter">
+              <option value="">All</option>
+              <option>Zillow saved search</option>
+              <option>Craigslist FSBO</option>
+              <option>Facebook marketplace</option>
+              <option>Google pay-per-click</option>
+              <option>Public notice list</option>
+              <option>Google Business Profile</option>
+              <option>MLS expired</option>
+            </select>
+          </label>
+          <label>Search
+            <input type="search" id="searchFilter" placeholder="City, name, motivation"/>
+          </label>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Lead</th>
+                <th>Source</th>
+                <th>Stage</th>
+                <th>Motivation</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leadRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="ai">
+      <h2>AI cold-call lab</h2>
+      <p class="lead">Describe the lead, choose your vibe, and let the concierge draft a script that nudges them to pay, book, or talk live. Works with OpenAI’s gpt-4o-mini—no extra UI or API key input required.</p>
+      <div class="ai-lab">
+        <form id="scriptForm">
+          <label>Lead type
+            <select name="leadType">
+              <option value="buyer">Buyer</option>
+              <option value="seller">Seller</option>
+              <option value="investor">Investor</option>
+            </select>
+          </label>
+          <label>Market or neighborhood
+            <input name="location" type="text" placeholder="e.g. Fishtown, 19125"/>
+          </label>
+          <label>Tone
+            <select name="tone">
+              <option value="friendly">Friendly</option>
+              <option value="direct">Direct</option>
+              <option value="consultative">Consultative</option>
+              <option value="luxury">Luxury</option>
+            </select>
+          </label>
+          <label>Focus
+            <input name="focus" type="text" placeholder="What problem are we solving?"/>
+          </label>
+          <label>Next step CTA
+            <select name="nextAction">
+              <option value="checkout">Send Stripe payment link</option>
+              <option value="book">Book a Calendly call</option>
+              <option value="transfer">Transfer to live closer</option>
+            </select>
+          </label>
+          <button class="btn" type="submit">Generate AI Script</button>
+          <div class="status" id="scriptStatus">Idle. Submit details to generate.</div>
+        </form>
+        <div class="ai-output">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            <h3 style="font-size:20px">Call script</h3>
+            <button type="button" class="copy-btn" id="copyScript">Copy to clipboard</button>
+          </div>
+          <pre id="scriptOutput">Add lead details to spin up a script that points prospects to pay, book, or talk live.</pre>
+          <div class="status" id="scriptMeta"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="stack">
+      <h2>How the stack closes deals</h2>
+      <div class="pipeline">
+        <div class="stage">
+          <span>Step 1</span>
+          <h3>Scrape & score</h3>
+          <p>Daily cron jobs hit Zillow, Redfin, MLS expired feeds, probate PDFs, and Google Business reviews. We enrich each lead with comps, time-on-market, and estimated equity so you know who’s serious.</p>
+        </div>
+        <div class="stage">
+          <span>Step 2</span>
+          <h3>Auto-dial + SMS safety net</h3>
+          <p>Twilio voice forwards to your floor. Missed call? Our SMS tree logs the lead in Sheets, asks for name + goal, and fires over the Calendly link.</p>
+        </div>
+        <div class="stage">
+          <span>Step 3</span>
+          <h3>Checkout & scheduling</h3>
+          <p>Stripe Checkout handles earnest deposit or consultation fees. Clients choose Apple Pay, card, or Link. Success page pushes them right into the booking flow.</p>
+        </div>
+        <div class="stage">
+          <span>Step 4</span>
+          <h3>Live handoff</h3>
+          <p>Agents get Slack/Discord alerts with transcript + AI summary. Tap to join live, text a payment link, or drop a DocuSign request.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-panel">
+      <div>
+        <h3>Launch your next power hour</h3>
+        <p>Queue fresh leads, copy the script, and drop your Stripe checkout link in under five minutes. All hosted on the Delco infrastructure you already trust.</p>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="/checkout">Collect a Reservation Fee</a>
+        <a class="btn ghost" href="/book">Book Strategy Session</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-wrap">
+      <div>Need custom data sources or more seats? Email <a href="mailto:hello@delcotechdivision.com">hello@delcotechdivision.com</a>.</div>
+      <div>Payments powered by Stripe. Scheduling via Calendly. Voice/SMS via Twilio. AI copywriting by OpenAI.</div>
+    </div>
+  </footer>
+
+  <script>
+    const leadRows = document.getElementById('leadRows');
+    const stageFilter = document.getElementById('stageFilter');
+    const sourceFilter = document.getElementById('sourceFilter');
+    const searchFilter = document.getElementById('searchFilter');
+    let leadData = [];
+
+    function renderLeads(){
+      const stageVal = stageFilter.value.toLowerCase();
+      const sourceVal = sourceFilter.value.toLowerCase();
+      const q = searchFilter.value.trim().toLowerCase();
+      const rows = leadData.filter(lead => {
+        const stageMatch = !stageVal || (lead.stage || '').toLowerCase() === stageVal;
+        const sourceMatch = !sourceVal || (lead.source || '').toLowerCase() === sourceVal;
+        const searchMatch = !q || [lead.name, lead.city, lead.motivation, lead.notes].some(v => String(v).toLowerCase().includes(q));
+        return stageMatch && sourceMatch && searchMatch;
+      }).map(lead => {
+        const tel = lead.phone ? `tel:${lead.phone.replace(/[^+\d]/g,'')}` : '#';
+        const checkoutLink = `/checkout?lead=${encodeURIComponent(lead.name || '')}`;
+        const bookLink = `/book?lead=${encodeURIComponent(lead.name || '')}`;
+        return `<tr>
+          <td>
+            <div><strong>${lead.name}</strong></div>
+            <div class="chip">${lead.city || ''}</div>
+            <div class="chip">${lead.leadType || ''}</div>
+          </td>
+          <td>${lead.source || ''}</td>
+          <td>${lead.stage || ''}</td>
+          <td>${lead.motivation || ''}</td>
+          <td>
+            <div class="actions">
+              <a class="btn ghost" style="padding:6px 10px;font-size:12px" href="${tel}">Call</a>
+              <a class="btn ghost" style="padding:6px 10px;font-size:12px" href="${checkoutLink}">Send pay link</a>
+              <a class="btn ghost" style="padding:6px 10px;font-size:12px" href="${bookLink}">Book</a>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+      leadRows.innerHTML = rows || `<tr><td colspan="5" style="text-align:center;padding:30px;color:#8e97b6">No leads match right now. Try clearing filters.</td></tr>`;
+    }
+
+    fetch('/data/real-estate-leads.json')
+      .then(res => res.json())
+      .then(json => { leadData = json; renderLeads(); })
+      .catch(() => {
+        leadData = [
+          { name: 'Template Lead', phone: '+12155550000', city: 'Sample City', leadType: 'buyer', source: 'Manual import', motivation: 'Demo data fallback', stage: 'New', notes: '' }
+        ];
+        renderLeads();
+      });
+
+    stageFilter.addEventListener('change', renderLeads);
+    sourceFilter.addEventListener('change', renderLeads);
+    searchFilter.addEventListener('input', () => {
+      window.clearTimeout(searchFilter._t);
+      searchFilter._t = window.setTimeout(renderLeads, 150);
+    });
+
+    // AI script generator
+    const scriptForm = document.getElementById('scriptForm');
+    const scriptStatus = document.getElementById('scriptStatus');
+    const scriptOutput = document.getElementById('scriptOutput');
+    const scriptMeta = document.getElementById('scriptMeta');
+    const copyBtn = document.getElementById('copyScript');
+
+    function fallbackScript(payload){
+      return `Intro: Hi, this is ${payload.tone === 'luxury' ? 'the concierge' : 'the acquisitions desk'} with Delco Tech, checking in about ${payload.focus || 'your real estate goals'} in ${payload.location || 'your area'}.\nDiscovery: Confirm timeline, financing, and any roadblocks.\nClose: Offer to ${payload.nextAction === 'checkout' ? 'text over a secure Stripe checkout link' : payload.nextAction === 'book' ? 'send my booking calendar' : 'transfer you to a senior closer now'}.`;
+    }
+
+    scriptForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(scriptForm);
+      const payload = Object.fromEntries(formData.entries());
+      scriptStatus.textContent = 'Generating with OpenAI…';
+      scriptMeta.textContent = '';
+      scriptOutput.textContent = '';
+      try {
+        const response = await fetch('/api/real-estate-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if(!response.ok) throw new Error('Bad response');
+        const data = await response.json();
+        scriptOutput.textContent = data.script || fallbackScript(payload);
+        scriptStatus.textContent = 'AI script ready. Tweak and drop into your dialer.';
+        scriptMeta.textContent = data.note ? data.note : `Lead type: ${payload.leadType} • Tone: ${payload.tone} • CTA: ${payload.nextAction}`;
+      } catch (err) {
+        scriptStatus.textContent = 'OpenAI unavailable. Using fallback template below.';
+        scriptOutput.textContent = fallbackScript(payload);
+        scriptMeta.textContent = 'Tip: Add more detail about objections for a tighter script.';
+      }
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(scriptOutput.textContent || '');
+        copyBtn.textContent = 'Copied!';
+        window.setTimeout(() => { copyBtn.textContent = 'Copy to clipboard'; }, 1800);
+      } catch (err) {
+        copyBtn.textContent = 'Press Ctrl+C';
+        window.setTimeout(() => { copyBtn.textContent = 'Copy to clipboard'; }, 1800);
+      }
+    });
+  </script>
+</body>
+</html>
