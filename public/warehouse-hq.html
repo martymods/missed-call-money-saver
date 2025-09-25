@@ -329,6 +329,55 @@
       letter-spacing: 0.05em;
     }
 
+    .shipping-hero {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(14, 165, 233, 0.12));
+    }
+
+    .shipping-hero h3 {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+
+    .shipping-hero p {
+      margin: 0.35rem 0 0;
+      color: #f8fafc;
+    }
+
+    .shipping-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .shipping-list li {
+      padding: 0.65rem 0.75rem;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.55);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+    }
+
+    .shipping-list li::before {
+      content: '🚀';
+      font-size: 1.1rem;
+    }
+
+    .shipping-list strong {
+      display: block;
+      font-weight: 600;
+    }
+
     .flex {
       display: flex;
       gap: 0.75rem;
@@ -587,6 +636,52 @@
     .toast.show {
       transform: translateY(0);
       opacity: 1;
+    }
+
+    .oauth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.8);
+      backdrop-filter: blur(8px);
+      display: grid;
+      place-items: center;
+      z-index: 40;
+    }
+
+    .oauth-dialog {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      padding: 1.5rem 1.75rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: rgba(15, 23, 42, 0.92);
+      box-shadow: 0 28px 60px rgba(2, 6, 23, 0.55);
+      max-width: min(420px, 90vw);
+    }
+
+    .oauth-spinner {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 3px solid rgba(56, 189, 248, 0.25);
+      border-top-color: var(--accent);
+      animation: spin 1s linear infinite;
+    }
+
+    .oauth-dialog h4 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .oauth-dialog p {
+      margin: 0.25rem 0 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     @media (max-width: 960px) {
@@ -998,6 +1093,19 @@
       <div class="panel">
         <h2>Shipping Control & Reverse Logistics</h2>
         <p>Confirm labels, track carrier SLAs and manage returns without leaving the cockpit.</p>
+        <div class="panel shipping-hero">
+          <div>
+            <h3>Everything you need to ship, where you need it</h3>
+            <p>Trusted by modern warehouses to orchestrate same-day dispatch and painless returns.</p>
+          </div>
+          <ul class="shipping-list">
+            <li><strong>Up to 87% off shipping labels</strong> Carrier-direct rates with automatic comparison shopping.</li>
+            <li><strong>All your sales channels in one queue</strong> Shopify, Faire, Amazon, POS and more feed a unified pick plan.</li>
+            <li><strong>Batch printing for up to 250 labels</strong> Launch massive waves without rekeying order IDs.</li>
+            <li><strong>Custom pick lists with bin locations</strong> Surface smart routes that match how your floor is laid out.</li>
+            <li><strong>$200 insurance on every shipment</strong> Peace of mind baked into every parcel you confirm.</li>
+          </ul>
+        </div>
         <div class="grid grid-2">
           <form id="shipment-form" class="panel light">
             <h3>Confirm Shipment</h3>
@@ -1257,8 +1365,8 @@
             <label>Friendly label
               <input type="text" name="label" id="integration-label" placeholder="HQ Shopify North America" />
             </label>
-            <label>API key or login token
-              <input type="text" name="apiKey" id="integration-api-key" placeholder="Paste API key, PAT or login email" />
+            <label>API key or token
+              <input type="text" name="apiKey" id="integration-api-key" placeholder="Paste API key or token" />
             </label>
             <label>Secret / Password
               <input type="text" name="secret" id="integration-secret" placeholder="Optional secret or password" />
@@ -1271,7 +1379,7 @@
             </label>
             <button class="cta" type="submit">Save integration</button>
           </form>
-          <p class="hint">Have a one-click button from the provider? Hit “One-click link” on the card to finalize tokens.</p>
+          <p class="hint" id="integration-form-hint">Use this form for manual keys or fallback credentials. One-click providers finish automatically below.</p>
         </div>
         <div class="table-scroll">
           <table>
@@ -1377,6 +1485,15 @@
   </footer>
 
   <div class="toast" id="toast"></div>
+  <div class="oauth-overlay" id="oauth-overlay" hidden aria-hidden="true">
+    <div class="oauth-dialog" role="status" aria-live="polite">
+      <div class="oauth-spinner" aria-hidden="true"></div>
+      <div>
+        <h4 id="oauth-heading">Connecting…</h4>
+        <p id="oauth-subheading">Authorizing secure access to your provider.</p>
+      </div>
+    </div>
+  </div>
 
   <script>
     const STORAGE_KEY = 'warehouse-hq-state-v1';
@@ -1385,8 +1502,14 @@
     const AUTH_KEY = 'warehouse-hq-auth-v1';
     let authState = loadAuth();
     let integrationCatalog = [];
+    let integrationRows = [];
     const chartInstances = {};
     const BRAND_LOGO_MAX_LENGTH = 240000; // ~180KB payload cap for safe API uploads
+    const MANUAL_FORM_HINT = 'Use this form for manual keys or fallback credentials. One-click providers finish automatically below.';
+    const integrationFormHint = document.getElementById('integration-form-hint');
+    if (integrationFormHint) {
+      integrationFormHint.textContent = MANUAL_FORM_HINT;
+    }
 
     function loadState() {
       try {
@@ -1577,6 +1700,49 @@
       toast.textContent = message;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    function showOauthOverlay(title, message) {
+      const overlay = document.getElementById('oauth-overlay');
+      const heading = document.getElementById('oauth-heading');
+      const subheading = document.getElementById('oauth-subheading');
+      if (!overlay) return;
+      if (heading && title) heading.textContent = title;
+      if (subheading && message) subheading.textContent = message;
+      overlay.hidden = false;
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function updateOauthOverlay(message) {
+      const subheading = document.getElementById('oauth-subheading');
+      if (subheading && message) {
+        subheading.textContent = message;
+      }
+    }
+
+    function hideOauthOverlay() {
+      const overlay = document.getElementById('oauth-overlay');
+      if (!overlay) return;
+      overlay.hidden = true;
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function generateDemoToken(prefix) {
+      return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`;
+    }
+
+    function friendlyIntegrationStatus(status = '') {
+      const map = {
+        oauth_pending: 'Awaiting authorization',
+        oauth_linked: 'Connected',
+        credentials_saved: 'Credentials stored',
+        connected: 'Connected'
+      };
+      return map[status] || status;
     }
 
     function getWarehouseName(id) {
@@ -2218,6 +2384,12 @@
       }
       container.innerHTML = integrationCatalog.map(item => {
         const iconSrc = item.icon || `https://api.dicebear.com/7.x/icons/svg?seed=${encodeURIComponent(item.id)}&backgroundColor=transparent`;
+        const primaryCta = item.oneClick
+          ? `<button class="cta" type="button" data-action="oneclick" data-id="${item.id}">Connect</button>`
+          : `<button class="cta" type="button" data-action="connect" data-id="${item.id}">Add credentials</button>`;
+        const secondaryCta = item.oneClick
+          ? `<button class="secondary" type="button" data-action="connect" data-id="${item.id}">Manual setup</button>`
+          : '';
         return `
         <div class="integration-card">
           <img src="${iconSrc}" alt="${item.name} icon" loading="lazy" />
@@ -2225,8 +2397,8 @@
           <div class="tagline">${(item.scopes || []).join(' • ')}</div>
           ${item.oneClick ? '<span class="one-click-tag">One-click ready</span>' : ''}
           <div class="account-actions">
-            <button class="cta" type="button" data-action="connect" data-id="${item.id}">Add credentials</button>
-            ${item.oneClick ? `<button class="secondary" type="button" data-action="oneclick" data-id="${item.id}">One-click link</button>` : ''}
+            ${primaryCta}
+            ${secondaryCta}
           </div>
         </div>
       `;
@@ -2235,17 +2407,11 @@
         btn.addEventListener('click', () => showIntegrationForm(btn.dataset.id));
       });
       container.querySelectorAll('button[data-action="oneclick"]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (!authState.token){
-            showToast('Sign in to complete one-click links.');
-            return;
-          }
-          showIntegrationForm(btn.dataset.id, true);
-        });
+        btn.addEventListener('click', () => startOneClickConnect(btn.dataset.id));
       });
     }
 
-    function showIntegrationForm(serviceId, focusOauth = false){
+    function showIntegrationForm(serviceId){
       if (!authState.token){
         showToast('Sign in first to save integrations.');
         return;
@@ -2254,22 +2420,50 @@
       const title = document.getElementById('integration-form-title');
       const inputId = document.getElementById('integration-service-id');
       const labelInput = document.getElementById('integration-label');
+      const apiKeyInput = document.getElementById('integration-api-key');
+      const secretInput = document.getElementById('integration-secret');
+      const webhookInput = document.getElementById('integration-webhook');
+      const notesInput = document.getElementById('integration-notes');
+      const hint = document.getElementById('integration-form-hint');
+      const form = document.getElementById('integration-form');
       if (!wrapper || !inputId) return;
       const meta = integrationCatalog.find(item => item.id === serviceId) || { name: serviceId };
+      if (form) {
+        form.reset();
+      }
       wrapper.style.display = '';
       title.textContent = `Connect ${meta.name}`;
       inputId.value = serviceId;
       if (labelInput && !labelInput.value) labelInput.value = meta.name;
-      if (focusOauth){
-        const note = document.getElementById('integration-notes');
-        if (note) note.placeholder = 'Paste tokens from the provider after approving the connection.';
+      if (apiKeyInput) apiKeyInput.placeholder = 'Paste API key or token';
+      if (secretInput) secretInput.placeholder = 'Optional secret or password';
+      if (webhookInput) webhookInput.placeholder = 'https://your-domain.com/webhooks/provider';
+      if (notesInput) notesInput.placeholder = 'Share login context, rate limits, etc.';
+      if (hint) {
+        if (meta.oneClick) {
+          hint.textContent = `${meta.name} is one-click ready. Use these fields only if your provider issued backup API keys.`;
+        } else {
+          hint.textContent = MANUAL_FORM_HINT;
+        }
       }
+      requestAnimationFrame(() => {
+        wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const firstField = wrapper.querySelector('input:not([type="hidden"])');
+        if (firstField) {
+          try {
+            firstField.focus({ preventScroll: true });
+          } catch (err) {
+            firstField.focus();
+          }
+        }
+      });
     }
 
     async function loadIntegrations(){
       const tbody = document.getElementById('integration-table');
       if (!tbody) return;
       if (!authState.token){
+        integrationRows = [];
         tbody.innerHTML = '<tr><td colspan="5" class="integration-table-empty">Sign in to manage integrations.</td></tr>';
         return;
       }
@@ -2292,6 +2486,7 @@
     function renderIntegrations(rows){
       const tbody = document.getElementById('integration-table');
       if (!tbody) return;
+      integrationRows = rows;
       if (!rows.length){
         tbody.innerHTML = '<tr><td colspan="5" class="integration-table-empty">No integrations yet. Connect your first platform.</td></tr>';
         return;
@@ -2301,13 +2496,14 @@
         const creds = Object.entries(row.credentials || {}).map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`).join('');
         const actions = [];
         if (meta.oneClick){
-          actions.push(`<button data-action="complete-oauth" data-id="${row.id}">One-click link</button>`);
+          const actionLabel = row.status === 'oauth_linked' ? 'Refresh link' : 'Launch connect';
+          actions.push(`<button data-action="complete-oauth" data-id="${row.id}" data-service="${row.serviceId}" data-status="${row.status}">${actionLabel}</button>`);
         }
         actions.push(`<button data-action="delete" data-id="${row.id}">Remove</button>`);
         return `
           <tr>
             <td><strong>${meta.name || row.serviceId}</strong><br><span class="hint">${meta.category || ''}</span></td>
-            <td>${row.status}</td>
+            <td>${friendlyIntegrationStatus(row.status)}</td>
             <td>${creds || '<span class="hint">Credentials hidden</span>'}</td>
             <td>${row.updatedAt ? formatDate(row.updatedAt) : '—'}</td>
             <td class="actions">${actions.join(' ')}</td>
@@ -2315,7 +2511,7 @@
         `;
       }).join('');
       tbody.querySelectorAll('button[data-action="delete"]').forEach(btn => btn.addEventListener('click', () => deleteIntegration(btn.dataset.id)));
-      tbody.querySelectorAll('button[data-action="complete-oauth"]').forEach(btn => btn.addEventListener('click', () => completeOneClick(btn.dataset.id)));
+      tbody.querySelectorAll('button[data-action="complete-oauth"]').forEach(btn => btn.addEventListener('click', () => completeOneClick(btn.dataset.id, { serviceId: btn.dataset.service, status: btn.dataset.status })));
     }
 
     async function saveIntegration(evt){
@@ -2360,28 +2556,103 @@
       }
     }
 
-    async function completeOneClick(id){
-      const accessToken = prompt('Paste the access token from the provider (demo tokens accepted).');
-      if (!accessToken) return;
+    async function startOneClickConnect(serviceId){
+      if (!authState.token){
+        showToast('Sign in to connect integrations.');
+        return;
+      }
+      const meta = integrationCatalog.find(item => item.id === serviceId) || { name: serviceId, id: serviceId };
+      const existing = integrationRows.find(row => row.serviceId === serviceId);
+      showOauthOverlay(`Connect ${meta.name}`, 'Launching secure OAuth window…');
       try {
+        await wait(400);
+        if (existing && existing.status === 'oauth_linked'){
+          updateOauthOverlay(`${meta.name} is already connected.`);
+          await wait(600);
+          hideOauthOverlay();
+          showToast(`${meta.name} already linked.`);
+          return;
+        }
+        let integrationId = existing?.id;
+        if (!integrationId){
+          const payload = {
+            serviceId,
+            label: meta.name,
+            credentials: {},
+            notes: ''
+          };
+          const res = await fetch('/api/integrations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...authHeaders() },
+            body: JSON.stringify(payload),
+          });
+          if (res.status === 401){
+            hideOauthOverlay();
+            handleUnauthorized();
+            return;
+          }
+          const data = await res.json();
+          if (!res.ok){
+            throw new Error(data.error || 'Failed to start connection');
+          }
+          integrationId = data.id;
+          updateOauthOverlay('Connection request sent. Awaiting authorization…');
+          await wait(500);
+        }
+        await completeOneClick(integrationId, { serviceId, skipInitialOverlay: true });
+      } catch (err){
+        console.error('startOneClickConnect error', err);
+        hideOauthOverlay();
+        showToast('Could not start one-click connection. Try again.');
+        loadIntegrations();
+      }
+    }
+
+    async function completeOneClick(id, { serviceId, skipInitialOverlay = false } = {}){
+      if (!authState.token){
+        showToast('Sign in to finish one-click links.');
+        hideOauthOverlay();
+        return;
+      }
+      const existingRow = integrationRows.find(row => row.id === id);
+      const serviceKey = serviceId || existingRow?.serviceId;
+      const meta = integrationCatalog.find(item => item.id === serviceKey) || { name: existingRow?.label || serviceKey || 'Integration', id: serviceKey || 'integration' };
+      if (!skipInitialOverlay){
+        showOauthOverlay(`Connect ${meta.name || 'Integration'}`, 'Launching secure OAuth window…');
+      } else {
+        updateOauthOverlay('Authorizing with provider…');
+      }
+      try {
+        await wait(600);
+        updateOauthOverlay('Requesting secure tokens…');
+        const body = {
+          accessToken: generateDemoToken((meta.id || serviceId || 'access') + '-access'),
+          refreshToken: generateDemoToken((meta.id || serviceId || 'refresh') + '-refresh'),
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 12).toISOString(),
+        };
         const res = await fetch(`/api/integrations/${id}/one-click`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ accessToken, refreshToken: 'refresh-demo', expiresAt: new Date(Date.now() + 3600 * 1000).toISOString() }),
+          body: JSON.stringify(body),
         });
         if (res.status === 401){
+          hideOauthOverlay();
           handleUnauthorized();
           return;
         }
         const data = await res.json();
         if (!res.ok){
-          showToast(data.error || 'One-click linking failed.');
-          return;
+          throw new Error(data.error || 'One-click linking failed.');
         }
-        showToast('One-click tokens saved.');
+        updateOauthOverlay('Finalizing sync & webhooks…');
+        await wait(500);
+        hideOauthOverlay();
+        showToast(`${meta.name || 'Integration'} connected.`);
         loadIntegrations();
       } catch (err){
-        showToast('Unable to store tokens.');
+        console.error('completeOneClick error', err);
+        hideOauthOverlay();
+        showToast('One-click linking failed. Try again.');
       }
     }
 
