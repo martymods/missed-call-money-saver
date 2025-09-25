@@ -1407,11 +1407,20 @@
     function loadAuth(){
       try {
         const raw = localStorage.getItem(AUTH_KEY);
-        if (raw) return JSON.parse(raw);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.token && parsed.user) {
+            return parsed;
+          }
+        }
       } catch (err){
         console.warn('Failed to load auth state', err);
       }
       return { token: null, user: null };
+    }
+
+    function isAuthenticated(){
+      return Boolean(authState?.token && authState?.user);
     }
 
     function persistAuth(){
@@ -1899,7 +1908,19 @@
     }
 
     function authHeaders(){
-      return authState?.token ? { Authorization: `Bearer ${authState.token}` } : {};
+      return isAuthenticated() ? { Authorization: `Bearer ${authState.token}` } : {};
+    }
+
+    function handleUnauthorized(message = 'Session expired. Sign in again to continue.'){
+      const wasAuthenticated = isAuthenticated();
+      authState = { token: null, user: null };
+      persistAuth();
+      updateAccountStatus();
+      renderTotpUi();
+      loadIntegrations();
+      if (wasAuthenticated){
+        showToast(message);
+      }
     }
 
     function setAuthState({ token = null, user = null }){
@@ -1949,7 +1970,7 @@
       const panel = document.getElementById('totp-panel');
       const container = document.getElementById('totp-content');
       if (!panel || !container) return;
-      if (!authState || !authState.user){
+      if (!authState || !authState.user || !authState.token){
         panel.style.display = 'none';
         container.innerHTML = '<p class="hint">Sign in to enable authenticator protection.</p>';
         return;
@@ -2136,6 +2157,10 @@
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ label: authState.user?.email || 'Warehouse HQ' }),
         });
+        if (res.status === 401){
+          handleUnauthorized();
+          return;
+        }
         const data = await res.json();
         if (!res.ok){
           showToast(data.error || 'Unable to enable 2FA');
@@ -2155,6 +2180,10 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
         });
+        if (res.status === 401){
+          handleUnauthorized();
+          return;
+        }
         if (!res.ok){
           const data = await res.json();
           showToast(data.error || 'Unable to disable 2FA');
@@ -2246,6 +2275,10 @@
       }
       try {
         const res = await fetch('/api/integrations', { headers: authHeaders() });
+        if (res.status === 401){
+          handleUnauthorized();
+          return;
+        }
         const data = await res.json();
         if (!res.ok){
           throw new Error(data.error || 'Failed');
@@ -2309,6 +2342,10 @@
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify(payload),
         });
+        if (res.status === 401){
+          handleUnauthorized();
+          return;
+        }
         const data = await res.json();
         if (!res.ok){
           showToast(data.error || 'Could not save integration');
@@ -2332,6 +2369,10 @@
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ accessToken, refreshToken: 'refresh-demo', expiresAt: new Date(Date.now() + 3600 * 1000).toISOString() }),
         });
+        if (res.status === 401){
+          handleUnauthorized();
+          return;
+        }
         const data = await res.json();
         if (!res.ok){
           showToast(data.error || 'One-click linking failed.');
@@ -2351,6 +2392,10 @@
           method: 'DELETE',
           headers: authHeaders(),
         });
+        if (res.status === 401){
+          handleUnauthorized();
+          return;
+        }
         if (!res.ok){
           showToast('Unable to remove integration.');
           return;
@@ -2373,11 +2418,15 @@
       if (!authState.token) return;
       try {
         const brandTheme = sanitizeBrandThemeForUpload();
-        await fetch('/api/users/brand', {
+        const res = await fetch('/api/users/brand', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ brandTheme }),
         });
+        if (res.status === 401){
+          handleUnauthorized();
+          return;
+        }
       } catch (err){
         console.warn('Brand sync skipped', err);
       }
