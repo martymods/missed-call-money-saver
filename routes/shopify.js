@@ -4,8 +4,19 @@ const { fetchShopifyData } = require('../services/shopify');
 const { findIntegrationByService, parseIntegrationCredentials } = require('../lib/integrations');
 const { recordAuditLog } = require('../services/auditLog');
 
+function normalizeShopDomain(value){
+  if (!value) return '';
+  return String(value)
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/\?.*$/, '')
+    .replace(/#.*/, '')
+    .replace(/\/.*$/, '')
+    .toLowerCase();
+}
+
 function resolveShopDomain(credentials = {}){
-  return (
+  const raw = (
     credentials.shopDomain ||
     credentials.shop ||
     credentials.domain ||
@@ -13,15 +24,17 @@ function resolveShopDomain(credentials = {}){
     process.env.SHOPIFY_SHOP_DOMAIN ||
     ''
   );
+  return normalizeShopDomain(raw);
 }
 
 function resolveAccessToken(credentials = {}){
-  return (
+  const token = (
     credentials.accessToken ||
     credentials.token ||
     credentials.apiKey ||
     ''
   );
+  return typeof token === 'string' ? token.trim() : '';
 }
 
 function createRouter(){

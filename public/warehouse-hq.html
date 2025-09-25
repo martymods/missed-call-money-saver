@@ -100,6 +100,41 @@
       transform: translateY(-1px);
     }
 
+    .shopify-logo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .shopify-logo-pill::before {
+      content: "";
+      display: inline-block;
+      width: 1.1rem;
+      height: 1.1rem;
+      background-image: url('/image/apiLogos/shopify.png');
+      background-repeat: no-repeat;
+      background-size: contain;
+    }
+
+    button.shopify-logo-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #shopify-warnings {
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    #shopify-warnings .shopify-logo-pill {
+      width: 100%;
+      justify-content: flex-start;
+      gap: 0.5rem;
+    }
+
     .nav-overlay {
       position: fixed;
       inset: 0;
@@ -823,7 +858,7 @@
           <div>
             <h3>Integration Pulse</h3>
             <ul class="list">
-              <li><strong>Commerce:</strong> Shopify, Amazon, eBay, Faire, POS</li>
+              <li><strong>Commerce:</strong> <span class="shopify-logo-pill">Shopify</span>, Amazon, eBay, Faire, POS</li>
               <li><strong>Accounting:</strong> QuickBooks, Xero, NetSuite, Odoo</li>
               <li><strong>Automation:</strong> Zebra scanners, RFID gateways, Locus bots</li>
             </ul>
@@ -937,10 +972,10 @@
           <div class="flex-space">
             <div>
               <h3>Inventory Snapshot</h3>
-              <p class="hint" id="shopify-sync-status">Connect Shopify to sync your catalogue.</p>
+              <p class="hint shopify-logo-pill" id="shopify-sync-status">Connect Shopify to sync your catalogue.</p>
             </div>
             <div class="flex" id="inventory-toolbar">
-              <button class="secondary" type="button" id="shopify-sync-btn">Sync Shopify</button>
+              <button class="secondary shopify-logo-pill" type="button" id="shopify-sync-btn">Sync Shopify</button>
               <input type="search" id="inventory-search" placeholder="Search SKU, name, lot…" />
               <select id="warehouse-filter"></select>
             </div>
@@ -968,7 +1003,7 @@
         <div class="grid grid-2">
           <div class="panel light">
             <div class="flex-space">
-              <h3>Shopify Collections</h3>
+              <h3 class="shopify-logo-pill">Shopify Collections</h3>
               <span class="hint" id="collections-count">—</span>
             </div>
             <div class="table-scroll small">
@@ -1221,7 +1256,7 @@
           </div>
           <ul class="shipping-list">
             <li><strong>Up to 87% off shipping labels</strong> Carrier-direct rates with automatic comparison shopping.</li>
-            <li><strong>All your sales channels in one queue</strong> Shopify, Faire, Amazon, POS and more feed a unified pick plan.</li>
+            <li><strong>All your sales channels in one queue</strong> <span class="shopify-logo-pill">Shopify</span>, Faire, Amazon, POS and more feed a unified pick plan.</li>
             <li><strong>Batch printing for up to 250 labels</strong> Launch massive waves without rekeying order IDs.</li>
             <li><strong>Custom pick lists with bin locations</strong> Surface smart routes that match how your floor is laid out.</li>
             <li><strong>$200 insurance on every shipment</strong> Peace of mind baked into every parcel you confirm.</li>
@@ -2268,8 +2303,14 @@
         panel.textContent = '';
         return;
       }
-      panel.innerHTML = warnings.map(w => `<div>${w}</div>`).join('');
-      panel.style.display = 'block';
+      panel.textContent = '';
+      warnings.forEach(message => {
+        const row = document.createElement('div');
+        row.className = 'shopify-logo-pill';
+        row.textContent = message;
+        panel.appendChild(row);
+      });
+      panel.style.display = 'flex';
     }
 
     function hasShopifyIntegration(){

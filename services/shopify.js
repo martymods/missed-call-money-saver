@@ -1,6 +1,17 @@
 const FETCH_LIMIT = Number(process.env.SHOPIFY_FETCH_LIMIT || 50);
 const API_VERSION = process.env.SHOPIFY_API_VERSION || '2024-04';
 
+function normalizeShopDomain(value){
+  if (!value) return '';
+  return String(value)
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/\?.*$/, '')
+    .replace(/#.*/, '')
+    .replace(/\/.*$/, '')
+    .toLowerCase();
+}
+
 function normalizeId(value){
   if (value === null || value === undefined) return '';
   try {
@@ -11,10 +22,15 @@ function normalizeId(value){
 }
 
 async function shopifyRequest({ shop, accessToken, path, query = {} }){
-  if (!shop) {
+  const domain = normalizeShopDomain(shop);
+  if (!domain) {
     throw new Error('Missing shop domain');
   }
-  const url = new URL(`https://${shop}/admin/api/${API_VERSION}/${path}`);
+  const token = typeof accessToken === 'string' ? accessToken.trim() : '';
+  if (!token) {
+    throw new Error('Missing Shopify access token');
+  }
+  const url = new URL(`https://${domain}/admin/api/${API_VERSION}/${path}`);
   Object.entries(query).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return;
     if (Array.isArray(value)) {
@@ -23,13 +39,15 @@ async function shopifyRequest({ shop, accessToken, path, query = {} }){
       url.searchParams.set(key, value);
     }
   });
-  const res = await fetch(url, {
-    headers: {
-      'X-Shopify-Access-Token': accessToken,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-  });
+    const res = await fetch(url, {
+      headers: {
+        'X-Shopify-Access-Token': token,
+        'X-Shopify-Shop-Domain': domain,
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    });
   if (!res.ok){
     const text = await res.text();
     const err = new Error(`Shopify request failed (${res.status}) for ${path}`);
@@ -224,11 +242,13 @@ async function fetchGiftCards(opts, meta){
 }
 
 async function fetchShopifyData({ shop, accessToken }){
-  if (!shop) throw new Error('Missing Shopify shop domain');
-  if (!accessToken) throw new Error('Missing Shopify access token');
+  const domain = normalizeShopDomain(shop);
+  const token = typeof accessToken === 'string' ? accessToken.trim() : '';
+  if (!domain) throw new Error('Missing Shopify shop domain');
+  if (!token) throw new Error('Missing Shopify access token');
 
   const meta = { warnings: [], counts: {} };
-  const opts = { shop, accessToken };
+  const opts = { shop: domain, accessToken: token };
   const fetchedAt = new Date().toISOString();
 
   const [locations, products] = await Promise.all([
