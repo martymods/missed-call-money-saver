@@ -1316,7 +1316,7 @@
                 <small>Snap a fresh badge or pick from your camera roll.</small>
               </span>
             </label>
-            <p class="hint brand-upload-hint" id="brand-logo-hint">PNG, JPG, or SVG up to 2MB.</p>
+            <p class="hint brand-upload-hint" id="brand-logo-hint">PNG or JPG up to 2MB (auto-optimized for cloud sync).</p>
             <button type="button" class="link-button" id="brand-logo-clear">Remove logo</button>
             <button class="cta" type="submit">Save brand preset</button>
             <p class="hint">Brand presets persist locally and, when signed in, sync to the cloud for your whole squad.</p>
@@ -1386,6 +1386,7 @@
     let authState = loadAuth();
     let integrationCatalog = [];
     const chartInstances = {};
+    const BRAND_LOGO_MAX_LENGTH = 240000; // ~180KB payload cap for safe API uploads
 
     function loadState() {
       try {
@@ -1981,13 +1982,100 @@
       }
     }
 
+    function sanitizeBrandThemeForUpload(){
+      const branding = state.branding || {};
+      const clean = {
+        accent: branding.accent || '#38bdf8',
+        background: branding.background || 'nebula',
+        callSign: branding.callSign || 'Warehouse HQ',
+        emoji: branding.emoji || '🚚',
+      };
+      if (branding.logoData && typeof branding.logoData === 'string' && branding.logoData.length <= BRAND_LOGO_MAX_LENGTH){
+        clean.logoData = branding.logoData;
+      }
+      return clean;
+    }
+
+    async function processLogoFile(file){
+      const raw = await readFileAsDataURL(file);
+      const optimized = await optimizeLogoData(raw, file.type || 'image/jpeg');
+      if (!optimized || optimized.length > BRAND_LOGO_MAX_LENGTH){
+        throw new Error('logo_too_large');
+      }
+      return optimized;
+    }
+
+    function readFileAsDataURL(file){
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string'){
+            resolve(reader.result);
+          } else {
+            reject(new Error('logo_invalid'));
+          }
+        };
+        reader.onerror = () => reject(new Error('logo_read_failed'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function optimizeLogoData(dataUrl, mimeType){
+      if (typeof dataUrl !== 'string'){
+        return Promise.reject(new Error('logo_invalid'));
+      }
+      if (dataUrl.length <= BRAND_LOGO_MAX_LENGTH){
+        return Promise.resolve(dataUrl);
+      }
+      if (!/^data:image\//.test(dataUrl)){
+        return Promise.resolve(dataUrl);
+      }
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const maxDimension = 512;
+            let { width, height } = img;
+            if (!width || !height){
+              resolve(dataUrl);
+              return;
+            }
+            const scale = Math.min(1, maxDimension / Math.max(width, height));
+            const targetWidth = Math.max(1, Math.round(width * scale));
+            const targetHeight = Math.max(1, Math.round(height * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+            const exportMime = mimeType === 'image/png' ? 'image/png' : 'image/jpeg';
+            let quality = exportMime === 'image/jpeg' ? 0.82 : undefined;
+            let output = canvas.toDataURL(exportMime, quality);
+            while (output.length > BRAND_LOGO_MAX_LENGTH && exportMime === 'image/jpeg' && quality > 0.46){
+              quality -= 0.12;
+              output = canvas.toDataURL(exportMime, quality);
+            }
+            if (output.length > BRAND_LOGO_MAX_LENGTH){
+              reject(new Error('logo_too_large'));
+              return;
+            }
+            resolve(output);
+          } catch (err){
+            reject(err);
+          }
+        };
+        img.onerror = () => reject(new Error('logo_invalid'));
+        img.src = dataUrl;
+      });
+    }
+
     async function registerAccount(evt){
       evt.preventDefault();
       const form = evt.target;
       const formData = new FormData(form);
       const payload = Object.fromEntries(formData.entries());
       payload.enableTotp = formData.get('enableTotp') === 'on';
-      payload.brandTheme = { ...state.branding };
+      payload.brandTheme = sanitizeBrandThemeForUpload();
       try {
         const res = await fetch('/api/users/register', {
           method: 'POST',
@@ -2284,10 +2372,11 @@
     async function syncBrandToServer(){
       if (!authState.token) return;
       try {
+        const brandTheme = sanitizeBrandThemeForUpload();
         await fetch('/api/users/brand', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ brandTheme: state.branding }),
+          body: JSON.stringify({ brandTheme }),
         });
       } catch (err){
         console.warn('Brand sync skipped', err);
@@ -2323,7 +2412,7 @@
         });
       });
       if (logoInput) {
-        logoInput.addEventListener('change', () => {
+        logoInput.addEventListener('change', async () => {
           const file = logoInput.files?.[0];
           if (!file) {
             return;
@@ -2338,19 +2427,26 @@
             logoInput.value = '';
             return;
           }
-          const reader = new FileReader();
-          reader.onload = () => {
-            if (typeof reader.result !== 'string') return;
+          try {
+            const optimized = await processLogoFile(file);
             state.branding = {
               ...state.branding,
-              logoData: reader.result,
+              logoData: optimized,
             };
             applyBranding();
             persist();
             scheduleBrandSync();
+            showToast('Logo optimized and saved.');
+          } catch (err) {
+            console.warn('Logo processing failed', err);
+            if (err?.message === 'logo_too_large') {
+              showToast('Logo is too large to sync. Please choose a smaller image.');
+            } else {
+              showToast('Unable to process logo. Try another image.');
+            }
+          } finally {
             logoInput.value = '';
-          };
-          reader.readAsDataURL(file);
+          }
         });
       }
       if (logoClear) {
