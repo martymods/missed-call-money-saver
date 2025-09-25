@@ -2,7 +2,8 @@
 const express = require('express');
 const { getCollection, ObjectId } = require('../services/mongo');
 const { authenticate } = require('./users');
-const { encryptString, decryptString } = require('../lib/crypto');
+const { encryptString } = require('../lib/crypto');
+const { parseIntegrationCredentials, findIntegrationById } = require('../lib/integrations');
 
 const CATALOG = [
   { id: 'google-workspace', name: 'Google Workspace', category: 'Productivity', oneClick: true, scopes: ['Gmail', 'Sheets', 'Calendar'], docs: 'https://developers.google.com/workspace', icon: '/image/apiLogos/Google_Workspace.png' },
@@ -59,7 +60,7 @@ function createRouter(){
         status: row.status || 'connected',
         connectedAt: row.connectedAt,
         updatedAt: row.updatedAt,
-        credentials: maskCredential(parseCredentials(row.credentials)),
+        credentials: maskCredential(parseIntegrationCredentials(row.credentials)),
         notes: row.notes || '',
       }));
       res.json({ ok: true, integrations });
@@ -104,11 +105,11 @@ function createRouter(){
       const { accessToken = '', refreshToken = '', expiresAt = '' } = req.body || {};
       const col = await getCollection('integrations');
       const filter = { _id: new ObjectId(id), userId: req.user._id };
-      const integration = await col.findOne(filter);
+      const integration = await findIntegrationById(id, req.user._id);
       if (!integration){
         return res.status(404).json({ error: 'not_found' });
       }
-      const stored = parseCredentials(integration.credentials);
+      const stored = parseIntegrationCredentials(integration.credentials);
       const merged = {
         ...stored,
         accessToken,
@@ -142,17 +143,6 @@ function createRouter(){
   });
 
   return router;
-}
-
-function parseCredentials(raw){
-  if (!raw) return {};
-  try {
-    const decoded = decryptString(raw);
-    if (!decoded) return {};
-    return JSON.parse(decoded);
-  } catch (err){
-    return {};
-  }
 }
 
 module.exports = createRouter;
