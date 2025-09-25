@@ -107,41 +107,7 @@ function createRouter(){
 
   router.post('/:id/one-click', async (req, res) => {
     try {
-      const { id } = req.params;
-      const {
-        accessToken = '',
-        refreshToken = '',
-        expiresAt = '',
-        shopDomain = '',
-        shop = '',
-      } = req.body || {};
-      const col = await getCollection('integrations');
-      const filter = { _id: new ObjectId(id), userId: req.user._id };
-      const integration = await findIntegrationById(id, req.user._id);
-      if (!integration){
-        return res.status(404).json({ error: 'not_found' });
-      }
-      const stored = parseIntegrationCredentials(integration.credentials);
-      const merged = {
-        ...stored,
-        accessToken,
-        refreshToken,
-        expiresAt,
-      };
-      const normalizedShop = String(shopDomain || shop || '')
-        .trim()
-        .replace(/^https?:\/\//i, '')
-        .replace(/\s+/g, '')
-        .replace(/\/.*$/, '')
-        .toLowerCase();
-      if (normalizedShop){
-        merged.shopDomain = normalizedShop;
-        merged.shop = normalizedShop;
-      }
-      await col.updateOne(filter, {
-        $set: {
-          credentials: encryptString(JSON.stringify(merged)),
-          status: 'oauth_linked',
+
           updatedAt: new Date().toISOString(),
         },
       });
