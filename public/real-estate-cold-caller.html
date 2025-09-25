@@ -56,7 +56,8 @@
     .pipeline .stage::before{counter-increment:step;content:"0" counter(step);position:absolute;top:16px;right:16px;font-weight:900;font-size:32px;color:rgba(70,194,255,.16)}
     .stage span{font-size:13px;color:#8e97b6;text-transform:uppercase;letter-spacing:.3px}
 
-    .leads-table{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;overflow:hidden}
+    .leads-table{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+    .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px}
     .filters{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px}
     .filters label{display:flex;flex-direction:column;font-size:12px;color:#8e97b6;text-transform:uppercase;letter-spacing:.3px;gap:6px}
     .filters select,.filters input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:#f4f7ff;border-radius:10px;padding:8px 10px;min-width:160px}
@@ -73,9 +74,12 @@
     .ai-lab input,.ai-lab select,.ai-lab textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:10px;color:#f6f8ff;resize:vertical}
     .ai-lab textarea{min-height:180px}
     .ai-output{background:linear-gradient(180deg,rgba(14,18,43,.65),rgba(14,18,43,.35));border:1px solid rgba(84,104,255,.28);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px}
+    .ai-output-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .script-actions{display:flex;gap:8px;flex-wrap:wrap}
     .ai-output pre{margin:0;white-space:pre-wrap;word-break:break-word;font-family:"JetBrains Mono",Menlo,Consolas,monospace;font-size:14px;color:#d8e5ff}
     .status{font-size:13px;color:#8fa0d8}
     .copy-btn{align-self:flex-start;padding:10px 14px;border-radius:10px;background:rgba(70,194,255,.16);color:#cfe7ff;border:1px solid rgba(70,194,255,.4);cursor:pointer}
+    .voice-btn{background:rgba(84,104,255,.24);border:1px solid rgba(84,104,255,.48)}
 
     .cta-panel{margin-top:48px;background:linear-gradient(135deg,rgba(70,194,255,.25),rgba(84,104,255,.35));border-radius:22px;padding:28px;border:1px solid rgba(255,255,255,.2);display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));align-items:center}
     .cta-panel h3{font-size:26px}
@@ -90,6 +94,18 @@
       .h1{font-size:30px}
       header{position:relative}
       .cta-panel{grid-template-columns:1fr;padding:26px}
+      .table-wrap{overflow:visible}
+      thead{display:none}
+      table,tbody,tr,td{display:block;width:100%}
+      tbody tr{margin-bottom:14px;padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.02)}
+      tbody tr:hover{background:rgba(84,104,255,.12)}
+      td{border:none;padding:6px 0}
+      td+td{margin-top:10px}
+      td[data-label]{display:flex;flex-direction:column;gap:6px}
+      td[data-label]::before{content:attr(data-label);font-size:11px;color:#8e97b6;text-transform:uppercase;letter-spacing:.35px}
+      td[data-label="Lead"]{gap:4px}
+      .actions{flex-direction:column;align-items:stretch}
+      .actions .btn{width:100%;justify-content:center}
     }
   </style>
 </head>
@@ -246,9 +262,12 @@
           <div class="status" id="scriptStatus">Idle. Submit details to generate.</div>
         </form>
         <div class="ai-output">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <div class="ai-output-header">
             <h3 style="font-size:20px">Call script</h3>
-            <button type="button" class="copy-btn" id="copyScript">Copy to clipboard</button>
+            <div class="script-actions">
+              <button type="button" class="copy-btn" id="copyScript">Copy to clipboard</button>
+              <button type="button" class="copy-btn voice-btn" id="speakScript">Play voice demo</button>
+            </div>
           </div>
           <pre id="scriptOutput">Add lead details to spin up a script that points prospects to pay, book, or talk live.</pre>
           <div class="status" id="scriptMeta"></div>
@@ -322,15 +341,15 @@
         const checkoutLink = `/checkout?lead=${encodeURIComponent(lead.name || '')}`;
         const bookLink = `/book?lead=${encodeURIComponent(lead.name || '')}`;
         return `<tr>
-          <td>
+          <td data-label="Lead">
             <div><strong>${lead.name}</strong></div>
             <div class="chip">${lead.city || ''}</div>
             <div class="chip">${lead.leadType || ''}</div>
           </td>
-          <td>${lead.source || ''}</td>
-          <td>${lead.stage || ''}</td>
-          <td>${lead.motivation || ''}</td>
-          <td>
+          <td data-label="Source">${lead.source || ''}</td>
+          <td data-label="Stage">${lead.stage || ''}</td>
+          <td data-label="Motivation">${lead.motivation || ''}</td>
+          <td data-label="Actions">
             <div class="actions">
               <a class="btn ghost" style="padding:6px 10px;font-size:12px" href="${tel}">Call</a>
               <a class="btn ghost" style="padding:6px 10px;font-size:12px" href="${checkoutLink}">Send pay link</a>
@@ -365,6 +384,60 @@
     const scriptOutput = document.getElementById('scriptOutput');
     const scriptMeta = document.getElementById('scriptMeta');
     const copyBtn = document.getElementById('copyScript');
+    const speakBtn = document.getElementById('speakScript');
+    const speechSupport = 'speechSynthesis' in window;
+
+    function resetVoiceButton(){
+      if(!speakBtn) return;
+      speakBtn.disabled = false;
+      speakBtn.textContent = 'Play voice demo';
+    }
+
+    function stopVoicePreview(){
+      if(speechSupport){
+        window.speechSynthesis.cancel();
+      }
+      resetVoiceButton();
+    }
+
+    function chooseVoice(){
+      if(!speechSupport) return null;
+      const voices = window.speechSynthesis.getVoices();
+      if(!voices.length) return null;
+      const preferredPatterns = [/Neural/i, /Natural/i, /WaveNet/i, /One/i];
+      for(const pattern of preferredPatterns){
+        const match = voices.find(v => pattern.test(v.name));
+        if(match) return match;
+      }
+      return voices.find(v => v.default && v.lang && v.lang.startsWith('en'))
+        || voices.find(v => v.lang && v.lang.startsWith('en'))
+        || voices[0];
+    }
+
+    function speakScriptText(text){
+      if(!speechSupport || !text) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voice = chooseVoice();
+      if(voice) utterance.voice = voice;
+      utterance.rate = 0.94;
+      utterance.pitch = 1;
+      utterance.onend = resetVoiceButton;
+      utterance.onerror = resetVoiceButton;
+      if(speakBtn){
+        speakBtn.textContent = 'Playing… Tap to stop';
+      }
+      window.speechSynthesis.speak(utterance);
+    }
+
+    if(speechSupport){
+      window.speechSynthesis.addEventListener('voiceschanged', () => {
+        window.speechSynthesis.getVoices();
+      });
+    } else if(speakBtn){
+      speakBtn.disabled = true;
+      speakBtn.textContent = 'Voice preview unavailable';
+    }
 
     function fallbackScript(payload){
       return `Intro: Hi, this is ${payload.tone === 'luxury' ? 'the concierge' : 'the acquisitions desk'} with Delco Tech, checking in about ${payload.focus || 'your real estate goals'} in ${payload.location || 'your area'}.\nDiscovery: Confirm timeline, financing, and any roadblocks.\nClose: Offer to ${payload.nextAction === 'checkout' ? 'text over a secure Stripe checkout link' : payload.nextAction === 'book' ? 'send my booking calendar' : 'transfer you to a senior closer now'}.`;
@@ -374,6 +447,7 @@
       event.preventDefault();
       const formData = new FormData(scriptForm);
       const payload = Object.fromEntries(formData.entries());
+      stopVoicePreview();
       scriptStatus.textContent = 'Generating with OpenAI…';
       scriptMeta.textContent = '';
       scriptOutput.textContent = '';
@@ -388,10 +462,12 @@
         scriptOutput.textContent = data.script || fallbackScript(payload);
         scriptStatus.textContent = 'AI script ready. Tweak and drop into your dialer.';
         scriptMeta.textContent = data.note ? data.note : `Lead type: ${payload.leadType} • Tone: ${payload.tone} • CTA: ${payload.nextAction}`;
+        resetVoiceButton();
       } catch (err) {
         scriptStatus.textContent = 'OpenAI unavailable. Using fallback template below.';
         scriptOutput.textContent = fallbackScript(payload);
         scriptMeta.textContent = 'Tip: Add more detail about objections for a tighter script.';
+        resetVoiceButton();
       }
     });
 
@@ -404,6 +480,25 @@
         copyBtn.textContent = 'Press Ctrl+C';
         window.setTimeout(() => { copyBtn.textContent = 'Copy to clipboard'; }, 1800);
       }
+    });
+
+    speakBtn?.addEventListener('click', () => {
+      if(!speechSupport){
+        speakBtn.disabled = true;
+        speakBtn.textContent = 'Voice preview unavailable';
+        return;
+      }
+      const text = scriptOutput.textContent.trim();
+      if(!text){
+        speakBtn.textContent = 'Add script details first';
+        window.setTimeout(resetVoiceButton, 2000);
+        return;
+      }
+      if(window.speechSynthesis.speaking){
+        stopVoicePreview();
+        return;
+      }
+      speakScriptText(text);
     });
   </script>
 </body>
