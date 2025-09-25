@@ -48,17 +48,24 @@ function createRouter(){
 
   router.post('/register', async (req, res) => {
     try {
-      const { email, password, name = '', enableTotp = false, brandTheme = null } = req.body || {};
+      const {
+        email: rawEmail,
+        password,
+        name = '',
+        enableTotp = false,
+        brandTheme = null,
+      } = req.body || {};
+      const email = String(rawEmail || '').trim().toLowerCase();
       if (!email || !password){
         return res.status(400).json({ error: 'missing_fields' });
       }
       const users = await getCollection('users');
-      const existing = await users.findOne({ email: email.toLowerCase() });
+      const existing = await users.findOne({ email });
       if (existing){
         return res.status(409).json({ error: 'email_exists' });
       }
       const doc = {
-        email: email.toLowerCase(),
+        email,
         password: hashPassword(password),
         name: String(name || '').trim(),
         brandTheme: brandTheme || null,
@@ -88,12 +95,13 @@ function createRouter(){
 
   router.post('/login', async (req, res) => {
     try {
-      const { email, password, totpToken } = req.body || {};
+      const { email: rawEmail, password, totpToken } = req.body || {};
+      const email = String(rawEmail || '').trim().toLowerCase();
       if (!email || !password){
         return res.status(400).json({ error: 'missing_fields' });
       }
       const users = await getCollection('users');
-      const user = await users.findOne({ email: email.toLowerCase() });
+      const user = await users.findOne({ email });
       if (!user){
         return res.status(401).json({ error: 'invalid_credentials' });
       }

@@ -251,6 +251,32 @@
       color: var(--text-muted);
     }
 
+    .hint.warning {
+      color: var(--warning);
+      font-weight: 600;
+    }
+
+    .hint.success {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .table-scroll.small {
+      max-height: 220px;
+      overflow-y: auto;
+      overflow-x: auto;
+    }
+
+    .shopify-warning {
+      margin-top: 0.5rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.75rem;
+      background: rgba(250, 204, 21, 0.08);
+      border: 1px solid rgba(250, 204, 21, 0.3);
+      color: var(--warning);
+      font-size: 0.8rem;
+    }
+
     button.cta {
       background: linear-gradient(135deg, #38bdf8, #2563eb);
       border: none;
@@ -909,8 +935,12 @@
 
         <div class="panel">
           <div class="flex-space">
-            <h3>Inventory Snapshot</h3>
-            <div class="flex">
+            <div>
+              <h3>Inventory Snapshot</h3>
+              <p class="hint" id="shopify-sync-status">Connect Shopify to sync your catalogue.</p>
+            </div>
+            <div class="flex" id="inventory-toolbar">
+              <button class="secondary" type="button" id="shopify-sync-btn">Sync Shopify</button>
               <input type="search" id="inventory-search" placeholder="Search SKU, name, lot…" />
               <select id="warehouse-filter"></select>
             </div>
@@ -931,6 +961,49 @@
               </thead>
               <tbody id="inventory-body"></tbody>
             </table>
+          </div>
+          <div id="shopify-warnings" class="shopify-warning" style="display:none;"></div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="panel light">
+            <div class="flex-space">
+              <h3>Shopify Collections</h3>
+              <span class="hint" id="collections-count">—</span>
+            </div>
+            <div class="table-scroll small">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Collection</th>
+                    <th>Type</th>
+                    <th>Products</th>
+                    <th>Updated</th>
+                  </tr>
+                </thead>
+                <tbody id="collections-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel light">
+            <div class="flex-space">
+              <h3>Gift Cards</h3>
+              <span class="hint" id="gift-cards-count">—</span>
+            </div>
+            <div class="table-scroll small">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Last 4</th>
+                    <th>Balance</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="gift-cards-body"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -1067,6 +1140,50 @@
             </label>
             <button class="cta" type="button" id="plan-cycle">Plan Cycle Count</button>
             <div class="callout" id="cycle-plan">Plan a cycle count to reduce stockouts by 22%.</div>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="panel light">
+            <div class="flex-space">
+              <h3>Purchase Orders</h3>
+              <span class="hint" id="purchase-orders-count">—</span>
+            </div>
+            <div class="table-scroll small">
+              <table>
+                <thead>
+                  <tr>
+                    <th>PO</th>
+                    <th>Vendor</th>
+                    <th>Due</th>
+                    <th>Status</th>
+                    <th>Lines</th>
+                  </tr>
+                </thead>
+                <tbody id="purchase-orders-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel light">
+            <div class="flex-space">
+              <h3>Transfers</h3>
+              <span class="hint" id="transfers-count">—</span>
+            </div>
+            <div class="table-scroll small">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Transfer</th>
+                    <th>Route</th>
+                    <th>ETA</th>
+                    <th>Status</th>
+                    <th>Lines</th>
+                  </tr>
+                </thead>
+                <tbody id="transfers-body"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -1508,6 +1625,9 @@
     let integrationCatalog = [];
     let integrationRows = [];
     const chartInstances = {};
+    const SHOPIFY_SYNC_CACHE_MS = 5 * 60 * 1000;
+    const SHOPIFY_SERVICE_ID = 'shopify';
+    const shopifySyncState = { loading: false, lastAttempt: 0 };
     const BRAND_LOGO_MAX_LENGTH = 240000; // ~180KB payload cap for safe API uploads
     const MANUAL_FORM_HINT = 'Use this form for manual keys or fallback credentials. One-click providers finish automatically below.';
     const integrationFormHint = document.getElementById('integration-form-hint');
@@ -1523,6 +1643,12 @@
           if (!data.branding) {
             data.branding = seedState().branding;
           }
+          if (!Array.isArray(data.collections)) data.collections = [];
+          if (!Array.isArray(data.giftCards)) data.giftCards = [];
+          if (!Array.isArray(data.purchaseOrders)) data.purchaseOrders = [];
+          if (!Array.isArray(data.transfers)) data.transfers = [];
+          if (!Array.isArray(data.shopifyWarnings)) data.shopifyWarnings = [];
+          if (!('lastShopifySync' in data)) data.lastShopifySync = null;
           return data;
         }
       } catch (err) {
@@ -1571,6 +1697,12 @@
         receipts: [],
         shipments: [],
         returns: [],
+        collections: [],
+        purchaseOrders: [],
+        transfers: [],
+        giftCards: [],
+        shopifyWarnings: [],
+        lastShopifySync: null,
         tasks: [],
         gamification: [
           { id: crypto.randomUUID(), message: '🏅 Team Inbound earned "5-Star Receiver" for 99.6% accuracy this week.' },
@@ -1699,6 +1831,13 @@
       return date.toLocaleDateString();
     }
 
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '—';
+      const date = new Date(dateStr);
+      if (Number.isNaN(date.getTime())) return dateStr;
+      return date.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+    }
+
     function showToast(message) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -1775,6 +1914,15 @@
 
     function generateDemoToken(prefix) {
       return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`;
+    }
+
+    function normalizeShopDomain(input) {
+      if (!input) return '';
+      return String(input)
+        .trim()
+        .replace(/^https?:\/\//i, '')
+        .replace(/\/.*$/, '')
+        .toLowerCase();
     }
 
     function friendlyIntegrationStatus(status = '') {
@@ -2004,6 +2152,248 @@
       priorities.innerHTML = missions.map(m => `<li>${m}</li>`).join('');
 
       renderCharts();
+    }
+
+    function renderCollections() {
+      const tbody = document.getElementById('collections-body');
+      const count = document.getElementById('collections-count');
+      if (!tbody) return;
+      const rows = Array.isArray(state.collections) ? state.collections : [];
+      if (count) {
+        count.textContent = rows.length ? `${rows.length} collections` : 'No collections';
+      }
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="4"><span class="hint">No collections synced yet.</span></td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(row => {
+        const type = row.type ? row.type.charAt(0).toUpperCase() + row.type.slice(1) : '—';
+        return `
+          <tr>
+            <td><strong>${row.title || 'Untitled'}</strong><br><span class="hint">${row.handle || ''}</span></td>
+            <td>${type}</td>
+            <td>${row.productsCount ?? '—'}</td>
+            <td>${row.updatedAt ? formatDate(row.updatedAt) : '—'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderGiftCards() {
+      const tbody = document.getElementById('gift-cards-body');
+      const count = document.getElementById('gift-cards-count');
+      if (!tbody) return;
+      const cards = Array.isArray(state.giftCards) ? state.giftCards : [];
+      if (count) {
+        count.textContent = cards.length ? `${cards.length} cards` : 'No gift cards';
+      }
+      if (!cards.length) {
+        tbody.innerHTML = '<tr><td colspan="4"><span class="hint">No gift cards available.</span></td></tr>';
+        return;
+      }
+      const now = Date.now();
+      tbody.innerHTML = cards.map(card => {
+        const balanceNum = Number(card.balance);
+        const balance = Number.isFinite(balanceNum) ? `$${balanceNum.toFixed(2)} ${card.currency || 'USD'}` : '—';
+        const expires = card.expiresOn ? new Date(card.expiresOn).getTime() : null;
+        let status = 'Active';
+        if (card.disabledAt) status = 'Disabled';
+        else if (expires && expires < now) status = 'Expired';
+        return `
+          <tr>
+            <td>${card.lastCharacters ? `•••• ${card.lastCharacters}` : '—'}<br><span class="hint">${card.createdAt ? formatDate(card.createdAt) : ''}</span></td>
+            <td>${balance}</td>
+            <td>${card.customerEmail || '—'}</td>
+            <td>${status}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPurchaseOrders() {
+      const tbody = document.getElementById('purchase-orders-body');
+      const count = document.getElementById('purchase-orders-count');
+      if (!tbody) return;
+      const orders = Array.isArray(state.purchaseOrders) ? state.purchaseOrders : [];
+      if (count) {
+        count.textContent = orders.length ? `${orders.length} POs` : 'No purchase orders';
+      }
+      if (!orders.length) {
+        tbody.innerHTML = '<tr><td colspan="5"><span class="hint">No purchase orders synced.</span></td></tr>';
+        return;
+      }
+      tbody.innerHTML = orders.map(order => `
+        <tr>
+          <td><strong>${order.name || 'PO'}</strong><br><span class="hint">${order.createdAt ? formatDate(order.createdAt) : ''}</span></td>
+          <td>${order.vendor || '—'}</td>
+          <td>${order.expectedAt ? formatDate(order.expectedAt) : '—'}</td>
+          <td>${order.status || '—'}</td>
+          <td>${order.lineCount ?? '—'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderTransfers() {
+      const tbody = document.getElementById('transfers-body');
+      const count = document.getElementById('transfers-count');
+      if (!tbody) return;
+      const transfers = Array.isArray(state.transfers) ? state.transfers : [];
+      if (count) {
+        count.textContent = transfers.length ? `${transfers.length} transfers` : 'No transfers';
+      }
+      if (!transfers.length) {
+        tbody.innerHTML = '<tr><td colspan="5"><span class="hint">No transfers synced.</span></td></tr>';
+        return;
+      }
+      tbody.innerHTML = transfers.map(transfer => {
+        const route = [transfer.source, transfer.destination].filter(Boolean).join(' → ') || '—';
+        return `
+          <tr>
+            <td><strong>${transfer.reference || 'Transfer'}</strong><br><span class="hint">${transfer.createdAt ? formatDate(transfer.createdAt) : ''}</span></td>
+            <td>${route}</td>
+            <td>${transfer.expectedArrival ? formatDate(transfer.expectedArrival) : '—'}</td>
+            <td>${transfer.status || '—'}</td>
+            <td>${transfer.lineCount ?? '—'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderShopifyWarnings() {
+      const panel = document.getElementById('shopify-warnings');
+      if (!panel) return;
+      const warnings = Array.isArray(state.shopifyWarnings) ? state.shopifyWarnings.filter(Boolean) : [];
+      if (!warnings.length) {
+        panel.style.display = 'none';
+        panel.textContent = '';
+        return;
+      }
+      panel.innerHTML = warnings.map(w => `<div>${w}</div>`).join('');
+      panel.style.display = 'block';
+    }
+
+    function hasShopifyIntegration(){
+      return integrationRows.some(row => row.serviceId === SHOPIFY_SERVICE_ID && row.status !== 'oauth_pending');
+    }
+
+    function updateShopifySyncUi({ available, syncing = false } = {}){
+      const statusEl = document.getElementById('shopify-sync-status');
+      const btn = document.getElementById('shopify-sync-btn');
+      if (!statusEl || !btn) return;
+      if (!available){
+        btn.style.display = 'none';
+        btn.disabled = true;
+        statusEl.textContent = 'Connect Shopify to sync your catalogue.';
+        statusEl.classList.remove('success');
+        statusEl.classList.remove('warning');
+        return;
+      }
+      btn.style.display = 'inline-flex';
+      btn.disabled = !!syncing;
+      btn.textContent = syncing ? 'Syncing…' : 'Sync Shopify';
+      if (syncing){
+        statusEl.textContent = 'Sync in progress…';
+        statusEl.classList.remove('success');
+        statusEl.classList.remove('warning');
+        return;
+      }
+      if (state.lastShopifySync){
+        statusEl.textContent = `Synced ${formatDateTime(state.lastShopifySync)}`;
+        statusEl.classList.add('success');
+        statusEl.classList.remove('warning');
+      } else {
+        statusEl.textContent = 'Ready to pull live data from Shopify.';
+        statusEl.classList.remove('success');
+        statusEl.classList.remove('warning');
+      }
+    }
+
+    function applyShopifyData(payload){
+      const data = payload?.data || {};
+      const meta = payload?.meta || {};
+      const locations = Array.isArray(data.locations) ? data.locations : [];
+      const inventory = Array.isArray(data.inventory) ? data.inventory : [];
+      if (locations.length){
+        state.warehouses = locations.map(loc => ({
+          id: String(loc.id || crypto.randomUUID()),
+          name: loc.name || `Location ${loc.id}`,
+          type: loc.active ? 'Shopify Location' : 'Inactive Location',
+          capacity: 0,
+          notes: [loc.address1, loc.city, loc.country].filter(Boolean).join(', '),
+        }));
+      }
+      state.collections = Array.isArray(data.collections) ? data.collections : [];
+      state.giftCards = Array.isArray(data.giftCards) ? data.giftCards : [];
+      state.purchaseOrders = Array.isArray(data.purchaseOrders) ? data.purchaseOrders : [];
+      state.transfers = Array.isArray(data.transfers) ? data.transfers : [];
+      state.shopifyWarnings = Array.isArray(meta.warnings) ? meta.warnings : [];
+      state.lastShopifySync = payload?.fetchedAt || new Date().toISOString();
+      const inventoryRows = inventory.map(item => ({
+        sku: item.sku,
+        name: item.productTitle || item.sku,
+        variant: item.variantTitle || '',
+        category: item.productType || '',
+        warehouseId: item.locationId || '',
+        location: item.locationName || '',
+        quantity: Number(item.available) || 0,
+        reorder: Number(item.reorderPoint) || 0,
+        lot: '',
+        expiry: '',
+        unitCost: item.price != null ? Number(item.price) : 0,
+      }));
+      state.items = inventoryRows;
+      persist();
+      updateWarehouseSelects();
+      renderInventory();
+      renderCollections();
+      renderGiftCards();
+      renderPurchaseOrders();
+      renderTransfers();
+      renderShopifyWarnings();
+      renderStats();
+      updateShopifySyncUi({ available: true });
+    }
+
+    async function syncShopifyIfAvailable(force = false){
+      if (!isAuthenticated()) return;
+      const available = hasShopifyIntegration();
+      updateShopifySyncUi({ available, syncing: shopifySyncState.loading });
+      if (!available) return;
+      if (!force && state.lastShopifySync){
+        const last = new Date(state.lastShopifySync).getTime();
+        if (!Number.isNaN(last) && Date.now() - last < SHOPIFY_SYNC_CACHE_MS){
+          return;
+        }
+      }
+      if (shopifySyncState.loading) return;
+      shopifySyncState.loading = true;
+      shopifySyncState.lastAttempt = Date.now();
+      updateShopifySyncUi({ available, syncing: true });
+      try {
+        const res = await fetch('/api/shopify/sync', { headers: authHeaders() });
+        if (res.status === 401){
+          handleUnauthorized();
+          return;
+        }
+        const data = await res.json();
+        if (!res.ok){
+          throw new Error(data?.message || data?.error || 'Failed to sync Shopify');
+        }
+        applyShopifyData(data);
+        showToast('Shopify data synced.');
+      } catch (err){
+        console.error('Shopify sync failed', err);
+        const warning = err?.message || 'Sync failed.';
+        state.shopifyWarnings = state.shopifyWarnings || [];
+        if (!state.shopifyWarnings.includes(warning)){
+          state.shopifyWarnings.push(warning);
+        }
+        renderShopifyWarnings();
+        showToast('Shopify sync failed.');
+      } finally {
+        shopifySyncState.loading = false;
+        updateShopifySyncUi({ available, syncing: false });
+      }
     }
 
     function ensureChart(id, config){
@@ -2507,6 +2897,8 @@
       if (!authState.token){
         integrationRows = [];
         tbody.innerHTML = '<tr><td colspan="5" class="integration-table-empty">Sign in to manage integrations.</td></tr>';
+        updateShopifySyncUi({ available: false });
+        renderShopifyWarnings();
         return;
       }
       try {
@@ -2522,6 +2914,8 @@
         renderIntegrations(data.integrations || []);
       } catch (err){
         tbody.innerHTML = '<tr><td colspan="5" class="integration-table-empty">Unable to load integrations.</td></tr>';
+        updateShopifySyncUi({ available: hasShopifyIntegration() });
+        renderShopifyWarnings();
       }
     }
 
@@ -2531,6 +2925,8 @@
       integrationRows = rows;
       if (!rows.length){
         tbody.innerHTML = '<tr><td colspan="5" class="integration-table-empty">No integrations yet. Connect your first platform.</td></tr>';
+        updateShopifySyncUi({ available: false });
+        renderShopifyWarnings();
         return;
       }
       tbody.innerHTML = rows.map(row => {
@@ -2554,6 +2950,14 @@
       }).join('');
       tbody.querySelectorAll('button[data-action="delete"]').forEach(btn => btn.addEventListener('click', () => deleteIntegration(btn.dataset.id)));
       tbody.querySelectorAll('button[data-action="complete-oauth"]').forEach(btn => btn.addEventListener('click', () => completeOneClick(btn.dataset.id, { serviceId: btn.dataset.service, status: btn.dataset.status })));
+      const available = hasShopifyIntegration();
+      updateShopifySyncUi({ available, syncing: shopifySyncState.loading });
+      if (available) {
+        syncShopifyIfAvailable();
+      } else {
+        state.shopifyWarnings = [];
+        renderShopifyWarnings();
+      }
     }
 
     async function saveIntegration(evt){
@@ -2676,6 +3080,28 @@
           refreshToken: generateDemoToken((meta.id || serviceId || 'refresh') + '-refresh'),
           expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 12).toISOString(),
         };
+        if ((meta.id || serviceKey) === SHOPIFY_SERVICE_ID) {
+          let existingShopDomain = existingRow?.credentials?.shopDomain || existingRow?.credentials?.shop || '';
+          if (typeof existingShopDomain === 'string' && existingShopDomain.includes('•••')) {
+            existingShopDomain = '';
+          }
+          let domainToUse = normalizeShopDomain(existingShopDomain);
+          if (!domainToUse) {
+            const suggested = authState.user?.email
+              ? `${authState.user.email.split('@')[0].replace(/[^a-z0-9-]/gi, '').toLowerCase() || 'warehouse-hq'}.myshopify.com`
+              : 'warehouse-hq.myshopify.com';
+            const input = window.prompt('Enter your Shopify shop domain (e.g. my-store.myshopify.com)', suggested);
+            if (input) {
+              domainToUse = normalizeShopDomain(input);
+            }
+          }
+          if (!domainToUse) {
+            hideOauthOverlay();
+            showToast('Shopify needs your shop domain to finish connecting.');
+            return;
+          }
+          body.shopDomain = domainToUse;
+        }
         const res = await fetchWithTimeout(`/api/integrations/${id}/one-click`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -3421,6 +3847,8 @@
       showToast('Tip: Create wave picks from the Orders tab to auto-assign teams.');
     });
 
+    document.getElementById('shopify-sync-btn').addEventListener('click', () => syncShopifyIfAvailable(true));
+
     document.getElementById('register-form').addEventListener('submit', registerAccount);
     document.getElementById('login-form').addEventListener('submit', loginAccount);
     document.getElementById('logout-btn').addEventListener('click', logoutAccount);
@@ -3435,6 +3863,11 @@
       renderShipments();
       renderReturns();
       renderTasks();
+      renderCollections();
+      renderGiftCards();
+      renderPurchaseOrders();
+      renderTransfers();
+      renderShopifyWarnings();
       renderStats();
       renderBundler();
     }
