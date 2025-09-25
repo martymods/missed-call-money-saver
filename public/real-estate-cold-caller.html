@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
   <title>Real Estate Cold Caller + AI Concierge</title>
   <meta name="description" content="AI-assisted real estate cold calling desk: scrape leads, auto-dial, collect payments with Stripe, book live appointments, and handoff to closers."/>
   <link rel="icon" href="/favicon-32.png" sizes="32x32"/>
@@ -19,6 +19,7 @@
     h1,h2,h3{margin:0;font-weight:800;color:#fff}
     p{margin:0;color:#dce2ff}
     button,input,select,textarea{font:inherit}
+    input,select,textarea{font-size:16px}
 
     header{position:sticky;top:0;z-index:20;background:rgba(4,8,21,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
     .nav{max-width:1100px;margin:auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -86,6 +87,36 @@
     .cta-panel p{color:#0c1327;font-weight:600}
     .cta-panel .btn{box-shadow:0 20px 40px rgba(4, 13, 40, .45)}
 
+    .tour-launch{display:flex;gap:12px;align-items:center}
+    .tour-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;z-index:100;pointer-events:none}
+    .tour-overlay.active{display:flex;pointer-events:auto}
+    .tour-backdrop{position:absolute;inset:0;background:rgba(4,8,21,.78);backdrop-filter:blur(6px);animation:fadeIn .3s ease forwards}
+    .tour-card{position:relative;max-width:520px;width:100%;background:linear-gradient(180deg,rgba(11,19,45,.92),rgba(10,14,32,.95));border:1px solid rgba(84,104,255,.32);border-radius:22px;padding:26px;display:flex;flex-direction:column;gap:18px;box-shadow:0 30px 80px rgba(6,12,35,.65);transform:translateY(18px);opacity:0;animation:floatUp .4s ease forwards}
+    .tour-card.show{animation:none;opacity:1;transform:translateY(0)}
+    .tour-progress{font-size:13px;letter-spacing:.35px;text-transform:uppercase;color:#8fa0d8}
+    .tour-card h3{font-size:24px}
+    .tour-card p{color:#d6deff;font-size:16px}
+    .tour-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .tour-actions .btn{min-width:120px;justify-content:center}
+    .tour-skip{background:transparent;border:none;color:#8fa0d8;font-size:14px;cursor:pointer;padding:8px}
+    .tour-skip:hover{color:#c2cffd}
+    .tour-highlight{position:relative;z-index:99;border-radius:18px;box-shadow:0 0 0 4px rgba(84,104,255,.45),0 24px 60px rgba(6,12,35,.55);animation:pulseGlow 2.4s ease-in-out infinite}
+
+    @keyframes fadeIn{
+      from{opacity:0}
+      to{opacity:1}
+    }
+
+    @keyframes floatUp{
+      from{opacity:0;transform:translateY(24px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    @keyframes pulseGlow{
+      0%,100%{box-shadow:0 0 0 4px rgba(84,104,255,.45),0 24px 60px rgba(6,12,35,.55)}
+      50%{box-shadow:0 0 0 6px rgba(70,194,255,.6),0 28px 80px rgba(6,12,35,.7)}
+    }
+
     footer{margin-top:60px;padding:30px 18px;border-top:1px solid rgba(255,255,255,.08);background:#040813;color:#8e97b6;font-size:13px}
     footer .footer-wrap{max-width:1100px;margin:auto;display:flex;flex-direction:column;gap:12px}
 
@@ -130,9 +161,10 @@
         <div class="tag">Cold-Calling Command Center</div>
         <h1 class="h1">AI-powered cold calling for agents who close</h1>
         <p class="sub">Scrape motivated buyer & seller lists from free public sources, launch compliant outreach, and drive every interested caller straight to payment, booking, or a live closer. Stripe, Calendly, and Twilio are already wired in.</p>
-        <div class="hero-actions">
+        <div class="hero-actions tour-launch">
           <a class="btn" href="/checkout">Launch Stripe Checkout</a>
           <a class="btn ghost" href="tel:+16105550123">Transfer to Live Floor</a>
+          <button class="btn ghost" type="button" id="startTour">Guided tour</button>
         </div>
         <div class="stat-grid">
           <div class="stat"><strong>3x</strong><span>Faster list qualification</span></div>
@@ -315,10 +347,26 @@
 
   <footer>
     <div class="footer-wrap">
-      <div>Need custom data sources or more seats? Email <a href="mailto:hello@delcotechdivision.com">hello@delcotechdivision.com</a>.</div>
+      <div>Need custom data sources or more seats? Email <a href="mailto:rb@dreamworld.co">rb@dreamworld.co</a>.</div>
       <div>Payments powered by Stripe. Scheduling via Calendly. Voice/SMS via Twilio. AI copywriting by OpenAI.</div>
     </div>
   </footer>
+
+  <div class="tour-overlay" id="tourOverlay" aria-hidden="true">
+    <div class="tour-backdrop" id="tourBackdrop"></div>
+    <div class="tour-card" id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
+      <div class="tour-progress" id="tourProgress">Step 1 of 5</div>
+      <h3 id="tourTitle">Welcome</h3>
+      <p id="tourBody">Follow the guided tour to see how every module accelerates deal flow.</p>
+      <div class="tour-actions">
+        <button type="button" class="tour-skip" id="tourSkip">Skip tour</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button type="button" class="btn ghost" id="tourPrev" disabled>Back</button>
+          <button type="button" class="btn" id="tourNext">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     const leadRows = document.getElementById('leadRows');
@@ -386,6 +434,7 @@
     const copyBtn = document.getElementById('copyScript');
     const speakBtn = document.getElementById('speakScript');
     const speechSupport = 'speechSynthesis' in window;
+    let scriptVoiceName = '';
 
     function resetVoiceButton(){
       if(!speakBtn) return;
@@ -407,11 +456,16 @@
       const preferredPatterns = [/Neural/i, /Natural/i, /WaveNet/i, /One/i];
       for(const pattern of preferredPatterns){
         const match = voices.find(v => pattern.test(v.name));
-        if(match) return match;
+        if(match){
+          scriptVoiceName = match.name;
+          return match;
+        }
       }
-      return voices.find(v => v.default && v.lang && v.lang.startsWith('en'))
+      const fallback = voices.find(v => v.default && v.lang && v.lang.startsWith('en'))
         || voices.find(v => v.lang && v.lang.startsWith('en'))
         || voices[0];
+      scriptVoiceName = fallback?.name || '';
+      return fallback;
     }
 
     function speakScriptText(text){
@@ -433,7 +487,11 @@
     if(speechSupport){
       window.speechSynthesis.addEventListener('voiceschanged', () => {
         window.speechSynthesis.getVoices();
+        if(!scriptVoiceName) chooseVoice();
       });
+      if(!scriptVoiceName){
+        window.setTimeout(() => { if(!scriptVoiceName) chooseVoice(); }, 400);
+      }
     } else if(speakBtn){
       speakBtn.disabled = true;
       speakBtn.textContent = 'Voice preview unavailable';
@@ -481,6 +539,144 @@
         window.setTimeout(() => { copyBtn.textContent = 'Copy to clipboard'; }, 1800);
       }
     });
+
+    // Guided tour setup
+    const startTourBtn = document.getElementById('startTour');
+    const tourOverlay = document.getElementById('tourOverlay');
+    const tourCard = document.getElementById('tourCard');
+    const tourTitle = document.getElementById('tourTitle');
+    const tourBody = document.getElementById('tourBody');
+    const tourProgress = document.getElementById('tourProgress');
+    const tourNext = document.getElementById('tourNext');
+    const tourPrev = document.getElementById('tourPrev');
+    const tourSkip = document.getElementById('tourSkip');
+    const tourBackdrop = document.getElementById('tourBackdrop');
+    const tourSteps = [
+      {
+        title: 'Welcome to the Real Estate Cold Caller',
+        body: 'This dashboard runs like an app: launch a pay link, bounce to the live floor, or walk a caller through bookings without leaving the page.',
+        narration: 'Welcome! This guided tour will show you how to spin up revenue from missed calls. You will see how to launch checkout links, route calls, and move faster than a traditional CRM.',
+        focus: '.hero-card'
+      },
+      {
+        title: 'Start with fresh lead data',
+        body: 'Import FSBO lists, public notices, or portal exports. Filters make it easy to jump straight into the prospects who are ready now.',
+        narration: 'First, sync the public data feeds or CSV drops you already collect. The filters keep you glued to the most motivated buyers and sellers.',
+        focus: '#leads'
+      },
+      {
+        title: 'Spin scripts with the AI lab',
+        body: 'Describe the lead, pick a tone, and generate a tailored talk track. Copy it or play the audio to coach your callers in seconds.',
+        narration: 'Next, the AI cold-call lab drafts a ready-to-read script. Choose your vibe, lock in the CTA, and your concierge creates compliant language you can send or speak instantly.',
+        focus: '#ai'
+      },
+      {
+        title: 'Collect payments instantly',
+        body: 'Stripe Checkout and Link are baked in. Send reservation fees, inspection retainers, or consulting deposits without switching tabs.',
+        narration: 'When a lead is hot, trigger the built-in Stripe checkout. Apple Pay, Link, and cards all work out of the box so you close financial commitment on the call.',
+        focus: '.cta-panel'
+      },
+      {
+        title: 'Hand off to humans anytime',
+        body: 'Transfer a caller to the live floor, route them to Calendly, or escalate to a closer with one tap. Use automations or bring in your team on demand.',
+        narration: 'Finally, tap the live floor or booking buttons for a seamless warm transfer. Automations keep working after hours, and humans jump in when you need them.',
+        focus: '.hero-actions'
+      }
+    ];
+    let tourIndex = 0;
+    let highlightedEl = null;
+
+    function clearHighlight(){
+      if(highlightedEl){
+        highlightedEl.classList.remove('tour-highlight');
+        highlightedEl = null;
+      }
+    }
+
+    function chooseTourVoice(){
+      if(!speechSupport) return null;
+      const voices = window.speechSynthesis.getVoices();
+      if(!voices.length) return null;
+      const alternate = voices.filter(v => v.name !== scriptVoiceName);
+      const pools = alternate.length ? alternate : voices;
+      const preferred = [/Female/i, /Samantha/i, /Jenny/i, /Aria/i, /Olivia/i];
+      for(const pattern of preferred){
+        const match = pools.find(v => pattern.test(v.name));
+        if(match) return match;
+      }
+      const langMatch = pools.find(v => v.lang && v.lang.startsWith('en'));
+      if(langMatch) return langMatch;
+      return pools[0];
+    }
+
+    function narrateTourStep(step){
+      if(!speechSupport) return;
+      stopVoicePreview();
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(`${step.title}. ${step.narration || step.body}`);
+      const voice = chooseTourVoice();
+      if(voice) utterance.voice = voice;
+      utterance.rate = 1.02;
+      utterance.pitch = 1.08;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function showTourStep(index){
+      const step = tourSteps[index];
+      if(!step) return;
+      tourIndex = index;
+      tourTitle.textContent = step.title;
+      tourBody.textContent = step.body;
+      tourProgress.textContent = `Step ${index + 1} of ${tourSteps.length}`;
+      clearHighlight();
+      if(step.focus){
+        const el = document.querySelector(step.focus);
+        if(el){
+          el.classList.add('tour-highlight');
+          highlightedEl = el;
+          el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        }
+      }
+      tourPrev.disabled = index === 0;
+      tourNext.textContent = index === tourSteps.length - 1 ? 'Finish' : 'Next';
+      tourCard.classList.remove('show');
+      void tourCard.offsetWidth;
+      tourCard.classList.add('show');
+      narrateTourStep(step);
+    }
+
+    function openTour(){
+      if(!tourOverlay) return;
+      tourOverlay.classList.add('active');
+      tourOverlay.setAttribute('aria-hidden', 'false');
+      tourIndex = 0;
+      showTourStep(0);
+    }
+
+    function closeTour(){
+      if(!tourOverlay) return;
+      clearHighlight();
+      tourOverlay.classList.remove('active');
+      tourOverlay.setAttribute('aria-hidden', 'true');
+      if(speechSupport){
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    startTourBtn?.addEventListener('click', openTour);
+    tourNext?.addEventListener('click', () => {
+      if(tourIndex >= tourSteps.length - 1){
+        closeTour();
+        return;
+      }
+      showTourStep(tourIndex + 1);
+    });
+    tourPrev?.addEventListener('click', () => {
+      if(tourIndex === 0) return;
+      showTourStep(tourIndex - 1);
+    });
+    tourSkip?.addEventListener('click', closeTour);
+    tourBackdrop?.addEventListener('click', closeTour);
 
     speakBtn?.addEventListener('click', () => {
       if(!speechSupport){
