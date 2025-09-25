@@ -2,8 +2,13 @@
 const express = require('express');
 const { getCollection, ObjectId } = require('../services/mongo');
 const { authenticate } = require('./users');
+
 const { encryptString } = require('../lib/crypto');
 const { parseIntegrationCredentials, findIntegrationById } = require('../lib/integrations');
+
+const { encryptString } = require('../lib/crypto');
+const { parseIntegrationCredentials, findIntegrationById } = require('../lib/integrations');
+
 
 const CATALOG = [
   { id: 'google-workspace', name: 'Google Workspace', category: 'Productivity', oneClick: true, scopes: ['Gmail', 'Sheets', 'Calendar'], docs: 'https://developers.google.com/workspace', icon: '/image/apiLogos/Google_Workspace.png' },
@@ -28,6 +33,7 @@ const CATALOG = [
   { id: 'dropbox', name: 'Dropbox', category: 'Content', oneClick: true, scopes: ['Files'], docs: 'https://www.dropbox.com/developers', icon: '/image/apiLogos/dropbox.png' },
 ];
 
+
 function maskCredential(credentials = {}){
   const masked = {};
   Object.entries(credentials).forEach(([key, value]) => {
@@ -45,6 +51,25 @@ function maskCredential(credentials = {}){
   });
   return masked;
 }
+
+function maskCredential(credentials = {}){
+  const masked = {};
+  Object.entries(credentials).forEach(([key, value]) => {
+    const lowerKey = String(key || '').toLowerCase();
+    const shouldMask = (
+      typeof value === 'string' &&
+      value.length > 4 &&
+      (lowerKey.includes('token') || lowerKey.includes('secret') || lowerKey.includes('key') || lowerKey.includes('password'))
+    );
+    if (shouldMask){
+      masked[key] = `${value.slice(0, 2)}•••${value.slice(-2)}`;
+    } else {
+      masked[key] = value;
+    }
+  });
+  return masked;
+}
+
 
 function createRouter(){
   const router = express.Router();
@@ -66,7 +91,11 @@ function createRouter(){
         status: row.status || 'connected',
         connectedAt: row.connectedAt,
         updatedAt: row.updatedAt,
+
         credentials: maskCredential(parseIntegrationCredentials(row.credentials)),
+
+        credentials: maskCredential(parseIntegrationCredentials(row.credentials)),
+
         notes: row.notes || '',
       }));
       res.json({ ok: true, integrations });
@@ -107,6 +136,7 @@ function createRouter(){
 
   router.post('/:id/one-click', async (req, res) => {
     try {
+
       const { id } = req.params;
       const {
         accessToken = '',
@@ -142,6 +172,7 @@ function createRouter(){
         $set: {
           credentials: encryptString(JSON.stringify(merged)),
           status: 'oauth_linked',
+
           updatedAt: new Date().toISOString(),
         },
       });
@@ -167,4 +198,8 @@ function createRouter(){
   return router;
 }
 
+
 module.exports = createRouter;
+
+module.exports = createRouter;
+
