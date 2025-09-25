@@ -6,9 +6,6 @@ const { authenticate } = require('./users');
 const { encryptString } = require('../lib/crypto');
 const { parseIntegrationCredentials, findIntegrationById } = require('../lib/integrations');
 
-const { encryptString } = require('../lib/crypto');
-const { parseIntegrationCredentials, findIntegrationById } = require('../lib/integrations');
-
 
 const CATALOG = [
   { id: 'google-workspace', name: 'Google Workspace', category: 'Productivity', oneClick: true, scopes: ['Gmail', 'Sheets', 'Calendar'], docs: 'https://developers.google.com/workspace', icon: '/image/apiLogos/Google_Workspace.png' },
@@ -52,24 +49,6 @@ function maskCredential(credentials = {}){
   return masked;
 }
 
-function maskCredential(credentials = {}){
-  const masked = {};
-  Object.entries(credentials).forEach(([key, value]) => {
-    const lowerKey = String(key || '').toLowerCase();
-    const shouldMask = (
-      typeof value === 'string' &&
-      value.length > 4 &&
-      (lowerKey.includes('token') || lowerKey.includes('secret') || lowerKey.includes('key') || lowerKey.includes('password'))
-    );
-    if (shouldMask){
-      masked[key] = `${value.slice(0, 2)}•••${value.slice(-2)}`;
-    } else {
-      masked[key] = value;
-    }
-  });
-  return masked;
-}
-
 
 function createRouter(){
   const router = express.Router();
@@ -91,8 +70,6 @@ function createRouter(){
         status: row.status || 'connected',
         connectedAt: row.connectedAt,
         updatedAt: row.updatedAt,
-
-        credentials: maskCredential(parseIntegrationCredentials(row.credentials)),
 
         credentials: maskCredential(parseIntegrationCredentials(row.credentials)),
 
@@ -198,8 +175,6 @@ function createRouter(){
   return router;
 }
 
-
-module.exports = createRouter;
 
 module.exports = createRouter;
 
