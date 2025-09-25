@@ -18,6 +18,7 @@ const createIntegrationsRouter = require('./routes/integrations');
 const createSupportRouter = require('./routes/support');
 const createShopifyRouter = require('./routes/shopify');
 const createAuditRouter = require('./routes/audit');
+const createDesignRouter = require('./routes/design');
 
 const jwt = require('jsonwebtoken');
 
@@ -48,18 +49,38 @@ const MENU = [
 ];
 
 const app = express();
+const BODY_LIMIT = process.env.REQUEST_BODY_LIMIT || '15mb';
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.jsdelivr.net https://assets.calendly.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://assets.calendly.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https://*",
+  "connect-src 'self' https: wss: data:",
+  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://assets.calendly.com https://www.youtube.com",
+  "form-action 'self' https://hooks.stripe.com",
+  "base-uri 'self'",
+  "object-src 'none'",
+].join('; ');
+
+app.use((_, res, next) => {
+  res.setHeader('Content-Security-Policy', contentSecurityPolicy);
+  next();
+});
 
 app.get('/api/food/menu', (_req,res)=> res.json({ items: MENU, taxRate: TAX_RATE }));
 
 
-app.use(express.urlencoded({ extended: true })); // Twilio posts form-url-encoded
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT })); // Twilio posts form-url-encoded
+app.use(express.json({ limit: BODY_LIMIT }));
 
 app.use('/api/users', createUserRouter());
 app.use('/api/integrations', createIntegrationsRouter());
 app.use('/api/support', createSupportRouter(openai));
 app.use('/api/shopify', createShopifyRouter());
 app.use('/api/audit', createAuditRouter());
+app.use('/api/design', createDesignRouter());
 
 // 👉 Serve the landing page & assets from /public
 app.use(express.static(path.join(__dirname, 'public')));
