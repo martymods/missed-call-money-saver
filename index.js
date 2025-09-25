@@ -16,6 +16,8 @@ const { setStep, setField, get: getState } = require('./lib/leadStore');
 const { createUserRouter } = require('./routes/users');
 const createIntegrationsRouter = require('./routes/integrations');
 const createSupportRouter = require('./routes/support');
+const createShopifyRouter = require('./routes/shopify');
+const createAuditRouter = require('./routes/audit');
 
 const jwt = require('jsonwebtoken');
 
@@ -56,6 +58,8 @@ app.use(express.json());
 app.use('/api/users', createUserRouter());
 app.use('/api/integrations', createIntegrationsRouter());
 app.use('/api/support', createSupportRouter(openai));
+app.use('/api/shopify', createShopifyRouter());
+app.use('/api/audit', createAuditRouter());
 
 // 👉 Serve the landing page & assets from /public
 app.use(express.static(path.join(__dirname, 'public')));

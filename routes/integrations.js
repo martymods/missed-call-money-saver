@@ -2,7 +2,8 @@
 const express = require('express');
 const { getCollection, ObjectId } = require('../services/mongo');
 const { authenticate } = require('./users');
-const { encryptString, decryptString } = require('../lib/crypto');
+const { encryptString } = require('../lib/crypto');
+const { parseIntegrationCredentials, findIntegrationById } = require('../lib/integrations');
 
 const CATALOG = [
   { id: 'google-workspace', name: 'Google Workspace', category: 'Productivity', oneClick: true, scopes: ['Gmail', 'Sheets', 'Calendar'], docs: 'https://developers.google.com/workspace', icon: '/image/apiLogos/Google_Workspace.png' },
@@ -30,7 +31,13 @@ const CATALOG = [
 function maskCredential(credentials = {}){
   const masked = {};
   Object.entries(credentials).forEach(([key, value]) => {
-    if (typeof value === 'string' && value.length > 4){
+    const lowerKey = String(key || '').toLowerCase();
+    const shouldMask = (
+      typeof value === 'string' &&
+      value.length > 4 &&
+      (lowerKey.includes('token') || lowerKey.includes('secret') || lowerKey.includes('key') || lowerKey.includes('password'))
+    );
+    if (shouldMask){
       masked[key] = `${value.slice(0, 2)}•••${value.slice(-2)}`;
     } else {
       masked[key] = value;
@@ -59,7 +66,7 @@ function createRouter(){
         status: row.status || 'connected',
         connectedAt: row.connectedAt,
         updatedAt: row.updatedAt,
-        credentials: maskCredential(parseCredentials(row.credentials)),
+        credentials: maskCredential(parseIntegrationCredentials(row.credentials)),
         notes: row.notes || '',
       }));
       res.json({ ok: true, integrations });
@@ -101,20 +108,36 @@ function createRouter(){
   router.post('/:id/one-click', async (req, res) => {
     try {
       const { id } = req.params;
-      const { accessToken = '', refreshToken = '', expiresAt = '' } = req.body || {};
+      const {
+        accessToken = '',
+        refreshToken = '',
+        expiresAt = '',
+        shopDomain = '',
+        shop = '',
+      } = req.body || {};
       const col = await getCollection('integrations');
       const filter = { _id: new ObjectId(id), userId: req.user._id };
-      const integration = await col.findOne(filter);
+      const integration = await findIntegrationById(id, req.user._id);
       if (!integration){
         return res.status(404).json({ error: 'not_found' });
       }
-      const stored = parseCredentials(integration.credentials);
+      const stored = parseIntegrationCredentials(integration.credentials);
       const merged = {
         ...stored,
         accessToken,
         refreshToken,
         expiresAt,
       };
+      const normalizedShop = String(shopDomain || shop || '')
+        .trim()
+        .replace(/^https?:\/\//i, '')
+        .replace(/\s+/g, '')
+        .replace(/\/.*$/, '')
+        .toLowerCase();
+      if (normalizedShop){
+        merged.shopDomain = normalizedShop;
+        merged.shop = normalizedShop;
+      }
       await col.updateOne(filter, {
         $set: {
           credentials: encryptString(JSON.stringify(merged)),
@@ -142,17 +165,6 @@ function createRouter(){
   });
 
   return router;
-}
-
-function parseCredentials(raw){
-  if (!raw) return {};
-  try {
-    const decoded = decryptString(raw);
-    if (!decoded) return {};
-    return JSON.parse(decoded);
-  } catch (err){
-    return {};
-  }
 }
 
 module.exports = createRouter;
