@@ -31,7 +31,13 @@ const CATALOG = [
 function maskCredential(credentials = {}){
   const masked = {};
   Object.entries(credentials).forEach(([key, value]) => {
-    if (typeof value === 'string' && value.length > 4){
+    const lowerKey = String(key || '').toLowerCase();
+    const shouldMask = (
+      typeof value === 'string' &&
+      value.length > 4 &&
+      (lowerKey.includes('token') || lowerKey.includes('secret') || lowerKey.includes('key') || lowerKey.includes('password'))
+    );
+    if (shouldMask){
       masked[key] = `${value.slice(0, 2)}•••${value.slice(-2)}`;
     } else {
       masked[key] = value;
@@ -101,25 +107,7 @@ function createRouter(){
 
   router.post('/:id/one-click', async (req, res) => {
     try {
-      const { id } = req.params;
-      const { accessToken = '', refreshToken = '', expiresAt = '' } = req.body || {};
-      const col = await getCollection('integrations');
-      const filter = { _id: new ObjectId(id), userId: req.user._id };
-      const integration = await findIntegrationById(id, req.user._id);
-      if (!integration){
-        return res.status(404).json({ error: 'not_found' });
-      }
-      const stored = parseIntegrationCredentials(integration.credentials);
-      const merged = {
-        ...stored,
-        accessToken,
-        refreshToken,
-        expiresAt,
-      };
-      await col.updateOne(filter, {
-        $set: {
-          credentials: encryptString(JSON.stringify(merged)),
-          status: 'oauth_linked',
+
           updatedAt: new Date().toISOString(),
         },
       });

@@ -1916,6 +1916,15 @@
       return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`;
     }
 
+    function normalizeShopDomain(input) {
+      if (!input) return '';
+      return String(input)
+        .trim()
+        .replace(/^https?:\/\//i, '')
+        .replace(/\/.*$/, '')
+        .toLowerCase();
+    }
+
     function friendlyIntegrationStatus(status = '') {
       const map = {
         oauth_pending: 'Awaiting authorization',
@@ -3071,6 +3080,28 @@
           refreshToken: generateDemoToken((meta.id || serviceId || 'refresh') + '-refresh'),
           expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 12).toISOString(),
         };
+        if ((meta.id || serviceKey) === SHOPIFY_SERVICE_ID) {
+          let existingShopDomain = existingRow?.credentials?.shopDomain || existingRow?.credentials?.shop || '';
+          if (typeof existingShopDomain === 'string' && existingShopDomain.includes('•••')) {
+            existingShopDomain = '';
+          }
+          let domainToUse = normalizeShopDomain(existingShopDomain);
+          if (!domainToUse) {
+            const suggested = authState.user?.email
+              ? `${authState.user.email.split('@')[0].replace(/[^a-z0-9-]/gi, '').toLowerCase() || 'warehouse-hq'}.myshopify.com`
+              : 'warehouse-hq.myshopify.com';
+            const input = window.prompt('Enter your Shopify shop domain (e.g. my-store.myshopify.com)', suggested);
+            if (input) {
+              domainToUse = normalizeShopDomain(input);
+            }
+          }
+          if (!domainToUse) {
+            hideOauthOverlay();
+            showToast('Shopify needs your shop domain to finish connecting.');
+            return;
+          }
+          body.shopDomain = domainToUse;
+        }
         const res = await fetchWithTimeout(`/api/integrations/${id}/one-click`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
