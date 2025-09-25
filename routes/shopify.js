@@ -28,13 +28,23 @@ function resolveShopDomain(credentials = {}){
 }
 
 function resolveAccessToken(credentials = {}){
-  const token = (
-    credentials.accessToken ||
-    credentials.token ||
-    credentials.apiKey ||
-    ''
-  );
-  return typeof token === 'string' ? token.trim() : '';
+  const sources = [
+    credentials.accessToken,
+    credentials.token,
+    credentials.apiKey,
+    process.env.SHOPIFY_ADMIN_ACCESS_TOKEN,
+    process.env.SHOPIFY_ACCESS_TOKEN,
+    process.env.SHOPIFY_API_TOKEN,
+    process.env.SHOPIFY_API_KEY,
+  ];
+
+  for (const value of sources){
+    if (typeof value === 'string' && value.trim()){
+      return value.trim();
+    }
+  }
+
+  return '';
 }
 
 function createRouter(){
