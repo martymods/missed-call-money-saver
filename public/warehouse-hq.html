@@ -1727,8 +1727,46 @@
       overlay.setAttribute('aria-hidden', 'true');
     }
 
+    (function registerOauthOverlayDismiss(){
+      const overlay = document.getElementById('oauth-overlay');
+      if (!overlay) return;
+      overlay.addEventListener('click', evt => {
+        if (evt.target === overlay) {
+          hideOauthOverlay();
+        }
+      });
+      document.addEventListener('keydown', evt => {
+        if (evt.key === 'Escape') {
+          hideOauthOverlay();
+        }
+      });
+    })();
+
     function wait(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    const OAUTH_TIMEOUT_MS = 15000;
+
+    async function fetchWithTimeout(resource, options = {}) {
+      const { timeout = OAUTH_TIMEOUT_MS, ...rest } = options;
+      if (typeof AbortController === 'undefined') {
+        return fetch(resource, rest);
+      }
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      try {
+        return await fetch(resource, { ...rest, signal: controller.signal });
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          const timeoutError = new Error('timeout');
+          timeoutError.code = 'timeout';
+          throw timeoutError;
+        }
+        throw err;
+      } finally {
+        clearTimeout(id);
+      }
     }
 
     function generateDemoToken(prefix) {
@@ -2581,7 +2619,7 @@
             credentials: {},
             notes: ''
           };
-          const res = await fetch('/api/integrations', {
+          const res = await fetchWithTimeout('/api/integrations', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...authHeaders() },
             body: JSON.stringify(payload),
@@ -2603,7 +2641,11 @@
       } catch (err){
         console.error('startOneClickConnect error', err);
         hideOauthOverlay();
-        showToast('Could not start one-click connection. Try again.');
+        if (err?.code === 'timeout') {
+          showToast('Connection timed out. Try again in a moment.');
+        } else {
+          showToast('Could not start one-click connection. Try again.');
+        }
         loadIntegrations();
       }
     }
@@ -2630,7 +2672,7 @@
           refreshToken: generateDemoToken((meta.id || serviceId || 'refresh') + '-refresh'),
           expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 12).toISOString(),
         };
-        const res = await fetch(`/api/integrations/${id}/one-click`, {
+        const res = await fetchWithTimeout(`/api/integrations/${id}/one-click`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify(body),
@@ -2652,7 +2694,11 @@
       } catch (err){
         console.error('completeOneClick error', err);
         hideOauthOverlay();
-        showToast('One-click linking failed. Try again.');
+        if (err?.code === 'timeout') {
+          showToast('Linking timed out. Please try again.');
+        } else {
+          showToast('One-click linking failed. Try again.');
+        }
       }
     }
 
