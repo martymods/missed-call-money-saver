@@ -3018,6 +3018,7 @@
       updateAccountStatus();
       renderTotpUi();
       loadIntegrations();
+      restoreSessionFromServer();
       if (wasAuthenticated){
         showToast(message);
       }
@@ -3038,12 +3039,39 @@
       renderTotpUi();
     }
 
+    async function restoreSessionFromServer(){
+      if (authState.token && authState.user) return;
+      try {
+        const res = await fetch('/api/users/session', { credentials: 'include' });
+        if (res.status === 204){
+          return;
+        }
+        if (!res.ok){
+          return;
+        }
+        const data = await res.json();
+        if (data && data.token && data.user){
+          setAuthState({ token: data.token, user: data.user });
+        }
+      } catch (err){
+        console.warn('Session restore skipped', err);
+      }
+    }
+
     async function hydrateAuth(){
       if (!authState.token || (authState.user && authState.user.email)) return;
       try {
-        const res = await fetch('/api/users/me', { headers: authHeaders() });
+        const res = await fetch('/api/users/me', { headers: authHeaders(), credentials: 'include' });
+        if (res.status === 401){
+          handleUnauthorized();
+          await restoreSessionFromServer();
+          return;
+        }
+        if (!res.ok){
+          return;
+        }
         const data = await res.json();
-        if (res.ok && data.user){
+        if (data && data.user){
           setAuthState({ token: authState.token, user: data.user });
         }
       } catch (err){
@@ -3201,6 +3229,7 @@
         const res = await fetch('/api/users/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(payload),
         });
         const data = await res.json();
@@ -3225,6 +3254,7 @@
         const res = await fetch('/api/users/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(payload),
         });
         const data = await res.json();
@@ -3241,7 +3271,16 @@
       }
     }
 
-    function logoutAccount(){
+    async function logoutAccount(){
+      try {
+        await fetch('/api/users/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          credentials: 'include',
+        });
+      } catch (err){
+        console.warn('Logout request failed', err);
+      }
       authState = { token: null, user: null };
       persistAuth();
       updateAccountStatus();
@@ -3255,6 +3294,7 @@
         const res = await fetch('/api/users/totp/enable', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          credentials: 'include',
           body: JSON.stringify({ label: authState.user?.email || 'Warehouse HQ' }),
         });
         if (res.status === 401){
@@ -3279,6 +3319,7 @@
         const res = await fetch('/api/users/totp/disable', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          credentials: 'include',
         });
         if (res.status === 401){
           handleUnauthorized();
@@ -3670,6 +3711,7 @@
         const res = await fetch('/api/users/brand', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          credentials: 'include',
           body: JSON.stringify({ brandTheme }),
         });
         if (res.status === 401){
@@ -4499,7 +4541,10 @@
     fetchIntegrationCatalog();
     loadIntegrations();
     loadOperationsGallery();
-    hydrateAuth();
+    (async () => {
+      await restoreSessionFromServer();
+      await hydrateAuth();
+    })();
 
     handleNavigation();
     initializeUI();
