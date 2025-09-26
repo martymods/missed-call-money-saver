@@ -608,6 +608,9 @@
     .integration-card .tagline { font-size: 0.8rem; color: var(--text-muted); }
     .integration-card button { align-self: flex-start; }
     .account-status { margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-muted); }
+    .demo-credentials { margin-top: 0.75rem; font-size: 0.9rem; background: rgba(15, 23, 42, 0.78); border: 1px solid var(--border); border-radius: 0.85rem; padding: 0.75rem 1rem; }
+    .demo-credentials ul { margin: 0.35rem 0 0.35rem 1.1rem; padding: 0; }
+    .demo-credentials code { font-family: var(--font-mono, 'JetBrains Mono', monospace); font-size: 0.85rem; }
     .account-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.75rem; }
     .brand-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem; }
     .brand-preview { border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 1rem; padding: 1rem; background: rgba(15, 23, 42, 0.75); display: flex; flex-direction: column; gap: 0.75rem; min-height: 200px; }
@@ -1496,6 +1499,15 @@
           </form>
         </div>
         <div class="account-status" id="account-status">Not signed in.</div>
+        <div class="demo-credentials" id="demo-credentials">
+          <p><strong>Need quick access?</strong> Use the preloaded demo commander:</p>
+          <ul>
+            <li>Email: <code data-demo="email">captain@warehouse-hq.com</code></li>
+            <li>Password: <code data-demo="password">warehouse-demo</code></li>
+            <li>Shopify domain: <code data-demo="shop">warehouse-hq.myshopify.com</code></li>
+          </ul>
+          <p class="hint">Sign in with the credentials above to load integrations and sync the simulated Shopify workspace.</p>
+        </div>
         <div class="account-actions">
           <button class="secondary" type="button" id="logout-btn" style="display:none;">Sign out</button>
         </div>
@@ -1656,6 +1668,9 @@
     const state = loadState();
     const warehouseSelects = ['item-warehouse', 'order-warehouse', 'receipt-warehouse', 'cycle-warehouse'];
     const AUTH_KEY = 'warehouse-hq-auth-v1';
+    const DEMO_EMAIL = 'captain@warehouse-hq.com';
+    const DEMO_PASSWORD = 'warehouse-demo';
+    const DEMO_SHOP_DOMAIN = 'warehouse-hq.myshopify.com';
     let authState = loadAuth();
     let integrationCatalog = [];
     let integrationRows = [];
@@ -1965,6 +1980,7 @@
         oauth_pending: 'Awaiting authorization',
         oauth_linked: 'Connected',
         credentials_saved: 'Credentials stored',
+        demo_seeded: 'Demo ready',
         connected: 'Connected'
       };
       return map[status] || status;
@@ -3889,6 +3905,28 @@
     });
 
     document.getElementById('shopify-sync-btn').addEventListener('click', () => syncShopifyIfAvailable(true));
+
+    const loginForm = document.getElementById('login-form');
+    if (loginForm){
+      const emailInput = loginForm.querySelector('input[name="email"]');
+      const passwordInput = loginForm.querySelector('input[name="password"]');
+      if (emailInput && !emailInput.value){
+        emailInput.value = DEMO_EMAIL;
+      }
+      if (passwordInput && !passwordInput.value){
+        passwordInput.value = DEMO_PASSWORD;
+      }
+    }
+
+    const demoCredentialsBlock = document.getElementById('demo-credentials');
+    if (demoCredentialsBlock){
+      const emailEl = demoCredentialsBlock.querySelector('code[data-demo="email"]');
+      const passEl = demoCredentialsBlock.querySelector('code[data-demo="password"]');
+      const shopEl = demoCredentialsBlock.querySelector('code[data-demo="shop"]');
+      if (emailEl) emailEl.textContent = DEMO_EMAIL;
+      if (passEl) passEl.textContent = DEMO_PASSWORD;
+      if (shopEl) shopEl.textContent = DEMO_SHOP_DOMAIN;
+    }
 
     document.getElementById('register-form').addEventListener('submit', registerAccount);
     document.getElementById('login-form').addEventListener('submit', loginAccount);
