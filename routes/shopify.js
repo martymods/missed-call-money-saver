@@ -3,6 +3,8 @@ const { authenticate } = require('./users');
 const { fetchShopifyData } = require('../services/shopify');
 const { findIntegrationByService, parseIntegrationCredentials } = require('../lib/integrations');
 const { recordAuditLog } = require('../services/auditLog');
+const { getDemoShopifySync } = require('../services/demoShopify');
+const { shouldBootstrapDemo } = require('../lib/bootstrapDemo');
 
 function normalizeShopDomain(value){
   if (!value) return '';
@@ -61,9 +63,23 @@ function createRouter(){
       const credentials = parseIntegrationCredentials(integration.credentials);
       const shop = resolveShopDomain(credentials);
       const accessToken = resolveAccessToken(credentials);
+
+      if (shouldBootstrapDemo && (integration.status === 'demo_seeded' || !shop || !accessToken)){
+        const demo = getDemoShopifySync();
+        await recordAuditLog({
+          type: 'shopify_sync_demo',
+          userId: req.user._id?.toString?.() || req.user._id,
+          integrationId: integration._id?.toString?.() || integration._id,
+          shop: demo.shop,
+          counts: demo.meta?.counts || {},
+        });
+        return res.json(demo);
+      }
+
       if (!shop || !accessToken){
         return res.status(400).json({ error: 'missing_shopify_credentials' });
       }
+
       const result = await fetchShopifyData({ shop, accessToken });
       await recordAuditLog({
         type: 'shopify_sync',

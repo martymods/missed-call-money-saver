@@ -19,6 +19,7 @@ const createSupportRouter = require('./routes/support');
 const createShopifyRouter = require('./routes/shopify');
 const createAuditRouter = require('./routes/audit');
 const createDesignRouter = require('./routes/design');
+const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
 
 const jwt = require('jsonwebtoken');
 
@@ -50,6 +51,8 @@ const MENU = [
 
 const app = express();
 const BODY_LIMIT = process.env.REQUEST_BODY_LIMIT || '15mb';
+
+const demoBootstrapPromise = bootstrapDemoData();
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -121,6 +124,13 @@ app.get('/config', (_, res) => {
     stripePk: process.env.STRIPE_PUBLISHABLE_KEY || '',
     paypalClientId: process.env.PAYPAL_CLIENT_ID || '',
     paypalPlanId: process.env.PAYPAL_PLAN_ID || '',
+    demoAccount: shouldBootstrapDemo ? {
+      email: DEMO_DEFAULTS.email,
+      password: DEMO_DEFAULTS.password,
+    } : null,
+    demoShopify: shouldBootstrapDemo ? {
+      shopDomain: DEMO_DEFAULTS.shopDomain,
+    } : null,
   });
 });
 
