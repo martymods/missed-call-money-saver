@@ -46,7 +46,7 @@
     header {
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 60;
       backdrop-filter: blur(16px);
       background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.8));
       border-bottom: 1px solid var(--border);
@@ -143,7 +143,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
-      z-index: 20;
+      z-index: 1100;
     }
 
     .nav-overlay.active {
@@ -425,13 +425,26 @@
       background: rgba(15, 23, 42, 0.55);
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.75rem;
       font-size: 0.9rem;
     }
 
-    .shipping-list li::before {
-      content: '🚀';
-      font-size: 1.1rem;
+    .shipping-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.75rem;
+      background: rgba(56, 189, 248, 0.15);
+      font-size: 1.2rem;
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.25);
+    }
+
+    .shipping-list li > div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
     }
 
     .shipping-list strong {
@@ -481,7 +494,7 @@
       transition: border 0.2s ease, background 0.2s ease;
       box-shadow: 0 10px 24px rgba(2, 6, 23, 0.45);
       backdrop-filter: blur(6px);
-      z-index: 1;
+      z-index: 1300;
     }
 
     .menu-toggle:hover,
@@ -600,8 +613,56 @@
       cursor: pointer;
     }
 
-    .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem; }
-    canvas.stat-chart { background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 0.85rem; padding: 0.75rem; }
+    .brand-highlight {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .brand-highlight-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .brand-highlight-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(15, 23, 42, 0.6);
+      box-shadow: 0 18px 32px rgba(2, 6, 23, 0.35);
+      min-height: 52px;
+    }
+
+    .brand-highlight-badge img {
+      width: 38px;
+      height: 38px;
+      border-radius: 0.9rem;
+      object-fit: cover;
+      box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.25);
+    }
+
+    .brand-highlight-emoji {
+      font-size: 1.6rem;
+      display: inline-flex;
+    }
+
+    .brand-highlight-badge img[hidden] {
+      display: none;
+    }
+
+    .brand-highlight-badge[data-has-logo="true"] .brand-highlight-emoji {
+      display: none;
+    }
+
+    .brand-highlight-name {
+      font-weight: 600;
+      font-size: 1rem;
+    }
     .integrations-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; margin: 1rem 0; }
     .integration-card { border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 1rem; padding: 1rem; background: rgba(15, 23, 42, 0.82); box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25); display: flex; flex-direction: column; gap: 0.6rem; }
     .integration-card img { width: 46px; height: 46px; border-radius: 0.75rem; background: rgba(56, 189, 248, 0.12); padding: 0.4rem; }
@@ -785,7 +846,7 @@
         transition: transform 0.3s ease;
         pointer-events: none;
         visibility: hidden;
-        z-index: 30;
+        z-index: 1200;
       }
 
       nav[data-open="true"] {
@@ -887,13 +948,15 @@
         </div>
       </div>
 
-      <div class="panel">
-        <h3>Ops Visualizer</h3>
-        <p class="hint">See stocking, sorting and labeling in living color. Powered by your command center telemetry.</p>
-        <div class="chart-grid">
-          <canvas id="inventoryChart" class="stat-chart" height="180" aria-label="Inventory velocity chart"></canvas>
-          <canvas id="orderChart" class="stat-chart" height="180" aria-label="Order status chart"></canvas>
-          <canvas id="missionChart" class="stat-chart" height="180" aria-label="Mission energy chart"></canvas>
+      <div class="panel brand-highlight">
+        <h3>Brand Spotlight</h3>
+        <div class="brand-highlight-content">
+          <div class="brand-highlight-badge" id="brand-highlight-badge" data-has-logo="false">
+            <img id="brand-highlight-logo" alt="Company logo spotlight" hidden />
+            <span class="brand-highlight-emoji" id="brand-highlight-emoji" aria-hidden="true">🚚</span>
+            <span class="brand-highlight-name" id="brand-highlight-name">Warehouse HQ</span>
+          </div>
+          <p class="hint" id="brand-highlight-hint">Upload your company logo in Data &amp; Settings → Branding to personalize this hub.</p>
         </div>
       </div>
     </section>
@@ -1268,11 +1331,41 @@
             <p>Trusted by modern warehouses to orchestrate same-day dispatch and painless returns.</p>
           </div>
           <ul class="shipping-list">
-            <li><strong>Up to 87% off shipping labels</strong> Carrier-direct rates with automatic comparison shopping.</li>
-            <li><strong>All your sales channels in one queue</strong> <span class="shopify-logo-pill">Shopify</span>, Faire, Amazon, POS and more feed a unified pick plan.</li>
-            <li><strong>Batch printing for up to 250 labels</strong> Launch massive waves without rekeying order IDs.</li>
-            <li><strong>Custom pick lists with bin locations</strong> Surface smart routes that match how your floor is laid out.</li>
-            <li><strong>$200 insurance on every shipment</strong> Peace of mind baked into every parcel you confirm.</li>
+            <li>
+              <span class="shipping-icon" aria-hidden="true">🏷️</span>
+              <div>
+                <strong>Up to 87% off shipping labels</strong>
+                Carrier-direct rates with automatic comparison shopping.
+              </div>
+            </li>
+            <li>
+              <span class="shipping-icon" aria-hidden="true">🛒</span>
+              <div>
+                <strong>All your sales channels in one queue</strong>
+                <span class="shopify-logo-pill">Shopify</span>, Faire, Amazon, POS and more feed a unified pick plan.
+              </div>
+            </li>
+            <li>
+              <span class="shipping-icon" aria-hidden="true">🖨️</span>
+              <div>
+                <strong>Batch printing for up to 250 labels</strong>
+                Launch massive waves without rekeying order IDs.
+              </div>
+            </li>
+            <li>
+              <span class="shipping-icon" aria-hidden="true">📍</span>
+              <div>
+                <strong>Custom pick lists with bin locations</strong>
+                Surface smart routes that match how your floor is laid out.
+              </div>
+            </li>
+            <li>
+              <span class="shipping-icon" aria-hidden="true">🛡️</span>
+              <div>
+                <strong>$200 insurance on every shipment</strong>
+                Peace of mind baked into every parcel you confirm.
+              </div>
+            </li>
           </ul>
         </div>
         <div class="grid grid-2">
@@ -1821,16 +1914,17 @@
       const callSign = branding.callSign || 'Warehouse HQ';
       const emoji = branding.emoji || '🚚';
       const logoData = branding.logoData || '';
+      const hasLogo = Boolean(logoData);
       const previewTitle = document.getElementById('brand-preview-title');
       if (previewTitle) previewTitle.textContent = callSign;
       const previewBadge = document.getElementById('brand-preview-badge');
       const previewLogo = document.getElementById('brand-preview-logo');
       const previewFallback = document.getElementById('brand-preview-fallback');
       if (previewBadge) {
-        previewBadge.dataset.hasLogo = logoData ? 'true' : 'false';
+        previewBadge.dataset.hasLogo = hasLogo ? 'true' : 'false';
       }
       if (previewLogo) {
-        if (logoData) {
+        if (hasLogo) {
           previewLogo.src = logoData;
           previewLogo.alt = `${callSign} logo preview`;
           previewLogo.hidden = false;
@@ -1854,7 +1948,7 @@
       const headerLogoShell = document.getElementById('brand-logo-shell');
       const headerLogo = document.getElementById('brand-logo-display');
       if (headerLogoShell && headerLogo) {
-        if (logoData) {
+        if (hasLogo) {
           headerLogo.src = logoData;
           headerLogo.alt = `${callSign} logo`;
           headerLogoShell.hidden = false;
@@ -1863,6 +1957,39 @@
           headerLogo.alt = 'Brand logo';
           headerLogoShell.hidden = true;
         }
+      }
+
+      const highlightBadge = document.getElementById('brand-highlight-badge');
+      const highlightLogo = document.getElementById('brand-highlight-logo');
+      const highlightEmoji = document.getElementById('brand-highlight-emoji');
+      const highlightName = document.getElementById('brand-highlight-name');
+      const highlightHint = document.getElementById('brand-highlight-hint');
+
+      if (highlightBadge) {
+        highlightBadge.dataset.hasLogo = hasLogo ? 'true' : 'false';
+      }
+      if (highlightLogo) {
+        if (hasLogo) {
+          highlightLogo.src = logoData;
+          highlightLogo.alt = `${callSign} logo spotlight`;
+          highlightLogo.hidden = false;
+        } else {
+          highlightLogo.removeAttribute('src');
+          highlightLogo.alt = '';
+          highlightLogo.hidden = true;
+        }
+      }
+      if (highlightEmoji) {
+        highlightEmoji.textContent = emoji;
+        highlightEmoji.hidden = hasLogo;
+      }
+      if (highlightName) {
+        highlightName.textContent = callSign;
+      }
+      if (highlightHint) {
+        highlightHint.textContent = hasLogo
+          ? 'Logo connected across command center experiences.'
+          : 'Upload your company logo in Data & Settings → Branding to personalize this hub.';
       }
 
       const callSignInput = document.getElementById('brand-call-sign');
