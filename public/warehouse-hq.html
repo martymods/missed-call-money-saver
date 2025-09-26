@@ -979,6 +979,10 @@
             </div>
             <div class="flex" id="inventory-toolbar">
               <button class="secondary shopify-logo-pill" type="button" id="shopify-sync-btn">Sync Shopify</button>
+              <label class="upload-label shopify-logo-pill">
+                <span>⬆︎ Import Shopify CSV</span>
+                <input type="file" id="shopify-csv-input" accept=".csv,text/csv" multiple />
+              </label>
               <input type="search" id="inventory-search" placeholder="Search SKU, name, lot…" />
               <select id="warehouse-filter"></select>
             </div>
@@ -1678,6 +1682,7 @@
     const SHOPIFY_SYNC_CACHE_MS = 5 * 60 * 1000;
     const SHOPIFY_SERVICE_ID = 'shopify';
     const shopifySyncState = { loading: false, lastAttempt: 0 };
+    const shopifyCsvBuffer = { inventory: [], products: [] };
     const BRAND_LOGO_MAX_LENGTH = 240000; // ~180KB payload cap for safe API uploads
     const MANUAL_FORM_HINT = 'Use this form for manual keys or fallback credentials. One-click providers finish automatically below.';
     const integrationFormHint = document.getElementById('integration-form-hint');
@@ -1699,6 +1704,7 @@
           if (!Array.isArray(data.transfers)) data.transfers = [];
           if (!Array.isArray(data.shopifyWarnings)) data.shopifyWarnings = [];
           if (!('lastShopifySync' in data)) data.lastShopifySync = null;
+          if (!('lastShopifySyncSource' in data)) data.lastShopifySyncSource = null;
           return data;
         }
       } catch (err) {
@@ -1753,6 +1759,7 @@
         giftCards: [],
         shopifyWarnings: [],
         lastShopifySync: null,
+        lastShopifySyncSource: null,
         tasks: [],
         gamification: [
           { id: crypto.randomUUID(), message: '🏅 Team Inbound earned "5-Star Receiver" for 99.6% accuracy this week.' },
@@ -2355,13 +2362,249 @@
         return;
       }
       if (state.lastShopifySync){
-        statusEl.textContent = `Synced ${formatDateTime(state.lastShopifySync)}`;
-        statusEl.classList.add('success');
-        statusEl.classList.remove('warning');
+        const source = state.lastShopifySyncSource === 'csv' ? 'Imported from CSV' : 'Synced';
+        statusEl.textContent = `${source} ${formatDateTime(state.lastShopifySync)}`;
+        if (state.lastShopifySyncSource === 'csv') {
+          statusEl.classList.remove('success');
+          statusEl.classList.add('warning');
+        } else {
+          statusEl.classList.add('success');
+          statusEl.classList.remove('warning');
+        }
       } else {
         statusEl.textContent = 'Ready to pull live data from Shopify.';
         statusEl.classList.remove('success');
         statusEl.classList.remove('warning');
+      }
+    }
+
+    function normalizeHeader(header = '') {
+      return String(header || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/_{2,}/g, '_')
+        .replace(/^_|_$/g, '');
+    }
+
+    function parseCsv(text = '') {
+      const rows = [];
+      let currentRow = [];
+      let currentValue = '';
+      let insideQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if (insideQuotes) {
+          if (char === '"') {
+            if (text[i + 1] === '"') {
+              currentValue += '"';
+              i++;
+            } else {
+              insideQuotes = false;
+            }
+          } else {
+            currentValue += char;
+          }
+        } else if (char === '"') {
+          insideQuotes = true;
+        } else if (char === ',') {
+          currentRow.push(currentValue);
+          currentValue = '';
+        } else if (char === '\r') {
+          continue;
+        } else if (char === '\n') {
+          currentRow.push(currentValue);
+          rows.push(currentRow);
+          currentRow = [];
+          currentValue = '';
+        } else {
+          currentValue += char;
+        }
+      }
+      if (insideQuotes) {
+        currentRow.push(currentValue);
+      } else if (currentValue || currentRow.length) {
+        currentRow.push(currentValue);
+      }
+      if (currentRow.length) {
+        rows.push(currentRow);
+      }
+      return rows;
+    }
+
+    function parseCsvToObjects(text = '') {
+      const rows = parseCsv(text);
+      if (!rows.length) {
+        return { headers: [], rows: [] };
+      }
+      const headers = rows[0];
+      const normalizedHeaders = headers.map(normalizeHeader);
+      const dataRows = rows.slice(1).map(cells => {
+        const row = {};
+        headers.forEach((header, idx) => {
+          const value = cells[idx] ?? '';
+          row[header] = value;
+          const normalized = normalizedHeaders[idx];
+          if (normalized && !(normalized in row)) {
+            row[normalized] = value;
+          }
+        });
+        return row;
+      }).filter(row => Object.values(row).some(val => String(val || '').trim()));
+      return { headers, rows: dataRows };
+    }
+
+    function detectShopifyCsvType(headers = []) {
+      const normalized = headers.map(normalizeHeader);
+      if (
+        normalized.includes('available_not_editable') ||
+        normalized.includes('variant_inventory_qty') ||
+        normalized.includes('on_hand_current') ||
+        normalized.includes('on_hand')
+      ) {
+        return 'inventory';
+      }
+      if (
+        normalized.includes('variant_sku') &&
+        (normalized.includes('variant_price') || normalized.includes('product_category') || normalized.includes('cost_per_item'))
+      ) {
+        return 'products';
+      }
+      return null;
+    }
+
+    function getFirstValue(row, keys = []) {
+      if (!row) return '';
+      for (const key of keys) {
+        if (!key) continue;
+        if (key in row && String(row[key]).trim()) {
+          return String(row[key]).trim();
+        }
+        const normalized = normalizeHeader(key);
+        if (normalized && normalized in row && String(row[normalized]).trim()) {
+          return String(row[normalized]).trim();
+        }
+      }
+      return '';
+    }
+
+    function parseNumeric(value) {
+      if (value === null || value === undefined || value === '') return NaN;
+      if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
+      const cleaned = String(value).replace(/[^0-9.\-]/g, '');
+      if (!cleaned) return NaN;
+      const parsed = Number(cleaned);
+      return Number.isFinite(parsed) ? parsed : NaN;
+    }
+
+    function buildVariantLabel(primary = {}, secondary = {}) {
+      const variantTitle = getFirstValue(primary, ['Variant Title']) || getFirstValue(secondary, ['Variant Title']);
+      if (variantTitle && variantTitle.toLowerCase() !== 'default title') {
+        return variantTitle;
+      }
+      const values = [];
+      ['Option1 Value', 'Option2 Value', 'Option3 Value', 'Variant Option1 Value', 'Variant Option2 Value', 'Variant Option3 Value']
+        .forEach(key => {
+          const val = getFirstValue(primary, [key]) || getFirstValue(secondary, [key]);
+          if (val && val.toLowerCase() !== 'default title' && !values.includes(val)) {
+            values.push(val);
+          }
+        });
+      return values.join(' / ');
+    }
+
+    function applyShopifyCsvUploads({ notify = false, productLoaded = false } = {}) {
+      const inventoryRows = Array.isArray(shopifyCsvBuffer.inventory) ? shopifyCsvBuffer.inventory : [];
+      if (!inventoryRows.length) {
+        if (notify) showToast('No Shopify inventory data found.');
+        return;
+      }
+      if (!Array.isArray(state.warehouses)) {
+        state.warehouses = [];
+      }
+      const warehousesByName = new Map(
+        state.warehouses.map(warehouse => [String(warehouse.name || '').trim().toLowerCase(), warehouse])
+      );
+      const productRows = Array.isArray(shopifyCsvBuffer.products) ? shopifyCsvBuffer.products : [];
+      const productIndex = new Map();
+      productRows.forEach(row => {
+        const sku = getFirstValue(row, ['Variant SKU', 'SKU', 'Sku']);
+        if (sku) {
+          productIndex.set(sku.toLowerCase(), row);
+        }
+      });
+      const items = [];
+      const seenSkus = new Set();
+      inventoryRows.forEach(row => {
+        const sku = getFirstValue(row, ['SKU', 'Variant SKU', 'Variant sku', 'Sku']);
+        if (!sku) return;
+        const normalizedSku = sku.toLowerCase();
+        if (seenSkus.has(normalizedSku)) return;
+        seenSkus.add(normalizedSku);
+        const productRow = productIndex.get(normalizedSku);
+        const name = getFirstValue(row, ['Title', 'Product Name']) || getFirstValue(productRow, ['Title', 'Product Title']) || sku;
+        const category = getFirstValue(productRow, ['Product Category', 'Type']) || getFirstValue(row, ['Product Category', 'Type']);
+        const locationName = getFirstValue(row, ['Location', 'Shop location', 'Shop Location', 'Location Name']);
+        const binName = getFirstValue(row, ['Bin name', 'Bin Name', 'Bin']);
+        const quantity = parseNumeric(
+          getFirstValue(row, [
+            'Available (not editable)',
+            'Variant Inventory Qty',
+            'On hand (current)',
+            'On hand (new)',
+            'On hand',
+            'Quantity'
+          ])
+        );
+        const reorder = parseNumeric(getFirstValue(row, ['Reorder Point', 'Reorder point', 'Safety stock']));
+        const unitCostRaw =
+          parseNumeric(getFirstValue(productRow, ['Cost per item', 'Variant Price', 'Price'])) ||
+          parseNumeric(getFirstValue(row, ['Cost per item', 'Variant Price', 'Price']));
+        const unitCost = Number.isFinite(unitCostRaw) ? Math.round(unitCostRaw * 100) / 100 : 0;
+        let warehouseId = '';
+        if (locationName) {
+          const key = locationName.toLowerCase();
+          let warehouse = warehousesByName.get(key);
+          if (!warehouse) {
+            warehouse = {
+              id: crypto.randomUUID(),
+              name: locationName,
+              type: 'Shopify Location',
+              capacity: 0,
+              notes: ''
+            };
+            warehousesByName.set(key, warehouse);
+            state.warehouses.push(warehouse);
+          }
+          warehouseId = warehouse.id;
+        }
+        items.push({
+          id: crypto.randomUUID(),
+          sku,
+          name,
+          variant: buildVariantLabel(row, productRow),
+          category,
+          warehouseId,
+          location: binName || locationName || '',
+          quantity: Number.isFinite(quantity) ? quantity : 0,
+          reorder: Number.isFinite(reorder) ? reorder : 0,
+          lot: '',
+          expiry: '',
+          unitCost,
+        });
+      });
+      state.items = items;
+      state.shopifyWarnings = [];
+      state.lastShopifySync = new Date().toISOString();
+      state.lastShopifySyncSource = 'csv';
+      persist();
+      updateWarehouseSelects();
+      renderInventory();
+      renderStats();
+      renderShopifyWarnings();
+      updateShopifySyncUi({ available: hasShopifyIntegration() });
+      if (notify) {
+        showToast(productLoaded ? 'Shopify CSV imported with product details.' : 'Shopify inventory CSV imported.');
       }
     }
 
@@ -2385,6 +2628,7 @@
       state.transfers = Array.isArray(data.transfers) ? data.transfers : [];
       state.shopifyWarnings = Array.isArray(meta.warnings) ? meta.warnings : [];
       state.lastShopifySync = payload?.fetchedAt || new Date().toISOString();
+      state.lastShopifySyncSource = 'api';
       const inventoryRows = inventory.map(item => ({
         sku: item.sku,
         name: item.productTitle || item.sku,
@@ -3803,6 +4047,67 @@
         evt.target.value = '';
       }
     });
+
+    const shopifyCsvInput = document.getElementById('shopify-csv-input');
+    if (shopifyCsvInput) {
+      shopifyCsvInput.addEventListener('change', evt => {
+        const files = Array.from(evt.target.files || []);
+        if (!files.length) return;
+        const nextBuffer = { inventory: [], products: [] };
+        const readers = files.map(file => new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = event => {
+            try {
+              const text = event.target?.result || '';
+              const parsed = parseCsvToObjects(text);
+              const type = detectShopifyCsvType(parsed.headers);
+              if (!type) {
+                resolve({ type: null, fileName: file.name });
+                return;
+              }
+              resolve({ type, rows: parsed.rows });
+            } catch (err) {
+              console.warn('Failed to parse Shopify CSV', err);
+              resolve({ type: null, fileName: file.name, error: err });
+            }
+          };
+          reader.onerror = () => resolve({ type: null, fileName: file.name });
+          reader.readAsText(file);
+        }));
+        Promise.all(readers).then(results => {
+          let inventoryLoaded = false;
+          let productLoaded = false;
+          const ignored = [];
+          results.forEach(result => {
+            if (!result) return;
+            if (result.type === 'inventory') {
+              nextBuffer.inventory = result.rows;
+              inventoryLoaded = true;
+            } else if (result.type === 'products') {
+              nextBuffer.products = result.rows;
+              productLoaded = true;
+            } else if (result.fileName) {
+              ignored.push(result.fileName);
+            }
+          });
+          if (!inventoryLoaded) {
+            showToast('No Shopify inventory data found in CSV.');
+            if (ignored.length) {
+              console.warn('Ignored CSV uploads:', ignored.join(', '));
+            }
+            return;
+          }
+          shopifyCsvBuffer.inventory = nextBuffer.inventory;
+          shopifyCsvBuffer.products = productLoaded ? nextBuffer.products : [];
+          applyShopifyCsvUploads({ notify: true, productLoaded });
+          if (ignored.length) {
+            console.warn('Ignored CSV uploads:', ignored.join(', '));
+          }
+        }).finally(() => {
+          shopifyCsvInput.value = '';
+        });
+      });
+    }
 
     document.getElementById('import-input').addEventListener('change', evt => {
       const file = evt.target.files[0];
