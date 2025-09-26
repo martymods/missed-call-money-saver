@@ -660,6 +660,12 @@
       font-size: 0.85rem;
     }
 
+    .upload-label.drag-hover {
+      border-color: rgba(56, 189, 248, 0.7);
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+    }
+
     .callout {
       border-left: 3px solid var(--accent);
       padding-left: 1rem;
@@ -2388,6 +2394,7 @@
     }
 
     function parseCsv(text = '') {
+      text = String(text || '').replace(/^\ufeff/, '');
       const rows = [];
       let currentRow = [];
       let currentValue = '';
@@ -2454,19 +2461,29 @@
       return { headers, rows: dataRows };
     }
 
-    function detectShopifyCsvType(headers = []) {
+    function detectShopifyCsvType(headers = [], fileName = '') {
       const normalized = headers.map(normalizeHeader);
+      const normalizedFile = String(fileName || '').toLowerCase();
       if (
         normalized.includes('available_not_editable') ||
         normalized.includes('variant_inventory_qty') ||
         normalized.includes('on_hand_current') ||
-        normalized.includes('on_hand')
+        normalized.includes('on_hand') ||
+        normalized.includes('inventory_item_sku') ||
+        normalized.includes('available') ||
+        (normalizedFile && /inventory/.test(normalizedFile))
       ) {
         return 'inventory';
       }
       if (
         normalized.includes('variant_sku') &&
         (normalized.includes('variant_price') || normalized.includes('product_category') || normalized.includes('cost_per_item'))
+      ) {
+        return 'products';
+      }
+      if (
+        normalizedFile &&
+        (/product/.test(normalizedFile) || /catalog/.test(normalizedFile))
       ) {
         return 'products';
       }
@@ -2513,6 +2530,43 @@
       return values.join(' / ');
     }
 
+    function buildProductMatchKeys(row = {}) {
+      const keys = [];
+      const sku = getFirstValue(row, ['Variant SKU', 'SKU', 'Sku']);
+      if (sku) keys.push(`sku:${sku.toLowerCase()}`);
+      const barcode = getFirstValue(row, ['Variant Barcode', 'Barcode']);
+      if (barcode) keys.push(`barcode:${barcode.toLowerCase()}`);
+      const handle = getFirstValue(row, ['Handle', 'Product Handle']);
+      const title = getFirstValue(row, ['Title', 'Product Title', 'Name']);
+      const variantLabel = buildVariantLabel(row, row);
+      const normalizedVariant = variantLabel ? variantLabel.toLowerCase() : '';
+      if (handle) {
+        const handleKey = handle.toLowerCase();
+        keys.push(`handle:${handleKey}`);
+        if (normalizedVariant) keys.push(`handle:${handleKey}|variant:${normalizedVariant}`);
+      }
+      if (title) {
+        const titleKey = title.toLowerCase();
+        keys.push(`title:${titleKey}`);
+        if (normalizedVariant) keys.push(`title:${titleKey}|variant:${normalizedVariant}`);
+      }
+      return keys;
+    }
+
+    function findProductMatch(row, productIndex) {
+      const keys = buildProductMatchKeys(row);
+      for (const key of keys) {
+        if (productIndex.has(key)) {
+          return productIndex.get(key);
+        }
+      }
+      if (!keys.length && productIndex.size === 1) {
+        const [first] = productIndex.values();
+        return first;
+      }
+      return null;
+    }
+
     function applyShopifyCsvUploads({ notify = false, productLoaded = false } = {}) {
       const inventoryRows = Array.isArray(shopifyCsvBuffer.inventory) ? shopifyCsvBuffer.inventory : [];
       if (!inventoryRows.length) {
@@ -2528,24 +2582,44 @@
       const productRows = Array.isArray(shopifyCsvBuffer.products) ? shopifyCsvBuffer.products : [];
       const productIndex = new Map();
       productRows.forEach(row => {
-        const sku = getFirstValue(row, ['Variant SKU', 'SKU', 'Sku']);
-        if (sku) {
-          productIndex.set(sku.toLowerCase(), row);
-        }
+        buildProductMatchKeys(row).forEach(key => {
+          if (!productIndex.has(key)) {
+            productIndex.set(key, row);
+          }
+        });
       });
       const items = [];
-      const seenSkus = new Set();
+      const seenKeys = new Set();
       inventoryRows.forEach(row => {
-        const sku = getFirstValue(row, ['SKU', 'Variant SKU', 'Variant sku', 'Sku']);
-        if (!sku) return;
+        if (!row) return;
+        let productRow = findProductMatch(row, productIndex);
+        let sku = getFirstValue(row, ['SKU', 'Variant SKU', 'Variant sku', 'Sku']);
+        if ((!sku || !sku.trim()) && productRow) {
+          sku = getFirstValue(productRow, ['Variant SKU', 'SKU', 'Sku']);
+        }
+        const handle = getFirstValue(row, ['Handle', 'Product Handle']) || getFirstValue(productRow, ['Handle', 'Product Handle']);
+        const variantLabel = buildVariantLabel(row, productRow);
+        if (!sku) {
+          if (handle && variantLabel) sku = `${handle} • ${variantLabel}`;
+          else if (handle) sku = handle;
+          else if (variantLabel) sku = variantLabel;
+        }
+        if (!sku) {
+          sku = `SKU-${items.length + 1}`;
+        }
         const normalizedSku = sku.toLowerCase();
-        if (seenSkus.has(normalizedSku)) return;
-        seenSkus.add(normalizedSku);
-        const productRow = productIndex.get(normalizedSku);
-        const name = getFirstValue(row, ['Title', 'Product Name']) || getFirstValue(productRow, ['Title', 'Product Title']) || sku;
-        const category = getFirstValue(productRow, ['Product Category', 'Type']) || getFirstValue(row, ['Product Category', 'Type']);
         const locationName = getFirstValue(row, ['Location', 'Shop location', 'Shop Location', 'Location Name']);
         const binName = getFirstValue(row, ['Bin name', 'Bin Name', 'Bin']);
+        const dedupeKey = [normalizedSku, (locationName || '').toLowerCase(), (binName || '').toLowerCase()].join('|');
+        if (seenKeys.has(dedupeKey)) return;
+        seenKeys.add(dedupeKey);
+        const name =
+          getFirstValue(row, ['Title', 'Product Name']) ||
+          getFirstValue(productRow, ['Title', 'Product Title']) ||
+          sku;
+        const category =
+          getFirstValue(productRow, ['Product Category', 'Type', 'Product Type']) ||
+          getFirstValue(row, ['Product Category', 'Type']);
         const quantity = parseNumeric(
           getFirstValue(row, [
             'Available (not editable)',
@@ -2582,7 +2656,7 @@
           id: crypto.randomUUID(),
           sku,
           name,
-          variant: buildVariantLabel(row, productRow),
+          variant: variantLabel,
           category,
           warehouseId,
           location: binName || locationName || '',
@@ -4049,63 +4123,98 @@
     });
 
     const shopifyCsvInput = document.getElementById('shopify-csv-input');
-    if (shopifyCsvInput) {
-      shopifyCsvInput.addEventListener('change', evt => {
-        const files = Array.from(evt.target.files || []);
-        if (!files.length) return;
-        const nextBuffer = { inventory: [], products: [] };
-        const readers = files.map(file => new Promise(resolve => {
-          const reader = new FileReader();
-          reader.onload = event => {
-            try {
-              const text = event.target?.result || '';
-              const parsed = parseCsvToObjects(text);
-              const type = detectShopifyCsvType(parsed.headers);
-              if (!type) {
-                resolve({ type: null, fileName: file.name });
-                return;
-              }
-              resolve({ type, rows: parsed.rows });
-            } catch (err) {
-              console.warn('Failed to parse Shopify CSV', err);
-              resolve({ type: null, fileName: file.name, error: err });
+
+    function handleShopifyCsvFiles(fileList = []) {
+      const files = Array.from(fileList || []).filter(file => file && file.name);
+      if (!files.length) return;
+      const nextBuffer = { inventory: [], products: [] };
+      const readers = files.map(file => new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = event => {
+          try {
+            const text = event.target?.result || '';
+            const parsed = parseCsvToObjects(text);
+            const type = detectShopifyCsvType(parsed.headers, file.name);
+            if (!type) {
+              resolve({ type: null, fileName: file.name });
+              return;
             }
-          };
-          reader.onerror = () => resolve({ type: null, fileName: file.name });
-          reader.readAsText(file);
-        }));
-        Promise.all(readers).then(results => {
-          let inventoryLoaded = false;
-          let productLoaded = false;
-          const ignored = [];
-          results.forEach(result => {
-            if (!result) return;
-            if (result.type === 'inventory') {
-              nextBuffer.inventory = result.rows;
-              inventoryLoaded = true;
-            } else if (result.type === 'products') {
-              nextBuffer.products = result.rows;
-              productLoaded = true;
-            } else if (result.fileName) {
-              ignored.push(result.fileName);
-            }
-          });
-          if (!inventoryLoaded) {
-            showToast('No Shopify inventory data found in CSV.');
-            if (ignored.length) {
-              console.warn('Ignored CSV uploads:', ignored.join(', '));
-            }
-            return;
+            resolve({ type, rows: parsed.rows, fileName: file.name });
+          } catch (err) {
+            console.warn('Failed to parse Shopify CSV', err);
+            resolve({ type: null, fileName: file.name, error: err });
           }
-          shopifyCsvBuffer.inventory = nextBuffer.inventory;
-          shopifyCsvBuffer.products = productLoaded ? nextBuffer.products : [];
-          applyShopifyCsvUploads({ notify: true, productLoaded });
+        };
+        reader.onerror = () => resolve({ type: null, fileName: file.name });
+        reader.readAsText(file);
+      }));
+      Promise.all(readers).then(results => {
+        let inventoryLoaded = false;
+        let productLoaded = false;
+        const ignored = [];
+        results.forEach(result => {
+          if (!result) return;
+          if (result.type === 'inventory') {
+            nextBuffer.inventory.push(...(result.rows || []));
+            inventoryLoaded = true;
+          } else if (result.type === 'products') {
+            nextBuffer.products.push(...(result.rows || []));
+            productLoaded = true;
+          } else if (result.fileName) {
+            ignored.push(result.fileName);
+          }
+        });
+        if (!inventoryLoaded) {
+          showToast('No Shopify inventory data found in CSV.');
           if (ignored.length) {
             console.warn('Ignored CSV uploads:', ignored.join(', '));
           }
-        }).finally(() => {
+          return;
+        }
+        shopifyCsvBuffer.inventory = nextBuffer.inventory;
+        shopifyCsvBuffer.products = productLoaded ? nextBuffer.products : [];
+        applyShopifyCsvUploads({ notify: true, productLoaded });
+        if (ignored.length) {
+          console.warn('Ignored CSV uploads:', ignored.join(', '));
+        }
+      }).finally(() => {
+        if (shopifyCsvInput) {
           shopifyCsvInput.value = '';
+        }
+      });
+    }
+
+    if (shopifyCsvInput) {
+      shopifyCsvInput.addEventListener('change', evt => {
+        handleShopifyCsvFiles(evt.target.files || []);
+      });
+    }
+
+    const shopifyCsvDropZone = document.querySelector('label.upload-label.shopify-logo-pill');
+    if (shopifyCsvDropZone) {
+      const preventDefaults = evt => {
+        evt.preventDefault();
+        evt.stopPropagation();
+      };
+      ['dragenter', 'dragover'].forEach(eventName => {
+        shopifyCsvDropZone.addEventListener(eventName, evt => {
+          preventDefaults(evt);
+          shopifyCsvDropZone.classList.add('drag-hover');
         });
+      });
+      ['dragleave', 'dragend'].forEach(eventName => {
+        shopifyCsvDropZone.addEventListener(eventName, evt => {
+          preventDefaults(evt);
+          shopifyCsvDropZone.classList.remove('drag-hover');
+        });
+      });
+      shopifyCsvDropZone.addEventListener('drop', evt => {
+        preventDefaults(evt);
+        shopifyCsvDropZone.classList.remove('drag-hover');
+        const files = Array.from(evt.dataTransfer?.files || []);
+        if (files.length) {
+          handleShopifyCsvFiles(files);
+        }
       });
     }
 
