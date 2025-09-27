@@ -6397,7 +6397,7 @@
       const activityList = document.getElementById('global-activity-list');
       if (!mapEl || !activityList) return;
 
-      const hasLeaflet = typeof L !== 'undefined';
+      let hasLeaflet = typeof L !== 'undefined';
       const hour = 60 * 60 * 1000;
       const minute = 60 * 1000;
       const now = Date.now();
@@ -6724,7 +6724,29 @@
 
       let map;
       let trackerIcons = {};
-      if (hasLeaflet) {
+      let mapReady = false;
+      let trackerIntervalId = null;
+
+      networkRoutes.forEach(route => {
+        route.departure = now + route.departureOffsetHours * hour;
+        route.arrival = now + route.arrivalOffsetHours * hour;
+        route.label = `${route.origin.name} → ${route.destination.name}`;
+        route.baseArrival = route.arrival;
+        route.signalAt = now - route.signalMinutesAgo * minute;
+        computeSegments(route);
+        routeLookup.set(route.id, route);
+      });
+
+      function initializeNetworkMap() {
+        hasLeaflet = typeof L !== 'undefined';
+        if (!hasLeaflet || mapReady) {
+          if (!hasLeaflet) {
+            mapEl.innerHTML = '<div class="hint">Enable maps to visualize live routes.</div>';
+          }
+          return;
+        }
+
+        mapEl.innerHTML = '';
         map = L.map(mapEl, {
           worldCopyJump: true,
           minZoom: 2,
@@ -6743,35 +6765,39 @@
           rail: L.icon({ iconUrl: '/image/icon_freight_train.png', iconSize: [36, 36], iconAnchor: [18, 18], tooltipAnchor: [0, -18] }),
           truck: L.icon({ iconUrl: '/image/icon_freight_truck.png', iconSize: [34, 34], iconAnchor: [17, 17], tooltipAnchor: [0, -16] })
         };
-      } else {
-        mapEl.innerHTML = '<div class="hint">Enable maps to visualize live routes.</div>';
+
+        networkRoutes.forEach(route => {
+          route.baseStyle = { color: routeStyles[route.mode], weight: 3.4, opacity: 0.85, dashArray: dashStyles[route.mode] };
+          route.polyline = L.polyline(route.path, route.baseStyle).addTo(map);
+          L.circleMarker(route.path[0], { radius: 5, className: `route-node route-node--${route.mode}` }).addTo(map).bindTooltip(`Origin: ${route.origin.name}`);
+          L.circleMarker(route.path[route.path.length - 1], { radius: 5, className: `route-node route-node--${route.mode}` }).addTo(map).bindTooltip(`Destination: ${route.destination.name}`);
+          const progress = getProgress(route);
+          const coords = interpolate(route, progress);
+          route.marker = L.marker(coords, { icon: trackerIcons[route.mode], zIndexOffset: 900 }).addTo(map);
+          route.marker.bindTooltip(buildTooltip(route), { direction: 'top', opacity: 0.9 });
+        });
+
+        mapReady = true;
+
+        if (!trackerIntervalId) {
+          trackerIntervalId = setInterval(() => {
+            networkRoutes.forEach(updateTracker);
+          }, 20000);
+        }
+
+        updateActivityList();
       }
 
-      networkRoutes.forEach(route => {
-        route.departure = now + route.departureOffsetHours * hour;
-        route.arrival = now + route.arrivalOffsetHours * hour;
-        route.label = `${route.origin.name} → ${route.destination.name}`;
-        route.baseArrival = route.arrival;
-        route.signalAt = now - route.signalMinutesAgo * minute;
-        computeSegments(route);
-        routeLookup.set(route.id, route);
-        if (!hasLeaflet) return;
-        route.baseStyle = { color: routeStyles[route.mode], weight: 3.4, opacity: 0.85, dashArray: dashStyles[route.mode] };
-        route.polyline = L.polyline(route.path, route.baseStyle).addTo(map);
-        L.circleMarker(route.path[0], { radius: 5, className: `route-node route-node--${route.mode}` }).addTo(map).bindTooltip(`Origin: ${route.origin.name}`);
-        L.circleMarker(route.path[route.path.length - 1], { radius: 5, className: `route-node route-node--${route.mode}` }).addTo(map).bindTooltip(`Destination: ${route.destination.name}`);
-        const progress = getProgress(route);
-        const coords = interpolate(route, progress);
-        route.marker = L.marker(coords, { icon: trackerIcons[route.mode], zIndexOffset: 900 }).addTo(map);
-        route.marker.bindTooltip(buildTooltip(route), { direction: 'top', opacity: 0.9 });
-      });
+      initializeNetworkMap();
+      if (!mapReady) {
+        window.addEventListener('load', () => {
+          if (mapReady) return;
+          initializeNetworkMap();
+          updateActivityList();
+        }, { once: true });
+      }
 
       updateActivityList();
-      if (hasLeaflet) {
-        setInterval(() => {
-          networkRoutes.forEach(updateTracker);
-        }, 20000);
-      }
       setInterval(updateActivityList, 60000);
 
       document.addEventListener('global-network-refresh', evt => refreshNetworkSnapshots(evt?.detail || {}));
