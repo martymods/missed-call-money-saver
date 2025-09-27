@@ -59,6 +59,46 @@
       padding: 1.5rem 1.25rem;
     }
 
+    .header-actions {
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .mode-toggle {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+      padding: 0.35rem 0.45rem;
+      border-radius: 0.75rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .mode-toggle span {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .mode-toggle button {
+      border: none;
+      border-radius: 0.6rem;
+      padding: 0.35rem 0.75rem;
+      background: var(--accent-strong);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .mode-toggle button:hover {
+      background: var(--accent);
+      transform: translateY(-1px);
+    }
+
     h1 {
       font-size: clamp(1.75rem, 2.2vw, 2.5rem);
       margin: 0;
@@ -2567,6 +2607,10 @@
         </div>
         <div class="flex header-actions">
           <div class="badge">Multi-tenant • Cloud-Ready • Free Forever Core</div>
+          <div class="mode-toggle" id="mode-toggle" role="status" aria-live="polite">
+            <span id="mode-status">Live workspace</span>
+            <button type="button" id="mode-toggle-btn" aria-pressed="false">View demo data</button>
+          </div>
           <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="hq-navigation">
             <span class="sr-only">Toggle navigation</span>
             <span class="line" aria-hidden="true"></span>
@@ -4146,6 +4190,11 @@
 
   <script>
     const STORAGE_KEY = 'warehouse-hq-state-v1';
+    const MODE_STORAGE_KEY = 'warehouse-hq-mode';
+    const MODE_LIVE = 'live';
+    const MODE_DEMO = 'demo';
+    let currentMode = loadWorkspaceMode();
+    let allowDemoRosterFallback = currentMode === MODE_DEMO;
     const SHIFT_STATUS_LEVELS = ['alert', 'swap-requested', 'acknowledged', 'published'];
     const state = loadState();
     const warehouseSelects = ['item-warehouse', 'order-warehouse', 'receipt-warehouse', 'cycle-warehouse'];
@@ -4217,6 +4266,180 @@
       }
     ];
     const LABOR_DEFAULT_CHANNEL = 'All Hands';
+
+    function saveWorkspaceMode(mode) {
+      try {
+        localStorage.setItem(MODE_STORAGE_KEY, mode);
+      } catch (err) {
+        console.warn('Failed to persist workspace mode', err);
+      }
+    }
+
+    function updateModeUi() {
+      const status = document.getElementById('mode-status');
+      const btn = document.getElementById('mode-toggle-btn');
+      if (!status || !btn) return;
+      if (currentMode === MODE_LIVE) {
+        status.textContent = 'Live workspace';
+        btn.textContent = 'View demo data';
+        btn.setAttribute('aria-pressed', 'false');
+      } else {
+        status.textContent = 'Demo walkthrough';
+        btn.textContent = 'Return to live data';
+        btn.setAttribute('aria-pressed', 'true');
+      }
+    }
+
+    async function fetchJson(url, options = {}) {
+      const response = await fetch(url, options);
+      let payload = null;
+      try {
+        payload = await response.json();
+      } catch (err) {
+        payload = null;
+      }
+      if (!response.ok) {
+        const error = new Error(payload?.error || response.statusText || 'Request failed');
+        error.status = response.status;
+        error.payload = payload;
+        throw error;
+      }
+      return payload;
+    }
+
+    function postJson(url, body, options = {}) {
+      const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
+      return fetchJson(url, {
+        method: options.method || 'POST',
+        headers,
+        body: JSON.stringify(body || {}),
+      });
+    }
+
+    function applyWorkspaceSnapshot(snapshot) {
+      if (!snapshot || typeof snapshot !== 'object') return;
+      const rosterSource = Array.isArray(snapshot.roster)
+        ? snapshot.roster
+        : Array.isArray(snapshot.teamMembers)
+          ? snapshot.teamMembers
+          : [];
+      const previousFallback = allowDemoRosterFallback;
+      allowDemoRosterFallback = false;
+      state.teamMembers = normalizeTeamMembers(rosterSource);
+      state.tasks = Array.isArray(snapshot.tasks)
+        ? snapshot.tasks.map(task => ensureTaskShape(task, state.teamMembers)).filter(Boolean)
+        : [];
+      state.shifts = Array.isArray(snapshot.shifts)
+        ? snapshot.shifts.map(shift => ensureShift(shift, state.teamMembers)).filter(Boolean)
+        : [];
+      state.timePunches = Array.isArray(snapshot.timePunches)
+        ? snapshot.timePunches.map(entry => ensureTimePunch(entry, state.teamMembers, state.shifts)).filter(Boolean)
+        : [];
+      state.laborBroadcasts = Array.isArray(snapshot.broadcasts)
+        ? snapshot.broadcasts.map(entry => ensureLaborBroadcast(entry, state.teamMembers)).filter(Boolean)
+        : [];
+      if (Array.isArray(snapshot.gamification)) {
+        state.gamification = snapshot.gamification
+          .map(entry => ({ id: entry.id || crypto.randomUUID(), message: (entry.message || '').trim() }))
+          .filter(entry => entry.message);
+      }
+      state.updatedAt = snapshot.updatedAt || new Date().toISOString();
+      allowDemoRosterFallback = previousFallback;
+    }
+
+    function upsertShiftFromServer(shift, roster) {
+      if (!shift) return null;
+      const normalized = ensureShift(shift, roster);
+      const idx = state.shifts.findIndex(entry => entry.id === normalized.id);
+      if (idx >= 0) {
+        state.shifts[idx] = normalized;
+      } else {
+        state.shifts.unshift(normalized);
+        state.shifts = state.shifts.slice(0, 48);
+      }
+      return normalized;
+    }
+
+    function insertBroadcastFromServer(broadcast, roster) {
+      const normalized = broadcast ? ensureLaborBroadcast(broadcast, roster) : null;
+      if (!normalized) return null;
+      state.laborBroadcasts.unshift(normalized);
+      state.laborBroadcasts = state.laborBroadcasts.slice(0, 80);
+      return normalized;
+    }
+
+    function insertTimeEventFromServer(event, roster) {
+      if (!event) return null;
+      const normalized = ensureTimePunch(event, roster, state.shifts);
+      state.timePunches.unshift(normalized);
+      state.timePunches = state.timePunches.slice(0, 120);
+      return normalized;
+    }
+
+    function insertTaskFromServer(task, roster) {
+      if (!task) return null;
+      const normalized = ensureTaskShape(task, roster);
+      state.tasks.push(normalized);
+      return normalized;
+    }
+
+    async function refreshWorkspaceFromServer(options = {}) {
+      if (currentMode !== MODE_LIVE) return null;
+      try {
+        const data = await fetchJson('/api/warehouse/state');
+        if (data?.workspace) {
+          applyWorkspaceSnapshot(data.workspace);
+          persist();
+          if (!options.skipRender) {
+            initializeUI();
+          }
+          if (options.showToast) {
+            showToast('Live workspace refreshed.');
+          }
+          return data.workspace;
+        }
+      } catch (err) {
+        console.error('Failed to refresh workspace', err);
+        if (options.errorToast) {
+          showToast(options.errorToast);
+        }
+      }
+      return null;
+    }
+
+    async function createLiveTask(payload, roster) {
+      const response = await postJson('/api/warehouse/tasks', payload);
+      return insertTaskFromServer(response?.task, roster);
+    }
+
+    async function createLiveShift(payload, roster) {
+      const response = await postJson('/api/warehouse/shifts', payload);
+      const shift = upsertShiftFromServer(response?.shift, roster);
+      insertBroadcastFromServer(response?.broadcast, roster);
+      return shift;
+    }
+
+    async function postLiveShiftEvent(shiftId, payload, roster) {
+      const response = await postJson(`/api/warehouse/shifts/${shiftId}/events`, payload);
+      const shift = upsertShiftFromServer(response?.shift, roster);
+      insertBroadcastFromServer(response?.broadcast, roster);
+      return shift;
+    }
+
+    async function createLiveTimeEvent(payload, roster) {
+      const response = await postJson('/api/warehouse/time-events', payload);
+      const punch = insertTimeEventFromServer(response?.timeEvent, roster);
+      if (response?.shift) {
+        upsertShiftFromServer(response.shift, roster);
+      }
+      insertBroadcastFromServer(response?.broadcast, roster);
+      return punch;
+    }
+
+    async function createLiveBroadcast(payload, roster) {
+      const response = await postJson('/api/warehouse/broadcasts', payload);
+      return insertBroadcastFromServer(response?.broadcast, roster);
+    }
 
     function createDefaultTeamMembers(){
       return [
@@ -4438,7 +4661,10 @@
     }
 
     function normalizeTeamMembers(list){
-      const base = Array.isArray(list) && list.length ? list : createDefaultTeamMembers();
+      const hasMembers = Array.isArray(list) && list.length;
+      const base = hasMembers
+        ? list
+        : (allowDemoRosterFallback ? createDefaultTeamMembers() : []);
       return base.map(ensureTeamMember).filter(Boolean);
     }
 
@@ -4674,54 +4900,90 @@
       integrationFormHint.textContent = MANUAL_FORM_HINT;
     }
 
+    const modeToggleBtn = document.getElementById('mode-toggle-btn');
+    if (modeToggleBtn) {
+      modeToggleBtn.addEventListener('click', async () => {
+        if (currentMode === MODE_LIVE) {
+          currentMode = MODE_DEMO;
+          allowDemoRosterFallback = true;
+          saveWorkspaceMode(MODE_DEMO);
+          syncState(seedState());
+          persist();
+          updateModeUi();
+          initializeUI();
+          showToast('Demo filler data enabled.');
+        } else {
+          currentMode = MODE_LIVE;
+          allowDemoRosterFallback = false;
+          saveWorkspaceMode(MODE_LIVE);
+          syncState(seedLiveState());
+          persist();
+          updateModeUi();
+          initializeUI();
+          await refreshWorkspaceFromServer({ showToast: true, errorToast: 'Unable to load live workspace.' });
+        }
+      });
+    }
+    updateModeUi();
+
+    function loadWorkspaceMode() {
+      try {
+        const raw = localStorage.getItem(MODE_STORAGE_KEY);
+        if (raw === MODE_DEMO) return MODE_DEMO;
+        if (raw === MODE_LIVE) return MODE_LIVE;
+      } catch (err) {
+        console.warn('Failed to load workspace mode', err);
+      }
+      return MODE_LIVE;
+    }
+
     function loadState() {
+      let data = null;
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
-          const data = JSON.parse(raw);
-          if (!data.branding) {
-            data.branding = seedState().branding;
-          }
-          if (!Array.isArray(data.items)) data.items = [];
-          data.items.forEach(item => {
-            item.color = sanitizeColor(item.color);
-          });
-          if (!Array.isArray(data.collections)) data.collections = [];
-          if (!Array.isArray(data.giftCards)) data.giftCards = [];
-          if (!Array.isArray(data.purchaseOrders)) data.purchaseOrders = [];
-          if (!Array.isArray(data.transfers)) data.transfers = [];
-          if (!Array.isArray(data.shopifyWarnings)) data.shopifyWarnings = [];
-          data.teamMembers = normalizeTeamMembers(data.teamMembers);
-          if (!Array.isArray(data.tasks)) data.tasks = [];
-          data.tasks = data.tasks.map(task => ensureTaskShape(task, data.teamMembers)).filter(Boolean);
-          if (!Array.isArray(data.shifts)) data.shifts = createDefaultShifts(data.teamMembers);
-          data.shifts = data.shifts.map(shift => ensureShift(shift, data.teamMembers)).filter(Boolean);
-          if (!Array.isArray(data.timePunches)) data.timePunches = createDefaultTimePunches(data.teamMembers, data.shifts);
-          data.timePunches = data.timePunches.map(entry => ensureTimePunch(entry, data.teamMembers, data.shifts)).filter(Boolean);
-          if (!Array.isArray(data.laborBroadcasts)) data.laborBroadcasts = createDefaultLaborBroadcasts(data.teamMembers);
-          data.laborBroadcasts = data.laborBroadcasts.map(entry => ensureLaborBroadcast(entry, data.teamMembers)).filter(Boolean);
-          if (!('lastShopifySync' in data)) data.lastShopifySync = null;
-          if (!('lastShopifySyncSource' in data)) data.lastShopifySyncSource = null;
-          return data;
+          data = JSON.parse(raw);
         }
       } catch (err) {
         console.warn('Failed to load state', err);
       }
-      const fallback = seedState();
-      fallback.teamMembers = normalizeTeamMembers(fallback.teamMembers);
-      fallback.tasks = Array.isArray(fallback.tasks)
-        ? fallback.tasks.map(task => ensureTaskShape(task, fallback.teamMembers)).filter(Boolean)
-        : [];
-      fallback.shifts = Array.isArray(fallback.shifts)
-        ? fallback.shifts.map(shift => ensureShift(shift, fallback.teamMembers)).filter(Boolean)
-        : createDefaultShifts(fallback.teamMembers);
-      fallback.timePunches = Array.isArray(fallback.timePunches)
-        ? fallback.timePunches.map(entry => ensureTimePunch(entry, fallback.teamMembers, fallback.shifts)).filter(Boolean)
-        : createDefaultTimePunches(fallback.teamMembers, fallback.shifts);
-      fallback.laborBroadcasts = Array.isArray(fallback.laborBroadcasts)
-        ? fallback.laborBroadcasts.map(entry => ensureLaborBroadcast(entry, fallback.teamMembers)).filter(Boolean)
-        : createDefaultLaborBroadcasts(fallback.teamMembers);
-      return fallback;
+      if (!data || typeof data !== 'object') {
+        data = currentMode === MODE_DEMO ? seedState() : seedLiveState();
+      }
+      if (!data.branding) {
+        data.branding = seedState().branding;
+      }
+      if (!Array.isArray(data.items)) data.items = [];
+      data.items.forEach(item => {
+        item.color = sanitizeColor(item.color);
+      });
+      if (!Array.isArray(data.collections)) data.collections = [];
+      if (!Array.isArray(data.giftCards)) data.giftCards = [];
+      if (!Array.isArray(data.purchaseOrders)) data.purchaseOrders = [];
+      if (!Array.isArray(data.transfers)) data.transfers = [];
+      if (!Array.isArray(data.shopifyWarnings)) data.shopifyWarnings = [];
+      data.teamMembers = normalizeTeamMembers(data.teamMembers);
+      if (!Array.isArray(data.tasks)) data.tasks = [];
+      data.tasks = data.tasks.map(task => ensureTaskShape(task, data.teamMembers)).filter(Boolean);
+      if (!Array.isArray(data.shifts)) {
+        data.shifts = allowDemoRosterFallback ? createDefaultShifts(data.teamMembers) : [];
+      }
+      data.shifts = data.shifts.map(shift => ensureShift(shift, data.teamMembers)).filter(Boolean);
+      if (!Array.isArray(data.timePunches)) {
+        data.timePunches = allowDemoRosterFallback ? createDefaultTimePunches(data.teamMembers, data.shifts) : [];
+      }
+      data.timePunches = data.timePunches.map(entry => ensureTimePunch(entry, data.teamMembers, data.shifts)).filter(Boolean);
+      if (!Array.isArray(data.laborBroadcasts)) {
+        data.laborBroadcasts = allowDemoRosterFallback ? createDefaultLaborBroadcasts(data.teamMembers) : [];
+      }
+      data.laborBroadcasts = data.laborBroadcasts.map(entry => ensureLaborBroadcast(entry, data.teamMembers)).filter(Boolean);
+      if (!Array.isArray(data.gamification)) data.gamification = [];
+      data.gamification = data.gamification
+        .map(entry => ({ id: entry.id || crypto.randomUUID(), message: (entry.message || '').trim() }))
+        .filter(entry => entry.message);
+      if (!('lastShopifySync' in data)) data.lastShopifySync = null;
+      if (!('lastShopifySyncSource' in data)) data.lastShopifySyncSource = null;
+      return data;
     }
 
     function loadScanQueue() {
@@ -5274,6 +5536,17 @@
           logoData: '',
         }
       };
+    }
+
+    function seedLiveState() {
+      const base = seedState();
+      base.teamMembers = [];
+      base.tasks = [];
+      base.shifts = [];
+      base.timePunches = [];
+      base.laborBroadcasts = [];
+      base.gamification = [];
+      return base;
     }
 
     function persist() {
@@ -8582,7 +8855,7 @@
 
     const shiftForm = document.getElementById('shift-form');
     if (shiftForm) {
-      shiftForm.addEventListener('submit', evt => {
+      shiftForm.addEventListener('submit', async evt => {
         evt.preventDefault();
         const form = evt.target;
         const data = Object.fromEntries(new FormData(form).entries());
@@ -8601,6 +8874,31 @@
           owner: owner?.name || data.owner || '',
           ownerId: owner?.id || null,
         };
+        if (currentMode === MODE_LIVE) {
+          try {
+            const livePayload = Object.assign({}, payload, {
+              actorSnapshot: buildTaskOwnerSnapshot(null, 'Warehouse HQ'),
+            });
+            const shift = await createLiveShift(livePayload, roster);
+            if (!shift) {
+              showToast('Unable to publish shift. Try again.');
+              return;
+            }
+            persist();
+            renderShiftBoard();
+            renderLaborTelemetry();
+            renderLaborKpis();
+            renderLaborBroadcasts();
+            populateShiftSelect();
+            showToast('Shift published for self-service scheduling.');
+            form.reset();
+          } catch (err) {
+            console.error('Shift publish error', err);
+            const message = err?.message || 'Unable to publish shift right now.';
+            showToast(message);
+          }
+          return;
+        }
         const shift = ensureShift(payload, roster);
         state.shifts.unshift(shift);
         state.shifts = state.shifts.slice(0, 48);
@@ -8647,7 +8945,7 @@
 
     const shiftBoard = document.getElementById('shift-board');
     if (shiftBoard) {
-      shiftBoard.addEventListener('click', evt => {
+      shiftBoard.addEventListener('click', async evt => {
         const button = evt.target.closest('button[data-action]');
         if (!button) return;
         const { action, id } = button.dataset;
@@ -8659,6 +8957,71 @@
         const actorSnapshot = actorMember
           ? buildTaskOwnerSnapshot(actorMember, actorMember.name)
           : buildTaskOwnerSnapshot(null, 'Warehouse HQ');
+
+        const getBroadcastPayload = (message, channel, priority) => ({
+          message,
+          channel,
+          priority,
+          authorSnapshot: actorSnapshot,
+          authorId: actorSnapshot?.id || null,
+        });
+
+        if (currentMode === MODE_LIVE) {
+          let message = '';
+          let level = 'info';
+          let channel = shift.zone || 'Labor Alerts';
+          let priority = 'normal';
+          let status = shift.status;
+          if (action === 'ack-shift') {
+            message = 'Shift acknowledged and visibility updated for leadership.';
+            level = 'success';
+            channel = 'Leadership Standup';
+            status = 'acknowledged';
+          } else if (action === 'swap-shift') {
+            message = 'Swap blast triggered to flex bench to cover open slots.';
+            level = 'alert';
+            priority = 'high';
+            status = 'swap-requested';
+          } else if (action === 'resolve-shift') {
+            message = 'Coverage confirmed and alerts cleared.';
+            level = 'success';
+            status = 'acknowledged';
+          }
+          try {
+            const payload = {
+              message,
+              level,
+              status,
+              actorSnapshot,
+            };
+            if (message) {
+              payload.broadcast = getBroadcastPayload(message, channel, priority);
+            }
+            const updated = await postLiveShiftEvent(id, payload, roster);
+            if (!updated) {
+              showToast('Unable to update shift. Try again.');
+              return;
+            }
+            persist();
+            renderShiftBoard();
+            renderLaborTelemetry();
+            renderLaborKpis();
+            renderLaborBroadcasts();
+            if (action === 'ack-shift') {
+              showToast('Shift acknowledged across mobile and HQ.');
+            } else if (action === 'swap-shift') {
+              showToast('Swap request broadcast to available associates.');
+            } else if (action === 'resolve-shift') {
+              showToast('Shift marked as covered.');
+            }
+          } catch (err) {
+            console.error('Shift event error', err);
+            const messageText = err?.message || 'Unable to update shift right now.';
+            showToast(messageText);
+          }
+          return;
+        }
+
         if (action === 'ack-shift') {
           shift.status = 'acknowledged';
           appendShiftActivity(id, 'Shift acknowledged and visibility updated for leadership.', {
@@ -8730,24 +9093,78 @@
 
     const timeClockForm = document.getElementById('time-clock-form');
     if (timeClockForm) {
-      timeClockForm.addEventListener('submit', evt => {
+      timeClockForm.addEventListener('submit', async evt => {
         evt.preventDefault();
         const form = evt.target;
         const data = Object.fromEntries(new FormData(form).entries());
         const roster = getRosterMembers();
         const member = matchTeamMember(roster, data.member, data.memberId);
+        const timestampIso = data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString();
+        const geoProvided = data.lat || data.lng || data.accuracy;
         const payload = {
           member: member?.name || data.member,
           memberId: member?.id || null,
           shiftId: data.shiftId || null,
           type: data.type,
           method: data.method,
-          timestamp: data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString(),
+          timestamp: timestampIso,
           notes: data.notes,
-          geo: (data.lat || data.lng || data.accuracy)
-            ? { lat: data.lat, lng: data.lng, accuracy: data.accuracy }
-            : undefined,
+          geo: geoProvided ? { lat: data.lat, lng: data.lng, accuracy: data.accuracy } : undefined,
         };
+        if (currentMode === MODE_LIVE) {
+          try {
+            let shift = null;
+            let appendActivity = null;
+            const memberSnapshot = member
+              ? buildTaskOwnerSnapshot(member, member.name)
+              : buildTaskOwnerSnapshot(null, data.member || 'Team member');
+            if (payload.shiftId) {
+              shift = state.shifts.find(entry => entry.id === payload.shiftId) || null;
+              const message = `${memberSnapshot.name || payload.member || 'Team member'} ${describePunchType(payload.type)} (${formatPunchMethod(payload.method)})`;
+              const level = payload.type === 'call-out'
+                ? 'alert'
+                : payload.type === 'clock-in'
+                  ? 'success'
+                  : 'info';
+              appendActivity = {
+                message,
+                level,
+                actorSnapshot: memberSnapshot,
+              };
+              if (payload.type === 'call-out') {
+                payload.status = 'alert';
+                appendActivity.broadcast = {
+                  message,
+                  channel: shift?.zone || 'Labor Alerts',
+                  priority: 'high',
+                  authorSnapshot: memberSnapshot,
+                  authorId: memberSnapshot?.id || null,
+                };
+              }
+            }
+            if (appendActivity) {
+              payload.appendActivity = appendActivity;
+            }
+            const punch = await createLiveTimeEvent(payload, roster);
+            if (!punch) {
+              showToast('Unable to log event. Try again.');
+              return;
+            }
+            persist();
+            renderTimePunches();
+            renderLaborTelemetry();
+            renderLaborKpis();
+            renderShiftBoard();
+            renderLaborBroadcasts();
+            showToast('Labor telemetry updated.');
+            form.reset();
+          } catch (err) {
+            console.error('Time event error', err);
+            const message = err?.message || 'Unable to log event right now.';
+            showToast(message);
+          }
+          return;
+        }
         const punch = ensureTimePunch(payload, roster, state.shifts);
         state.timePunches.unshift(punch);
         state.timePunches = state.timePunches.slice(0, 120);
@@ -8782,7 +9199,7 @@
 
     const laborBroadcastForm = document.getElementById('labor-broadcast-form');
     if (laborBroadcastForm) {
-      laborBroadcastForm.addEventListener('submit', evt => {
+      laborBroadcastForm.addEventListener('submit', async evt => {
         evt.preventDefault();
         const form = evt.target;
         const data = Object.fromEntries(new FormData(form).entries());
@@ -8797,6 +9214,25 @@
           authorId: author?.id || null,
           authorSnapshot: author ? buildTaskOwnerSnapshot(author, author.name) : buildTaskOwnerSnapshot(null, data.author || 'Warehouse HQ'),
         };
+        if (currentMode === MODE_LIVE) {
+          try {
+            const broadcast = await createLiveBroadcast(payload, roster);
+            if (!broadcast) {
+              showToast('Message required to broadcast.');
+              return;
+            }
+            persist();
+            renderLaborBroadcasts();
+            renderLaborTelemetry();
+            showToast('Broadcast queued for delivery across channels.');
+            form.reset();
+          } catch (err) {
+            console.error('Broadcast error', err);
+            const message = err?.message || 'Unable to send broadcast right now.';
+            showToast(message);
+          }
+          return;
+        }
         const broadcast = ensureLaborBroadcast(payload, roster);
         if (!broadcast) {
           showToast('Message required to broadcast.');
@@ -8952,32 +9388,60 @@
       if (action === 'close-task') closeTask(id);
     });
 
-    document.getElementById('task-form').addEventListener('submit', evt => {
-      evt.preventDefault();
-      const form = evt.target;
-      const data = Object.fromEntries(new FormData(form).entries());
-      const roster = getRosterMembers();
-      const ownerMatch = matchTeamMember(roster, data.owner);
-      const task = {
-        id: crypto.randomUUID(),
-        title: data.title,
-        owner: data.owner,
-        ownerId: ownerMatch?.id || null,
-        ownerSnapshot: buildTaskOwnerSnapshot(ownerMatch, data.owner),
-        type: data.type,
-        dueDate: data.dueDate,
-        link: data.link,
-        status: 'open',
-        createdAt: new Date().toISOString(),
-        activity: [],
-      };
-      appendTaskActivity(task, 'Dispatched mission to floor', 'team');
-      state.tasks.push(task);
-      persist();
-      renderTasks();
-      showToast('Task dispatched to floor.');
-      form.reset();
-    });
+    const taskForm = document.getElementById('task-form');
+    if (taskForm) {
+      taskForm.addEventListener('submit', async evt => {
+        evt.preventDefault();
+        const form = evt.target;
+        const data = Object.fromEntries(new FormData(form).entries());
+        const roster = getRosterMembers();
+        const ownerMatch = matchTeamMember(roster, data.owner);
+        if (currentMode === MODE_LIVE) {
+          try {
+            const task = await createLiveTask({
+              title: data.title,
+              owner: ownerMatch?.name || data.owner || '',
+              ownerId: ownerMatch?.id || null,
+              type: data.type,
+              dueDate: data.dueDate,
+              link: data.link,
+            }, roster);
+            if (!task) {
+              showToast('Unable to dispatch task. Try again.');
+              return;
+            }
+            persist();
+            renderTasks();
+            showToast('Task dispatched to floor.');
+            form.reset();
+          } catch (err) {
+            console.error('Task dispatch error', err);
+            const message = err?.message || 'Unable to dispatch task right now.';
+            showToast(message);
+          }
+          return;
+        }
+        const task = {
+          id: crypto.randomUUID(),
+          title: data.title,
+          owner: data.owner,
+          ownerId: ownerMatch?.id || null,
+          ownerSnapshot: buildTaskOwnerSnapshot(ownerMatch, data.owner),
+          type: data.type,
+          dueDate: data.dueDate,
+          link: data.link,
+          status: 'open',
+          createdAt: new Date().toISOString(),
+          activity: [],
+        };
+        appendTaskActivity(task, 'Dispatched mission to floor', 'team');
+        state.tasks.push(task);
+        persist();
+        renderTasks();
+        showToast('Task dispatched to floor.');
+        form.reset();
+      });
+    }
 
     document.getElementById('plan-cycle').addEventListener('click', () => {
       const warehouseId = document.getElementById('cycle-warehouse').value;
@@ -9556,6 +10020,17 @@
       renderLaborKpis();
       renderLaborBroadcasts();
       renderLaborTools();
+    }
+
+    async function bootstrapWorkspace() {
+      if (currentMode === MODE_LIVE) {
+        allowDemoRosterFallback = false;
+        initializeUI();
+        await refreshWorkspaceFromServer({ errorToast: 'Unable to load live workspace.' });
+      } else {
+        allowDemoRosterFallback = true;
+        initializeUI();
+      }
     }
 
     applyBranding();
@@ -10170,7 +10645,7 @@
 
     handleNavigation();
     drainStoredScanQueue();
-    initializeUI();
+    bootstrapWorkspace();
   </script>
 </body>
 </html>
