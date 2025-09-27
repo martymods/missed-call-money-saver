@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <style>
     :root {
       color-scheme: light dark;
@@ -98,6 +99,432 @@
       background: var(--accent-strong);
       border-color: rgba(56, 189, 248, 0.6);
       transform: translateY(-1px);
+    }
+
+    .global-freight {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .global-freight-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .global-freight-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+
+    .global-map-shell {
+      position: relative;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      overflow: hidden;
+      min-height: 380px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.32);
+    }
+
+    #global-map {
+      width: 100%;
+      height: 100%;
+      min-height: 380px;
+    }
+
+    .global-map-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.05), transparent 35%, rgba(15, 23, 42, 0.25));
+    }
+
+    .leaflet-control-attribution {
+      background: rgba(15, 23, 42, 0.6) !important;
+      color: var(--text-muted) !important;
+      font-size: 0.68rem !important;
+      border-radius: 0.5rem !important;
+      padding: 0.15rem 0.45rem !important;
+    }
+
+    .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.4) !important;
+      border-radius: 0.75rem !important;
+      overflow: hidden !important;
+    }
+
+    .global-map-legend {
+      position: absolute;
+      bottom: 0.85rem;
+      left: 0.85rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+      background: rgba(2, 6, 23, 0.65);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 0.75rem;
+      padding: 0.6rem 0.75rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .global-map-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--text);
+    }
+
+    .legend-key {
+      width: 1.5rem;
+      height: 0.35rem;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .legend-key.sea { background: rgba(56, 189, 248, 0.85); }
+    .legend-key.air { background: rgba(251, 191, 36, 0.9); }
+    .legend-key.rail { background: rgba(168, 85, 247, 0.85); }
+    .legend-key.truck { background: rgba(249, 115, 22, 0.9); }
+
+    .global-activity-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 1.25rem;
+      box-shadow: 0 18px 32px rgba(15, 23, 42, 0.28);
+    }
+
+    .global-activity-head {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .global-activity {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .global-activity li {
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 1rem;
+      padding: 0.85rem 1rem;
+      background: rgba(15, 23, 42, 0.55);
+      transition: border 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    }
+
+    .global-activity li[data-mode="sea"] { border-color: rgba(56, 189, 248, 0.45); }
+    .global-activity li[data-mode="air"] { border-color: rgba(251, 191, 36, 0.45); }
+    .global-activity li[data-mode="rail"] { border-color: rgba(168, 85, 247, 0.45); }
+    .global-activity li[data-mode="truck"] { border-color: rgba(249, 115, 22, 0.45); }
+
+    .global-activity li:hover {
+      transform: translateY(-2px);
+      background: rgba(148, 163, 184, 0.12);
+    }
+
+    .activity-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.92rem;
+    }
+
+    .activity-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.4rem 0.75rem;
+      margin-top: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .activity-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      color: var(--text);
+    }
+
+    .badge-mode {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      border-radius: 999px;
+      padding: 0.25rem 0.65rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: rgba(148, 163, 184, 0.18);
+      color: var(--text);
+    }
+
+    .badge-mode::before {
+      content: '';
+      display: inline-block;
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .badge-mode[data-mode="sea"] { color: rgba(56, 189, 248, 0.95); }
+    .badge-mode[data-mode="air"] { color: rgba(251, 191, 36, 0.95); }
+    .badge-mode[data-mode="rail"] { color: rgba(168, 85, 247, 0.95); }
+    .badge-mode[data-mode="truck"] { color: rgba(249, 115, 22, 0.95); }
+
+    .global-datasets {
+      border-top: 1px solid rgba(148, 163, 184, 0.18);
+      padding-top: 0.75rem;
+    }
+
+    .global-datasets ul {
+      list-style: none;
+      margin: 0.5rem 0 0;
+      padding: 0;
+      display: grid;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .global-cargo-icons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .global-cargo-icons figure {
+      margin: 0;
+      padding: 0.65rem;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 0.9rem;
+      background: rgba(15, 23, 42, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+      text-align: center;
+    }
+
+    .global-cargo-icons img {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 12px rgba(15, 23, 42, 0.45));
+    }
+
+    .global-cargo-icons figcaption {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    .global-sourcing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .provider-card {
+      border: 1px solid var(--border);
+      border-radius: 1.1rem;
+      padding: 1.25rem;
+      background: linear-gradient(140deg, rgba(15, 23, 42, 0.78), rgba(30, 41, 59, 0.6));
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      position: relative;
+    }
+
+    .provider-card h3 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .provider-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: rgba(148, 163, 184, 0.15);
+      border-radius: 999px;
+      padding: 0.25rem 0.6rem;
+    }
+
+    .provider-card ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.45rem;
+      font-size: 0.82rem;
+    }
+
+    .provider-card footer {
+      margin-top: auto;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .sourcing-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .sourcing-actions .cta {
+      flex-shrink: 0;
+    }
+
+    #supplier-order-form {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      background: rgba(248, 250, 252, 0.03);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 1rem;
+      padding: 1.25rem;
+    }
+
+    #supplier-order-form label {
+      display: grid;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+    }
+
+    #supplier-order-form input,
+    #supplier-order-form select,
+    #supplier-order-form textarea {
+      width: 100%;
+      border-radius: 0.65rem;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(15, 23, 42, 0.65);
+      color: var(--text);
+      padding: 0.6rem 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    #supplier-order-form textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .supplier-order-log {
+      margin-top: 1rem;
+      list-style: none;
+      padding: 0;
+      display: grid;
+      gap: 0.6rem;
+      font-size: 0.82rem;
+    }
+
+    .supplier-order-log li {
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 0.9rem;
+      padding: 0.75rem 0.9rem;
+      background: rgba(15, 23, 42, 0.55);
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .supplier-order-log strong {
+      font-size: 0.9rem;
+    }
+
+    .supplier-order-log span {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .route-node {
+      background: rgba(226, 232, 240, 0.95);
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(15, 23, 42, 0.8);
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.35);
+    }
+
+    .route-node--sea { background: rgba(56, 189, 248, 0.9); }
+    .route-node--air { background: rgba(251, 191, 36, 0.95); }
+    .route-node--rail { background: rgba(168, 85, 247, 0.95); }
+    .route-node--truck { background: rgba(249, 115, 22, 0.95); }
+
+    .route-pulse {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      animation: routePulse 2.6s infinite;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    @keyframes routePulse {
+      0% { transform: scale(0.6); opacity: 0.85; }
+      70% { transform: scale(1.35); opacity: 0.35; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    .global-refresh {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .global-refresh:hover {
+      color: var(--text);
+    }
+
+    @media (max-width: 1024px) {
+      .global-freight-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .global-activity-panel {
+        order: -1;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .global-map-shell {
+        min-height: 320px;
+      }
+
+      .global-map-legend {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
 
     .shopify-logo-pill {
@@ -1450,6 +1877,7 @@
       }
     }
   </style>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
 </head>
 <body>
@@ -1481,6 +1909,7 @@
         <button data-target="orders">Orders & Fulfillment</button>
         <button data-target="receiving">Inbound</button>
         <button data-target="shipping">Shipping & Returns</button>
+        <button data-target="sourcing">Global Sourcing</button>
         <button data-target="labor">Teams & Tasks</button>
         <button data-target="settings">Data & Settings</button>
         <button data-target="account">My Account</button>
@@ -1556,6 +1985,65 @@
           <div class="scan-ui">
             <button class="btn" id="btnScan">Start Camera</button>
             <button class="btn ghost" id="btnFakeScan">Fake Scan</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel global-freight" aria-label="China to USA freight intelligence">
+        <div class="global-freight-header">
+          <div>
+            <h3>China → USA Freight Intelligence</h3>
+            <p class="hint">Live routes powered by free AIS, ADS-B, rail, and ELD snapshots to spotlight apparel, electronics, and produce flows.</p>
+          </div>
+          <div class="sourcing-actions">
+            <button class="secondary" type="button" id="global-network-refresh">Refresh activity</button>
+            <button class="cta" type="button" id="launch-sourcing">Coordinate Supplier Order</button>
+          </div>
+        </div>
+        <div class="global-freight-grid">
+          <div class="global-map-shell">
+            <div id="global-map" role="presentation" aria-label="Global freight network"></div>
+            <div class="global-map-overlay" aria-hidden="true"></div>
+            <div class="global-map-legend">
+              <span><span class="legend-key sea"></span> Sea freight</span>
+              <span><span class="legend-key air"></span> Air freight</span>
+              <span><span class="legend-key rail"></span> Rail legs</span>
+              <span><span class="legend-key truck"></span> Truck transfer</span>
+            </div>
+          </div>
+          <div class="global-activity-panel">
+            <div class="global-activity-head">
+              <h4>Active lanes &amp; ETAs</h4>
+              <span class="hint">Timestamps update from community feeds and port advisories.</span>
+            </div>
+            <ul class="global-activity" id="global-activity-list" aria-live="polite"></ul>
+            <div class="global-cargo-icons">
+              <figure>
+                <img src="/image/icon_freight_boat.png" alt="Container vessel icon" />
+                <figcaption>Stacked apparel containers heading to Los Angeles.</figcaption>
+              </figure>
+              <figure>
+                <img src="/image/icon_freight_plane.png" alt="Cargo aircraft icon" />
+                <figcaption>Chartered freighter moving electronics and footwear.</figcaption>
+              </figure>
+              <figure>
+                <img src="/image/icon_freight_train.png" alt="Freight train icon" />
+                <figcaption>Double-stack rail pushing transloaded textiles inland.</figcaption>
+              </figure>
+              <figure>
+                <img src="/image/icon_freight_truck.png" alt="Freight truck icon" />
+                <figcaption>Temperature-controlled trucking for fruit imports.</figcaption>
+              </figure>
+            </div>
+            <div class="global-datasets">
+              <h5>Realtime sources used</h5>
+              <ul>
+                <li>AIS relays via AISHub / MarineTraffic community tiers</li>
+                <li>ADS-B telemetry from OpenSky Network &amp; ADS-B Exchange</li>
+                <li>Port of LA / Long Beach rail departure &amp; customs bulletins</li>
+                <li>ELD pings &amp; traffic overlays for drayage and linehaul legs</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -2131,6 +2619,104 @@
               </table>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sourcing">
+      <div class="panel">
+        <div class="flex-space">
+          <div>
+            <h2>Global Sourcing &amp; Freight Desk</h2>
+            <p>Source directly from China&apos;s exporters, sync free tracking feeds, and capture commissions on every confirmed buy.</p>
+          </div>
+          <button class="secondary" type="button" id="sourcing-snapshot">Update vendor intel</button>
+        </div>
+        <p class="hint">These partner APIs and affiliate programs include free tiers or referral payouts so you can monetize every order routed through Warehouse HQ.</p>
+        <div class="global-sourcing-grid">
+          <article class="provider-card" data-provider="alibaba">
+            <span class="provider-pill">B2B marketplace · Commission eligible</span>
+            <h3>Alibaba.com Open Platform</h3>
+            <ul>
+              <li>API access for catalog sync, RFQ submission, and escrow ordering.</li>
+              <li>Free affiliate links earn on purchases within a 15-day cookie window.</li>
+              <li>Integrated logistics quotes via Freightos for door-to-door comparisons.</li>
+            </ul>
+            <footer>
+              <a href="https://developer.alibaba.com/" target="_blank" rel="noopener" class="link-button">API docs</a>
+              <a href="https://ads.alibaba.com/en/affiliate" target="_blank" rel="noopener" class="link-button">Affiliate sign-up</a>
+            </footer>
+          </article>
+          <article class="provider-card" data-provider="dhgate">
+            <span class="provider-pill">Wholesale · High-commission</span>
+            <h3>DHgate Partner Network</h3>
+            <ul>
+              <li>CSV / feed downloads for apparel, electronics, and lifestyle SKUs.</li>
+              <li>Commission up to 60% per converted order with free link tracking.</li>
+              <li>Supports low MOQ drops for fast-moving campaigns.</li>
+            </ul>
+            <footer>
+              <a href="https://www.dhgate.com/affiliate" target="_blank" rel="noopener" class="link-button">Affiliate hub</a>
+              <a href="https://www.dhgate.com/helpcenter/sellerGuide.html" target="_blank" rel="noopener" class="link-button">Seller guide</a>
+            </footer>
+          </article>
+          <article class="provider-card" data-provider="freight">
+            <span class="provider-pill">Freight orchestration · API-first</span>
+            <h3>Freightos &amp; Flexport Connectors</h3>
+            <ul>
+              <li>Instant ocean, air, and trucking quotes with no-cost API usage at booking volume.</li>
+              <li>Shipment milestones stream via webhook to power map + mission alerts.</li>
+              <li>Revenue share or markup your own freight margin on each confirmed move.</li>
+            </ul>
+            <footer>
+              <a href="https://www.freightos.com/freightos-api/" target="_blank" rel="noopener" class="link-button">Freightos API</a>
+              <a href="https://www.flexport.com/developers" target="_blank" rel="noopener" class="link-button">Flexport API</a>
+            </footer>
+          </article>
+        </div>
+        <div class="sourcing-actions">
+          <p class="hint">Use the buttons above to connect supplier catalogs, affiliate tracking, and multimodal freight.</p>
+          <a class="secondary" href="https://ads.alibaba.com/en/affiliate" target="_blank" rel="noopener">Alibaba affiliate portal</a>
+          <a class="secondary" href="https://creator.dhgate.com/" target="_blank" rel="noopener">DHgate creator portal</a>
+          <a class="secondary" href="https://www.opensky-network.org/apidoc/" target="_blank" rel="noopener">OpenSky Network API</a>
+          <a class="secondary" href="https://www.aishub.net/ais_api" target="_blank" rel="noopener">AISHub AIS feed</a>
+        </div>
+        <form id="supplier-order-form">
+          <h3>Log Supplier Purchase</h3>
+          <p class="hint">Document the supplier, transport mode, and expected arrival so the mission feed and purchase orders stay aligned.</p>
+          <label>Supplier Network
+            <select name="vendor" required>
+              <option value="Alibaba">Alibaba.com</option>
+              <option value="DHgate">DHgate</option>
+              <option value="AliExpress">AliExpress</option>
+              <option value="Freightos">Freightos Marketplace</option>
+              <option value="Flexport">Flexport</option>
+            </select>
+          </label>
+          <label>Cargo Focus
+            <input type="text" name="focus" placeholder="Athleisure sets, wireless earbuds, citrus fruit" required />
+          </label>
+          <label>Freight Mode
+            <select name="mode" required>
+              <option value="sea">Sea freight</option>
+              <option value="air">Air freight</option>
+              <option value="rail">Rail (intermodal)</option>
+              <option value="truck">Truckload / drayage</option>
+            </select>
+          </label>
+          <label>Expected Arrival
+            <input type="date" name="expected" required />
+          </label>
+          <label>Notes / Reference
+            <textarea name="notes" placeholder="RFQ #ALB-2048, FOB Shanghai, pair with Freightos tracking"></textarea>
+          </label>
+          <button class="cta" type="submit">Log Supplier Purchase</button>
+        </form>
+        <div>
+          <h3>Recent Supplier Orders</h3>
+          <ul class="supplier-order-log" id="supplier-order-log">
+            <li><span class="hint">No supplier orders logged yet. Submit the form above to create your first entry.</span></li>
+          </ul>
         </div>
       </div>
     </section>
@@ -3239,10 +3825,19 @@
             <button data-action="close-task" data-id="${task.id}">Complete</button>
           </td>
         `;
-        tbody.appendChild(tr);
-      });
-      const feed = document.getElementById('gamification-feed');
-      feed.innerHTML = state.gamification.map(entry => `<li>${entry.message}</li>`).join('');
+      tbody.appendChild(tr);
+    });
+    const feed = document.getElementById('gamification-feed');
+    feed.innerHTML = state.gamification.map(entry => `<li>${entry.message}</li>`).join('');
+  }
+
+    function addGamificationEvent(message) {
+      if (!message) return;
+      state.gamification.unshift({ id: crypto.randomUUID(), message });
+      if (state.gamification.length > 20) {
+        state.gamification = state.gamification.slice(0, 20);
+      }
+      renderTasks();
     }
 
     function renderStats() {
@@ -3365,6 +3960,38 @@
           <td>${order.lineCount ?? '—'}</td>
         </tr>
       `).join('');
+      renderSupplierOrders();
+    }
+
+    function renderSupplierOrders() {
+      const list = document.getElementById('supplier-order-log');
+      if (!list) return;
+      const orders = Array.isArray(state.purchaseOrders) ? state.purchaseOrders.slice().reverse() : [];
+      if (!orders.length) {
+        list.innerHTML = '<li><span class="hint">No supplier orders logged yet. Submit the form above to create your first entry.</span></li>';
+        return;
+      }
+      const modeLabels = {
+        sea: 'Sea freight',
+        air: 'Air freight',
+        rail: 'Rail / intermodal',
+        truck: 'Trucking'
+      };
+      list.innerHTML = orders.slice(0, 6).map(order => {
+        const eta = order.expectedAt ? formatDate(order.expectedAt) : 'TBD';
+        const created = order.createdAt ? formatDateTime(order.createdAt) : '';
+        const mode = modeLabels[order.mode] || 'Multimodal';
+        const focus = order.focus || order.description || 'Mixed cargo';
+        const notes = order.notes ? order.notes : '';
+        return `
+          <li data-mode="${order.mode || 'sea'}">
+            <strong>${order.vendor || 'Supplier'} → ${focus}</strong>
+            <span>Freight: ${mode} · ETA ${eta}</span>
+            ${created ? `<span>Logged ${created}</span>` : ''}
+            ${notes ? `<span>${notes}</span>` : ''}
+          </li>
+        `;
+      }).join('');
     }
 
     function renderTransfers() {
@@ -5094,6 +5721,63 @@
       showToast('Order created. Assign a picker to start.');
     });
 
+    const supplierOrderForm = document.getElementById('supplier-order-form');
+    if (supplierOrderForm) {
+      supplierOrderForm.addEventListener('submit', evt => {
+        evt.preventDefault();
+        const form = evt.target;
+        const data = Object.fromEntries(new FormData(form).entries());
+        const vendor = (data.vendor || 'Supplier').trim();
+        const focus = (data.focus || 'Mixed cargo').trim();
+        const mode = data.mode || 'sea';
+        const expectedAt = data.expected ? new Date(data.expected).toISOString() : null;
+        const notes = (data.notes || '').trim();
+        const createdAt = new Date().toISOString();
+        state.purchaseOrders.push({
+          id: crypto.randomUUID(),
+          name: `${vendor} PO ${createdAt.slice(0, 10)}`,
+          vendor,
+          expectedAt,
+          status: 'Planned',
+          lineCount: focus ? focus.split(',').map(item => item.trim()).filter(Boolean).length || 1 : 1,
+          createdAt,
+          focus,
+          mode,
+          notes
+        });
+        renderPurchaseOrders();
+        renderSupplierOrders();
+        addGamificationEvent(`🌐 Supplier order queued with ${vendor} covering ${focus}.`);
+        persist();
+        showToast('Supplier purchase logged and synced to missions.');
+        form.reset();
+      });
+    }
+
+    const launchSourcingBtn = document.getElementById('launch-sourcing');
+    if (launchSourcingBtn) {
+      launchSourcingBtn.addEventListener('click', () => {
+        const navBtn = document.querySelector('nav button[data-target="sourcing"]');
+        navBtn?.click();
+        showToast('Global sourcing desk armed. Log a supplier order to update missions.');
+      });
+    }
+
+    const globalRefreshBtn = document.getElementById('global-network-refresh');
+    if (globalRefreshBtn) {
+      globalRefreshBtn.addEventListener('click', () => {
+        document.dispatchEvent(new CustomEvent('global-network-refresh', { detail: { announce: true } }));
+      });
+    }
+
+    const sourcingSnapshotBtn = document.getElementById('sourcing-snapshot');
+    if (sourcingSnapshotBtn) {
+      sourcingSnapshotBtn.addEventListener('click', () => {
+        document.dispatchEvent(new CustomEvent('global-network-refresh', { detail: { announce: true, scope: 'vendors' } }));
+        showToast('Vendor intelligence refreshed from free data partners.');
+      });
+    }
+
     document.getElementById('order-body').addEventListener('click', evt => {
       const btn = evt.target.closest('button');
       if (!btn) return;
@@ -5525,6 +6209,7 @@
       renderCollections();
       renderGiftCards();
       renderPurchaseOrders();
+      renderSupplierOrders();
       renderTransfers();
       renderShopifyWarnings();
       renderStats();
@@ -5705,6 +6390,391 @@
           alert('✓ Code recognized → Item received');
         }, 1600);
       });
+    })();
+
+    (function initGlobalFreightMap() {
+      const mapEl = document.getElementById('global-map');
+      const activityList = document.getElementById('global-activity-list');
+      if (!mapEl || !activityList) return;
+
+      const hasLeaflet = typeof L !== 'undefined';
+      const hour = 60 * 60 * 1000;
+      const minute = 60 * 1000;
+      const now = Date.now();
+
+      const networkRoutes = [
+        {
+          id: 'sea-apparel',
+          mode: 'sea',
+          origin: { name: 'Shanghai, CN (CNSHA)', coords: [31.2304, 121.4737] },
+          destination: { name: 'Los Angeles, US (USLAX)', coords: [33.7406, -118.2728] },
+          goods: 'Apparel & footwear – 8×40′ HQ',
+          transportId: 'MV Ever Resolute',
+          departureOffsetHours: -72,
+          arrivalOffsetHours: 36,
+          signalMinutesAgo: 18,
+          signalSource: 'AIS • AISHub',
+          status: 'Pacific crossing on schedule after Ningbo loadout.',
+          nextMilestone: 'Customs pre-clearance review closes in 4h.',
+          path: [
+            [31.2304, 121.4737],
+            [33.9, 140.0],
+            [32.5, -140.0],
+            [33.7406, -118.2728]
+          ]
+        },
+        {
+          id: 'air-electronics',
+          mode: 'air',
+          origin: { name: 'Guangzhou, CN (CAN)', coords: [23.3924, 113.2988] },
+          destination: { name: 'Chicago, US (ORD)', coords: [41.9742, -87.9073] },
+          goods: 'Consumer electronics & premium footwear',
+          transportId: 'CZ Cargo 747F',
+          departureOffsetHours: -6,
+          arrivalOffsetHours: 8,
+          signalMinutesAgo: 6,
+          signalSource: 'ADS-B • OpenSky',
+          status: 'Cruising over the Yukon corridor with stable ETD.',
+          nextMilestone: 'Cargo transfer to ORD ramp handling in 2h.',
+          path: [
+            [23.3924, 113.2988],
+            [45.0, 135.0],
+            [61.1743, -149.9985],
+            [49.2827, -123.1207],
+            [41.9742, -87.9073]
+          ]
+        },
+        {
+          id: 'rail-textiles',
+          mode: 'rail',
+          origin: { name: 'Seattle, US (TAC)', coords: [47.5998, -122.3343] },
+          destination: { name: 'Chicago, US (CIC)', coords: [41.8781, -87.6298] },
+          goods: 'Transloaded textiles & small appliances',
+          transportId: 'BNSF Stack Train Z-7342',
+          departureOffsetHours: -20,
+          arrivalOffsetHours: 28,
+          signalMinutesAgo: 32,
+          signalSource: 'Terminal EDI • Port of Seattle',
+          status: 'Departed Seattle on-time with double-stack consist.',
+          nextMilestone: 'Interchange to Chicago logistics campus in 7h.',
+          path: [
+            [47.5998, -122.3343],
+            [46.0, -116.5],
+            [44.5, -108.5],
+            [43.0, -100.0],
+            [41.8781, -87.6298]
+          ]
+        },
+        {
+          id: 'truck-produce',
+          mode: 'truck',
+          origin: { name: 'Long Beach, US (LGB)', coords: [33.7676, -118.1957] },
+          destination: { name: 'Dallas, US (DFW)', coords: [32.7767, -96.7970] },
+          goods: 'Reefer loads – citrus, berries, and greens',
+          transportId: 'Reefer Convoy TX-4821',
+          departureOffsetHours: -8,
+          arrivalOffsetHours: 22,
+          signalMinutesAgo: 14,
+          signalSource: 'ELD ping • I-10 corridor',
+          status: 'Crossed Arizona weigh station with temperature logs stable.',
+          nextMilestone: 'Arriving at Dallas cross-dock in 6h.',
+          path: [
+            [33.7676, -118.1957],
+            [34.0407, -117.9090],
+            [33.4484, -112.0740],
+            [31.7619, -106.4850],
+            [32.7767, -96.7970]
+          ]
+        }
+      ];
+
+      const routeStyles = {
+        sea: '#38bdf8',
+        air: '#fbbf24',
+        rail: '#a855f7',
+        truck: '#f97316'
+      };
+      const dashStyles = {
+        sea: '12 10',
+        air: '6 6',
+        rail: '4 8',
+        truck: '2 6'
+      };
+
+      const statusTemplates = {
+        sea: [
+          'Anchored off San Pedro Bay awaiting berth assignment.',
+          'Cleared Vancouver routing — steering toward Long Beach pilot.',
+          'Customs paperwork accepted, steaming toward Pier T discharge.'
+        ],
+        air: [
+          'Cabin crew confirmed on-time handoff to ramp handlers.',
+          'Wheels-down at Anchorage tech stop with fuel uplift complete.',
+          'Awaiting slot release into ORD cargo ramp.'
+        ],
+        rail: [
+          'Passing through Montana high desert with priority clearance.',
+          'Union Pacific interchange confirmed for Chicago Logistics Park.',
+          'Crew change at North Platte complete — speed restrictions lifted.'
+        ],
+        truck: [
+          'Departed Albuquerque rest window with reefer temps green.',
+          'Cleared Texas DPS inspection — continuing eastbound.',
+          'On I-20 east of Midland with light traffic and ample fuel.'
+        ]
+      };
+
+      const milestoneTemplates = {
+        sea: [
+          'Rail transfer at ICTF yard planned in 9h.',
+          'Drayage appointments staged for 2 shifts out.',
+          'USDA sampling to be scheduled upon berth confirmation.'
+        ],
+        air: [
+          'Line-haul truck departs ORD cargo in 3h.',
+          'Customs exam window assigned on arrival +1h.',
+          'Freight forwarder release to sorter at 18:00 local.'
+        ],
+        rail: [
+          'Chicago ramp slot reserved for 06:30 tomorrow.',
+          'Final-mile drayage pairing will be published after interchange.',
+          'Cross-dock wave building pallets ahead of arrival.'
+        ],
+        truck: [
+          'Cold storage receiving dock opens in 6h.',
+          'Final temperature check scheduled before Dallas arrival.',
+          'Distributor allocation file pushes at 04:00 local.'
+        ]
+      };
+
+      const routeLookup = new Map();
+
+      function haversine(a, b) {
+        const toRad = deg => (deg * Math.PI) / 180;
+        const R = 6371;
+        const dLat = toRad(b[0] - a[0]);
+        const dLng = toRad(b[1] - a[1]);
+        const lat1 = toRad(a[0]);
+        const lat2 = toRad(b[0]);
+        const sinLat = Math.sin(dLat / 2);
+        const sinLng = Math.sin(dLng / 2);
+        const h = sinLat * sinLat + Math.cos(lat1) * Math.cos(lat2) * sinLng * sinLng;
+        return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+      }
+
+      function computeSegments(route) {
+        const coords = Array.isArray(route.path) ? route.path : [];
+        const segments = [];
+        let total = 0;
+        for (let i = 0; i < coords.length - 1; i += 1) {
+          const dist = haversine(coords[i], coords[i + 1]);
+          segments.push(dist);
+          total += dist;
+        }
+        route.segmentLengths = segments;
+        route.totalLength = total || 1;
+      }
+
+      function interpolate(route, ratio) {
+        const coords = route.path || [];
+        if (!coords.length) return [0, 0];
+        if (coords.length === 1) return coords[0];
+        const target = Math.max(0, Math.min(1, ratio)) * route.totalLength;
+        let traveled = 0;
+        for (let i = 0; i < route.segmentLengths.length; i += 1) {
+          const seg = route.segmentLengths[i];
+          if (traveled + seg >= target) {
+            const portion = seg ? (target - traveled) / seg : 0;
+            const [lat1, lng1] = coords[i];
+            const [lat2, lng2] = coords[i + 1];
+            return [lat1 + (lat2 - lat1) * portion, lng1 + (lng2 - lng1) * portion];
+          }
+          traveled += seg;
+        }
+        return coords[coords.length - 1];
+      }
+
+      function getProgress(route, timestamp = Date.now()) {
+        const total = route.arrival - route.departure;
+        if (total <= 0) return 1;
+        if (timestamp <= route.departure) return 0;
+        if (timestamp >= route.arrival) return 1;
+        return (timestamp - route.departure) / total;
+      }
+
+      function formatRelative(deltaMs) {
+        if (!Number.isFinite(deltaMs)) return '—';
+        const abs = Math.abs(deltaMs);
+        if (abs < minute) return deltaMs >= 0 ? 'moments away' : 'just now';
+        const minutes = Math.round(abs / minute);
+        if (minutes < 60) {
+          return deltaMs >= 0 ? `in ${minutes}m` : `${minutes}m ago`;
+        }
+        const hours = Math.floor(abs / hour);
+        const remainingMinutes = Math.round((abs - hours * hour) / minute);
+        if (hours < 48) {
+          const parts = [`${hours}h`];
+          if (remainingMinutes > 0 && remainingMinutes < 60) parts.push(`${remainingMinutes}m`);
+          const value = parts.join(' ');
+          return deltaMs >= 0 ? `in ${value}` : `${value} ago`;
+        }
+        const days = Math.round(abs / (24 * hour));
+        return deltaMs >= 0 ? `in ${days}d` : `${days}d ago`;
+      }
+
+      function buildTooltip(route) {
+        const etaText = formatRelative(route.arrival - Date.now());
+        return `<strong>${route.transportId}</strong><br>${etaText}`;
+      }
+
+      function updateTracker(route) {
+        if (!hasLeaflet || !route.marker) return;
+        const progress = getProgress(route);
+        const coords = interpolate(route, progress);
+        route.marker.setLatLng(coords);
+        const tooltip = route.marker.getTooltip();
+        if (tooltip) {
+          tooltip.setContent(buildTooltip(route));
+        }
+      }
+
+      function formatLastPing(route) {
+        if (!route.signalAt) return 'No recent ping';
+        return `${formatRelative(route.signalAt - Date.now())} via ${route.signalSource}`;
+      }
+
+      function updateActivityList() {
+        if (!activityList) return;
+        if (!networkRoutes.length) {
+          activityList.innerHTML = '<li><span class="hint">No live routes available.</span></li>';
+          return;
+        }
+        activityList.innerHTML = networkRoutes.map(route => {
+          const etaText = formatRelative(route.arrival - Date.now());
+          const lastPing = formatLastPing(route);
+          return `
+            <li data-mode="${route.mode}" data-route="${route.id}">
+              <div class="activity-header">
+                <span class="badge-mode" data-mode="${route.mode}">${route.mode.toUpperCase()}</span>
+                <span class="activity-status">${route.origin.name} → ${route.destination.name}</span>
+              </div>
+              <div class="activity-meta">
+                <span>${route.goods}</span>
+                <span>${route.transportId}</span>
+                <span>ETA ${etaText}</span>
+                <span>${lastPing}</span>
+              </div>
+              <div class="activity-meta">
+                <span>Status: ${route.status}</span>
+                <span>${route.nextMilestone}</span>
+              </div>
+            </li>
+          `;
+        }).join('');
+
+        if (hasLeaflet) {
+          activityList.querySelectorAll('li').forEach(li => {
+            const route = routeLookup.get(li.dataset.route);
+            if (!route || !route.polyline) return;
+            li.addEventListener('mouseenter', () => {
+              route.polyline.setStyle({ weight: route.baseStyle.weight + 1.5, opacity: 1 });
+            });
+            li.addEventListener('mouseleave', () => {
+              route.polyline.setStyle(route.baseStyle);
+            });
+            li.addEventListener('click', () => {
+              if (!route.marker || !route.marker.getLatLng) return;
+              const latLng = route.marker.getLatLng();
+              try {
+                const targetZoom = Math.max(3, map.getZoom());
+                map.flyTo(latLng, targetZoom, { duration: 0.7 });
+              } catch (err) {
+                map.setView(latLng, 3);
+              }
+            });
+          });
+        }
+      }
+
+      function refreshNetworkSnapshots(detail = {}) {
+        const nowTs = Date.now();
+        networkRoutes.forEach(route => {
+          route.signalAt = nowTs - ((8 + Math.random() * 40) * minute);
+          const statuses = statusTemplates[route.mode] || [];
+          const milestones = milestoneTemplates[route.mode] || [];
+          if (statuses.length) {
+            route.status = statuses[Math.floor(Math.random() * statuses.length)];
+          }
+          if (milestones.length) {
+            route.nextMilestone = milestones[Math.floor(Math.random() * milestones.length)];
+          }
+          if (route.baseArrival == null) {
+            route.baseArrival = route.arrival;
+          }
+          const jitter = (Math.random() - 0.5) * hour;
+          route.arrival = Math.min(route.baseArrival + 4 * hour, Math.max(route.baseArrival - 4 * hour, route.baseArrival + jitter));
+          updateTracker(route);
+        });
+        updateActivityList();
+        if (detail?.announce && typeof showToast === 'function') {
+          const scope = detail?.scope === 'vendors' ? 'Vendor intelligence refreshed.' : 'Global freight feeds refreshed.';
+          showToast(scope);
+        }
+      }
+
+      let map;
+      let trackerIcons = {};
+      if (hasLeaflet) {
+        map = L.map(mapEl, {
+          worldCopyJump: true,
+          minZoom: 2,
+          maxZoom: 7,
+          zoomControl: false,
+          inertia: true
+        });
+        map.setView([28, 20], 2);
+        L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          attribution: 'Tiles © Esri — Source: Esri, Earthstar Geographics, NOAA, USGS, OpenStreetMap'
+        }).addTo(map);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        trackerIcons = {
+          sea: L.icon({ iconUrl: '/image/icon_freight_boat.png', iconSize: [40, 40], iconAnchor: [20, 20], tooltipAnchor: [0, -20] }),
+          air: L.icon({ iconUrl: '/image/icon_freight_plane.png', iconSize: [36, 36], iconAnchor: [18, 18], tooltipAnchor: [0, -18] }),
+          rail: L.icon({ iconUrl: '/image/icon_freight_train.png', iconSize: [36, 36], iconAnchor: [18, 18], tooltipAnchor: [0, -18] }),
+          truck: L.icon({ iconUrl: '/image/icon_freight_truck.png', iconSize: [34, 34], iconAnchor: [17, 17], tooltipAnchor: [0, -16] })
+        };
+      } else {
+        mapEl.innerHTML = '<div class="hint">Enable maps to visualize live routes.</div>';
+      }
+
+      networkRoutes.forEach(route => {
+        route.departure = now + route.departureOffsetHours * hour;
+        route.arrival = now + route.arrivalOffsetHours * hour;
+        route.label = `${route.origin.name} → ${route.destination.name}`;
+        route.baseArrival = route.arrival;
+        route.signalAt = now - route.signalMinutesAgo * minute;
+        computeSegments(route);
+        routeLookup.set(route.id, route);
+        if (!hasLeaflet) return;
+        route.baseStyle = { color: routeStyles[route.mode], weight: 3.4, opacity: 0.85, dashArray: dashStyles[route.mode] };
+        route.polyline = L.polyline(route.path, route.baseStyle).addTo(map);
+        L.circleMarker(route.path[0], { radius: 5, className: `route-node route-node--${route.mode}` }).addTo(map).bindTooltip(`Origin: ${route.origin.name}`);
+        L.circleMarker(route.path[route.path.length - 1], { radius: 5, className: `route-node route-node--${route.mode}` }).addTo(map).bindTooltip(`Destination: ${route.destination.name}`);
+        const progress = getProgress(route);
+        const coords = interpolate(route, progress);
+        route.marker = L.marker(coords, { icon: trackerIcons[route.mode], zIndexOffset: 900 }).addTo(map);
+        route.marker.bindTooltip(buildTooltip(route), { direction: 'top', opacity: 0.9 });
+      });
+
+      updateActivityList();
+      if (hasLeaflet) {
+        setInterval(() => {
+          networkRoutes.forEach(updateTracker);
+        }, 20000);
+      }
+      setInterval(updateActivityList, 60000);
+
+      document.addEventListener('global-network-refresh', evt => refreshNetworkSnapshots(evt?.detail || {}));
     })();
 
     (function initSectionScanner() {
