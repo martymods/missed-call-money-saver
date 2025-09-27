@@ -867,6 +867,281 @@
         font-size: 0.85rem;
       }
     }
+    /* --- Warehouse "Flowboard" Kanban + Conveyor --- */
+    .wh-wrap {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+      font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto;
+    }
+
+    .wh-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .wh-kpi {
+      background: #0b122a;
+      color: #e9edff;
+      border: 1px solid #223063;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 12px 30px rgba(12, 24, 80, 0.15);
+    }
+
+    .wh-kpi h4 {
+      margin: 0 0 4px;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .wh-kpi .num {
+      font-weight: 900;
+      font-size: 24px;
+      letter-spacing: 0.2px;
+    }
+
+    .wh-kpi canvas {
+      width: 100%;
+      height: 32px;
+      display: block;
+      margin-top: 6px;
+      filter: contrast(1.2) saturate(1.2);
+    }
+
+    .wh-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .wh-col {
+      background: #0f1430;
+      border: 1px solid #253069;
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wh-col h3 {
+      margin: 0;
+      padding: 12px 14px;
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      color: #aab7ff;
+      border-bottom: 1px solid #223063;
+      background: linear-gradient(180deg, #11173a, #0e1534);
+    }
+
+    .wh-lane {
+      flex: 1;
+      min-height: 180px;
+      padding: 10px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .wh-card {
+      background: #11183b;
+      border: 1px solid #2a3876;
+      border-radius: 12px;
+      padding: 10px;
+      color: #e9edff;
+      box-shadow: 0 10px 24px rgba(12, 24, 80, 0.18);
+    }
+
+    .wh-card small {
+      opacity: 0.8;
+    }
+
+    .wh-card .badge {
+      display: inline-block;
+      background: #e4ffef;
+      color: #085c2c;
+      border: 1px solid #bff3cd;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 11px;
+    }
+
+    .wh-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      translate: -50% -50%;
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    .wh-ghost.animate {
+      animation: wh-move var(--dur, 700ms) cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    @keyframes wh-move {
+      to {
+        transform: translate(var(--dx, 0px), var(--dy, 0px));
+      }
+    }
+
+    .wh-conveyor {
+      margin: 16px 0;
+      background: linear-gradient(180deg, #0a1026, #080e22);
+      border: 1px solid #202a5a;
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 12px 30px rgba(12, 24, 80, 0.15);
+    }
+
+    .belt {
+      height: 10px;
+      border-radius: 999px;
+      background: repeating-linear-gradient(90deg, #15204c 0 28px, #0f1a3f 28px 56px);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #223063;
+    }
+
+    .belt::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+      animation: shine 2.4s linear infinite;
+    }
+
+    @keyframes shine {
+      from {
+        translate: -100% 0;
+      }
+
+      to {
+        translate: 100% 0;
+      }
+    }
+
+    .pallets {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .pallet {
+      width: 100px;
+      height: 50px;
+      border-radius: 10px;
+      background: #11183b;
+      border: 1px solid #2a3876;
+      box-shadow: 0 10px 24px rgba(12, 24, 80, 0.18);
+      color: #e9edff;
+      display: grid;
+      place-items: center;
+    }
+
+    .pallet.run {
+      animation: roll 7s linear infinite;
+    }
+
+    @keyframes roll {
+      from {
+        transform: translateX(-10%);
+      }
+
+      to {
+        transform: translateX(110%);
+      }
+    }
+
+    .scan-wrap {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #223063;
+      background: #050a1f;
+    }
+
+    .scan-video {
+      width: 100%;
+      max-height: 280px;
+      object-fit: cover;
+      display: block;
+      opacity: 0.9;
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #18e7a6, transparent);
+      box-shadow: 0 0 16px #18e7a6;
+    }
+
+    .scan-line.animate {
+      animation: scan 2.2s ease-in-out infinite;
+    }
+
+    @keyframes scan {
+      0% {
+        top: 8%;
+      }
+
+      50% {
+        top: 88%;
+      }
+
+      100% {
+        top: 8%;
+      }
+    }
+
+    .scan-ui {
+      position: absolute;
+      inset: auto 10px 10px 10px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #2a3876;
+      background: #0b2cff;
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn.ghost {
+      background: #0f1430;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pallet.run,
+      .wh-ghost.animate,
+      .belt::before,
+      .scan-line.animate {
+        animation: none;
+      }
+    }
+
+    @media (max-width: 1000px) {
+      .wh-board,
+      .wh-kpis {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .wh-board,
+      .wh-kpis {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
 </head>
@@ -915,6 +1190,68 @@
         <p>Stay ahead of the floor: review health signals, SLA watch-outs, and AI nudges to guide your next move.</p>
         <div class="stats" id="stat-cards"></div>
       </div>
+
+      <section class="wh-wrap" id="warehouse-visual">
+        <div class="wh-kpis" id="kpis">
+          <div class="wh-kpi">
+            <h4>Orders Today</h4>
+            <div class="num" data-kpi="orders">0</div>
+            <canvas data-spark="orders"></canvas>
+          </div>
+          <div class="wh-kpi">
+            <h4>Avg. Pick Time</h4>
+            <div class="num" data-kpi="pickTime">0m</div>
+            <canvas data-spark="pickTime"></canvas>
+          </div>
+          <div class="wh-kpi">
+            <h4>On-Time Ship</h4>
+            <div class="num" data-kpi="ots">0%</div>
+            <canvas data-spark="ots"></canvas>
+          </div>
+          <div class="wh-kpi">
+            <h4>Backorders</h4>
+            <div class="num" data-kpi="bo">0</div>
+            <canvas data-spark="bo"></canvas>
+          </div>
+        </div>
+
+        <div class="wh-board" id="flowboard" aria-label="Warehouse flow">
+          <div class="wh-col" data-col="new">
+            <h3>New</h3>
+            <div class="wh-lane" id="lane-new"></div>
+          </div>
+          <div class="wh-col" data-col="picking">
+            <h3>Picking</h3>
+            <div class="wh-lane" id="lane-picking"></div>
+          </div>
+          <div class="wh-col" data-col="packing">
+            <h3>Packing</h3>
+            <div class="wh-lane" id="lane-packing"></div>
+          </div>
+          <div class="wh-col" data-col="shipped">
+            <h3>Shipped</h3>
+            <div class="wh-lane" id="lane-shipped"></div>
+          </div>
+        </div>
+
+        <div class="wh-conveyor" aria-label="Conveyor">
+          <div class="belt"></div>
+          <div class="pallets">
+            <div class="pallet run">ORD-1842</div>
+            <div class="pallet run" style="animation-delay: .8s">ORD-1843</div>
+            <div class="pallet run" style="animation-delay: 1.6s">ORD-1844</div>
+          </div>
+        </div>
+
+        <div class="scan-wrap" id="scanner">
+          <video class="scan-video" id="scanVideo" playsinline></video>
+          <div class="scan-line" id="scanLine"></div>
+          <div class="scan-ui">
+            <button class="btn" id="btnScan">Start Camera</button>
+            <button class="btn ghost" id="btnFakeScan">Fake Scan</button>
+          </div>
+        </div>
+      </section>
 
       <div class="summary-grid">
         <div class="summary-tile">
@@ -4544,6 +4881,171 @@
     (async () => {
       await restoreSessionFromServer();
       await hydrateAuth();
+    })();
+
+    (function(){
+      const wrap = document.getElementById('warehouse-visual');
+      if (!wrap) return;
+
+      const flowOrders = [
+        { id: 'ORD-1842', items: 3, eta: 'Today', status: 'new' },
+        { id: 'ORD-1843', items: 1, eta: 'Today', status: 'new' },
+        { id: 'ORD-1844', items: 5, eta: 'Today', status: 'new' },
+        { id: 'ORD-1845', items: 2, eta: 'Today', status: 'new' }
+      ];
+      const flowLanes = ['new', 'picking', 'packing', 'shipped'];
+
+      const laneById = id => document.getElementById(`lane-${id}`);
+
+      function makeCard(order) {
+        const el = document.createElement('div');
+        el.className = 'wh-card';
+        el.setAttribute('data-id', order.id);
+        el.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <b>${order.id}</b> <span class="badge">${order.items} items</span>
+          </div>
+          <small>ETA: ${order.eta}</small>
+        `;
+        return el;
+      }
+
+      function renderFlow() {
+        flowLanes.forEach(lane => {
+          const laneEl = laneById(lane);
+          if (laneEl) laneEl.innerHTML = '';
+        });
+        flowOrders.forEach(order => {
+          const laneEl = laneById(order.status);
+          if (laneEl) laneEl.appendChild(makeCard(order));
+        });
+      }
+
+      function flyCard(fromEl, toEl) {
+        if (!fromEl || !toEl) return;
+        const ghost = fromEl.cloneNode(true);
+        const rectFrom = fromEl.getBoundingClientRect();
+        const rectTo = toEl.getBoundingClientRect();
+        ghost.classList.add('wh-ghost');
+        ghost.style.left = `${rectFrom.left + rectFrom.width / 2}px`;
+        ghost.style.top = `${rectFrom.top + rectFrom.height / 2}px`;
+        document.body.appendChild(ghost);
+        const dx = rectTo.left + rectTo.width / 2 - (rectFrom.left + rectFrom.width / 2);
+        const dy = rectTo.top + rectTo.height / 2 - (rectFrom.top + rectFrom.height / 2);
+        ghost.style.setProperty('--dx', `${dx}px`);
+        ghost.style.setProperty('--dy', `${dy}px`);
+        ghost.classList.add('animate');
+        setTimeout(() => ghost.remove(), 720);
+      }
+
+      renderFlow();
+
+      let cursor = 0;
+      function advanceFlow() {
+        const order = flowOrders[cursor % flowOrders.length];
+        const currentIndex = flowLanes.indexOf(order.status);
+        if (currentIndex < flowLanes.length - 1) {
+          const fromLane = laneById(flowLanes[currentIndex]);
+          const fromCard = fromLane?.querySelector(`.wh-card[data-id="${order.id}"]`);
+          order.status = flowLanes[currentIndex + 1];
+          renderFlow();
+          const toLane = laneById(flowLanes[currentIndex + 1]);
+          const toCard = toLane?.querySelector(`.wh-card[data-id="${order.id}"]`);
+          flyCard(fromCard, toCard);
+          if (order.status === 'picking') incrementKpi('orders', 1);
+          if (order.status === 'shipped') incrementKpi('ots', Math.random() < 0.9 ? 1 : 0);
+        } else {
+          order.status = 'new';
+          renderFlow();
+        }
+        cursor += 1;
+      }
+
+      const kpiValues = { orders: 0, pickTime: 9, ots: 92, bo: 3 };
+      const sparkHistory = { orders: [], pickTime: [], ots: [], bo: [] };
+
+      function drawSpark(name) {
+        const canvas = document.querySelector(`canvas[data-spark="${name}"]`);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const width = (canvas.width = canvas.clientWidth * window.devicePixelRatio);
+        const height = (canvas.height = canvas.clientHeight * window.devicePixelRatio);
+        const data = sparkHistory[name].slice(-40);
+        if (!data.length) return;
+        const min = Math.min(...data);
+        const max = Math.max(...data);
+        ctx.clearRect(0, 0, width, height);
+        ctx.lineWidth = 2 * window.devicePixelRatio;
+        ctx.strokeStyle = '#6ae3ff';
+        ctx.beginPath();
+        data.forEach((value, index) => {
+          const x = (index / Math.max(1, data.length - 1)) * width;
+          const y = height - ((value - min) / Math.max(1, max - min)) * height;
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+
+      function animateKpi(name, target, suffix = '') {
+        const el = document.querySelector(`.num[data-kpi="${name}"]`);
+        if (!el) return;
+        const startValue = Number(String(el.textContent).replace(/[^\d]/g, '')) || 0;
+        const start = performance.now();
+        const duration = 400;
+        function step(now) {
+          const progress = Math.min(1, (now - start) / duration);
+          el.textContent = `${Math.round(startValue + (target - startValue) * progress)}${suffix}`;
+          if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+
+      function incrementKpi(name, delta) {
+        kpiValues[name] = Math.max(0, (kpiValues[name] || 0) + delta);
+        sparkHistory[name].push(kpiValues[name]);
+        drawSpark(name);
+        const suffix = name === 'pickTime' ? 'm' : name === 'ots' ? '%' : '';
+        animateKpi(name, kpiValues[name], suffix);
+      }
+
+      ['orders', 'pickTime', 'ots', 'bo'].forEach(key => {
+        for (let i = 0; i < 20; i += 1) {
+          const base = key === 'ots' ? 88 : key === 'bo' ? 3 : 5;
+          sparkHistory[key].push(Math.max(1, Math.round(Math.random() * 10 + base)));
+        }
+        drawSpark(key);
+        const suffix = key === 'pickTime' ? 'm' : key === 'ots' ? '%' : '';
+        animateKpi(key, kpiValues[key], suffix);
+      });
+
+      setInterval(advanceFlow, 1600);
+
+      const scanButton = document.getElementById('btnScan');
+      const fakeButton = document.getElementById('btnFakeScan');
+      const scanVideo = document.getElementById('scanVideo');
+      const scanLine = document.getElementById('scanLine');
+
+      scanButton?.addEventListener('click', async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+          if (scanVideo) {
+            scanVideo.srcObject = stream;
+            await scanVideo.play();
+          }
+          scanLine?.classList.add('animate');
+        } catch (error) {
+          alert('Camera not available.');
+        }
+      });
+
+      fakeButton?.addEventListener('click', () => {
+        scanLine?.classList.add('animate');
+        setTimeout(() => {
+          scanLine?.classList.remove('animate');
+          alert('✓ Code recognized → Item received');
+        }, 1600);
+      });
     })();
 
     handleNavigation();
