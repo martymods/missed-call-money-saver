@@ -3706,9 +3706,12 @@
       owner: 'Warehouse Owner / Merchant',
     };
     const DEFAULT_PROFILE_ROLE = 'freelancer';
-    const PROFILE_PHOTO_MAX_SIZE = 5 * 1024 * 1024; // 5MB guard before compression
+    const PROFILE_PHOTO_LARGE_FILE_THRESHOLD = 5 * 1024 * 1024; // Trigger more aggressive compression above 5MB
+    const PROFILE_PHOTO_HARD_LIMIT = 40 * 1024 * 1024; // Prevent extreme files from exhausting memory
     const PROFILE_PHOTO_CANVAS_MAX = 512;
+    const PROFILE_PHOTO_AGGRESSIVE_CANVAS_MAX = 400;
     const PROFILE_PHOTO_JPEG_QUALITY = 0.72;
+    const PROFILE_PHOTO_JPEG_QUALITY_AGGRESSIVE = 0.62;
     const PROFILE_PHOTO_PNG_QUALITY = 0.85;
     const MAX_TASK_ACTIVITY = 12;
 
@@ -4250,22 +4253,30 @@
       });
     }
 
-    async function compressImageFile(file) {
+    async function compressImageFile(file, options = {}) {
       if (!file) return null;
+      const { aggressive = false } = options;
       const dataUrl = await readFileAsDataURL(file);
       const img = await loadImage(dataUrl);
       const canvas = document.createElement('canvas');
       const maxSide = Math.max(img.width, img.height) || 1;
-      const scale = Math.min(1, PROFILE_PHOTO_CANVAS_MAX / maxSide);
+      const canvasLimit = aggressive
+        ? Math.max(256, Math.min(PROFILE_PHOTO_CANVAS_MAX, PROFILE_PHOTO_AGGRESSIVE_CANVAS_MAX))
+        : PROFILE_PHOTO_CANVAS_MAX;
+      const scale = Math.min(1, canvasLimit / maxSide);
       const width = Math.max(1, Math.round(img.width * scale));
       const height = Math.max(1, Math.round(img.height * scale));
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
-      const preferPng = file.type === 'image/png' && width * height <= 400000;
+      const preferPng = !aggressive && file.type === 'image/png' && width * height <= 400000;
       const mimeType = preferPng ? 'image/png' : 'image/jpeg';
-      const quality = preferPng ? PROFILE_PHOTO_PNG_QUALITY : PROFILE_PHOTO_JPEG_QUALITY;
+      const quality = preferPng
+        ? PROFILE_PHOTO_PNG_QUALITY
+        : aggressive
+          ? PROFILE_PHOTO_JPEG_QUALITY_AGGRESSIVE
+          : PROFILE_PHOTO_JPEG_QUALITY;
       const compressedDataUrl = canvas.toDataURL(mimeType, quality);
       const [, base64 = ''] = compressedDataUrl.split(',');
       return {
@@ -4293,14 +4304,18 @@
         setPhotoPreview(preview, null, fallbackText);
         return;
       }
-      if (file.size > PROFILE_PHOTO_MAX_SIZE) {
-        showToast('Choose an image smaller than 5MB.');
+      if (file.size > PROFILE_PHOTO_HARD_LIMIT) {
+        showToast('That image is extremely large. Pick a photo under 40MB.');
         input.value = '';
         setPhotoPreview(preview, null, fallbackText);
         return;
       }
+      const isLargeFile = file.size > PROFILE_PHOTO_LARGE_FILE_THRESHOLD;
+      if (isLargeFile) {
+        showToast('Large image detected — optimizing before upload…');
+      }
       try {
-        const photo = await compressImageFile(file);
+        const photo = await compressImageFile(file, { aggressive: isLargeFile });
         if (!photo) {
           throw new Error('compress_failed');
         }
