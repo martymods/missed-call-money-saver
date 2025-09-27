@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Warehouse HQ – Logistics Command Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1694,7 +1694,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
+      padding: clamp(1rem, 4vw, 1.5rem);
       z-index: 90;
     }
 
@@ -1713,14 +1713,17 @@
       position: relative;
       z-index: 1;
       width: min(420px, 100%);
+      max-width: 100%;
       background: rgba(15, 23, 42, 0.95);
       border: 1px solid rgba(148, 163, 184, 0.35);
       border-radius: 1.2rem;
-      padding: 1.5rem;
+      padding: clamp(1.25rem, 4vw, 1.5rem);
       box-shadow: 0 30px 60px rgba(2, 6, 23, 0.45);
       display: flex;
       flex-direction: column;
       gap: 1rem;
+      max-height: calc(100vh - clamp(2rem, 8vw, 4rem));
+      overflow-y: auto;
     }
 
     .scan-modal-content h3 {
@@ -1754,6 +1757,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      width: 100%;
+      max-height: min(70vh, 520px);
     }
 
     .scan-modal-stage video {
@@ -1777,6 +1782,26 @@
     .scan-modal-line.animate {
       display: block;
       animation: scan 2.2s ease-in-out infinite;
+    }
+
+    @media (max-width: 600px) {
+      .section-scan-modal {
+        align-items: flex-start;
+      }
+
+      .section-scan-modal .scan-modal-content {
+        margin: 0 auto;
+        border-radius: 1rem;
+      }
+
+      .scan-modal-stage {
+        aspect-ratio: auto;
+        height: clamp(240px, 60vh, 360px);
+      }
+
+      .scan-modal-stage video {
+        height: 100%;
+      }
     }
 
     .scan-modal-hint {
@@ -6834,6 +6859,8 @@
       let scanFrameHandle = null;
       let lastDetectedCode = '';
       let lastDetectedAt = 0;
+      let failStreak = 0;
+      let jsQrReady = typeof window.jsQR === 'function';
 
       const contexts = {
         inventory: {
@@ -7020,6 +7047,7 @@
               ]);
               codeReader = new browserMod.BrowserMultiFormatReader(hints, 500);
               NotFoundExceptionCtor = libraryMod.NotFoundException;
+              failStreak = 0;
               return true;
             } catch (error) {
               console.error('Failed to initialize quick scanner', error);
@@ -7035,6 +7063,66 @@
           return false;
         }
         return true;
+      }
+
+      async function ensureJsQr() {
+        if (jsQrReady) return true;
+        try {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+            script.async = true;
+            script.onload = () => resolve();
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+          jsQrReady = typeof window.jsQR === 'function';
+        } catch (error) {
+          console.warn('Failed to load jsQR fallback', error);
+          jsQrReady = false;
+        }
+        return jsQrReady;
+      }
+
+      async function decodeFrame(width, height) {
+        if (!codeReader) return null;
+        try {
+          const result = await codeReader.decodeFromCanvas(captureCanvas);
+          if (result) {
+            failStreak = 0;
+            const rawText = typeof result.getText === 'function' ? result.getText() : result.text;
+            return {
+              text: rawText,
+              format: typeof result.getBarcodeFormat === 'function' ? result.getBarcodeFormat()?.toString?.() : result.format,
+              engine: 'ZXing'
+            };
+          }
+        } catch (error) {
+          if (NotFoundExceptionCtor && error instanceof NotFoundExceptionCtor) {
+            failStreak += 1;
+          } else {
+            console.warn('Quick scan decode error', error);
+          }
+        }
+
+        if (failStreak >= 4 && await ensureJsQr()) {
+          try {
+            const imageData = captureCtx.getImageData(0, 0, width, height);
+            const qr = window.jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+            if (qr?.data) {
+              failStreak = 0;
+              return {
+                text: qr.data,
+                format: 'QR_CODE',
+                engine: 'jsQR fallback'
+              };
+            }
+          } catch (error) {
+            console.debug('Quick scan fallback decode failed', error);
+          }
+        }
+
+        return null;
       }
 
       async function scanFrame() {
@@ -7059,23 +7147,17 @@
           captureCanvas.height = height;
         }
         captureCtx.drawImage(videoEl, 0, 0, width, height);
-        try {
-          const result = await codeReader.decodeFromCanvas(captureCanvas);
-          if (result) {
-            const rawText = typeof result.getText === 'function' ? result.getText() : result.text;
-            const normalized = String(rawText || '').trim();
-            if (normalized) {
-              const now = Date.now();
-              if (normalized !== lastDetectedCode || now - lastDetectedAt > 1200) {
-                lastDetectedCode = normalized;
-                lastDetectedAt = now;
-                handleScan(normalized);
-              }
+        const decoded = await decodeFrame(width, height);
+        if (decoded?.text) {
+          const normalized = String(decoded.text || '').trim();
+          if (normalized) {
+            const now = Date.now();
+            if (normalized !== lastDetectedCode || now - lastDetectedAt > 1200) {
+              lastDetectedCode = normalized;
+              lastDetectedAt = now;
+              handleScan(normalized, { engine: decoded.engine });
+              await new Promise(resolve => setTimeout(resolve, 160));
             }
-          }
-        } catch (error) {
-          if (!NotFoundExceptionCtor || !(error instanceof NotFoundExceptionCtor)) {
-            console.warn('Quick scan decode error', error);
           }
         }
         if (scanning) {
@@ -7085,6 +7167,7 @@
 
       function stopCamera() {
         scanning = false;
+        failStreak = 0;
         if (scanFrameHandle != null) {
           cancelAnimationFrame(scanFrameHandle);
           scanFrameHandle = null;
@@ -7134,7 +7217,7 @@
           lineEl?.classList.add('animate');
           codeReader.reset();
           scanning = true;
-          setStatus('Camera active. Align the sticker inside the frame.', 'info');
+          setStatus('Scanning… move items through the frame.', 'info');
           scanFrameHandle = requestAnimationFrame(scanFrame);
         } catch (error) {
           console.warn('Camera start failed', error);
@@ -7183,7 +7266,7 @@
         }, 50);
       }
 
-      function handleScan(raw, { simulated = false } = {}) {
+      function handleScan(raw, { simulated = false, engine = '' } = {}) {
         if (!currentContext) {
           setStatus('Choose a list to scan into first.', 'error');
           return;
@@ -7197,7 +7280,9 @@
           const result = currentContext.handler(code);
           const message = typeof result === 'string' ? result : result?.message || `Captured ${code}`;
           const variant = result?.variant || 'success';
-          const displayMessage = simulated ? `${message} (simulated)` : message;
+          const displayMessage = simulated
+            ? `${message} (simulated${engine ? ` via ${engine}` : ''})`
+            : `${message}${engine ? ` (${engine})` : ''}`;
           setStatus(displayMessage, variant);
           if (result?.toast && typeof showToast === 'function') {
             showToast(message);
