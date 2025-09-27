@@ -1370,6 +1370,12 @@
     .integration-card .tagline { font-size: 0.8rem; color: var(--text-muted); }
     .integration-card button { align-self: flex-start; }
     .account-status { margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-muted); }
+    .profile-photo-field { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; }
+    .profile-photo-preview { width: 100%; max-width: 160px; aspect-ratio: 1 / 1; border-radius: 1rem; border: 1px dashed rgba(148, 163, 184, 0.45); background: rgba(15, 23, 42, 0.55); display: flex; align-items: center; justify-content: center; overflow: hidden; color: rgba(148, 163, 184, 0.9); font-size: 0.85rem; padding: 0.5rem; box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.45); }
+    .profile-photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-photo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+    .profile-photo-actions .secondary { padding: 0.35rem 0.75rem; }
+    .profile-role-hint { font-size: 0.75rem; color: rgba(148, 163, 184, 0.85); margin-top: -0.35rem; }
     .demo-credentials { margin-top: 0.75rem; font-size: 0.9rem; background: rgba(15, 23, 42, 0.78); border: 1px solid var(--border); border-radius: 0.85rem; padding: 0.75rem 1rem; }
     .demo-credentials ul { margin: 0.35rem 0 0.35rem 1.1rem; padding: 0; }
     .demo-credentials code { font-family: var(--font-mono, 'JetBrains Mono', monospace); font-size: 0.85rem; }
@@ -3058,6 +3064,32 @@
             <label>Password
               <input type="password" name="password" minlength="8" required placeholder="At least 8 characters" />
             </label>
+            <label>Role in the Network
+              <select name="role" required>
+                <option value="freelancer">Freelancer / Contractor</option>
+                <option value="employee">Warehouse Employee</option>
+                <option value="owner">Warehouse Owner / Merchant</option>
+              </select>
+            </label>
+            <p class="profile-role-hint">Owners operate like merchants. Freelancers & employees mirror the driver experience so brands know who is on the floor.</p>
+            <label>Profile Headline
+              <input type="text" name="profileHeadline" placeholder="Ex: Owner • Dreamworld Fulfillment" />
+            </label>
+            <label>Service Area / Focus
+              <input type="text" name="profileServiceArea" placeholder="Ex: Tri-state cross-dock & returns" />
+            </label>
+            <label>About You
+              <textarea name="profileBio" rows="3" placeholder="Summarize your warehouse skills or facility capabilities."></textarea>
+            </label>
+            <div class="profile-photo-field">
+              <div class="profile-photo-preview" id="register-photo-preview">
+                <span>Add a photo to personalize your profile</span>
+              </div>
+              <label>Profile Photo
+                <input type="file" id="register-photo" accept="image/*" />
+              </label>
+              <p class="hint">Images are resized before saving so your account stays lightweight.</p>
+            </div>
             <label class="mini-input"><input type="checkbox" name="enableTotp" /> Enable authenticator set up right away</label>
             <button class="cta" type="submit">Register &amp; Launch</button>
           </form>
@@ -3098,6 +3130,45 @@
           <button class="cta" type="button" id="enable-totp">Generate authenticator secret</button>
           <p class="hint">Scan the QR code we provide or copy the secret into your authenticator app.</p>
         </div>
+      </div>
+
+      <div class="panel light" id="profile-panel" style="display:none;">
+        <h3>Warehouse Identity</h3>
+        <p class="hint">Create a DoorDash-style profile. Owners act as merchants, while freelancers and employees mirror the driver view.</p>
+        <form id="profile-form">
+          <label>Display Name
+            <input type="text" name="name" placeholder="Fleet Captain" />
+          </label>
+          <label>Role in the Network
+            <select name="role">
+              <option value="freelancer">Freelancer / Contractor</option>
+              <option value="employee">Warehouse Employee</option>
+              <option value="owner">Warehouse Owner / Merchant</option>
+            </select>
+          </label>
+          <p class="profile-role-hint">Owners publish merchant-facing details. Everyone else shares their driver-ready skills and availability.</p>
+          <label>Profile Headline
+            <input type="text" name="profileHeadline" placeholder="Ex: Owner • Dreamworld Fulfillment" />
+          </label>
+          <label>Service Area / Focus
+            <input type="text" name="profileServiceArea" placeholder="Ex: Tri-state cross-dock & returns" />
+          </label>
+          <label>About You
+            <textarea name="profileBio" rows="3" placeholder="Let brands know how you run your warehouse or shifts."></textarea>
+          </label>
+          <div class="profile-photo-field">
+            <div class="profile-photo-preview" id="profile-photo-preview">
+              <span>Add a photo so teams recognize you</span>
+            </div>
+            <div class="profile-photo-actions">
+              <input type="file" id="profile-photo-input" accept="image/*" style="display:none;" />
+              <button class="secondary" type="button" id="profile-photo-trigger">Upload photo</button>
+              <button class="secondary" type="button" id="profile-remove-photo">Remove photo</button>
+            </div>
+            <p class="hint">Photos are compressed before saving so MongoDB stays lean.</p>
+          </div>
+          <button class="cta" type="submit">Save profile</button>
+        </form>
       </div>
 
       <div class="panel">
@@ -3261,6 +3332,18 @@
     const MANUAL_FORM_HINT = 'Use this form for manual keys or fallback credentials. One-click providers finish automatically below.';
     const integrationFormHint = document.getElementById('integration-form-hint');
     const HEX_COLOR_REGEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+    const PROFILE_ROLE_LABELS = {
+      freelancer: 'Freelancer / Contractor',
+      employee: 'Warehouse Employee',
+      owner: 'Warehouse Owner / Merchant',
+    };
+    const DEFAULT_PROFILE_ROLE = 'freelancer';
+    const PROFILE_PHOTO_MAX_SIZE = 5 * 1024 * 1024; // 5MB guard before compression
+    const PROFILE_PHOTO_CANVAS_MAX = 512;
+    const PROFILE_PHOTO_JPEG_QUALITY = 0.72;
+    const PROFILE_PHOTO_PNG_QUALITY = 0.85;
+    const photoState = { register: null, profile: null };
+    let profilePhotoRemoveRequested = false;
     let lastInventoryRows = [];
     const SCAN_CHANNEL_NAME = 'warehouse-hq-scan';
     const SCAN_STORAGE_EVENT_KEY = 'warehouse-hq-scan-payload';
@@ -3322,13 +3405,133 @@
       }
     }
 
+    function ensureUserProfile(user) {
+      if (!user || typeof user !== 'object') return null;
+      const profile = user.profile && typeof user.profile === 'object' ? user.profile : {};
+      return {
+        ...user,
+        profile: {
+          role: (profile.role || DEFAULT_PROFILE_ROLE),
+          headline: profile.headline || '',
+          serviceArea: profile.serviceArea || '',
+          bio: profile.bio || '',
+          photo: profile.photo && typeof profile.photo === 'object' ? profile.photo : null,
+        },
+      };
+    }
+
+    function roleLabel(role) {
+      const key = (role || '').toLowerCase();
+      return PROFILE_ROLE_LABELS[key] || PROFILE_ROLE_LABELS[DEFAULT_PROFILE_ROLE];
+    }
+
+    function setPhotoPreview(previewEl, photo, fallbackText) {
+      if (!previewEl) return;
+      previewEl.innerHTML = '';
+      if (photo && photo.url) {
+        const img = document.createElement('img');
+        img.src = photo.url;
+        img.alt = 'Profile photo preview';
+        img.loading = 'lazy';
+        previewEl.appendChild(img);
+      } else {
+        const span = document.createElement('span');
+        span.textContent = fallbackText;
+        previewEl.appendChild(span);
+      }
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    async function compressImageFile(file) {
+      if (!file) return null;
+      const dataUrl = await readFileAsDataURL(file);
+      const img = await loadImage(dataUrl);
+      const canvas = document.createElement('canvas');
+      const maxSide = Math.max(img.width, img.height) || 1;
+      const scale = Math.min(1, PROFILE_PHOTO_CANVAS_MAX / maxSide);
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      const preferPng = file.type === 'image/png' && width * height <= 400000;
+      const mimeType = preferPng ? 'image/png' : 'image/jpeg';
+      const quality = preferPng ? PROFILE_PHOTO_PNG_QUALITY : PROFILE_PHOTO_JPEG_QUALITY;
+      const compressedDataUrl = canvas.toDataURL(mimeType, quality);
+      const [, base64 = ''] = compressedDataUrl.split(',');
+      return {
+        mimeType,
+        data: base64,
+        width,
+        height,
+        approximateSize: Math.ceil(base64.length * 0.75),
+      };
+    }
+
+    async function processPhotoInput(input, key, fallbackText) {
+      const previewId = key === 'profile' ? 'profile-photo-preview' : 'register-photo-preview';
+      const preview = document.getElementById(previewId);
+      if (!input || !input.files || !input.files.length) {
+        photoState[key] = null;
+        if (key === 'profile') profilePhotoRemoveRequested = false;
+        setPhotoPreview(preview, null, fallbackText);
+        return;
+      }
+      const file = input.files[0];
+      if (!file.type.startsWith('image/')) {
+        showToast('Select an image file to continue.');
+        input.value = '';
+        setPhotoPreview(preview, null, fallbackText);
+        return;
+      }
+      if (file.size > PROFILE_PHOTO_MAX_SIZE) {
+        showToast('Choose an image smaller than 5MB.');
+        input.value = '';
+        setPhotoPreview(preview, null, fallbackText);
+        return;
+      }
+      try {
+        const photo = await compressImageFile(file);
+        if (!photo) {
+          throw new Error('compress_failed');
+        }
+        photoState[key] = photo;
+        const dataUrl = `data:${photo.mimeType};base64,${photo.data}`;
+        setPhotoPreview(preview, { url: dataUrl }, fallbackText);
+        if (key === 'profile') profilePhotoRemoveRequested = false;
+      } catch (err) {
+        console.error('Image compression failed', err);
+        showToast('We could not process that image. Try a different file.');
+        photoState[key] = null;
+        input.value = '';
+        setPhotoPreview(preview, null, fallbackText);
+      }
+    }
+
+    function resetRegisterPhoto() {
+      const preview = document.getElementById('register-photo-preview');
+      const input = document.getElementById('register-photo');
+      if (input) input.value = '';
+      photoState.register = null;
+      setPhotoPreview(preview, null, 'Add a photo to personalize your profile');
+    }
+
     function loadAuth(){
       try {
         const raw = localStorage.getItem(AUTH_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
           if (parsed && parsed.token && parsed.user) {
-            return parsed;
+            return { token: parsed.token, user: ensureUserProfile(parsed.user) };
           }
         }
       } catch (err){
@@ -5025,6 +5228,7 @@
       persistAuth();
       updateAccountStatus();
       renderTotpUi();
+      renderProfilePanel();
       loadIntegrations();
       restoreSessionFromServer();
       if (wasAuthenticated){
@@ -5033,10 +5237,11 @@
     }
 
     function setAuthState({ token = null, user = null }){
-      authState = { token, user };
+      const normalizedUser = user ? ensureUserProfile(user) : null;
+      authState = { token, user: normalizedUser };
       persistAuth();
-      if (user && user.brandTheme){
-        state.branding = { ...state.branding, ...user.brandTheme };
+      if (normalizedUser && normalizedUser.brandTheme){
+        state.branding = { ...state.branding, ...normalizedUser.brandTheme };
         persist();
         applyBranding();
       }
@@ -5045,6 +5250,7 @@
         loadIntegrations();
       }
       renderTotpUi();
+      renderProfilePanel();
     }
 
     async function restoreSessionFromServer(){
@@ -5093,6 +5299,12 @@
       if (!status || !logoutBtn) return;
       if (authState && authState.user){
         const parts = [`Signed in as ${authState.user.email}`];
+        if (authState.user.profile){
+          parts.push(roleLabel(authState.user.profile.role));
+          if (authState.user.profile.headline){
+            parts.push(authState.user.profile.headline);
+          }
+        }
         if (authState.user.totpEnabled) parts.push('2FA enabled');
         status.textContent = parts.join(' • ');
         logoutBtn.style.display = 'inline-flex';
@@ -5137,6 +5349,44 @@
         `;
         container.querySelector('#enable-totp').addEventListener('click', enableTotp);
       }
+    }
+
+    function renderProfilePanel(){
+      const panel = document.getElementById('profile-panel');
+      const form = document.getElementById('profile-form');
+      if (!panel || !form){
+        return;
+      }
+      const preview = document.getElementById('profile-photo-preview');
+      if (!authState || !authState.token || !authState.user){
+        panel.style.display = 'none';
+        form.reset();
+        setPhotoPreview(preview, null, 'Add a photo so teams recognize you');
+        photoState.profile = null;
+        profilePhotoRemoveRequested = false;
+        const fileInput = document.getElementById('profile-photo-input');
+        if (fileInput) fileInput.value = '';
+        return;
+      }
+      panel.style.display = '';
+      const user = ensureUserProfile(authState.user);
+      const nameInput = form.querySelector('input[name="name"]');
+      if (nameInput) nameInput.value = user.name || '';
+      const roleSelect = form.querySelector('select[name="role"]');
+      if (roleSelect){
+        roleSelect.value = user.profile?.role || DEFAULT_PROFILE_ROLE;
+      }
+      const headlineInput = form.querySelector('input[name="profileHeadline"]');
+      if (headlineInput) headlineInput.value = user.profile?.headline || '';
+      const serviceAreaInput = form.querySelector('input[name="profileServiceArea"]');
+      if (serviceAreaInput) serviceAreaInput.value = user.profile?.serviceArea || '';
+      const bioInput = form.querySelector('textarea[name="profileBio"]');
+      if (bioInput) bioInput.value = user.profile?.bio || '';
+      setPhotoPreview(preview, user.profile?.photo || null, 'Add a photo so teams recognize you');
+      const fileInput = document.getElementById('profile-photo-input');
+      if (fileInput) fileInput.value = '';
+      photoState.profile = null;
+      profilePhotoRemoveRequested = false;
     }
 
     function sanitizeBrandThemeForUpload(){
@@ -5252,9 +5502,38 @@
       evt.preventDefault();
       const form = evt.target;
       const formData = new FormData(form);
-      const payload = Object.fromEntries(formData.entries());
-      payload.enableTotp = formData.get('enableTotp') === 'on';
+      const payload = {};
+      formData.forEach((value, key) => {
+        if (value instanceof File) return;
+        if (key === 'password'){
+          payload[key] = value;
+        } else if (typeof value === 'string'){
+          payload[key] = value.trim();
+        } else {
+          payload[key] = value;
+        }
+      });
+      payload.enableTotp = formData.has('enableTotp');
       payload.brandTheme = sanitizeBrandThemeForUpload();
+      const profile = {
+        role: (payload.role || DEFAULT_PROFILE_ROLE).toLowerCase(),
+        profileHeadline: payload.profileHeadline || '',
+        profileServiceArea: payload.profileServiceArea || '',
+        profileBio: payload.profileBio || '',
+      };
+      payload.role = profile.role;
+      payload.profile = {
+        role: profile.role,
+        headline: profile.profileHeadline,
+        serviceArea: profile.profileServiceArea,
+        bio: profile.profileBio,
+      };
+      delete payload.profileHeadline;
+      delete payload.profileServiceArea;
+      delete payload.profileBio;
+      if (photoState.register){
+        payload.profilePhoto = photoState.register;
+      }
       try {
         const res = await fetch('/api/users/register', {
           method: 'POST',
@@ -5264,13 +5543,20 @@
         });
         const data = await res.json();
         if (!res.ok){
-          showToast(data.error || 'Unable to register');
+          let message = data.error || 'Unable to register';
+          if (data.error === 'photo_too_large'){
+            message = 'Profile photo is still too large after compression. Try a smaller image.';
+          } else if (data.error === 'invalid_photo'){
+            message = 'We could not read that profile photo. Try uploading a different file.';
+          }
+          showToast(message);
           return;
         }
         setAuthState({ token: data.token, user: data.user });
         renderTotpUi(data.totp);
         showToast('Account created. Welcome aboard!');
         form.reset();
+        resetRegisterPhoto();
       } catch (err){
         showToast('Registration failed. Try again shortly.');
       }
@@ -5301,6 +5587,72 @@
       }
     }
 
+    async function saveProfile(evt){
+      evt.preventDefault();
+      if (!authState || !authState.token){
+        showToast('Sign in to update your profile.');
+        return;
+      }
+      const form = evt.target;
+      const formData = new FormData(form);
+      const payload = {};
+      formData.forEach((value, key) => {
+        if (value instanceof File) return;
+        if (typeof value === 'string'){
+          payload[key] = value.trim();
+        } else {
+          payload[key] = value;
+        }
+      });
+      const role = (payload.role || DEFAULT_PROFILE_ROLE).toLowerCase();
+      payload.role = role;
+      payload.profile = {
+        role,
+        headline: payload.profileHeadline || '',
+        serviceArea: payload.profileServiceArea || '',
+        bio: payload.profileBio || '',
+      };
+      delete payload.profileHeadline;
+      delete payload.profileServiceArea;
+      delete payload.profileBio;
+      if (photoState.profile){
+        payload.profilePhoto = photoState.profile;
+      } else if (profilePhotoRemoveRequested){
+        payload.removePhoto = true;
+      }
+      try {
+        const res = await fetch('/api/users/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          credentials: 'include',
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok){
+          let message = data.error || 'Unable to update profile.';
+          if (data.error === 'photo_too_large'){
+            message = 'Profile photo is too large even after compression. Try a smaller image.';
+          } else if (data.error === 'invalid_photo'){
+            message = 'We could not read that image. Try uploading a different file.';
+          }
+          showToast(message);
+          return;
+        }
+        authState.user = ensureUserProfile(data.user);
+        persistAuth();
+        renderProfilePanel();
+        updateAccountStatus();
+        photoState.profile = null;
+        profilePhotoRemoveRequested = false;
+        const fileInput = document.getElementById('profile-photo-input');
+        if (fileInput) fileInput.value = '';
+        showToast('Profile updated.');
+      } catch (err){
+        console.error('Profile update failed', err);
+        showToast('Profile update unavailable right now.');
+      }
+    }
+
     async function logoutAccount(){
       try {
         await fetch('/api/users/logout', {
@@ -5315,6 +5667,7 @@
       persistAuth();
       updateAccountStatus();
       renderTotpUi();
+      renderProfilePanel();
       loadIntegrations();
       showToast('Signed out.');
     }
@@ -6900,9 +7253,49 @@
       if (shopEl) shopEl.textContent = DEMO_SHOP_DOMAIN;
     }
 
-    document.getElementById('register-form').addEventListener('submit', registerAccount);
-    document.getElementById('login-form').addEventListener('submit', loginAccount);
-    document.getElementById('logout-btn').addEventListener('click', logoutAccount);
+    const registerPhotoInput = document.getElementById('register-photo');
+    if (registerPhotoInput){
+      registerPhotoInput.addEventListener('change', evt => {
+        processPhotoInput(evt.target, 'register', 'Add a photo to personalize your profile');
+      });
+    }
+
+    const profilePhotoInput = document.getElementById('profile-photo-input');
+    if (profilePhotoInput){
+      profilePhotoInput.addEventListener('change', evt => {
+        processPhotoInput(evt.target, 'profile', 'Add a photo so teams recognize you');
+      });
+    }
+
+    const profilePhotoTrigger = document.getElementById('profile-photo-trigger');
+    if (profilePhotoTrigger){
+      profilePhotoTrigger.addEventListener('click', () => {
+        profilePhotoInput?.click();
+      });
+    }
+
+    const profileRemoveBtn = document.getElementById('profile-remove-photo');
+    if (profileRemoveBtn){
+      profileRemoveBtn.addEventListener('click', () => {
+        photoState.profile = null;
+        profilePhotoRemoveRequested = true;
+        setPhotoPreview(document.getElementById('profile-photo-preview'), null, 'Add a photo so teams recognize you');
+        if (profilePhotoInput) profilePhotoInput.value = '';
+        showToast('Photo will be removed once you save your profile.');
+      });
+    }
+
+    const registerForm = document.getElementById('register-form');
+    if (registerForm){
+      registerForm.addEventListener('submit', registerAccount);
+    }
+    if (loginForm){
+      loginForm.addEventListener('submit', loginAccount);
+    }
+    const logoutBtnEl = document.getElementById('logout-btn');
+    logoutBtnEl?.addEventListener('click', logoutAccount);
+    const profileFormEl = document.getElementById('profile-form');
+    profileFormEl?.addEventListener('submit', saveProfile);
     document.getElementById('integration-form').addEventListener('submit', saveIntegration);
     document.getElementById('support-form').addEventListener('submit', submitSupportReport);
 
@@ -6928,6 +7321,7 @@
     initBrandingControls();
     updateAccountStatus();
     renderTotpUi();
+    renderProfilePanel();
     fetchIntegrationCatalog();
     loadIntegrations();
     (async () => {
