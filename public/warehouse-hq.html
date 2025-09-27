@@ -483,6 +483,236 @@
       color: var(--text-muted);
     }
 
+    .vecna-showcase {
+      margin-top: 1.75rem;
+      display: grid;
+      gap: 1.75rem;
+    }
+
+    .vecna-hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 1.5rem;
+      min-height: 260px;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      background: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.2), transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.15), transparent 65%),
+        rgba(15, 23, 42, 0.92);
+      box-shadow: 0 28px 60px rgba(15, 23, 42, 0.35);
+      isolation: isolate;
+    }
+
+    .vecna-hero video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(1.2) brightness(0.55);
+      opacity: 0.85;
+    }
+
+    .vecna-hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.45), rgba(15, 23, 42, 0.6));
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .vecna-hero-content {
+      position: relative;
+      z-index: 1;
+      padding: 2.25rem;
+      max-width: 520px;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .vecna-hero-content h3 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2vw, 1.7rem);
+    }
+
+    .vecna-hero-content p {
+      margin: 0;
+      color: rgba(224, 242, 254, 0.86);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .vecna-hero-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem 1.5rem;
+      font-size: 0.78rem;
+      color: rgba(226, 232, 240, 0.85);
+    }
+
+    .vecna-metric strong {
+      display: block;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: 0.02em;
+    }
+
+    .vecna-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .vecna-card {
+      position: relative;
+      border-radius: 1.25rem;
+      padding: 1.35rem;
+      background: linear-gradient(165deg, rgba(15, 23, 42, 0.9), rgba(56, 189, 248, 0.16));
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      box-shadow: 0 22px 44px rgba(15, 23, 42, 0.32);
+      overflow: hidden;
+      display: grid;
+      gap: 0.75rem;
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .vecna-card::before {
+      content: "";
+      position: absolute;
+      inset: auto -20% -35% -20%;
+      height: 55%;
+      background: radial-gradient(circle at center, rgba(56, 189, 248, 0.35), transparent 70%);
+      opacity: 0.8;
+      transform: translateY(20%);
+      pointer-events: none;
+    }
+
+    .vecna-card:hover {
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: 0 28px 58px rgba(15, 23, 42, 0.4);
+    }
+
+    .vecna-card h4 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: #e0f2fe;
+    }
+
+    .vecna-card figure {
+      position: relative;
+      margin: 0;
+      display: grid;
+      gap: 0.75rem;
+      z-index: 1;
+    }
+
+    .vecna-card img {
+      width: min(82%, 260px);
+      justify-self: center;
+      filter: drop-shadow(0 18px 30px rgba(15, 23, 42, 0.6));
+      animation: floaty 8s ease-in-out infinite;
+    }
+
+    .vecna-card figcaption {
+      font-size: 0.8rem;
+      color: rgba(226, 232, 240, 0.85);
+      line-height: 1.55;
+    }
+
+    .vecna-specs {
+      list-style: none;
+      margin: 0.35rem 0 0;
+      padding: 0;
+      display: grid;
+      gap: 0.2rem;
+    }
+
+    .vecna-specs li {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .vecna-specs li::before {
+      content: "";
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.9);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    .vecna-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .vecna-gallery-card {
+      position: relative;
+      border-radius: 1.15rem;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      box-shadow: 0 20px 42px rgba(15, 23, 42, 0.3);
+      display: grid;
+      gap: 0;
+    }
+
+    .vecna-gallery-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      aspect-ratio: 4 / 3;
+      transition: transform 0.6s ease;
+    }
+
+    .vecna-gallery-card:hover img {
+      transform: scale(1.05);
+    }
+
+    .vecna-gallery-card figcaption {
+      padding: 1rem 1.1rem 1.25rem;
+      font-size: 0.8rem;
+      color: rgba(226, 232, 240, 0.9);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.1), rgba(15, 23, 42, 0.85));
+    }
+
+    .vecna-gallery-card figcaption strong {
+      display: block;
+      font-size: 0.88rem;
+      color: #f1f5f9;
+      margin-bottom: 0.35rem;
+    }
+
+    @keyframes floaty {
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .vecna-card img,
+      .vecna-gallery-card img {
+        animation: none;
+        transition: none;
+      }
+
+      .vecna-card:hover,
+      .vecna-gallery-card:hover img {
+        transform: none;
+      }
+
+      .vecna-hero video {
+        animation: none;
+      }
+    }
+
     .robotics-bundle {
       margin-top: 1.5rem;
       display: grid;
@@ -3357,6 +3587,125 @@
         <div class="automation-intro">
           <p>Warehouses now rely on AMRs, automated forklifts, cobots, and patrol robots to move inventory, package orders, and secure the floor around the clock. We curate the vendors that offer commissions or reseller pricing, plus developer-friendly APIs so your Warehouse HQ can orchestrate every mission.</p>
           <p>Bundle robots, scanners, and labeling in one checkout: we handle payment through Stripe, drop-ship from U.S. inventory, and include integration kits so operators can go live without managed services.</p>
+        </div>
+
+        <div class="vecna-showcase" aria-label="Vecna Robotics highlights">
+          <div class="vecna-hero">
+            <video autoplay muted loop playsinline poster="/image/CaseFlow_WorkerandCPJ-1.png">
+              <source src="https://cdn.coverr.co/videos/coverr-a-forklift-in-a-warehouse-7718/1080p.mp4" type="video/mp4" />
+            </video>
+            <div class="vecna-hero-content">
+              <span class="provider-pill">Hybrid Case Picking · New Playbook</span>
+              <h3>CaseFlow™ synchronizes humans and robots in real time.</h3>
+              <p>Pair CPJ co-bot pallet jacks with adaptive routing so workers stay in pick zones while robotics handle the haul. Congestion signals reroute units instantly to keep outbound waves on schedule.</p>
+              <div class="vecna-hero-metrics">
+                <div class="vecna-metric">
+                  <strong>CaseFlow™</strong>
+                  Dynamic task orchestration for case picking peaks.
+                </div>
+                <div class="vecna-metric">
+                  <strong>CPJ Co-bot</strong>
+                  Scanner-guided handoffs between humans and AMRs.
+                </div>
+                <div class="vecna-metric">
+                  <strong>VecnaFleet™</strong>
+                  Shared telemetry across AFL forklifts and ATG tuggers.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="vecna-grid">
+            <article class="vecna-card">
+              <span class="provider-pill">Hybrid Case Picking</span>
+              <h4>CaseFlow™ Pallet Intelligence</h4>
+              <figure>
+                <img src="/image/CPJ-with-Scanner.png" alt="CaseFlow co-bot pallet jack staged with handheld scanner" loading="lazy" />
+                <figcaption>
+                  Utilizes our CPJ Co-bot Pallet Jack for every aisle handoff. Dynamically orchestrates workers and robots with congestion-aware routing. Adapts to changing SKU demand without reprogramming.
+                </figcaption>
+              </figure>
+            </article>
+
+            <article class="vecna-card">
+              <span class="provider-pill">Co-bot Pallet Jack</span>
+              <h4>Vecna CPJ + Scanner Bundle</h4>
+              <figure>
+                <img src="/image/PalletJack-2024-2.png" alt="Vecna CPJ co-bot pallet jack with integrated sensors" loading="lazy" />
+                <figcaption>
+                  <strong>CPJ with Scanner</strong> keeps operators docked in pick zones while robotics stage pallets for departure.
+                  <ul class="vecna-specs">
+                    <li>3,300 lbs. capacity for mixed cases.</li>
+                    <li>2.8 mph travel @ max load to shadow human pace.</li>
+                    <li>Vision-guided docking for millimeter-accurate pallet placement.</li>
+                  </ul>
+                </figcaption>
+              </figure>
+            </article>
+
+            <article class="vecna-card">
+              <span class="provider-pill">Autonomous Forklift</span>
+              <h4>Vecna AFL Reach &amp; Lift</h4>
+              <figure>
+                <img src="/image/VecnaFleet-AFL-New-2x.png" alt="Vecna autonomous forklift with sensors and safety mast" loading="lazy" />
+                <figcaption>
+                  Give your productivity a serious lift with Vecna AFL telematics.
+                  <ul class="vecna-specs">
+                    <li>3,000 lbs. payload rating.</li>
+                    <li>60″ lift height for dock-to-rack workflows.</li>
+                    <li>6.7 mph travel @ max load with aisle-safe slowdown.</li>
+                  </ul>
+                </figcaption>
+              </figure>
+            </article>
+
+            <article class="vecna-card">
+              <span class="provider-pill">Autonomous Tugger</span>
+              <h4>Vecna ATG Train</h4>
+              <figure>
+                <img src="/image/VecnaFleet-Tugger-New-2x.png" alt="Vecna ATG autonomous tugger with towing hitch" loading="lazy" />
+                <figcaption>
+                  A tugger built for the long haul with VecnaFleet orchestration.
+                  <ul class="vecna-specs">
+                    <li>10,000 lbs. towing capacity for multi-stop milk runs.</li>
+                    <li>4.5 mph travel @ max load keeps up with production tempo.</li>
+                    <li>Hands-free coupling and mission queuing for 24/7 shuttles.</li>
+                  </ul>
+                </figcaption>
+              </figure>
+            </article>
+          </div>
+
+          <div class="vecna-gallery">
+            <figure class="vecna-gallery-card">
+              <img src="/image/CaseFlow_WorkerandCPJ-1.png" alt="Autonomous pallet jack transporting boxed pallets through a warehouse aisle" loading="lazy" />
+              <figcaption>
+                <strong>Live Hybrid Picking</strong>
+                CPJ escorts full pallets out of a high-volume aisle while operators stay in their pick zones for continuous flow.
+              </figcaption>
+            </figure>
+            <figure class="vecna-gallery-card">
+              <img src="/image/CaseFlow_WorkerandCPJ-2.jpg" alt="Autonomous mobile robot towing a rack of inventory bins" loading="lazy" />
+              <figcaption>
+                <strong>AMR Shelf Runner</strong>
+                Shelf-level AMR ferries replenishment totes, syncing CaseFlow missions with Zebra handheld confirmations.
+              </figcaption>
+            </figure>
+            <figure class="vecna-gallery-card">
+              <img src="/image/CaseFlow_WorkerandCPJ-3.jpg" alt="Row of Vecna autonomous vehicles staged along a warehouse safety line" loading="lazy" />
+              <figcaption>
+                <strong>Fleet Readiness</strong>
+                Pre-staged Vecna units await mission dispatch along OSHA-marked lanes with shared charging and diagnostics.
+              </figcaption>
+            </figure>
+            <figure class="vecna-gallery-card">
+              <img src="/image/CaseFlow_WorkerandCPJ-4.png" alt="Vecna autonomous forklift maneuvering near loaded pallets inside a facility" loading="lazy" />
+              <figcaption>
+                <strong>Autonomous Lift Coordination</strong>
+                AFL forklift threads between staging zones, executing lift tasks pushed from Warehouse HQ without pausing the line.
+              </figcaption>
+            </figure>
+          </div>
         </div>
 
         <div class="panel light robotics-bundle" id="robotics-bundler" style="display:none;">
