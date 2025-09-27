@@ -1389,6 +1389,7 @@
                 <span>⬆︎ Import Shopify CSV</span>
                 <input type="file" id="shopify-csv-input" accept=".csv,text/csv" multiple />
               </label>
+              <button class="toolbar" type="button" id="print-stickers-btn">🖨 Print Stickers</button>
               <input type="search" id="inventory-search" placeholder="Search SKU, name, lot…" />
               <select id="warehouse-filter"></select>
             </div>
@@ -1405,6 +1406,7 @@
                   <th>Reorder</th>
                   <th>Lot / Exp</th>
                   <th>Status</th>
+                  <th>Sticker</th>
                 </tr>
               </thead>
               <tbody id="inventory-body"></tbody>
@@ -2116,6 +2118,7 @@
     const BRAND_LOGO_MAX_LENGTH = 240000; // ~180KB payload cap for safe API uploads
     const MANUAL_FORM_HINT = 'Use this form for manual keys or fallback credentials. One-click providers finish automatically below.';
     const integrationFormHint = document.getElementById('integration-form-hint');
+    let lastInventoryRows = [];
     if (integrationFormHint) {
       integrationFormHint.textContent = MANUAL_FORM_HINT;
     }
@@ -2359,6 +2362,172 @@
       return date.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
     }
 
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return '';
+      return String(value).replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[char]);
+    }
+
+    function buildStickerCard(item) {
+      const quantity = Number(item.quantity) || 0;
+      const reorder = Number(item.reorder) || 0;
+      const status = quantity <= reorder
+        ? 'Reorder'
+        : quantity < reorder * 1.5
+          ? 'Monitor'
+          : 'Healthy';
+      const expiry = item.expiry ? formatDate(item.expiry) : '—';
+      const warehouseName = getWarehouseName(item.warehouseId);
+      const location = item.location || '—';
+      const lot = item.lot || '—';
+      const category = item.category || '—';
+      const variant = item.variant ? `<div class="sticker-variant">${escapeHtml(item.variant)}</div>` : '';
+      return `
+        <section class="sticker">
+          <div class="sticker-top">
+            <span class="sticker-sku">${escapeHtml(item.sku)}</span>
+            <span class="sticker-warehouse">${escapeHtml(warehouseName)}</span>
+          </div>
+          <div class="sticker-name">${escapeHtml(item.name || item.sku)}</div>
+          ${variant}
+          <div class="sticker-meta"><span><strong>Bin</strong> ${escapeHtml(location)}</span><span><strong>Qty</strong> ${escapeHtml(quantity)}</span></div>
+          <div class="sticker-meta"><span><strong>Lot</strong> ${escapeHtml(lot)}</span><span><strong>Exp</strong> ${escapeHtml(expiry)}</span></div>
+          <div class="sticker-meta"><span><strong>Category</strong> ${escapeHtml(category)}</span><span><strong>Status</strong> ${escapeHtml(status)}</span></div>
+          <div class="sticker-barcode" aria-hidden="true">${escapeHtml(item.sku)}</div>
+        </section>
+      `;
+    }
+
+    function openStickerPrint(items) {
+      const printableItems = (items || []).filter(Boolean);
+      if (!printableItems.length) {
+        showToast('No stickers to print. Adjust your filters and try again.');
+        return;
+      }
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        alert('Please enable pop-ups to print stickers.');
+        return;
+      }
+      const callSign = state.branding?.callSign || 'Warehouse HQ';
+      const printedAt = new Date().toLocaleString();
+      const safeCallSign = escapeHtml(callSign);
+      const safePrintedAt = escapeHtml(printedAt);
+      const stickerCount = printableItems.length;
+      const stickerLabel = stickerCount === 1 ? 'SKU' : 'SKUs';
+      const stickersHtml = printableItems.map(buildStickerCard).join('');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <title>${safeCallSign} Stickers</title>
+            <style>
+              *, *::before, *::after { box-sizing: border-box; }
+              @page { margin: 0.5in; }
+              body {
+                margin: 0;
+                font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                background: #ffffff;
+                color: #0f172a;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .print-header {
+                padding: 1.25rem 1.5rem 0;
+              }
+              .print-header h1 {
+                margin: 0;
+                font-size: 1.35rem;
+              }
+              .print-header p {
+                margin: 0.25rem 0 0;
+                color: #475569;
+                font-size: 0.9rem;
+              }
+              .sticker-sheet {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 0.75rem;
+                padding: 1rem 1.5rem 1.5rem;
+              }
+              .sticker {
+                border: 1px dashed #94a3b8;
+                border-radius: 0.75rem;
+                padding: 0.85rem 0.9rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.45rem;
+                min-height: 180px;
+              }
+              .sticker-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: #1e293b;
+              }
+              .sticker-name {
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #0f172a;
+              }
+              .sticker-variant {
+                font-size: 0.9rem;
+                color: #334155;
+              }
+              .sticker-meta {
+                display: flex;
+                justify-content: space-between;
+                gap: 0.75rem;
+                font-size: 0.8rem;
+                color: #475569;
+              }
+              .sticker-meta strong {
+                font-weight: 600;
+                color: #1e293b;
+                margin-right: 0.25rem;
+              }
+              .sticker-barcode {
+                margin-top: auto;
+                padding-top: 0.6rem;
+                border-top: 1px dashed #cbd5f5;
+                font-family: 'Courier New', Courier, monospace;
+                letter-spacing: 0.3em;
+                font-size: 0.95rem;
+                text-align: center;
+                color: #1f2937;
+              }
+            </style>
+          </head>
+          <body>
+            <header class="print-header">
+              <h1>${safeCallSign} Stickers</h1>
+              <p>Printed ${safePrintedAt} • ${stickerCount} ${stickerLabel}</p>
+            </header>
+            <main class="sticker-sheet">
+              ${stickersHtml}
+            </main>
+            <script>
+              window.addEventListener('load', () => {
+                window.focus();
+                window.print();
+              });
+              window.addEventListener('afterprint', () => window.close());
+            </scr` + `ipt>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+
     function showToast(message) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -2510,6 +2679,7 @@
           return matchesSearch && matchesWarehouse;
         })
         .sort((a, b) => a.sku.localeCompare(b.sku));
+      lastInventoryRows = rows.slice();
       rows.forEach(item => {
         const status = item.quantity <= (item.reorder || 0)
           ? '<span class="tag low">Reorder</span>'
@@ -2526,6 +2696,7 @@
           <td>${item.reorder}</td>
           <td>${item.lot || '—'}<br><span class="hint">${item.expiry ? formatDate(item.expiry) : ''}</span></td>
           <td>${status}</td>
+          <td class="actions"><button type="button" class="print-sticker-btn" data-id="${item.id}" title="Print sticker" aria-label="Print sticker">Print</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -4479,6 +4650,26 @@
 
     document.getElementById('inventory-search').addEventListener('input', renderInventory);
     document.getElementById('warehouse-filter').addEventListener('change', renderInventory);
+    const printStickersBtn = document.getElementById('print-stickers-btn');
+    if (printStickersBtn) {
+      printStickersBtn.addEventListener('click', () => openStickerPrint(lastInventoryRows));
+    }
+    const inventoryBody = document.getElementById('inventory-body');
+    if (inventoryBody) {
+      inventoryBody.addEventListener('click', evt => {
+        const target = evt.target instanceof Element ? evt.target : evt.target.parentElement;
+        if (!target) return;
+        const btn = target.closest('.print-sticker-btn');
+        if (!btn) return;
+        const { id } = btn.dataset;
+        const item = state.items.find(it => it.id === id);
+        if (!item) {
+          showToast('Sticker data unavailable. Refresh and try again.');
+          return;
+        }
+        openStickerPrint([item]);
+      });
+    }
     document.getElementById('order-status-filter').addEventListener('change', renderOrders);
 
     document.getElementById('receipt-form').addEventListener('submit', evt => {
