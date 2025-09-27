@@ -362,6 +362,33 @@
       position: relative;
     }
 
+    .provider-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .provider-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 0.85rem;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 12px 28px rgba(2, 6, 23, 0.45);
+      flex-shrink: 0;
+    }
+
+    .provider-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
     .provider-card h3 {
       margin: 0;
       font-size: 1.05rem;
@@ -1393,10 +1420,21 @@
       align-items: center;
       gap: 0.35rem;
       font-size: 0.85rem;
+      position: relative;
+      overflow: hidden;
     }
 
     .upload-label span {
       white-space: normal;
+    }
+
+    .upload-label input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
     }
 
     .upload-label.drag-hover {
@@ -2790,7 +2828,12 @@
         <p class="hint">These partner APIs and affiliate programs include free tiers or referral payouts so you can monetize every order routed through Warehouse HQ.</p>
         <div class="global-sourcing-grid">
           <article class="provider-card" data-provider="alibaba">
-            <span class="provider-pill">B2B marketplace · Commission eligible</span>
+            <div class="provider-card-header">
+              <span class="provider-pill">B2B marketplace · Commission eligible</span>
+              <div class="provider-logo">
+                <img src="image/apiLogos/Alibaba.png" alt="Alibaba.com logo" loading="lazy" />
+              </div>
+            </div>
             <h3>Alibaba.com Open Platform</h3>
             <ul>
               <li>API access for catalog sync, RFQ submission, and escrow ordering.</li>
@@ -2803,7 +2846,12 @@
             </footer>
           </article>
           <article class="provider-card" data-provider="dhgate">
-            <span class="provider-pill">Wholesale · High-commission</span>
+            <div class="provider-card-header">
+              <span class="provider-pill">Wholesale · High-commission</span>
+              <div class="provider-logo">
+                <img src="image/apiLogos/DHgate.png" alt="DHgate logo" loading="lazy" />
+              </div>
+            </div>
             <h3>DHgate Partner Network</h3>
             <ul>
               <li>CSV / feed downloads for apparel, electronics, and lifestyle SKUs.</li>
@@ -2816,7 +2864,12 @@
             </footer>
           </article>
           <article class="provider-card" data-provider="freight">
-            <span class="provider-pill">Freight orchestration · API-first</span>
+            <div class="provider-card-header">
+              <span class="provider-pill">Freight orchestration · API-first</span>
+              <div class="provider-logo">
+                <img src="image/apiLogos/Freightos.png" alt="Freightos logo" loading="lazy" />
+              </div>
+            </div>
             <h3>Freightos &amp; Flexport Connectors</h3>
             <ul>
               <li>Instant ocean, air, and trucking quotes with no-cost API usage at booking volume.</li>
