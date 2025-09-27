@@ -92,6 +92,9 @@
       font-weight: 500;
       cursor: pointer;
       transition: background 0.2s ease, transform 0.2s ease, border 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     nav button:hover,
@@ -1043,9 +1046,9 @@
       width: 2.5rem;
       height: 2.5rem;
       border-radius: 0.75rem;
-      border: 1px solid var(--border);
-      background: rgba(2, 6, 23, 0.96);
-      color: inherit;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: rgba(2, 6, 23, 0.85);
+      color: #f8fafc;
       position: relative;
       cursor: pointer;
       transition: border 0.2s ease, background 0.2s ease;
@@ -1434,7 +1437,8 @@
         bottom: 0;
         width: min(320px, 85vw);
         margin-top: 0;
-        background: rgba(15, 23, 42, 0.97);
+        background: rgba(15, 23, 42, 0.92);
+        backdrop-filter: blur(18px);
         border-left: 1px solid var(--border);
         box-shadow: -20px 0 40px rgba(2, 6, 23, 0.55);
         padding: 1.5rem;
@@ -1456,6 +1460,7 @@
 
       nav button {
         width: 100%;
+        justify-content: flex-start;
       }
 
       .wrap {
@@ -1464,6 +1469,69 @@
 
       table {
         font-size: 0.85rem;
+      }
+    }
+
+    @media (max-width: 720px) {
+      header .wrap {
+        padding: 0.75rem 1rem;
+      }
+
+      .brand-identity {
+        gap: 0.5rem;
+      }
+
+      .brand-identity p {
+        display: none;
+      }
+
+      header h1 {
+        font-size: 1.3rem;
+      }
+
+      .brand-logo-shell {
+        width: 44px;
+        height: 44px;
+      }
+
+      .header-actions .badge {
+        display: none;
+      }
+
+      .header-actions {
+        justify-content: flex-end;
+        flex: 1;
+      }
+
+      nav {
+        width: min(280px, 80vw);
+        padding: 1.25rem;
+      }
+
+      #inventory-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 0.65rem;
+      }
+
+      #inventory-toolbar > * {
+        flex: 1 1 100%;
+        width: 100%;
+      }
+
+      #inventory-toolbar input[type="search"],
+      #inventory-toolbar select {
+        width: 100%;
+      }
+
+      #inventory-toolbar button,
+      #inventory-toolbar a,
+      #inventory-toolbar label {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
     }
     /* --- Warehouse "Flowboard" Kanban + Conveyor --- */
@@ -2837,6 +2905,8 @@
     let lastInventoryRows = [];
     const SCAN_CHANNEL_NAME = 'warehouse-hq-scan';
     const SCAN_STORAGE_EVENT_KEY = 'warehouse-hq-scan-payload';
+    const SCAN_QUEUE_KEY = 'warehouse-hq-scan-queue';
+    const processedScanIds = new Set();
     if (integrationFormHint) {
       integrationFormHint.textContent = MANUAL_FORM_HINT;
     }
@@ -2868,6 +2938,31 @@
       return seedState();
     }
 
+    function loadScanQueue() {
+      try {
+        const raw = localStorage.getItem(SCAN_QUEUE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter(item => item && typeof item === 'object');
+      } catch (err) {
+        console.warn('Failed to load buffered scans', err);
+        return [];
+      }
+    }
+
+    function saveScanQueue(queue) {
+      try {
+        if (queue && queue.length) {
+          localStorage.setItem(SCAN_QUEUE_KEY, JSON.stringify(queue));
+        } else {
+          localStorage.removeItem(SCAN_QUEUE_KEY);
+        }
+      } catch (err) {
+        console.warn('Failed to persist scan queue', err);
+      }
+    }
+
     function loadAuth(){
       try {
         const raw = localStorage.getItem(AUTH_KEY);
@@ -2896,6 +2991,36 @@
         return `#${expanded.toLowerCase()}`;
       }
       return trimmed.toLowerCase();
+    }
+
+    function acknowledgeScanPayload(payload = {}) {
+      const id = payload && typeof payload === 'object' ? payload.id : null;
+      if (!id) return;
+      try {
+        const queue = loadScanQueue();
+        if (!queue.length) return;
+        const next = queue.filter(item => item && item.id !== id);
+        if (next.length !== queue.length) {
+          saveScanQueue(next);
+        }
+      } catch (err) {
+        console.warn('Failed to acknowledge buffered scan', err);
+      }
+    }
+
+    function drainStoredScanQueue() {
+      const queue = loadScanQueue();
+      if (!queue.length) return;
+      const ordered = queue
+        .slice()
+        .sort((a, b) => (Number(a?.timestamp) || 0) - (Number(b?.timestamp) || 0));
+      ordered.forEach(payload => {
+        try {
+          processScannerPayload(payload, { announce: false });
+        } catch (err) {
+          console.warn('Failed to apply buffered scan payload', err);
+        }
+      });
     }
 
     function isAuthenticated(){
@@ -3999,17 +4124,38 @@
       returns: handleReturnScan
     };
 
-    function processScannerPayload(payload = {}) {
+    function processScannerPayload(payload = {}, options = {}) {
       if (!payload || typeof payload !== 'object') return;
+      const { announce = true } = options;
       const mode = payload.mode;
       const code = payload.code;
-      if (!mode || !code) return;
+      const id = payload.id;
+      if (id && processedScanIds.has(id)) {
+        acknowledgeScanPayload(payload);
+        return;
+      }
+      if (!mode || !code) {
+        acknowledgeScanPayload(payload);
+        return;
+      }
       const handler = scanHandlers[mode];
-      if (!handler) return;
-      const message = handler(code, payload);
-      if (message && typeof showToast === 'function') {
+      if (!handler) {
+        acknowledgeScanPayload(payload);
+        return;
+      }
+      let message = null;
+      try {
+        message = handler(code, payload);
+      } catch (err) {
+        console.warn('Failed to handle scan payload', err);
+      }
+      if (id) {
+        processedScanIds.add(id);
+      }
+      if (message && announce && typeof showToast === 'function') {
         showToast(message);
       }
+      acknowledgeScanPayload(payload);
     }
 
     function normalizeHeader(header = '') {
@@ -6770,6 +6916,7 @@
     })();
 
     handleNavigation();
+    drainStoredScanQueue();
     initializeUI();
   </script>
 </body>
