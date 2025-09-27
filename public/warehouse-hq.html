@@ -4146,6 +4146,7 @@
 
   <script>
     const STORAGE_KEY = 'warehouse-hq-state-v1';
+    const SHIFT_STATUS_LEVELS = ['alert', 'swap-requested', 'acknowledged', 'published'];
     const state = loadState();
     const warehouseSelects = ['item-warehouse', 'order-warehouse', 'receipt-warehouse', 'cycle-warehouse'];
     const AUTH_KEY = 'warehouse-hq-auth-v1';
@@ -4216,7 +4217,6 @@
       }
     ];
     const LABOR_DEFAULT_CHANNEL = 'All Hands';
-    const SHIFT_STATUS_LEVELS = ['alert', 'swap-requested', 'acknowledged', 'published'];
 
     function createDefaultTeamMembers(){
       return [
