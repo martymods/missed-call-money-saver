@@ -752,13 +752,18 @@
       box-shadow: 0 15px 30px rgba(37, 99, 235, 0.35);
     }
 
-    button.secondary {
+    button.secondary,
+    a.secondary {
       background: transparent;
       color: inherit;
       border: 1px solid var(--border);
       padding: 0.6rem 1rem;
       border-radius: 0.75rem;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     table {
@@ -1156,13 +1161,20 @@
     }
 
     .toolbar button,
-    button.toolbar {
+    .toolbar a,
+    button.toolbar,
+    a.toolbar {
       padding: 0.55rem 0.85rem;
       border-radius: 0.7rem;
       border: 1px solid var(--border);
       background: rgba(15, 23, 42, 0.75);
       color: inherit;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
     }
 
     .brand-highlight {
@@ -1273,6 +1285,10 @@
       font-size: 0.85rem;
     }
 
+    .upload-label span {
+      white-space: normal;
+    }
+
     .upload-label.drag-hover {
       border-color: rgba(56, 189, 248, 0.7);
       background: rgba(56, 189, 248, 0.12);
@@ -1292,6 +1308,37 @@
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+    }
+
+    @media (max-width: 768px) {
+      #inventory-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      #inventory-toolbar > * {
+        width: 100%;
+      }
+
+      #inventory-toolbar .toolbar,
+      #inventory-toolbar .secondary,
+      #inventory-toolbar .upload-label,
+      #inventory-toolbar input[type="search"],
+      #inventory-toolbar select {
+        width: 100%;
+      }
+
+      #inventory-toolbar .upload-label {
+        justify-content: center;
+        text-align: center;
+        padding: 0.85rem;
+        flex-wrap: wrap;
+      }
+
+      #inventory-toolbar .upload-label span {
+        display: block;
+      }
     }
 
     .status-open { background: rgba(56, 189, 248, 0.18); color: #38bdf8; }
@@ -1608,285 +1655,6 @@
       }
     }
 
-    .scan-wrap {
-      position: relative;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid #223063;
-      background: #050a1f;
-    }
-
-    .scan-video {
-      width: 100%;
-      max-height: 280px;
-      object-fit: cover;
-      display: block;
-      opacity: 0.9;
-    }
-
-    .scan-line {
-      position: absolute;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #18e7a6, transparent);
-      box-shadow: 0 0 16px #18e7a6;
-    }
-
-    .scan-line.animate {
-      animation: scan 2.2s ease-in-out infinite;
-    }
-
-    @keyframes scan {
-      0% {
-        top: 8%;
-      }
-
-      50% {
-        top: 88%;
-      }
-
-      100% {
-        top: 8%;
-      }
-    }
-
-    .scan-ui {
-      position: absolute;
-      inset: auto 10px 10px 10px;
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn {
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #2a3876;
-      background: #0b2cff;
-      color: #fff;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .btn.ghost {
-      background: #0f1430;
-    }
-
-    .scan-trigger {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-weight: 600;
-    }
-
-    .scan-trigger::before {
-      content: "📷";
-      font-size: 0.95rem;
-    }
-
-    body.scan-modal-open {
-      overflow: hidden;
-    }
-
-    .section-scan-modal {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: clamp(1rem, 4vw, 1.5rem);
-      z-index: 90;
-    }
-
-    .section-scan-modal[hidden] {
-      display: none;
-    }
-
-    .section-scan-modal .scan-modal-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(2, 6, 23, 0.72);
-      backdrop-filter: blur(14px);
-    }
-
-    .section-scan-modal .scan-modal-content {
-      position: relative;
-      z-index: 1;
-      width: min(420px, 100%);
-      max-width: 100%;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      border-radius: 1.2rem;
-      padding: clamp(1.25rem, 4vw, 1.5rem);
-      box-shadow: 0 30px 60px rgba(2, 6, 23, 0.45);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      max-height: calc(100vh - clamp(2rem, 8vw, 4rem));
-      overflow-y: auto;
-    }
-
-    .scan-modal-content h3 {
-      margin: 0;
-    }
-
-    .scan-modal-content p {
-      margin: 0;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    .scan-modal-close {
-      position: absolute;
-      top: 0.75rem;
-      right: 0.75rem;
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-
-    .scan-modal-stage {
-      position: relative;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      border-radius: 1rem;
-      overflow: hidden;
-      background: #000;
-      aspect-ratio: 3 / 4;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      max-height: min(70vh, 520px);
-    }
-
-    .scan-modal-stage video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transform: scaleX(-1);
-      background: #000;
-    }
-
-    .scan-modal-line {
-      position: absolute;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #18e7a6, transparent);
-      box-shadow: 0 0 16px #18e7a6;
-      display: none;
-    }
-
-    .scan-modal-line.animate {
-      display: block;
-      animation: scan 2.2s ease-in-out infinite;
-    }
-
-    @media (max-width: 600px) {
-      .section-scan-modal {
-        align-items: flex-start;
-      }
-
-      .section-scan-modal .scan-modal-content {
-        margin: 0 auto;
-        border-radius: 1rem;
-      }
-
-      .scan-modal-stage {
-        aspect-ratio: auto;
-        height: clamp(240px, 60vh, 360px);
-      }
-
-      .scan-modal-stage video {
-        height: 100%;
-      }
-    }
-
-    .scan-modal-hint {
-      position: absolute;
-      bottom: 1rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(2, 6, 23, 0.7);
-      padding: 0.35rem 0.75rem;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-    }
-
-    .scan-modal-input {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .scan-modal-input input {
-      padding: 0.65rem 0.85rem;
-      border-radius: 0.85rem;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.78);
-      color: inherit;
-      font-size: 1rem;
-    }
-
-    .scan-modal-input input:focus {
-      outline: 2px solid rgba(56, 189, 248, 0.6);
-      outline-offset: 2px;
-    }
-
-    .scan-modal-buttons,
-    .scan-modal-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
-
-    .scan-modal-actions button {
-      flex: 1;
-      min-width: 120px;
-    }
-
-    .scan-modal-status {
-      min-height: 1.1rem;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .scan-modal-status[data-variant="success"] {
-      color: var(--success);
-    }
-
-    .scan-modal-status[data-variant="error"] {
-      color: var(--danger);
-    }
-
-    .scan-modal-status[data-variant="info"] {
-      color: var(--text-muted);
-    }
-
-    @media (max-width: 600px) {
-      .scan-modal-content {
-        padding: 1.25rem;
-      }
-
-      .scan-modal-stage {
-        aspect-ratio: auto;
-        height: 240px;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .pallet.run,
-      .wh-ghost.animate,
-      .belt::before,
-      .scan-line.animate {
-        animation: none;
-      }
-    }
 
     @media (max-width: 1000px) {
       .wh-board,
@@ -2221,7 +1989,7 @@
                 <input type="file" id="shopify-csv-input" accept=".csv,text/csv" multiple />
               </label>
               <button class="toolbar" type="button" id="print-stickers-btn">🖨 Print Stickers</button>
-              <button class="toolbar scan-trigger" type="button" data-scan-target="inventory">Quick Scan</button>
+              <a class="toolbar scanner-link" href="/scanner-inventory.html" target="_blank" rel="noopener">Inventory Scanner</a>
               <input type="search" id="inventory-search" placeholder="Search SKU, name, lot…" />
               <select id="warehouse-filter"></select>
               <select id="inventory-sort" aria-label="Sort inventory">
@@ -2347,7 +2115,7 @@
           <div class="flex-space">
             <h3>Open Orders</h3>
             <div class="flex">
-              <button class="secondary scan-trigger" type="button" data-scan-target="orders">Quick Scan</button>
+              <a class="secondary scanner-link" href="/scanner-orders.html" target="_blank" rel="noopener">Orders Scanner</a>
               <select id="order-status-filter">
                 <option value="all">All</option>
                 <option value="open">Open</option>
@@ -2479,7 +2247,7 @@
         <div class="panel">
           <div class="flex-space">
             <h3>Inbound Activity Log</h3>
-            <button class="secondary scan-trigger" type="button" data-scan-target="receipts">Quick Scan</button>
+            <a class="secondary scanner-link" href="/scanner-inbound.html" target="_blank" rel="noopener">Inbound Scanner</a>
           </div>
           <div class="table-scroll">
             <table>
@@ -2605,7 +2373,7 @@
           <div class="panel">
             <div class="flex-space">
               <h3>Shipments</h3>
-              <button class="secondary scan-trigger" type="button" data-scan-target="shipments">Quick Scan</button>
+              <a class="secondary scanner-link" href="/scanner-shipments.html" target="_blank" rel="noopener">Shipping Scanner</a>
             </div>
             <div class="table-scroll">
               <table>
@@ -2626,7 +2394,7 @@
           <div class="panel">
             <div class="flex-space">
               <h3>Returns</h3>
-              <button class="secondary scan-trigger" type="button" data-scan-target="returns">Quick Scan</button>
+              <a class="secondary scanner-link" href="/scanner-returns.html" target="_blank" rel="noopener">Returns Scanner</a>
             </div>
             <div class="table-scroll">
               <table>
@@ -3034,32 +2802,6 @@
     </div>
   </footer>
 
-  <div class="section-scan-modal" id="section-scan-modal" hidden aria-hidden="true">
-    <div class="scan-modal-backdrop" data-action="close"></div>
-    <div class="scan-modal-content" role="dialog" aria-modal="true" aria-labelledby="scan-modal-title" aria-describedby="scan-modal-description">
-      <button class="scan-modal-close" type="button" data-action="close" aria-label="Close scanner">✕</button>
-      <h3 id="scan-modal-title">Quick Scan</h3>
-      <p id="scan-modal-description">Focus the field below or start the camera to capture stickers without leaving your workflow.</p>
-      <div class="scan-modal-stage">
-        <video id="sectionScanVideo" playsinline muted></video>
-        <div class="scan-modal-line" id="sectionScanLine"></div>
-        <span class="scan-modal-hint">Align barcode with frame</span>
-      </div>
-      <label class="scan-modal-input" for="section-scan-input">
-        <span>Scan or type code</span>
-        <input id="section-scan-input" type="text" placeholder="Focus here and scan barcode" autocomplete="off" inputmode="text" />
-      </label>
-      <div class="scan-modal-buttons">
-        <button type="button" class="cta" id="scan-submit">Add to list</button>
-        <button type="button" class="secondary" data-action="close">Done</button>
-      </div>
-      <div class="scan-modal-actions">
-        <button type="button" class="secondary" id="scan-start-camera">Start camera</button>
-        <button type="button" class="secondary" id="scan-fake">Fake scan</button>
-      </div>
-      <div class="scan-modal-status" id="scan-modal-status"></div>
-    </div>
-  </div>
 
   <div class="toast" id="toast"></div>
   <div class="oauth-overlay" id="oauth-overlay" hidden aria-hidden="true">
@@ -3093,6 +2835,8 @@
     const integrationFormHint = document.getElementById('integration-form-hint');
     const HEX_COLOR_REGEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
     let lastInventoryRows = [];
+    const SCAN_CHANNEL_NAME = 'warehouse-hq-scan';
+    const SCAN_STORAGE_EVENT_KEY = 'warehouse-hq-scan-payload';
     if (integrationFormHint) {
       integrationFormHint.textContent = MANUAL_FORM_HINT;
     }
@@ -3207,6 +2951,20 @@
       } catch (err) {
         console.warn('Failed to persist state', err);
       }
+    }
+
+    function syncState(nextState) {
+      if (!nextState || typeof nextState !== 'object') {
+        return;
+      }
+      const keys = new Set([...Object.keys(state), ...Object.keys(nextState)]);
+      keys.forEach(key => {
+        if (Object.prototype.hasOwnProperty.call(nextState, key)) {
+          state[key] = nextState[key];
+        } else {
+          delete state[key];
+        }
+      });
     }
 
     function hexToRgba(hex, alpha) {
@@ -4103,6 +3861,154 @@
         statusEl.textContent = 'Ready to pull live data from Shopify.';
         statusEl.classList.remove('success');
         statusEl.classList.remove('warning');
+      }
+    }
+
+    function handleInventoryScan(code, payload = {}) {
+      const normalized = String(code || '').trim().toUpperCase();
+      if (!normalized) return null;
+      const qty = Math.max(1, Number(payload.quantity) || 1);
+      const item = findOrCreateItem({ sku: normalized });
+      if (!item.name || item.name === item.sku) {
+        item.name = normalized;
+      }
+      item.quantity = (Number(item.quantity) || 0) + qty;
+      persist();
+      renderInventory();
+      renderStats();
+      return `Inventory updated for ${normalized}.`;
+    }
+
+    function handleOrderScan(code) {
+      const raw = String(code || '').trim();
+      if (!raw) return null;
+      const orderId = raw.toUpperCase();
+      const existing = state.orders.find(order => String(order.orderId || '').toUpperCase() === orderId);
+      let message;
+      if (existing) {
+        existing.status = existing.status && existing.status !== 'cancelled' ? existing.status : 'open';
+        existing.progress = Math.min(100, (Number(existing.progress) || 0) + 10);
+        if (!Array.isArray(existing.lines) || !existing.lines.length) {
+          existing.lines = [{ sku: orderId, qty: 1 }];
+        }
+        message = `Order ${orderId} updated from scan.`;
+      } else {
+        const warehouseId = state.warehouses[0]?.id || '';
+        const dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        state.orders.push({
+          id: crypto.randomUUID(),
+          orderId,
+          customer: 'Quick scan',
+          warehouseId,
+          dueDate,
+          priority: 'Standard',
+          shipping: 'Standard',
+          lines: [{ sku: orderId, qty: 1 }],
+          status: 'open',
+          progress: 10,
+          createdAt: new Date().toISOString()
+        });
+        message = `Order ${orderId} created from scan.`;
+      }
+      persist();
+      renderOrders();
+      renderStats();
+      return message;
+    }
+
+    function handleReceiptScan(code, payload = {}) {
+      const normalized = String(code || '').trim().toUpperCase();
+      if (!normalized) return null;
+      const qty = Math.max(1, Number(payload.quantity) || 1);
+      const item = findOrCreateItem({ sku: normalized });
+      item.quantity = (Number(item.quantity) || 0) + qty;
+      const receipt = {
+        id: crypto.randomUUID(),
+        reference: payload.reference || `SCAN-${normalized}`,
+        supplier: payload.supplier || 'Quick scan',
+        warehouseId: item.warehouseId || state.warehouses[0]?.id || '',
+        sku: normalized,
+        quantity: qty,
+        location: item.location || '',
+        lot: item.lot || '',
+        expiry: item.expiry || '',
+        notes: payload.notes || 'Captured via scanner link',
+        date: new Date().toISOString()
+      };
+      state.receipts.push(receipt);
+      persist();
+      renderReceipts();
+      renderInventory();
+      renderStats();
+      return `Inbound logged for ${normalized}.`;
+    }
+
+    function handleShipmentScan(code, payload = {}) {
+      const orderId = String(code || '').trim().toUpperCase();
+      if (!orderId) return null;
+      const shipment = {
+        id: crypto.randomUUID(),
+        orderId,
+        carrier: payload.carrier || 'Quick scan',
+        tracking: payload.tracking || `SCAN-${Math.random().toString(36).slice(2, 10).toUpperCase()}`,
+        packages: Math.max(1, Number(payload.packages) || 1),
+        cost: Number(payload.cost) || 0,
+        date: new Date().toISOString()
+      };
+      state.shipments.push(shipment);
+      const order = state.orders.find(o => String(o.orderId || '').toUpperCase() === orderId);
+      if (order) {
+        order.status = 'shipped';
+        order.progress = 100;
+      }
+      persist();
+      renderShipments();
+      renderOrders();
+      renderStats();
+      return `Shipment captured for ${orderId}.`;
+    }
+
+    function handleReturnScan(code, payload = {}) {
+      const normalized = String(code || '').trim().toUpperCase();
+      if (!normalized) return null;
+      const qty = Math.max(1, Number(payload.quantity) || 1);
+      const ret = {
+        id: crypto.randomUUID(),
+        orderId: payload.orderId ? String(payload.orderId).trim() || normalized : normalized,
+        sku: normalized,
+        quantity: qty,
+        reason: payload.reason || 'damaged',
+        disposition: payload.disposition || 'restock',
+        date: new Date().toISOString()
+      };
+      state.returns.push(ret);
+      const item = findOrCreateItem({ sku: normalized });
+      item.quantity = (Number(item.quantity) || 0) + qty;
+      persist();
+      renderReturns();
+      renderInventory();
+      renderStats();
+      return `Return logged for ${normalized}.`;
+    }
+
+    const scanHandlers = {
+      inventory: handleInventoryScan,
+      orders: handleOrderScan,
+      receipts: handleReceiptScan,
+      shipments: handleShipmentScan,
+      returns: handleReturnScan
+    };
+
+    function processScannerPayload(payload = {}) {
+      if (!payload || typeof payload !== 'object') return;
+      const mode = payload.mode;
+      const code = payload.code;
+      if (!mode || !code) return;
+      const handler = scanHandlers[mode];
+      if (!handler) return;
+      const message = handler(code, payload);
+      if (message && typeof showToast === 'function') {
+        showToast(message);
       }
     }
 
@@ -6825,518 +6731,41 @@
       updateActivityList();
       setInterval(updateActivityList, 60000);
 
-      document.addEventListener('global-network-refresh', evt => refreshNetworkSnapshots(evt?.detail || {}));
-    })();
+    document.addEventListener('global-network-refresh', evt => refreshNetworkSnapshots(evt?.detail || {}));
+  })();
 
-    (function initSectionScanner() {
-      const modal = document.getElementById('section-scan-modal');
-      if (!modal) return;
-
-      const titleEl = document.getElementById('scan-modal-title');
-      const descriptionEl = document.getElementById('scan-modal-description');
-      const inputEl = document.getElementById('section-scan-input');
-      const statusEl = document.getElementById('scan-modal-status');
-      const submitBtn = document.getElementById('scan-submit');
-      const startCameraBtn = document.getElementById('scan-start-camera');
-      const fakeBtn = document.getElementById('scan-fake');
-      const videoEl = document.getElementById('sectionScanVideo');
-      const lineEl = document.getElementById('sectionScanLine');
-      const triggers = Array.from(document.querySelectorAll('[data-scan-target]'));
-      const closeButtons = Array.from(modal.querySelectorAll('[data-action="close"]'));
-      const defaultPlaceholder = inputEl ? inputEl.placeholder : '';
-
-      let currentContext = null;
-      let activeStream = null;
-      const captureCanvas = document.createElement('canvas');
-      captureCanvas.setAttribute('aria-hidden', 'true');
-      captureCanvas.style.display = 'none';
-      const captureCtx = captureCanvas.getContext('2d', { willReadFrequently: true });
-
-      let codeReader = null;
-      let NotFoundExceptionCtor = null;
-      let scannerReadyPromise = null;
-      let scanning = false;
-      let scanFrameHandle = null;
-      let lastDetectedCode = '';
-      let lastDetectedAt = 0;
-      let failStreak = 0;
-      let jsQrReady = typeof window.jsQR === 'function';
-
-      const contexts = {
-        inventory: {
-          title: 'Scan SKU into Inventory',
-          description: 'Add or increment SKUs without leaving the catalogue.',
-          placeholder: 'Scan SKU barcode',
-          handler(code) {
-            const normalized = code.toUpperCase();
-            const item = findOrCreateItem({ sku: normalized });
-            if (!item.name || item.name === item.sku) {
-              item.name = normalized;
-            }
-            item.quantity = (Number(item.quantity) || 0) + 1;
-            persist();
-            renderInventory();
-            renderStats();
-            return { message: `Inventory updated for ${normalized}.`, toast: true };
-          }
-        },
-        orders: {
-          title: 'Scan Order for Fulfillment',
-          description: 'Drop orders into the live queue straight from the floor.',
-          placeholder: 'Scan order ID',
-          handler(code) {
-            const orderId = code.toUpperCase();
-            const existing = state.orders.find(order => String(order.orderId || '').toLowerCase() === orderId.toLowerCase());
-            let message;
-            if (existing) {
-              existing.status = existing.status && existing.status !== 'cancelled' ? existing.status : 'open';
-              existing.progress = Math.min(100, (Number(existing.progress) || 0) + 10);
-              if (!Array.isArray(existing.lines) || !existing.lines.length) {
-                existing.lines = [{ sku: orderId, qty: 1 }];
-              }
-              message = `Order ${orderId} updated from scan.`;
-            } else {
-              const warehouseId = state.warehouses[0]?.id || '';
-              const dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-              state.orders.push({
-                id: crypto.randomUUID(),
-                orderId,
-                customer: 'Quick scan',
-                warehouseId,
-                dueDate,
-                priority: 'Standard',
-                shipping: 'Standard',
-                lines: [{ sku: orderId, qty: 1 }],
-                status: 'open',
-                progress: 10,
-                createdAt: new Date().toISOString()
-              });
-              message = `Order ${orderId} created from scan.`;
-            }
-            persist();
-            renderOrders();
-            renderStats();
-            return { message, toast: true };
-          }
-        },
-        receipts: {
-          title: 'Scan Inbound Item',
-          description: 'Log received inventory and boost stock counts instantly.',
-          placeholder: 'Scan inbound SKU',
-          handler(code) {
-            const sku = code.toUpperCase();
-            const item = findOrCreateItem({ sku });
-            item.quantity = (Number(item.quantity) || 0) + 1;
-            const receipt = {
-              id: crypto.randomUUID(),
-              reference: `SCAN-${sku}`,
-              supplier: 'Quick scan',
-              warehouseId: item.warehouseId || state.warehouses[0]?.id || '',
-              sku,
-              quantity: 1,
-              location: item.location || '',
-              lot: item.lot || '',
-              expiry: item.expiry || '',
-              notes: 'Captured via quick scan',
-              date: new Date().toISOString()
-            };
-            state.receipts.push(receipt);
-            persist();
-            renderReceipts();
-            renderInventory();
-            renderStats();
-            return { message: `Inbound logged for ${sku}.`, toast: true };
-          }
-        },
-        shipments: {
-          title: 'Scan Shipment to Close',
-          description: 'Confirm a shipment right from the packing station.',
-          placeholder: 'Scan outbound order ID',
-          handler(code) {
-            const orderId = code.toUpperCase();
-            const shipment = {
-              id: crypto.randomUUID(),
-              orderId,
-              carrier: 'Quick scan',
-              tracking: `SCAN-${Math.random().toString(36).slice(2, 10).toUpperCase()}`,
-              packages: 1,
-              cost: 0,
-              date: new Date().toISOString()
-            };
-            state.shipments.push(shipment);
-            const order = state.orders.find(o => String(o.orderId || '').toLowerCase() === orderId.toLowerCase());
-            if (order) {
-              order.status = 'shipped';
-              order.progress = 100;
-            }
-            persist();
-            renderShipments();
-            renderOrders();
-            renderStats();
-            return { message: `Shipment captured for ${orderId}.`, toast: true };
-          }
-        },
-        returns: {
-          title: 'Scan Return to Process',
-          description: 'Capture a return and restock eligible items automatically.',
-          placeholder: 'Scan return SKU or order',
-          handler(code) {
-            const sku = code.toUpperCase();
-            const ret = {
-              id: crypto.randomUUID(),
-              orderId: sku,
-              sku,
-              quantity: 1,
-              reason: 'damaged',
-              disposition: 'restock',
-              date: new Date().toISOString()
-            };
-            state.returns.push(ret);
-            const item = findOrCreateItem({ sku });
-            item.quantity = (Number(item.quantity) || 0) + 1;
-            persist();
-            renderReturns();
-            renderInventory();
-            renderStats();
-            return { message: `Return logged for ${sku}.`, toast: true };
-          }
-        }
-      };
-
-      function setStatus(message = '', variant = 'info') {
-        if (!statusEl) return;
-        statusEl.textContent = message;
-        if (message) {
-          statusEl.dataset.variant = variant;
-          if (variant === 'error') {
-            statusEl.setAttribute('role', 'alert');
-          } else if (variant === 'success') {
-            statusEl.setAttribute('role', 'status');
-          } else {
-            statusEl.setAttribute('role', 'status');
-          }
-        } else {
-          statusEl.removeAttribute('data-variant');
-          statusEl.removeAttribute('role');
-        }
+    (function registerScannerSync() {
+      if (typeof BroadcastChannel === 'function') {
+        const scanChannel = new BroadcastChannel(SCAN_CHANNEL_NAME);
+        scanChannel.addEventListener('message', event => {
+          if (!event || typeof event.data !== 'object') return;
+          processScannerPayload(event.data);
+        });
       }
 
-      async function ensureScannerEngine() {
-        if (codeReader) return true;
-        if (!scannerReadyPromise) {
-          scannerReadyPromise = (async () => {
-            try {
-              const [browserMod, libraryMod] = await Promise.all([
-                import('https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/+esm'),
-                import('https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/+esm')
-              ]);
-              const hints = new Map();
-              hints.set(libraryMod.DecodeHintType.POSSIBLE_FORMATS, [
-                libraryMod.BarcodeFormat.QR_CODE,
-                libraryMod.BarcodeFormat.DATA_MATRIX,
-                libraryMod.BarcodeFormat.AZTEC,
-                libraryMod.BarcodeFormat.PDF_417,
-                libraryMod.BarcodeFormat.CODE_128,
-                libraryMod.BarcodeFormat.CODE_39,
-                libraryMod.BarcodeFormat.CODE_93,
-                libraryMod.BarcodeFormat.ITF,
-                libraryMod.BarcodeFormat.EAN_13,
-                libraryMod.BarcodeFormat.EAN_8,
-                libraryMod.BarcodeFormat.UPC_A,
-                libraryMod.BarcodeFormat.UPC_E
-              ]);
-              codeReader = new browserMod.BrowserMultiFormatReader(hints, 500);
-              NotFoundExceptionCtor = libraryMod.NotFoundException;
-              failStreak = 0;
-              return true;
-            } catch (error) {
-              console.error('Failed to initialize quick scanner', error);
-              codeReader = null;
-              NotFoundExceptionCtor = null;
-              return false;
-            }
-          })();
-        }
-        const ready = await scannerReadyPromise;
-        if (!ready || !codeReader) {
-          scannerReadyPromise = null;
-          return false;
-        }
-        return true;
-      }
-
-      async function ensureJsQr() {
-        if (jsQrReady) return true;
-        try {
-          await new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
-            script.async = true;
-            script.onload = () => resolve();
-            script.onerror = reject;
-            document.head.appendChild(script);
-          });
-          jsQrReady = typeof window.jsQR === 'function';
-        } catch (error) {
-          console.warn('Failed to load jsQR fallback', error);
-          jsQrReady = false;
-        }
-        return jsQrReady;
-      }
-
-      async function decodeFrame(width, height) {
-        if (!codeReader) return null;
-        try {
-          const result = await codeReader.decodeFromCanvas(captureCanvas);
-          if (result) {
-            failStreak = 0;
-            const rawText = typeof result.getText === 'function' ? result.getText() : result.text;
-            return {
-              text: rawText,
-              format: typeof result.getBarcodeFormat === 'function' ? result.getBarcodeFormat()?.toString?.() : result.format,
-              engine: 'ZXing'
-            };
-          }
-        } catch (error) {
-          if (NotFoundExceptionCtor && error instanceof NotFoundExceptionCtor) {
-            failStreak += 1;
-          } else {
-            console.warn('Quick scan decode error', error);
-          }
-        }
-
-        if (failStreak >= 4 && await ensureJsQr()) {
+      window.addEventListener('storage', event => {
+        if (event.key === SCAN_STORAGE_EVENT_KEY && event.newValue) {
           try {
-            const imageData = captureCtx.getImageData(0, 0, width, height);
-            const qr = window.jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-            if (qr?.data) {
-              failStreak = 0;
-              return {
-                text: qr.data,
-                format: 'QR_CODE',
-                engine: 'jsQR fallback'
-              };
-            }
-          } catch (error) {
-            console.debug('Quick scan fallback decode failed', error);
-          }
-        }
-
-        return null;
-      }
-
-      async function scanFrame() {
-        if (!scanning) return;
-        if (!videoEl || !captureCtx) {
-          setStatus('Scanner not supported in this browser. Use manual entry instead.', 'error');
-          stopCamera();
-          return;
-        }
-        if (videoEl.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) {
-          scanFrameHandle = requestAnimationFrame(scanFrame);
-          return;
-        }
-        const width = videoEl.videoWidth || videoEl.clientWidth || 640;
-        const height = videoEl.videoHeight || videoEl.clientHeight || 480;
-        if (!width || !height) {
-          scanFrameHandle = requestAnimationFrame(scanFrame);
-          return;
-        }
-        if (captureCanvas.width !== width || captureCanvas.height !== height) {
-          captureCanvas.width = width;
-          captureCanvas.height = height;
-        }
-        captureCtx.drawImage(videoEl, 0, 0, width, height);
-        const decoded = await decodeFrame(width, height);
-        if (decoded?.text) {
-          const normalized = String(decoded.text || '').trim();
-          if (normalized) {
-            const now = Date.now();
-            if (normalized !== lastDetectedCode || now - lastDetectedAt > 1200) {
-              lastDetectedCode = normalized;
-              lastDetectedAt = now;
-              handleScan(normalized, { engine: decoded.engine });
-              await new Promise(resolve => setTimeout(resolve, 160));
-            }
-          }
-        }
-        if (scanning) {
-          scanFrameHandle = requestAnimationFrame(scanFrame);
-        }
-      }
-
-      function stopCamera() {
-        scanning = false;
-        failStreak = 0;
-        if (scanFrameHandle != null) {
-          cancelAnimationFrame(scanFrameHandle);
-          scanFrameHandle = null;
-        }
-        lastDetectedCode = '';
-        lastDetectedAt = 0;
-        if (codeReader && typeof codeReader.reset === 'function') {
-          try {
-            codeReader.reset();
+            const payload = JSON.parse(event.newValue);
+            processScannerPayload(payload);
           } catch (err) {
-            console.debug('Quick scan reset failed', err);
+            console.warn('Failed to apply scanner payload from storage', err);
+          }
+        } else if (event.key === STORAGE_KEY && event.newValue) {
+          try {
+            const refreshed = loadState();
+            syncState(refreshed);
+            updateWarehouseSelects();
+            renderInventory();
+            renderOrders();
+            renderReceipts();
+            renderShipments();
+            renderReturns();
+            renderStats();
+          } catch (err) {
+            console.warn('Failed to refresh dashboard from storage', err);
           }
         }
-        if (activeStream) {
-          activeStream.getTracks().forEach(track => track.stop());
-          activeStream = null;
-        }
-        if (videoEl) {
-          videoEl.srcObject = null;
-        }
-        lineEl?.classList.remove('animate');
-      }
-
-      async function startCamera() {
-        if (!modal || modal.hidden) return;
-        try {
-          const ready = await ensureScannerEngine();
-          if (!ready || !codeReader) {
-            setStatus('Scanner engine unavailable. Use manual entry instead.', 'error');
-            return;
-          }
-          if (!navigator.mediaDevices?.getUserMedia) {
-            setStatus('Camera not supported. Use a handheld barcode scanner instead.', 'error');
-            return;
-          }
-          if (!captureCtx) {
-            setStatus('Scanner not supported in this browser. Use manual entry instead.', 'error');
-            return;
-          }
-          stopCamera();
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-          activeStream = stream;
-          if (videoEl) {
-            videoEl.srcObject = stream;
-            await videoEl.play();
-          }
-          lineEl?.classList.add('animate');
-          codeReader.reset();
-          scanning = true;
-          setStatus('Scanning… move items through the frame.', 'info');
-          scanFrameHandle = requestAnimationFrame(scanFrame);
-        } catch (error) {
-          console.warn('Camera start failed', error);
-          setStatus('Camera not available. Use manual entry instead.', 'error');
-          lineEl?.classList.remove('animate');
-        }
-      }
-
-      function closeModal() {
-        if (modal.hidden) return;
-        modal.hidden = true;
-        modal.setAttribute('aria-hidden', 'true');
-        modal.removeAttribute('data-context');
-        document.body.classList.remove('scan-modal-open');
-        currentContext = null;
-        if (inputEl) {
-          inputEl.value = '';
-          inputEl.placeholder = defaultPlaceholder;
-        }
-        setStatus('');
-        stopCamera();
-      }
-
-      function openModal(target) {
-        const context = contexts[target];
-        if (!context) {
-          console.warn('Unknown scan context', target);
-          return;
-        }
-        currentContext = context;
-        if (titleEl) titleEl.textContent = context.title;
-        if (descriptionEl) descriptionEl.textContent = context.description;
-        if (inputEl) {
-          inputEl.value = '';
-          inputEl.placeholder = context.placeholder || defaultPlaceholder;
-        }
-        setStatus('Focus the field below and scan a sticker.', 'info');
-        modal.hidden = false;
-        modal.setAttribute('aria-hidden', 'false');
-        modal.dataset.context = target;
-        document.body.classList.add('scan-modal-open');
-        stopCamera();
-        setTimeout(() => {
-          inputEl?.focus();
-          inputEl?.select?.();
-        }, 50);
-      }
-
-      function handleScan(raw, { simulated = false, engine = '' } = {}) {
-        if (!currentContext) {
-          setStatus('Choose a list to scan into first.', 'error');
-          return;
-        }
-        const code = String(raw || '').trim();
-        if (!code) {
-          setStatus('Scan a barcode to continue.', 'error');
-          return;
-        }
-        try {
-          const result = currentContext.handler(code);
-          const message = typeof result === 'string' ? result : result?.message || `Captured ${code}`;
-          const variant = result?.variant || 'success';
-          const displayMessage = simulated
-            ? `${message} (simulated${engine ? ` via ${engine}` : ''})`
-            : `${message}${engine ? ` (${engine})` : ''}`;
-          setStatus(displayMessage, variant);
-          if (result?.toast && typeof showToast === 'function') {
-            showToast(message);
-          }
-          if (inputEl) {
-            inputEl.value = '';
-            inputEl.focus();
-          }
-        } catch (error) {
-          console.error('Scan handler failed', error);
-          setStatus(error.message || 'Unable to process scan.', 'error');
-        }
-      }
-
-      triggers.forEach(btn => {
-        const target = btn.dataset.scanTarget;
-        if (!target) return;
-        btn.addEventListener('click', () => openModal(target));
-      });
-
-      closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
-
-      modal.addEventListener('click', evt => {
-        const action = evt.target?.dataset?.action;
-        if (action === 'close') {
-          closeModal();
-        }
-      });
-
-      document.addEventListener('keydown', evt => {
-        if (evt.key === 'Escape' && !modal.hidden) {
-          closeModal();
-        }
-      });
-
-      window.addEventListener('beforeunload', stopCamera);
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          stopCamera();
-        }
-      });
-
-      submitBtn?.addEventListener('click', () => handleScan(inputEl?.value));
-      inputEl?.addEventListener('keydown', evt => {
-        if (evt.key === 'Enter') {
-          evt.preventDefault();
-          handleScan(inputEl.value);
-        }
-      });
-
-      startCameraBtn?.addEventListener('click', startCamera);
-      fakeBtn?.addEventListener('click', () => {
-        const fakeCode = `SCAN-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-        handleScan(fakeCode, { simulated: true });
       });
     })();
 

@@ -586,6 +586,168 @@
     const clearBtn = document.getElementById('clearLog');
 
     const STORAGE_KEY = 'warehouse-hq-scanner-sessions';
+    const SCAN_CHANNEL_NAME = 'warehouse-hq-scan';
+    const SCAN_STORAGE_EVENT_KEY = 'warehouse-hq-scan-payload';
+
+    const MODE_CONFIG = {
+      general: {
+        key: 'general',
+        pageTitle: 'Warehouse HQ Scanner – Scan Anything',
+        heading: 'Scan Anything HQ',
+        lead: 'Use the on-device camera to capture barcodes, QR codes, labels, and even objects — all in a single, game-ready workflow that keeps your ops moving.',
+        scannerTitle: 'Live Scanner',
+        missionTitle: 'Mission Stats',
+        missions: [
+          { id: 'count', label: 'Lock 5 rapid scans', goal: 5 },
+          { id: 'unique', label: 'Verify 3 unique items', goal: 3 },
+          { id: 'ocr', label: 'OCR 2 documents', goal: 2 }
+        ],
+        comboReady: 'Combo ready.',
+        comboActive: 'Combo x{combo} — keep the streak!',
+        logType: 'Barcode / QR',
+        toastMessage: () => 'Scan locked — keep the flow going!',
+        statusMessage: decoded => `Captured ${decoded.format} via ${decoded.engine}.`
+      },
+      inventory: {
+        key: 'inventory',
+        pageTitle: 'Warehouse HQ Scanner – Inventory',
+        heading: 'Inventory Cycle Scanner',
+        lead: 'Count SKUs, catch low stock, and color lanes instantly.',
+        scannerTitle: 'Inventory Scanner',
+        missionTitle: 'Inventory Missions',
+        missions: [
+          { id: 'count', label: 'Log 10 cycle-count hits', goal: 10 },
+          { id: 'unique', label: 'Verify 6 unique SKUs', goal: 6 },
+          { id: 'ocr', label: 'OCR 2 shelf tags', goal: 2 }
+        ],
+        comboReady: 'Ready for next SKU streak.',
+        comboActive: 'Cycle streak x{combo} — keep counting!',
+        logType: 'Inventory Scan',
+        syncMode: 'inventory',
+        toastMessage: decoded => `Inventory updated for ${decoded.text}.`,
+        statusMessage: decoded => `SKU ${decoded.text} logged to inventory.`
+      },
+      orders: {
+        key: 'orders',
+        pageTitle: 'Warehouse HQ Scanner – Orders',
+        heading: 'Orders & Fulfillment Scanner',
+        lead: 'Drop orders into the pick queue, validate pack outs, and keep rush jobs visible.',
+        scannerTitle: 'Orders Scanner',
+        missionTitle: 'Fulfillment Missions',
+        missions: [
+          { id: 'count', label: 'Stage 8 orders for pickers', goal: 8 },
+          { id: 'unique', label: 'Confirm 5 unique order IDs', goal: 5 },
+          { id: 'ocr', label: 'OCR 2 packing slips', goal: 2 }
+        ],
+        comboReady: 'Queue primed for next pick.',
+        comboActive: 'Picking combo x{combo} — keep flowing!',
+        logType: 'Order Scan',
+        syncMode: 'orders',
+        toastMessage: decoded => `Order ${decoded.text} synced.`,
+        statusMessage: decoded => `Order ${decoded.text} slotted into fulfillment.`
+      },
+      inbound: {
+        key: 'inbound',
+        pageTitle: 'Warehouse HQ Scanner – Inbound',
+        heading: 'Inbound Receiving Scanner',
+        lead: 'Capture cartons, pallets, and compliance data the moment they hit the dock.',
+        scannerTitle: 'Inbound Scanner',
+        missionTitle: 'Receiving Missions',
+        missions: [
+          { id: 'count', label: 'Check-in 6 inbound pieces', goal: 6 },
+          { id: 'unique', label: 'Validate 4 unique SKUs', goal: 4 },
+          { id: 'ocr', label: 'OCR 2 packing slips', goal: 2 }
+        ],
+        comboReady: 'Dock ready for the next arrival.',
+        comboActive: 'Inbound streak x{combo} — keep rolling!',
+        logType: 'Inbound Scan',
+        syncMode: 'receipts',
+        toastMessage: decoded => `Inbound logged for ${decoded.text}.`,
+        statusMessage: decoded => `Receiving recorded for ${decoded.text}.`
+      },
+      shipments: {
+        key: 'shipments',
+        pageTitle: 'Warehouse HQ Scanner – Shipping',
+        heading: 'Shipping Confirmation Scanner',
+        lead: 'Seal parcels, assign tracking numbers, and clear docks without breaking stride.',
+        scannerTitle: 'Shipping Scanner',
+        missionTitle: 'Shipping Missions',
+        missions: [
+          { id: 'count', label: 'Close 7 shipments', goal: 7 },
+          { id: 'unique', label: 'Apply 5 unique tracking IDs', goal: 5 },
+          { id: 'ocr', label: 'OCR 2 carrier docs', goal: 2 }
+        ],
+        comboReady: 'Next label ready.',
+        comboActive: 'Label sprint x{combo} — keep packing!',
+        logType: 'Shipment Scan',
+        syncMode: 'shipments',
+        toastMessage: decoded => `Shipment locked for ${decoded.text}.`,
+        statusMessage: decoded => `Shipment confirmed for ${decoded.text}.`
+      },
+      returns: {
+        key: 'returns',
+        pageTitle: 'Warehouse HQ Scanner – Returns',
+        heading: 'Returns Processing Scanner',
+        lead: 'Capture reasons, restock inventory, and keep RMA queues light-speed fast.',
+        scannerTitle: 'Returns Scanner',
+        missionTitle: 'Returns Missions',
+        missions: [
+          { id: 'count', label: 'Log 5 returns', goal: 5 },
+          { id: 'unique', label: 'Audit 4 unique RMAs', goal: 4 },
+          { id: 'ocr', label: 'OCR 2 return labels', goal: 2 }
+        ],
+        comboReady: 'Ready for the next RMA.',
+        comboActive: 'Returns streak x{combo} — keep the loop tight!',
+        logType: 'Return Scan',
+        syncMode: 'returns',
+        toastMessage: decoded => `Return queued for ${decoded.text}.`,
+        statusMessage: decoded => `Return captured for ${decoded.text}.`
+      }
+    };
+
+    const queryMode = new URLSearchParams(window.location.search).get('mode');
+    const initialMode = (window.SCANNER_MODE || queryMode || 'general').toLowerCase();
+    const config = MODE_CONFIG[initialMode] || MODE_CONFIG.general;
+
+    document.title = config.pageTitle;
+    const headingEl = document.querySelector('h1');
+    const leadEl = document.querySelector('.lead');
+    const scannerTitleEl = document.getElementById('scanner-title');
+    const missionTitleEl = document.getElementById('session-title');
+    if (headingEl && config.heading) headingEl.textContent = config.heading;
+    if (leadEl && config.lead) leadEl.textContent = config.lead;
+    if (scannerTitleEl && config.scannerTitle) scannerTitleEl.textContent = config.scannerTitle;
+    if (missionTitleEl && config.missionTitle) missionTitleEl.textContent = config.missionTitle;
+    if (statusBadge && config.initialStatus) statusBadge.textContent = config.initialStatus;
+
+    const scanChannel = typeof BroadcastChannel === 'function' ? new BroadcastChannel(SCAN_CHANNEL_NAME) : null;
+
+    function broadcastDetection(decoded, timestamp) {
+      if (!config.syncMode) return;
+      const payload = {
+        type: 'warehouse-scan',
+        mode: config.syncMode,
+        code: decoded.text,
+        format: decoded.format,
+        engine: decoded.engine,
+        timestamp,
+        quantity: 1
+      };
+      if (scanChannel) {
+        try {
+          scanChannel.postMessage(payload);
+        } catch (err) {
+          console.warn('Failed to broadcast scan via channel', err);
+        }
+      } else {
+        try {
+          localStorage.setItem(SCAN_STORAGE_EVENT_KEY, JSON.stringify(payload));
+          localStorage.removeItem(SCAN_STORAGE_EVENT_KEY);
+        } catch (err) {
+          console.warn('Failed to broadcast scan via storage', err);
+        }
+      }
+    }
 
     const ZXING_HINTS = new Map();
     ZXING_HINTS.set(DecodeHintType.POSSIBLE_FORMATS, [
@@ -621,11 +783,10 @@
       objectCount: 0
     };
 
-    const missions = [
-      { id: 'inbound', label: 'Scan 5 inbound items', goal: 5, progress: 0 },
-      { id: 'cycle', label: 'Verify 3 unique SKUs', goal: 3, progress: 0 },
-      { id: 'ocr', label: 'OCR 2 documents', goal: 2, progress: 0 }
-    ];
+    const missions = (config.missions || MODE_CONFIG.general.missions).map(mission => ({
+      ...mission,
+      progress: 0
+    }));
 
     renderMissions();
 
@@ -650,9 +811,11 @@
       uniqueCountEl.textContent = state.uniqueSet.size;
       ocrCountEl.textContent = state.ocrCount;
       objectCountEl.textContent = state.objectCount;
+      const activeTemplate = config.comboActive || 'Combo x{combo} — keep the streak!';
+      const readyLabel = config.comboReady || 'Combo ready.';
       comboLabelEl.textContent = state.combo > 1
-        ? `Combo x${state.combo} — keep the streak!`
-        : 'Combo ready.';
+        ? activeTemplate.replace('{combo}', state.combo)
+        : readyLabel;
     }
 
     function renderMissions() {
@@ -902,7 +1065,7 @@
 
       const entry = {
         id: crypto.randomUUID(),
-        type: 'Barcode / QR',
+        type: config.logType || 'Barcode / QR',
         text: decoded.text,
         format: decoded.format,
         engine: decoded.engine,
@@ -915,8 +1078,15 @@
       renderMissions();
       appendLogEntry(entry);
       updateStats();
-      setStatus(`Captured ${decoded.format} via ${decoded.engine}.`, 'success');
-      showToast('Scan locked — keep the flow going!');
+      const statusMessage = typeof config.statusMessage === 'function'
+        ? config.statusMessage(decoded)
+        : (config.statusMessage || `Captured ${decoded.format} via ${decoded.engine}.`);
+      setStatus(statusMessage, 'success');
+      const toastMessage = typeof config.toastMessage === 'function'
+        ? config.toastMessage(decoded)
+        : (config.toastMessage || 'Scan locked — keep the flow going!');
+      showToast(toastMessage);
+      broadcastDetection(decoded, now);
     }
     async function runOcrCapture() {
       if (!video.srcObject) {
