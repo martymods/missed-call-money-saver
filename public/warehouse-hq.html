@@ -768,6 +768,289 @@
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
 
+    .labor-scheduling-grid,
+    .labor-tracking-grid,
+    .labor-communications-grid {
+      margin-top: 1.25rem;
+    }
+
+    .shift-board,
+    .time-punch-log,
+    .labor-comm-feed,
+    .labor-telemetry-feed,
+    .labor-tool-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .shift-card,
+    .punch-card,
+    .comm-card,
+    .telemetry-card,
+    .tool-card {
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      border-radius: 0.85rem;
+      padding: 0.85rem;
+      background: rgba(148, 163, 184, 0.12);
+      backdrop-filter: blur(4px);
+    }
+
+    .panel.light .shift-card,
+    .panel.light .punch-card,
+    .panel.light .comm-card,
+    .panel.light .telemetry-card,
+    .panel.light .tool-card {
+      background: rgba(255, 255, 255, 0.65);
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
+    .shift-card header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .shift-card strong {
+      font-size: 1rem;
+    }
+
+    .shift-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.18);
+      color: #0369a1;
+    }
+
+    .shift-status[data-status="acknowledged"] {
+      background: rgba(74, 222, 128, 0.2);
+      color: #166534;
+    }
+
+    .shift-status[data-status="swap-requested"] {
+      background: rgba(250, 204, 21, 0.25);
+      color: #854d0e;
+    }
+
+    .shift-status[data-status="alert"] {
+      background: rgba(248, 113, 113, 0.25);
+      color: #b91c1c;
+    }
+
+    .shift-meta,
+    .punch-meta,
+    .comm-meta,
+    .telemetry-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: rgba(15, 23, 42, 0.65);
+    }
+
+    .shift-meta span,
+    .punch-meta span,
+    .comm-meta span,
+    .telemetry-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .shift-owner {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin: 0.65rem 0;
+    }
+
+    .shift-owner strong {
+      display: block;
+      font-size: 0.95rem;
+    }
+
+    .shift-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .shift-pill,
+    .comm-pill,
+    .telemetry-pill {
+      padding: 0.2rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: rgba(15, 23, 42, 0.08);
+      color: rgba(15, 23, 42, 0.75);
+    }
+
+    .shift-pill[data-variant="mobile"] {
+      background: rgba(56, 189, 248, 0.18);
+      color: #0369a1;
+    }
+
+    .shift-pill[data-variant="gps"] {
+      background: rgba(37, 99, 235, 0.18);
+      color: #1d4ed8;
+    }
+
+    .shift-pill[data-variant="coverage"] {
+      background: rgba(74, 222, 128, 0.18);
+      color: #166534;
+    }
+
+    .shift-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.7rem;
+    }
+
+    .shift-actions button {
+      border: 1px solid rgba(15, 23, 42, 0.2);
+      background: rgba(15, 23, 42, 0.05);
+      color: #0f172a;
+      padding: 0.35rem 0.6rem;
+      border-radius: 0.6rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .shift-actions button:hover {
+      border-color: rgba(56, 189, 248, 0.65);
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    .shift-activity,
+    .telemetry-details {
+      list-style: none;
+      margin: 0.6rem 0 0;
+      padding: 0;
+      display: grid;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      color: rgba(15, 23, 42, 0.7);
+    }
+
+    .shift-activity li,
+    .telemetry-details li {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .shift-activity time,
+    .telemetry-details time,
+    .punch-meta time,
+    .comm-meta time {
+      font-size: 0.7rem;
+      color: rgba(15, 23, 42, 0.55);
+    }
+
+    .punch-card strong,
+    .comm-card strong {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .comm-card strong {
+      font-weight: 600;
+    }
+
+    .comm-pill[data-priority="high"] {
+      background: rgba(248, 113, 113, 0.2);
+      color: #b91c1c;
+    }
+
+    .comm-pill[data-priority="medium"] {
+      background: rgba(250, 204, 21, 0.25);
+      color: #854d0e;
+    }
+
+    .telemetry-card strong {
+      font-size: 0.9rem;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+
+    .labor-kpi-grid {
+      margin-top: 1.25rem;
+      display: grid;
+      gap: 0.85rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .labor-kpi {
+      background: rgba(15, 23, 42, 0.85);
+      color: var(--text);
+      border-radius: 0.9rem;
+      padding: 1rem;
+      border: 1px solid rgba(56, 189, 248, 0.18);
+      display: grid;
+      gap: 0.4rem;
+    }
+
+    .labor-kpi strong {
+      font-size: 1.6rem;
+    }
+
+    .labor-kpi span {
+      font-size: 0.8rem;
+      color: rgba(226, 232, 240, 0.8);
+    }
+
+    .tool-card h4 {
+      margin: 0 0 0.35rem;
+      font-size: 1rem;
+    }
+
+    .tool-card .hint {
+      margin-top: 0.35rem;
+      font-size: 0.78rem;
+    }
+
+    .tool-card a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      text-decoration: none;
+      font-weight: 600;
+      margin-top: 0.45rem;
+      color: #0f172a;
+    }
+
+    .tool-card a:hover {
+      text-decoration: underline;
+    }
+
+    .empty-state {
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      background: rgba(15, 23, 42, 0.06);
+      text-align: center;
+      color: rgba(15, 23, 42, 0.6);
+      font-size: 0.85rem;
+    }
+
+    .panel.light .empty-state {
+      background: rgba(15, 23, 42, 0.05);
+    }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -2499,6 +2782,7 @@
             <button class="toolbar" id="reset-btn">Reset Workspace</button>
           </div>
         </div>
+
         <div class="grid grid-2">
           <form id="warehouse-form" class="panel light">
             <h3>New Warehouse / Zone</h3>
@@ -3334,6 +3618,174 @@
             <li><strong>Metrics that matter:</strong> Digital records roll up to leadership dashboards so supervisors can spot who is on shift, compare throughput vs. targets and adjust staffing on the fly.</li>
           </ul>
         </div>
+
+
+        <div class="grid grid-2 labor-scheduling-grid">
+          <form id="shift-form" class="panel light">
+            <h3>Publish Shift to Mobile</h3>
+            <p class="hint">Associate-led scheduling keeps swaps, call-outs and acknowledgements auditable in one panel.</p>
+            <label>Shift Name
+              <input type="text" name="title" placeholder="Inbound Dock AM" required />
+            </label>
+            <label>Zone / Location
+              <input type="text" name="zone" placeholder="Dock 2 • Philadelphia" />
+            </label>
+            <div class="grid grid-3">
+              <label>Shift Date
+                <input type="date" name="date" required />
+              </label>
+              <label>Start Time
+                <input type="time" name="start" required />
+              </label>
+              <label>End Time
+                <input type="time" name="end" required />
+              </label>
+            </div>
+            <label>Headcount Target
+              <input type="number" name="coverage" min="1" value="3" />
+            </label>
+            <label>Assign Lead / Owner
+              <input type="text" name="owner" placeholder="Alicia (Inbound)" list="team-owner-list" />
+            </label>
+            <label>Mobile Controls
+              <span class="hint">Let team members manage swaps and confirm shifts from their phones.</span>
+              <label class="mini-input"><input type="checkbox" name="mobileSwap" checked /> Enable mobile swap + acknowledgements</label>
+            </label>
+            <label>GPS Time Clock
+              <select name="gpsMode">
+                <option value="recommended">Recommended – soft geo-fence</option>
+                <option value="strict">Strict – enforce geo-fence</option>
+                <option value="kiosk">Kiosk mode – QR / PIN only</option>
+              </select>
+            </label>
+            <label>Notes for the crew
+              <textarea name="notes" rows="2" placeholder="Stage pallets, verify ASN vs. RF scans, flag variances in mission board."></textarea>
+            </label>
+            <div class="shift-actions">
+              <button class="cta" type="submit">Post shift</button>
+              <button class="secondary" type="button" id="shift-template-btn">Load template</button>
+            </div>
+          </form>
+
+          <div class="panel light">
+            <h3>Mobile Shift Command</h3>
+            <p class="hint">Swipe-ready roster with live swaps, acknowledgements and coverage alerts.</p>
+            <ul class="shift-board" id="shift-board"></ul>
+          </div>
+        </div>
+
+        <div class="grid grid-2 labor-tracking-grid">
+          <form id="time-clock-form" class="panel light">
+            <h3>GPS Time Clock &amp; Events</h3>
+            <p class="hint">Capture mobile punches, call-outs and wellness checks from any device.</p>
+            <label>Team Member
+              <input type="text" name="member" placeholder="Malik Chen" list="team-owner-list" required />
+            </label>
+            <label>Shift (optional)
+              <select name="shiftId" id="time-clock-shift">
+                <option value="">Unassigned / Adhoc</option>
+              </select>
+            </label>
+            <label>Event Type
+              <select name="type" required>
+                <option value="clock-in">Clock in</option>
+                <option value="clock-out">Clock out</option>
+                <option value="break-start">Break start</option>
+                <option value="break-end">Break end</option>
+                <option value="gps-check">GPS check-in</option>
+                <option value="call-out">Call-out / absent</option>
+              </select>
+            </label>
+            <label>Capture Method
+              <select name="method">
+                <option value="gps">GPS mobile</option>
+                <option value="kiosk">Shared kiosk</option>
+                <option value="qr">QR scan</option>
+                <option value="telephony">IVR / telephony</option>
+              </select>
+            </label>
+            <div class="grid grid-3">
+              <label>Latitude
+                <input type="text" name="lat" id="clock-lat" placeholder="39.9526" />
+              </label>
+              <label>Longitude
+                <input type="text" name="lng" id="clock-lng" placeholder="-75.1652" />
+              </label>
+              <label>Accuracy (m)
+                <input type="number" name="accuracy" id="clock-accuracy" min="0" placeholder="9" />
+              </label>
+            </div>
+            <label>Timestamp
+              <input type="datetime-local" name="timestamp" id="clock-timestamp" />
+            </label>
+            <label>Notes
+              <textarea name="notes" rows="2" placeholder="Ex: Swap approved, covering Dock 3 after break."></textarea>
+            </label>
+            <div class="shift-actions">
+              <button class="secondary" type="button" id="clock-location-btn">Simulate GPS ping</button>
+              <button class="secondary" type="button" id="clock-now-btn">Stamp current time</button>
+              <button class="cta" type="submit">Log event</button>
+            </div>
+          </form>
+
+          <div class="panel light">
+            <h3>Real-Time Time Clock Feed</h3>
+            <p class="hint">Unified punches, call-outs and compliance notes stream here instantly.</p>
+            <ul class="time-punch-log" id="time-punch-log"></ul>
+          </div>
+        </div>
+
+        <div class="panel light">
+          <h3>Unified Labor Telemetry</h3>
+          <p class="hint">Scheduling, time clock and productivity insights combine into a single leadership-ready feed.</p>
+          <ul class="labor-telemetry-feed" id="labor-telemetry-feed"></ul>
+        </div>
+
+        <div class="labor-kpi-grid" id="labor-kpi-grid"></div>
+
+        <div class="grid grid-2 labor-communications-grid">
+          <div class="panel light">
+            <h3>Real-Time Communications</h3>
+            <p class="hint">Broadcast shift changes, safety alerts and overtime offers without leaving Warehouse HQ.</p>
+            <ul class="labor-comm-feed" id="labor-comm-feed"></ul>
+          </div>
+
+          <form id="labor-broadcast-form" class="panel light">
+            <h3>Broadcast Update</h3>
+            <p class="hint">Messages sync to SMS, email and in-app notifications depending on each team member's preferences.</p>
+            <label>Message
+              <textarea name="message" rows="3" required placeholder="Inbound A swap approved. Malik covering 14:00–22:00."></textarea>
+            </label>
+            <label>Channel
+              <select name="channel">
+                <option value="All Hands">All Hands</option>
+                <option value="Inbound Dock">Inbound Dock</option>
+                <option value="Outbound Wave">Outbound Wave</option>
+                <option value="Leadership Standup">Leadership Standup</option>
+              </select>
+            </label>
+            <label>Priority
+              <select name="priority">
+                <option value="normal">Info</option>
+                <option value="medium">Heads-up</option>
+                <option value="high">Alert</option>
+              </select>
+            </label>
+            <label>Sender (optional)
+              <input type="text" name="author" placeholder="Floor Captain" list="team-owner-list" />
+            </label>
+            <label>Schedule send
+              <input type="datetime-local" name="broadcastAt" />
+            </label>
+            <button class="cta" type="submit">Broadcast to teams</button>
+          </form>
+        </div>
+
+        <div class="panel light">
+          <h3>Free Tool Stack Recommendations</h3>
+          <p class="hint">Launch mobile scheduling and telemetry without monthly fees. Upgrade only when scale demands it.</p>
+          <ul class="labor-tool-grid" id="labor-tool-recs"></ul>
+        </div>
         <div class="grid grid-2">
           <form id="task-form" class="panel light">
             <h3>Assign Task</h3>
@@ -3726,6 +4178,45 @@
     const PROFILE_PHOTO_JPEG_QUALITY_AGGRESSIVE = 0.62;
     const PROFILE_PHOTO_PNG_QUALITY = 0.85;
     const MAX_TASK_ACTIVITY = 12;
+    const LABOR_TOOL_RECOMMENDATIONS = [
+      {
+        name: 'Sling',
+        url: 'https://www.getsling.com/',
+        tagline: 'Forever-free scheduling & time clock',
+        highlight: 'Mobile-first rosters with PTO, shift swaps and broadcast messaging.',
+        extras: 'Pair with Stripe for instant payouts when you upsell premium tiers.'
+      },
+      {
+        name: 'Connecteam',
+        url: 'https://connecteam.com/',
+        tagline: 'Free geofenced tracking (up to 10 staff)',
+        highlight: 'GPS + geofence time clocks, task checklists and safety training in one app.',
+        extras: 'Use the free CRM board to manage applicant pipelines alongside shifts.'
+      },
+      {
+        name: 'Homebase',
+        url: 'https://joinhomebase.com/',
+        tagline: 'Free scheduling for up to 20 employees',
+        highlight: 'Auto reminders, labor compliance alerts and wage forecasts for every schedule change.',
+        extras: 'Export payroll-ready timesheets directly into Gusto, ADP or Square.'
+      },
+      {
+        name: 'Clockify',
+        url: 'https://clockify.me/',
+        tagline: 'Free mobile time tracker & kiosk mode',
+        highlight: 'Unlimited projects and tags to map throughput, coaching hours or flex labor.',
+        extras: 'Enable kiosk QR check-ins for temp staff without provisioning logins.'
+      },
+      {
+        name: 'WP-HR Manager',
+        url: 'https://wordpress.org/plugins/wp-hr-manager/',
+        tagline: 'Open-source HRIS for recruiting + payroll notes',
+        highlight: 'Applicant tracking, onboarding and leave management in a WordPress-friendly package.',
+        extras: 'Host it yourself, tie into Gravity Forms, and surface profiles in Warehouse HQ.'
+      }
+    ];
+    const LABOR_DEFAULT_CHANNEL = 'All Hands';
+    const SHIFT_STATUS_LEVELS = ['alert', 'swap-requested', 'acknowledged', 'published'];
 
     function createDefaultTeamMembers(){
       return [
@@ -3776,6 +4267,141 @@
           isFreelancer: true,
           aliases: ['Jordan (Flex)', 'Freelancer Bench'],
           avatarSeed: 'Jordan Vega',
+        }
+      ];
+    }
+
+    function createDefaultShifts(roster = []){
+      const toIsoDate = date => new Date(date).toISOString().slice(0, 10);
+      const now = new Date();
+      const today = toIsoDate(now);
+      const tomorrow = toIsoDate(now.getTime() + 24 * 60 * 60 * 1000);
+      const inbound = roster[0] || null;
+      const picking = roster[1] || null;
+      return [
+        {
+          id: crypto.randomUUID(),
+          title: 'Inbound Dock AM',
+          zone: 'Dock 2 • Philadelphia',
+          date: today,
+          start: '06:00',
+          end: '14:00',
+          coverage: 4,
+          ownerId: inbound?.id || null,
+          owner: inbound?.name || 'Inbound Lead',
+          allowMobileSwaps: true,
+          gpsMode: 'strict',
+          notes: 'Stage pallets for wave 1 and capture ASN variances.',
+          status: 'published',
+          mobileActions: [
+            { id: crypto.randomUUID(), message: 'Roster published to mobile board.', timestamp: new Date(now.getTime() - 30 * 60 * 1000).toISOString(), level: 'info' },
+            { id: crypto.randomUUID(), message: 'Jordan flagged a late arrival – swap suggested for 10:00 slot.', timestamp: new Date(now.getTime() - 10 * 60 * 1000).toISOString(), level: 'alert' }
+          ]
+        },
+        {
+          id: crypto.randomUUID(),
+          title: 'Wave Picking PM',
+          zone: 'Aisles 3-9 • Mezzanine',
+          date: tomorrow,
+          start: '14:00',
+          end: '22:00',
+          coverage: 5,
+          ownerId: picking?.id || null,
+          owner: picking?.name || 'Picking Captain',
+          allowMobileSwaps: true,
+          gpsMode: 'recommended',
+          notes: 'Prep rush orders, confirm replen before 18:00, and sync with carrier cut-offs.',
+          status: 'published',
+          mobileActions: [
+            { id: crypto.randomUUID(), message: 'Draft shift ready – awaiting acknowledgements.', timestamp: new Date(now.getTime() + 3 * 60 * 60 * 1000).toISOString(), level: 'info' }
+          ]
+        }
+      ];
+    }
+
+    function createDefaultTimePunches(roster = [], shifts = []){
+      const inbound = roster[0] || null;
+      const flex = roster[2] || null;
+      const inboundShift = shifts[0] || null;
+      const pickingShift = shifts[1] || null;
+      const now = new Date();
+      return [
+        {
+          id: crypto.randomUUID(),
+          memberId: inbound?.id || null,
+          member: inbound?.name || 'Inbound Lead',
+          shiftId: inboundShift?.id || null,
+          type: 'clock-in',
+          method: 'gps',
+          timestamp: new Date(now.getTime() - 90 * 60 * 1000).toISOString(),
+          notes: 'Dock door 4 check complete. Ready for ASN wave.',
+          geo: { lat: 39.9527, lng: -75.1652, accuracy: 8 }
+        },
+        {
+          id: crypto.randomUUID(),
+          memberId: flex?.id || null,
+          member: flex?.name || 'Flex Operator',
+          shiftId: inboundShift?.id || null,
+          type: 'gps-check',
+          method: 'gps',
+          timestamp: new Date(now.getTime() - 35 * 60 * 1000).toISOString(),
+          notes: 'Flex bench verified location before swap assist.',
+          geo: { lat: 39.9531, lng: -75.166, accuracy: 12 }
+        },
+        {
+          id: crypto.randomUUID(),
+          memberId: inbound?.id || null,
+          member: inbound?.name || 'Inbound Lead',
+          shiftId: inboundShift?.id || null,
+          type: 'break-start',
+          method: 'kiosk',
+          timestamp: new Date(now.getTime() - 20 * 60 * 1000).toISOString(),
+          notes: 'Meal break starting – coverage escalated to flex bench.',
+          geo: { lat: 39.9526, lng: -75.1659, accuracy: 5 }
+        },
+        {
+          id: crypto.randomUUID(),
+          memberId: pickingShift ? pickingShift.ownerId : null,
+          member: pickingShift?.owner || 'Picking Captain',
+          shiftId: pickingShift?.id || null,
+          type: 'call-out',
+          method: 'telephony',
+          timestamp: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
+          notes: 'Requesting coverage – family emergency.',
+          geo: null
+        }
+      ];
+    }
+
+    function createDefaultLaborBroadcasts(roster = []){
+      const now = new Date();
+      const inbound = roster[0] || null;
+      const author = inbound ? inbound.name : 'Warehouse HQ';
+      return [
+        {
+          id: crypto.randomUUID(),
+          message: 'Inbound Dock AM shift published. Confirm your slots in the mobile app.',
+          channel: 'Inbound Dock',
+          priority: 'normal',
+          createdAt: new Date(now.getTime() - 45 * 60 * 1000).toISOString(),
+          author: author,
+          authorId: inbound?.id || null
+        },
+        {
+          id: crypto.randomUUID(),
+          message: 'Malik requested coverage for 16:00–18:00. Flex bench, tap to claim.',
+          channel: 'Outbound Wave',
+          priority: 'medium',
+          createdAt: new Date(now.getTime() - 12 * 60 * 1000).toISOString(),
+          author: 'Warehouse HQ'
+        },
+        {
+          id: crypto.randomUUID(),
+          message: 'Leadership metric: 92% of today’s shifts acknowledged. Need two more confirmations.',
+          channel: 'Leadership Standup',
+          priority: 'normal',
+          createdAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
+          author: 'Ops AI Analyst'
         }
       ];
     }
@@ -3870,6 +4496,173 @@
       return next;
     }
 
+    function normalizeTimestamp(value){
+      if (!value) return null;
+      const date = value instanceof Date ? value : new Date(value);
+      if (Number.isNaN(date.getTime())) return null;
+      return date.toISOString();
+    }
+
+    function ensureShift(shift, roster){
+      if (!shift || typeof shift !== 'object') return null;
+      const next = { ...shift };
+      next.id = next.id || crypto.randomUUID();
+      next.title = (next.title || 'Warehouse Shift').trim();
+      next.zone = (next.zone || '').trim();
+      next.date = next.date || new Date().toISOString().slice(0, 10);
+      const sanitizeTime = value => {
+        if (!value) return '08:00';
+        const parts = String(value).split(':');
+        const hour = String(parts[0] || '00').padStart(2, '0');
+        const minute = String((parts[1] || '00').slice(0, 2)).padStart(2, '0');
+        return `${hour}:${minute}`;
+      };
+      next.start = sanitizeTime(next.start);
+      next.end = sanitizeTime(next.end);
+      next.coverage = Number.isFinite(Number(next.coverage)) && Number(next.coverage) > 0 ? Number(next.coverage) : 1;
+      next.allowMobileSwaps = next.allowMobileSwaps !== false;
+      next.gpsMode = (next.gpsMode || 'recommended').toLowerCase();
+      if (!['recommended', 'strict', 'kiosk'].includes(next.gpsMode)) {
+        next.gpsMode = 'recommended';
+      }
+      const rawStatus = (next.status || 'published').toLowerCase();
+      next.status = SHIFT_STATUS_LEVELS.includes(rawStatus) ? rawStatus : 'published';
+      const owner = matchTeamMember(roster, next.owner || next.ownerSnapshot?.name, next.ownerId);
+      if (owner){
+        next.ownerId = owner.id;
+        next.ownerSnapshot = buildTaskOwnerSnapshot(owner, owner.name);
+      } else if (!next.ownerSnapshot){
+        next.ownerSnapshot = buildTaskOwnerSnapshot(null, next.owner || 'Unassigned');
+      }
+      if (!Array.isArray(next.mobileActions)) {
+        next.mobileActions = [];
+      }
+      next.mobileActions = next.mobileActions.filter(Boolean).map(entry => {
+        const item = { ...entry };
+        item.id = item.id || crypto.randomUUID();
+        item.message = (item.message || '').trim() || 'Shift update';
+        item.timestamp = normalizeTimestamp(item.timestamp) || new Date().toISOString();
+        item.level = (item.level || 'info').toLowerCase();
+        if (!['info', 'success', 'alert', 'warn'].includes(item.level)) {
+          item.level = 'info';
+        }
+        if (item.actorSnapshot && !item.actorSnapshot.name) {
+          item.actorSnapshot.name = item.actorSnapshot.name || 'Warehouse HQ';
+        }
+        return item;
+      });
+      return next;
+    }
+
+    function ensureTimePunch(entry, roster, shifts){
+      if (!entry || typeof entry !== 'object') return null;
+      const punch = { ...entry };
+      punch.id = punch.id || crypto.randomUUID();
+      const allowedTypes = ['clock-in', 'clock-out', 'break-start', 'break-end', 'gps-check', 'call-out'];
+      punch.type = (punch.type || 'clock-in').toLowerCase();
+      if (!allowedTypes.includes(punch.type)) punch.type = 'clock-in';
+      punch.method = (punch.method || 'gps').toLowerCase();
+      punch.timestamp = normalizeTimestamp(punch.timestamp) || new Date().toISOString();
+      const member = matchTeamMember(roster, punch.member || punch.memberSnapshot?.name, punch.memberId);
+      if (member){
+        punch.memberId = member.id;
+        punch.memberSnapshot = buildTaskOwnerSnapshot(member, member.name);
+      } else if (!punch.memberSnapshot){
+        punch.memberSnapshot = buildTaskOwnerSnapshot(null, punch.member || 'Team Member');
+      }
+      const shift = Array.isArray(shifts) ? shifts.find(s => s.id === punch.shiftId) : null;
+      punch.shiftId = shift ? shift.id : punch.shiftId || null;
+      const lat = Number(punch.lat ?? punch.latitude ?? punch.geo?.lat);
+      const lng = Number(punch.lng ?? punch.longitude ?? punch.geo?.lng);
+      const accuracy = Number(punch.accuracy ?? punch.geo?.accuracy);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        punch.geo = { lat, lng, accuracy: Number.isFinite(accuracy) ? accuracy : null };
+      } else {
+        punch.geo = null;
+      }
+      punch.notes = (punch.notes || '').trim();
+      return punch;
+    }
+
+    function ensureLaborBroadcast(entry, roster){
+      if (!entry || typeof entry !== 'object') return null;
+      const broadcast = { ...entry };
+      broadcast.id = broadcast.id || crypto.randomUUID();
+      broadcast.message = (broadcast.message || '').trim();
+      if (!broadcast.message) return null;
+      broadcast.channel = (broadcast.channel || LABOR_DEFAULT_CHANNEL).trim() || LABOR_DEFAULT_CHANNEL;
+      broadcast.priority = (broadcast.priority || 'normal').toLowerCase();
+      if (!['normal', 'medium', 'high'].includes(broadcast.priority)) {
+        broadcast.priority = 'normal';
+      }
+      broadcast.createdAt = normalizeTimestamp(broadcast.createdAt) || new Date().toISOString();
+      const author = matchTeamMember(roster, broadcast.author || broadcast.authorSnapshot?.name, broadcast.authorId);
+      if (author){
+        broadcast.authorId = author.id;
+        broadcast.authorSnapshot = buildTaskOwnerSnapshot(author, author.name);
+      } else if (!broadcast.authorSnapshot){
+        broadcast.authorSnapshot = buildTaskOwnerSnapshot(null, broadcast.author || 'Warehouse HQ');
+      }
+      return broadcast;
+    }
+
+    function ensureLaborCollections(roster){
+      const normalizedRoster = Array.isArray(roster) ? roster : getRosterMembers();
+      state.shifts = Array.isArray(state.shifts)
+        ? state.shifts.map(shift => ensureShift(shift, normalizedRoster)).filter(Boolean)
+        : [];
+      state.timePunches = Array.isArray(state.timePunches)
+        ? state.timePunches.map(entry => ensureTimePunch(entry, normalizedRoster, state.shifts)).filter(Boolean)
+        : [];
+      state.laborBroadcasts = Array.isArray(state.laborBroadcasts)
+        ? state.laborBroadcasts.map(entry => ensureLaborBroadcast(entry, normalizedRoster)).filter(Boolean)
+        : [];
+      return normalizedRoster;
+    }
+
+    function appendShiftActivity(shiftId, message, options = {}){
+      if (!shiftId || !message) return null;
+      const roster = Array.isArray(options.roster) ? options.roster : getRosterMembers();
+      ensureLaborCollections(roster);
+      const shift = state.shifts.find(entry => entry.id === shiftId);
+      if (!shift) return null;
+      if (!Array.isArray(shift.mobileActions)) shift.mobileActions = [];
+      const entry = {
+        id: crypto.randomUUID(),
+        message: message.trim(),
+        timestamp: normalizeTimestamp(options.timestamp) || new Date().toISOString(),
+        level: (options.level || 'info').toLowerCase(),
+        actorSnapshot: options.actorSnapshot || null,
+      };
+      if (!['info', 'success', 'alert', 'warn'].includes(entry.level)) {
+        entry.level = 'info';
+      }
+      if (entry.actorSnapshot && !entry.actorSnapshot.name) {
+        entry.actorSnapshot.name = entry.actorSnapshot.name || 'Warehouse HQ';
+      }
+      shift.mobileActions.unshift(entry);
+      shift.mobileActions = shift.mobileActions.slice(0, 12);
+      if (options.broadcast) {
+        const broadcastPriority = options.priority
+          || (entry.level === 'alert' ? 'high' : entry.level === 'warn' ? 'medium' : 'normal');
+        const fallbackAuthor = entry.actorSnapshot || shift.ownerSnapshot || buildTaskOwnerSnapshot(null, 'Warehouse HQ');
+        const broadcastPayload = {
+          message,
+          channel: options.channel || shift.zone || LABOR_DEFAULT_CHANNEL,
+          priority: broadcastPriority,
+          createdAt: entry.timestamp,
+          authorSnapshot: fallbackAuthor,
+          authorId: fallbackAuthor?.id || null,
+        };
+        const normalized = ensureLaborBroadcast(broadcastPayload, roster);
+        if (normalized) {
+          state.laborBroadcasts.unshift(normalized);
+          state.laborBroadcasts = state.laborBroadcasts.slice(0, 40);
+        }
+      }
+      return entry;
+    }
+
     const photoState = { register: null, profile: null };
     let profilePhotoRemoveRequested = false;
     let lastInventoryRows = [];
@@ -3901,6 +4694,12 @@
           data.teamMembers = normalizeTeamMembers(data.teamMembers);
           if (!Array.isArray(data.tasks)) data.tasks = [];
           data.tasks = data.tasks.map(task => ensureTaskShape(task, data.teamMembers)).filter(Boolean);
+          if (!Array.isArray(data.shifts)) data.shifts = createDefaultShifts(data.teamMembers);
+          data.shifts = data.shifts.map(shift => ensureShift(shift, data.teamMembers)).filter(Boolean);
+          if (!Array.isArray(data.timePunches)) data.timePunches = createDefaultTimePunches(data.teamMembers, data.shifts);
+          data.timePunches = data.timePunches.map(entry => ensureTimePunch(entry, data.teamMembers, data.shifts)).filter(Boolean);
+          if (!Array.isArray(data.laborBroadcasts)) data.laborBroadcasts = createDefaultLaborBroadcasts(data.teamMembers);
+          data.laborBroadcasts = data.laborBroadcasts.map(entry => ensureLaborBroadcast(entry, data.teamMembers)).filter(Boolean);
           if (!('lastShopifySync' in data)) data.lastShopifySync = null;
           if (!('lastShopifySyncSource' in data)) data.lastShopifySyncSource = null;
           return data;
@@ -3913,6 +4712,15 @@
       fallback.tasks = Array.isArray(fallback.tasks)
         ? fallback.tasks.map(task => ensureTaskShape(task, fallback.teamMembers)).filter(Boolean)
         : [];
+      fallback.shifts = Array.isArray(fallback.shifts)
+        ? fallback.shifts.map(shift => ensureShift(shift, fallback.teamMembers)).filter(Boolean)
+        : createDefaultShifts(fallback.teamMembers);
+      fallback.timePunches = Array.isArray(fallback.timePunches)
+        ? fallback.timePunches.map(entry => ensureTimePunch(entry, fallback.teamMembers, fallback.shifts)).filter(Boolean)
+        : createDefaultTimePunches(fallback.teamMembers, fallback.shifts);
+      fallback.laborBroadcasts = Array.isArray(fallback.laborBroadcasts)
+        ? fallback.laborBroadcasts.map(entry => ensureLaborBroadcast(entry, fallback.teamMembers)).filter(Boolean)
+        : createDefaultLaborBroadcasts(fallback.teamMembers);
       return fallback;
     }
 
@@ -3998,6 +4806,7 @@
           roster.unshift(authMember);
         }
       }
+      ensureLaborCollections(roster);
       return roster;
     }
 
@@ -4426,7 +5235,11 @@
 
     function seedState() {
       const now = new Date().toISOString();
-          return {
+      const teamMembers = createDefaultTeamMembers();
+      const shifts = createDefaultShifts(teamMembers);
+      const timePunches = createDefaultTimePunches(teamMembers, shifts);
+      const laborBroadcasts = createDefaultLaborBroadcasts(teamMembers);
+      return {
         generatedAt: now,
         warehouses: [
           { id: crypto.randomUUID(), name: 'Delco Fulfillment East', type: 'Fulfillment Center', capacity: 1200, notes: 'Philadelphia, PA – robotics ready' },
@@ -4445,7 +5258,10 @@
         lastShopifySync: null,
         lastShopifySyncSource: null,
         tasks: [],
-        teamMembers: createDefaultTeamMembers(),
+        shifts,
+        timePunches,
+        laborBroadcasts,
+        teamMembers,
         gamification: [
           { id: crypto.randomUUID(), message: '🏅 Team Inbound earned "5-Star Receiver" for 99.6% accuracy this week.' },
           { id: crypto.randomUUID(), message: '🚀 Picking squad unlocked Rush Wave Boost after meeting SLA five days straight.' }
@@ -4627,6 +5443,47 @@
       const date = new Date(dateStr);
       if (Number.isNaN(date.getTime())) return dateStr;
       return date.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    function formatTimeOfDay(timeStr) {
+      if (!timeStr) return '—';
+      const [hourStr, minuteStr = '00'] = String(timeStr).split(':');
+      const hour = Number(hourStr);
+      const minute = Number(minuteStr);
+      if (Number.isNaN(hour) || Number.isNaN(minute)) return timeStr;
+      const date = new Date();
+      date.setHours(hour);
+      date.setMinutes(minute);
+      return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function describePunchType(type) {
+      switch (type) {
+        case 'clock-in':
+          return 'clocked in';
+        case 'clock-out':
+          return 'clocked out';
+        case 'break-start':
+          return 'started break';
+        case 'break-end':
+          return 'ended break';
+        case 'gps-check':
+          return 'sent GPS check-in';
+        case 'call-out':
+          return 'called out';
+        default:
+          return 'logged activity';
+      }
+    }
+
+    function formatPunchMethod(method) {
+      if (!method) return 'Method: —';
+      const value = method.toLowerCase();
+      if (value === 'gps') return 'GPS mobile';
+      if (value === 'kiosk') return 'Shared kiosk';
+      if (value === 'qr') return 'QR scan';
+      if (value === 'telephony') return 'IVR / telephony';
+      return method;
     }
 
     function escapeHtml(value) {
@@ -5148,6 +6005,280 @@
         state.gamification = state.gamification.slice(0, 20);
       }
       renderTasks();
+    }
+
+    function populateShiftSelect() {
+      const select = document.getElementById('time-clock-shift');
+      if (!select) return;
+      const current = select.value;
+      const shifts = state.shifts.slice().sort((a, b) => {
+        const aDate = new Date(`${a.date || ''}T${a.start || '00:00'}`);
+        const bDate = new Date(`${b.date || ''}T${b.start || '00:00'}`);
+        return aDate - bDate;
+      });
+      const options = shifts.map(shift => {
+        const label = `${formatDate(shift.date)} • ${shift.title}`;
+        return `<option value="${shift.id}">${label}</option>`;
+      });
+      select.innerHTML = ['<option value="">Unassigned / Adhoc</option>', ...options].join('');
+      if (current && shifts.some(shift => shift.id === current)) {
+        select.value = current;
+      }
+    }
+
+    function renderShiftBoard() {
+      const list = document.getElementById('shift-board');
+      if (!list) return;
+      const roster = getRosterMembers();
+      const shifts = state.shifts.slice().sort((a, b) => {
+        const aDate = new Date(`${a.date || ''}T${a.start || '00:00'}`);
+        const bDate = new Date(`${b.date || ''}T${b.start || '00:00'}`);
+        return aDate - bDate;
+      });
+      if (!shifts.length) {
+        list.innerHTML = '<li class="empty-state">No shifts yet. Publish one on the left to activate mobile scheduling.</li>';
+        populateShiftSelect();
+        return;
+      }
+      list.innerHTML = shifts.map(shift => {
+        const owner = shift.ownerSnapshot || buildTaskOwnerSnapshot(matchTeamMember(roster, shift.owner, shift.ownerId), shift.owner || '');
+        const ownerAvatar = renderAvatar({ photo: owner?.photo, name: owner?.name, className: 'task-owner-avatar', alt: `${owner?.name || 'Shift owner'} avatar` });
+        const status = shift.status || 'published';
+        const mobilePill = shift.allowMobileSwaps ? '<span class="shift-pill" data-variant="mobile">Mobile swaps</span>' : '';
+        const gpsLabel = shift.gpsMode === 'strict' ? 'Strict geo-fence' : shift.gpsMode === 'kiosk' ? 'Kiosk mode' : 'GPS recommended';
+        const gpsPill = `<span class="shift-pill" data-variant="gps">${gpsLabel}</span>`;
+        const coveragePill = `<span class="shift-pill" data-variant="coverage">${shift.coverage} head${shift.coverage === 1 ? '' : 's'}</span>`;
+        const activity = Array.isArray(shift.mobileActions) ? shift.mobileActions.slice(0, 3) : [];
+        const activityHtml = activity.map(entry => {
+          const actor = entry.actorSnapshot?.name ? `${entry.actorSnapshot.name}: ` : '';
+          const levelBadge = entry.level === 'alert'
+            ? '<span class="comm-pill" data-priority="high">Alert</span>'
+            : entry.level === 'warn'
+              ? '<span class="comm-pill" data-priority="medium">Heads-up</span>'
+              : entry.level === 'success'
+                ? '<span class="shift-pill" data-variant="coverage">Cleared</span>'
+                : '<span class="shift-pill" data-variant="mobile">Update</span>';
+          return `<li>${levelBadge}<span>${actor}${entry.message}</span><time datetime="${entry.timestamp}">${formatDateTime(entry.timestamp)}</time></li>`;
+        }).join('');
+        const activityList = activityHtml ? `<ul class="shift-activity">${activityHtml}</ul>` : '';
+        const statusAttr = SHIFT_STATUS_LEVELS.includes(status) ? status : 'published';
+        const ownerMeta = owner?.role || owner?.team ? `<span>${[owner?.role, owner?.team].filter(Boolean).join(' • ')}</span>` : '';
+        return `
+          <li class="shift-card" data-id="${shift.id}">
+            <header>
+              <div>
+                <strong>${shift.title}</strong>
+                <div class="shift-meta">
+                  <span>📅 ${formatDate(shift.date)}</span>
+                  <span>🕒 ${formatTimeOfDay(shift.start)} – ${formatTimeOfDay(shift.end)}</span>
+                  ${shift.zone ? `<span>📍 ${shift.zone}</span>` : ''}
+                </div>
+              </div>
+              <span class="shift-status" data-status="${statusAttr}">${statusAttr.replace('-', ' ')}</span>
+            </header>
+            <div class="shift-owner">
+              ${ownerAvatar}
+              <div>
+                <strong>${owner?.name || 'Unassigned'}</strong>
+                ${ownerMeta}
+              </div>
+            </div>
+            <div class="shift-pills">${mobilePill}${gpsPill}${coveragePill}</div>
+            ${activityList}
+            <div class="shift-actions">
+              <button type="button" data-action="ack-shift" data-id="${shift.id}">Acknowledge</button>
+              <button type="button" data-action="swap-shift" data-id="${shift.id}">Launch swap blast</button>
+              <button type="button" data-action="resolve-shift" data-id="${shift.id}">Mark filled</button>
+            </div>
+          </li>
+        `;
+      }).join('');
+      populateShiftSelect();
+    }
+
+    function renderTimePunches() {
+      const list = document.getElementById('time-punch-log');
+      if (!list) return;
+      const punches = state.timePunches.slice().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      if (!punches.length) {
+        list.innerHTML = '<li class="empty-state">No time events yet. Log an event to populate the feed.</li>';
+        return;
+      }
+      list.innerHTML = punches.slice(0, 12).map(punch => {
+        const member = punch.memberSnapshot || buildTaskOwnerSnapshot(matchTeamMember(getRosterMembers(), punch.member, punch.memberId), punch.member || 'Team Member');
+        const geo = punch.geo && typeof punch.geo === 'object' ? punch.geo : null;
+        const location = geo ? `<div class="punch-meta"><span>📍 ${geo.lat.toFixed(4)}, ${geo.lng.toFixed(4)}</span>${Number.isFinite(Number(geo.accuracy)) ? `<span>±${Number(geo.accuracy)}m</span>` : ''}</div>` : '';
+        const shift = punch.shiftId ? state.shifts.find(shift => shift.id === punch.shiftId) : null;
+        const shiftLabel = shift ? `<span>🧭 ${shift.title}</span>` : '';
+        return `
+          <li class="punch-card">
+            <strong>${member?.name || punch.member || 'Team member'}</strong>
+            <div class="punch-meta">
+              <span>${describePunchType(punch.type)}</span>
+              <span>${formatPunchMethod(punch.method)}</span>
+              <time datetime="${punch.timestamp}">${formatDateTime(punch.timestamp)}</time>
+              ${shiftLabel}
+            </div>
+            ${location}
+            ${punch.notes ? `<p class="hint">${punch.notes}</p>` : ''}
+          </li>
+        `;
+      }).join('');
+    }
+
+    function renderLaborTelemetry() {
+      const feed = document.getElementById('labor-telemetry-feed');
+      if (!feed) return;
+      const entries = [];
+      state.shifts.forEach(shift => {
+        (shift.mobileActions || []).forEach(action => {
+          entries.push({
+            timestamp: action.timestamp,
+            message: `${shift.title}: ${action.message}`,
+            level: action.level || 'info',
+            source: 'Shift mobile',
+            meta: `${formatDate(shift.date)} • ${formatTimeOfDay(shift.start)} start`
+          });
+        });
+      });
+      state.timePunches.forEach(punch => {
+        entries.push({
+          timestamp: punch.timestamp,
+          message: `${punch.memberSnapshot?.name || punch.member || 'Team member'} ${describePunchType(punch.type)} (${formatPunchMethod(punch.method)})`,
+          level: punch.type === 'call-out' ? 'alert' : 'info',
+          source: 'Time clock',
+          meta: punch.shiftId ? `Shift: ${state.shifts.find(shift => shift.id === punch.shiftId)?.title || '—'}` : 'Adhoc'
+        });
+      });
+      state.laborBroadcasts.forEach(cast => {
+        entries.push({
+          timestamp: cast.createdAt,
+          message: `[${cast.channel}] ${cast.message}`,
+          level: cast.priority === 'high' ? 'alert' : cast.priority === 'medium' ? 'warn' : 'info',
+          source: cast.authorSnapshot?.name || cast.author || 'Broadcast',
+          meta: 'Broadcast'
+        });
+      });
+      const ordered = entries
+        .filter(entry => entry.timestamp)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 12);
+      if (!ordered.length) {
+        feed.innerHTML = '<li class="empty-state">Telemetry feed will populate as shifts and punches are logged.</li>';
+        return;
+      }
+      feed.innerHTML = ordered.map(entry => {
+        const badge = entry.level === 'alert'
+          ? '<span class="comm-pill" data-priority="high">Alert</span>'
+          : entry.level === 'warn'
+            ? '<span class="comm-pill" data-priority="medium">Heads-up</span>'
+            : '<span class="shift-pill" data-variant="mobile">Update</span>';
+        return `
+          <li class="telemetry-card">
+            <strong>${entry.message}</strong>
+            <div class="telemetry-meta">
+              <span>👤 ${entry.source}</span>
+              <span>🧭 ${entry.meta}</span>
+              <time datetime="${entry.timestamp}">${formatDateTime(entry.timestamp)}</time>
+            </div>
+            <ul class="telemetry-details">
+              <li>${badge}</li>
+            </ul>
+          </li>
+        `;
+      }).join('');
+    }
+
+    function renderLaborKpis() {
+      const grid = document.getElementById('labor-kpi-grid');
+      if (!grid) return;
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const shifts = state.shifts.slice();
+      const punches = state.timePunches.slice();
+      const headcountToday = shifts.filter(shift => shift.date === todayKey).reduce((sum, shift) => sum + (Number(shift.coverage) || 1), 0);
+      const mobileEnabled = shifts.filter(shift => shift.allowMobileSwaps).length;
+      const mobileShare = shifts.length ? Math.round((mobileEnabled / shifts.length) * 100) : 0;
+      const gpsPunches = punches.filter(punch => (punch.method || '').toLowerCase() === 'gps');
+      const gpsShare = punches.length ? Math.round((gpsPunches.length / punches.length) * 100) : 0;
+      const latestByMember = new Map();
+      punches.forEach(punch => {
+        const key = punch.memberSnapshot?.id || punch.memberId || punch.memberSnapshot?.name || punch.member;
+        if (!key) return;
+        const timestamp = new Date(punch.timestamp).getTime();
+        const prior = latestByMember.get(key);
+        if (!prior || timestamp > prior.timestamp) {
+          latestByMember.set(key, { timestamp, type: punch.type });
+        }
+      });
+      let activeCount = 0;
+      latestByMember.forEach(entry => {
+        if (['clock-in', 'gps-check', 'break-end'].includes(entry.type)) {
+          activeCount += 1;
+        }
+      });
+      const alertsOpen = shifts.reduce((sum, shift) => {
+        const statusAlert = shift.status === 'alert';
+        const actionAlert = (shift.mobileActions || []).some(action => action.level === 'alert');
+        return sum + (statusAlert || actionAlert ? 1 : 0);
+      }, 0);
+      const cards = [
+        { title: 'Headcount scheduled today', value: headcountToday, meta: 'Published coverage across today’s shifts.' },
+        { title: 'Mobile-enabled shifts', value: `${mobileShare}%`, meta: 'Swaps + acknowledgements live in self-service.' },
+        { title: 'GPS compliance', value: `${gpsShare}%`, meta: 'Time events captured with GPS or geofence.' },
+        { title: 'On shift right now', value: activeCount, meta: 'Latest clock-in vs. clock-out activity.' },
+        { title: 'Open labor alerts', value: alertsOpen, meta: 'Call-outs or swaps needing action.' }
+      ];
+      grid.innerHTML = cards.map(card => `
+        <div class="labor-kpi">
+          <strong>${card.value}</strong>
+          <span>${card.title}</span>
+          <span class="hint">${card.meta}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderLaborBroadcasts() {
+      const feed = document.getElementById('labor-comm-feed');
+      if (!feed) return;
+      const broadcasts = state.laborBroadcasts.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      if (!broadcasts.length) {
+        feed.innerHTML = '<li class="empty-state">No broadcasts yet. Use the form to push your first update.</li>';
+        return;
+      }
+      feed.innerHTML = broadcasts.slice(0, 10).map(entry => {
+        const priority = entry.priority === 'high' ? 'high' : entry.priority === 'medium' ? 'medium' : 'normal';
+        const badge = priority === 'high'
+          ? '<span class="comm-pill" data-priority="high">Alert</span>'
+          : priority === 'medium'
+            ? '<span class="comm-pill" data-priority="medium">Heads-up</span>'
+            : '<span class="shift-pill" data-variant="mobile">Info</span>';
+        const author = entry.authorSnapshot?.name || entry.author || 'Warehouse HQ';
+        return `
+          <li class="comm-card">
+            <strong>${entry.channel}</strong>
+            <div class="comm-meta">
+              ${badge}
+              <span>👤 ${author}</span>
+              <time datetime="${entry.createdAt}">${formatDateTime(entry.createdAt)}</time>
+            </div>
+            <p>${entry.message}</p>
+          </li>
+        `;
+      }).join('');
+    }
+
+    function renderLaborTools() {
+      const list = document.getElementById('labor-tool-recs');
+      if (!list) return;
+      list.innerHTML = LABOR_TOOL_RECOMMENDATIONS.map(tool => `
+        <li class="tool-card">
+          <h4>${tool.name}</h4>
+          <div>${tool.tagline}</div>
+          <p>${tool.highlight}</p>
+          <p class="hint">${tool.extras}</p>
+          <a href="${tool.url}" target="_blank" rel="noopener">Explore ${tool.name} →</a>
+        </li>
+      `).join('');
     }
 
     function renderStats() {
@@ -7449,6 +8580,238 @@
       });
     }
 
+    const shiftForm = document.getElementById('shift-form');
+    if (shiftForm) {
+      shiftForm.addEventListener('submit', evt => {
+        evt.preventDefault();
+        const form = evt.target;
+        const data = Object.fromEntries(new FormData(form).entries());
+        const roster = getRosterMembers();
+        const owner = matchTeamMember(roster, data.owner, data.ownerId);
+        const payload = {
+          title: data.title,
+          zone: data.zone,
+          date: data.date,
+          start: data.start,
+          end: data.end,
+          coverage: Number(data.coverage) || 1,
+          allowMobileSwaps: Boolean(data.mobileSwap),
+          gpsMode: data.gpsMode || 'recommended',
+          notes: data.notes,
+          owner: owner?.name || data.owner || '',
+          ownerId: owner?.id || null,
+        };
+        const shift = ensureShift(payload, roster);
+        state.shifts.unshift(shift);
+        state.shifts = state.shifts.slice(0, 48);
+        appendShiftActivity(
+          shift.id,
+          `${shift.title} published to mobile board.`,
+          {
+            roster,
+            level: 'info',
+            actorSnapshot: buildTaskOwnerSnapshot(null, 'Warehouse HQ'),
+            broadcast: true,
+            channel: shift.zone || 'Labor Alerts',
+          }
+        );
+        persist();
+        renderShiftBoard();
+        renderLaborTelemetry();
+        renderLaborKpis();
+        renderLaborBroadcasts();
+        populateShiftSelect();
+        showToast('Shift published for self-service scheduling.');
+        form.reset();
+      });
+    }
+
+    const shiftTemplateBtn = document.getElementById('shift-template-btn');
+    if (shiftTemplateBtn && shiftForm) {
+      shiftTemplateBtn.addEventListener('click', () => {
+        const now = new Date();
+        const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        shiftForm.elements.title.value = 'Flex Pack Wave';
+        shiftForm.elements.zone.value = 'Zone C • Flex Pack';
+        shiftForm.elements.date.value = localDate;
+        shiftForm.elements.start.value = '18:00';
+        shiftForm.elements.end.value = '22:00';
+        shiftForm.elements.coverage.value = '3';
+        const roster = getRosterMembers();
+        const defaultOwner = roster[1]?.aliases?.[0] || roster[1]?.name || '';
+        shiftForm.elements.owner.value = defaultOwner;
+        shiftForm.elements.notes.value = 'Prioritize rush D2C orders, stage returns, and prep carrier scans.';
+        showToast('Shift template loaded. Adjust details and post to publish.');
+      });
+    }
+
+    const shiftBoard = document.getElementById('shift-board');
+    if (shiftBoard) {
+      shiftBoard.addEventListener('click', evt => {
+        const button = evt.target.closest('button[data-action]');
+        if (!button) return;
+        const { action, id } = button.dataset;
+        if (!id) return;
+        const roster = getRosterMembers();
+        const shift = state.shifts.find(entry => entry.id === id);
+        if (!shift) return;
+        const actorMember = authUserAsTeamMember();
+        const actorSnapshot = actorMember
+          ? buildTaskOwnerSnapshot(actorMember, actorMember.name)
+          : buildTaskOwnerSnapshot(null, 'Warehouse HQ');
+        if (action === 'ack-shift') {
+          shift.status = 'acknowledged';
+          appendShiftActivity(id, 'Shift acknowledged and visibility updated for leadership.', {
+            level: 'success',
+            actorSnapshot,
+            roster,
+            broadcast: true,
+            channel: 'Leadership Standup',
+          });
+          showToast('Shift acknowledged across mobile and HQ.');
+        } else if (action === 'swap-shift') {
+          shift.status = 'swap-requested';
+          appendShiftActivity(id, 'Swap blast triggered to flex bench to cover open slots.', {
+            level: 'alert',
+            actorSnapshot,
+            roster,
+            broadcast: true,
+            channel: shift.zone || 'Labor Alerts',
+            priority: 'high',
+          });
+          showToast('Swap request broadcast to available associates.');
+        } else if (action === 'resolve-shift') {
+          shift.status = 'acknowledged';
+          appendShiftActivity(id, 'Coverage confirmed and alerts cleared.', {
+            level: 'success',
+            actorSnapshot,
+            roster,
+            broadcast: true,
+            channel: shift.zone || 'Labor Alerts',
+          });
+          showToast('Shift marked as covered.');
+        }
+        persist();
+        renderShiftBoard();
+        renderLaborTelemetry();
+        renderLaborKpis();
+        renderLaborBroadcasts();
+      });
+    }
+
+    const clockLocationBtn = document.getElementById('clock-location-btn');
+    if (clockLocationBtn) {
+      clockLocationBtn.addEventListener('click', () => {
+        const latField = document.getElementById('clock-lat');
+        const lngField = document.getElementById('clock-lng');
+        const accField = document.getElementById('clock-accuracy');
+        const baseLat = 39.9526;
+        const baseLng = -75.1652;
+        const lat = (baseLat + (Math.random() - 0.5) * 0.01).toFixed(5);
+        const lng = (baseLng + (Math.random() - 0.5) * 0.01).toFixed(5);
+        if (latField) latField.value = lat;
+        if (lngField) lngField.value = lng;
+        if (accField) accField.value = Math.max(5, Math.round(Math.random() * 12));
+        showToast('Simulated GPS ping near primary dock.');
+      });
+    }
+
+    const clockNowBtn = document.getElementById('clock-now-btn');
+    if (clockNowBtn) {
+      clockNowBtn.addEventListener('click', () => {
+        const tsField = document.getElementById('clock-timestamp');
+        if (!tsField) return;
+        const now = new Date();
+        const localValue = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        tsField.value = localValue;
+        showToast('Timestamp set to current moment.');
+      });
+    }
+
+    const timeClockForm = document.getElementById('time-clock-form');
+    if (timeClockForm) {
+      timeClockForm.addEventListener('submit', evt => {
+        evt.preventDefault();
+        const form = evt.target;
+        const data = Object.fromEntries(new FormData(form).entries());
+        const roster = getRosterMembers();
+        const member = matchTeamMember(roster, data.member, data.memberId);
+        const payload = {
+          member: member?.name || data.member,
+          memberId: member?.id || null,
+          shiftId: data.shiftId || null,
+          type: data.type,
+          method: data.method,
+          timestamp: data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString(),
+          notes: data.notes,
+          geo: (data.lat || data.lng || data.accuracy)
+            ? { lat: data.lat, lng: data.lng, accuracy: data.accuracy }
+            : undefined,
+        };
+        const punch = ensureTimePunch(payload, roster, state.shifts);
+        state.timePunches.unshift(punch);
+        state.timePunches = state.timePunches.slice(0, 120);
+        if (punch.shiftId) {
+          const shift = state.shifts.find(entry => entry.id === punch.shiftId);
+          if (shift) {
+            const message = `${punch.memberSnapshot?.name || punch.member || 'Team member'} ${describePunchType(punch.type)} (${formatPunchMethod(punch.method)})`;
+            const level = punch.type === 'call-out' ? 'alert' : punch.type === 'clock-in' ? 'success' : 'info';
+            appendShiftActivity(shift.id, message, {
+              level,
+              actorSnapshot: punch.memberSnapshot,
+              roster,
+              broadcast: punch.type === 'call-out',
+              channel: shift.zone || 'Labor Alerts',
+              priority: punch.type === 'call-out' ? 'high' : undefined,
+            });
+            if (punch.type === 'call-out') {
+              shift.status = 'alert';
+            }
+          }
+        }
+        persist();
+        renderTimePunches();
+        renderLaborTelemetry();
+        renderLaborKpis();
+        renderShiftBoard();
+        renderLaborBroadcasts();
+        showToast('Labor telemetry updated.');
+        form.reset();
+      });
+    }
+
+    const laborBroadcastForm = document.getElementById('labor-broadcast-form');
+    if (laborBroadcastForm) {
+      laborBroadcastForm.addEventListener('submit', evt => {
+        evt.preventDefault();
+        const form = evt.target;
+        const data = Object.fromEntries(new FormData(form).entries());
+        const roster = getRosterMembers();
+        const author = matchTeamMember(roster, data.author, data.authorId);
+        const payload = {
+          message: data.message,
+          channel: data.channel || LABOR_DEFAULT_CHANNEL,
+          priority: data.priority || 'normal',
+          createdAt: data.broadcastAt ? new Date(data.broadcastAt).toISOString() : new Date().toISOString(),
+          author: author?.name || data.author || 'Warehouse HQ',
+          authorId: author?.id || null,
+          authorSnapshot: author ? buildTaskOwnerSnapshot(author, author.name) : buildTaskOwnerSnapshot(null, data.author || 'Warehouse HQ'),
+        };
+        const broadcast = ensureLaborBroadcast(payload, roster);
+        if (!broadcast) {
+          showToast('Message required to broadcast.');
+          return;
+        }
+        state.laborBroadcasts.unshift(broadcast);
+        state.laborBroadcasts = state.laborBroadcasts.slice(0, 50);
+        persist();
+        renderLaborBroadcasts();
+        renderLaborTelemetry();
+        showToast('Broadcast queued for delivery across channels.');
+        form.reset();
+      });
+    }
+
     document.getElementById('order-body').addEventListener('click', evt => {
       const btn = evt.target.closest('button');
       if (!btn) return;
@@ -8187,6 +9550,12 @@
       renderShopifyWarnings();
       renderStats();
       renderBundler();
+      renderShiftBoard();
+      renderTimePunches();
+      renderLaborTelemetry();
+      renderLaborKpis();
+      renderLaborBroadcasts();
+      renderLaborTools();
     }
 
     applyBranding();
