@@ -396,6 +396,85 @@
       color: var(--text-muted);
     }
 
+    .automation-cta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.4rem;
+      text-align: right;
+    }
+
+    .automation-cta small {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .automation-intro {
+      margin-top: 1.25rem;
+      display: grid;
+      gap: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .automation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .automation-card {
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.82), rgba(56, 189, 248, 0.18));
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      box-shadow: 0 18px 34px rgba(15, 23, 42, 0.32);
+    }
+
+    .automation-card .price-range {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .automation-card ul li {
+      line-height: 1.45;
+    }
+
+    .automation-support {
+      margin-top: 1.75rem;
+      padding: 1.25rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.6);
+      display: grid;
+      gap: 1.25rem;
+    }
+
+    .automation-support-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .automation-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.55rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .automation-list li strong {
+      color: var(--text);
+    }
+
+    .automation-note {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
     .sourcing-actions {
       display: flex;
       flex-wrap: wrap;
@@ -1770,6 +1849,7 @@
         <button data-target="orders">Orders & Fulfillment</button>
         <button data-target="receiving">Inbound</button>
         <button data-target="shipping">Shipping & Returns</button>
+        <button data-target="automation">Warehouse AI & Robotics</button>
         <button data-target="sourcing">Global Sourcing</button>
         <button data-target="labor">Teams & Tasks</button>
         <button data-target="settings">Data & Settings</button>
@@ -2480,6 +2560,157 @@
               </table>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="automation">
+      <div class="panel">
+        <div class="flex-space">
+          <div>
+            <h2>Warehouse AI &amp; Robotics (USA Focus)</h2>
+            <p>Deploy revenue-generating robotics with U.S. distributors, partner APIs, and affiliate commissions baked into every deal.</p>
+          </div>
+          <div class="automation-cta">
+            <button class="cta" type="button" id="robotics-checkout">Launch Stripe Robotics Order</button>
+            <small>We collect deposits via Stripe, fulfill hardware, and coordinate U.S.-based integrators on your behalf.</small>
+          </div>
+        </div>
+
+        <div class="automation-intro">
+          <p>Warehouses now rely on AMRs, automated forklifts, cobots, and patrol robots to move inventory, package orders, and secure the floor around the clock. We curate the vendors that offer commissions or reseller pricing, plus developer-friendly APIs so your Warehouse HQ can orchestrate every mission.</p>
+          <p>Bundle robots, scanners, and labeling in one checkout: we handle payment through Stripe, drop-ship from U.S. inventory, and include integration kits so operators can go live without managed services.</p>
+        </div>
+
+        <div class="automation-grid">
+          <article class="provider-card automation-card" data-focus="amr">
+            <span class="provider-pill">AMRs · Affiliate &amp; API ready</span>
+            <h3>Autonomous Mobile Robots</h3>
+            <p class="price-range">Typical investment: $10K – $100K+ per robot</p>
+            <ul>
+              <li>Locus Robotics totes runners (~$35K) keep humans in pick zones and pay partner commissions on fleet expansions.</li>
+              <li>Fetch Robotics (Sevens) Freight AMRs (~$100K) and MiR payload bots ($10K–$15K entry) expose REST/ROS for task dispatch.</li>
+              <li>Boston Dynamics Spot (~$75K) patrols and inspects aisles with a robust SDK for payloads and analytics.</li>
+            </ul>
+            <footer>
+              <a href="https://locusrobotics.com/partners/" target="_blank" rel="noopener" class="link-button">Locus partner</a>
+              <a href="https://fetchrobotics.com/platform/fetch-freight/" target="_blank" rel="noopener" class="link-button">Fetch Freight</a>
+              <a href="https://www.bostondynamics.com/spot/developers" target="_blank" rel="noopener" class="link-button">Spot SDK</a>
+            </footer>
+          </article>
+
+          <article class="provider-card automation-card" data-focus="forklifts">
+            <span class="provider-pill">Automated forklifts · Reseller margin</span>
+            <h3>Guided Forklifts &amp; AGVs</h3>
+            <p class="price-range">Typical investment: $50K – $150K+ per vehicle</p>
+            <ul>
+              <li>Vecna Robotics autonomous pallet forks lift and stage loads while sharing revenue on closed projects.</li>
+              <li>OTTO Motors and Seegrid fleets retrofit or replace forklifts with LiDAR navigation and REST/ROS control.</li>
+              <li>Offer Robot-as-a-Service financing so customers pay monthly while you keep integrator rebates.</li>
+            </ul>
+            <footer>
+              <a href="https://www.vecnarobotics.com/" target="_blank" rel="noopener" class="link-button">Vecna Robotics</a>
+              <a href="https://ottomotors.com/partners" target="_blank" rel="noopener" class="link-button">OTTO partner</a>
+              <a href="https://seegrid.com/" target="_blank" rel="noopener" class="link-button">Seegrid programs</a>
+            </footer>
+          </article>
+
+          <article class="provider-card automation-card" data-focus="cobots">
+            <span class="provider-pill">Cobots · Turnkey pick/pack</span>
+            <h3>Collaborative Robot Arms</h3>
+            <p class="price-range">Typical investment: $33K – $65K per cell</p>
+            <ul>
+              <li>Standard Bots RO1 (18kg payload) with pick/pack station ($45K–$65K) includes built-in vision and AI.</li>
+              <li>Universal Robots UR series ($33K–$49K) ship with U.S. support, UR+ marketplace grippers, and safety certifications.</li>
+              <li>Bundle grippers, conveyors, and QA cameras for higher affiliate payouts and faster ROI.</li>
+            </ul>
+            <footer>
+              <a href="https://standardbots.com/ro1" target="_blank" rel="noopener" class="link-button">RO1 details</a>
+              <a href="https://standardbots.com/partner-program" target="_blank" rel="noopener" class="link-button">Standard Bots partners</a>
+              <a href="https://www.universal-robots.com/urplus/" target="_blank" rel="noopener" class="link-button">UR+ ecosystem</a>
+            </footer>
+          </article>
+
+          <article class="provider-card automation-card" data-focus="packaging">
+            <span class="provider-pill">Packaging automation · Add-on margin</span>
+            <h3>Conveyors, Case Packers &amp; Labeling</h3>
+            <p class="price-range">Typical investment: $5K – $150K+ per line</p>
+            <ul>
+              <li>Automated case-packing cells (robot + vision) reach $150K+ with healthy reseller commissions.</li>
+              <li>Modular conveyors, baggers, and box formers start at a few thousand dollars for quick win-upsells.</li>
+              <li>Zebra Print DNA &amp; Honeywell labelers plug into Warehouse HQ for API-driven shipping documents.</li>
+            </ul>
+            <footer>
+              <a href="https://www.packsize.com/solutions/" target="_blank" rel="noopener" class="link-button">Packsize on-demand</a>
+              <a href="https://www.paxiom.com/" target="_blank" rel="noopener" class="link-button">Paxiom automation</a>
+              <a href="https://techdocs.zebra.com/" target="_blank" rel="noopener" class="link-button">Zebra Print DNA</a>
+            </footer>
+          </article>
+
+          <article class="provider-card automation-card" data-focus="security">
+            <span class="provider-pill">Security robots · Subscription share</span>
+            <h3>Autonomous Patrol &amp; Inspection</h3>
+            <p class="price-range">Typical investment: $6 – $12/hr or ~$75K/yr</p>
+            <ul>
+              <li>Boston Dynamics Spot with cameras or thermal payloads surveys aisles and docks on programmable routes.</li>
+              <li>Knightscope K5 indoor patrol robot leases for $7–$12/hr with referral payouts.</li>
+              <li>Cobalt Robotics subscriptions (~$75K/yr) cover robot, support, and analytics—bundle with your monitoring fees.</li>
+            </ul>
+            <footer>
+              <a href="https://www.bostondynamics.com/spot" target="_blank" rel="noopener" class="link-button">Spot overview</a>
+              <a href="https://www.knightscope.com/" target="_blank" rel="noopener" class="link-button">Knightscope leasing</a>
+              <a href="https://www.cobaltrobotics.com/" target="_blank" rel="noopener" class="link-button">Cobalt security</a>
+            </footer>
+          </article>
+
+          <article class="provider-card automation-card" data-focus="scanning">
+            <span class="provider-pill">Scanning · Drop-ship friendly</span>
+            <h3>Handheld Scanners &amp; RFID</h3>
+            <p class="price-range">Typical investment: $500 – $1,500 per device</p>
+            <ul>
+              <li>Zebra TC22/TC53e and Honeywell CT47 rugged Android handhelds stream barcode/RFID data via DataWedge or Mobility SDK.</li>
+              <li>Pair with Zebra/Honeywell label printers for frictionless shipping paperwork and recurring media sales.</li>
+              <li>Offer entry-level bundles alongside our "$5 barcode packs" to capture budget buyers and upsell to enterprise kits.</li>
+            </ul>
+            <footer>
+              <a href="https://www.zebra.com/us/en/partners.html" target="_blank" rel="noopener" class="link-button">Zebra partner</a>
+              <a href="https://techdocs.zebra.com/datawedge/latest/guide/api/" target="_blank" rel="noopener" class="link-button">DataWedge API</a>
+              <a href="https://sps.honeywell.com/us/en/support/partners" target="_blank" rel="noopener" class="link-button">Honeywell programs</a>
+            </footer>
+          </article>
+        </div>
+
+        <div class="automation-support">
+          <div class="automation-support-grid">
+            <div>
+              <h3>What You Need On-Site</h3>
+              <ul class="automation-list">
+                <li><strong>Connectivity &amp; maps:</strong> Enterprise Wi-Fi or private LTE/5G, plus LiDAR scans or CAD maps for fleet navigation.</li>
+                <li><strong>Charging &amp; safety:</strong> 120V charging drops, floor marking, and OSHA-compliant training for mixed robot/human aisles.</li>
+                <li><strong>Data layer:</strong> Warehouse HQ + WMS/ERP credentials to sync pick lists, telemetry, and alerts through REST/ROS/MQTT.</li>
+                <li><strong>Operator enablement:</strong> Assign a shift supervisor for pre-flight checks—our onboarding kit includes SOPs and remote coaching.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Monetize Every Deployment</h3>
+              <ul class="automation-list">
+                <li><strong>Stripe-powered deposits:</strong> Use the button above to collect custom retainers; we schedule drop shipments and integrators.</li>
+                <li><strong>Affiliate &amp; reseller tiers:</strong> Capture commission from Locus, OTTO, Standard Bots, Zebra, and Honeywell on qualified referrals.</li>
+                <li><strong>Robot-as-a-Service upsells:</strong> Lease Knightscope or Cobalt robots ($7–$12/hr or ~$75K/yr) and share recurring revenue.</li>
+                <li><strong>DIY support kits:</strong> Provide customers with configuration files, charging plans, and training so they can self-manage without ongoing labor contracts.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>APIs &amp; Integration Jumpstarts</h3>
+              <ul class="automation-list">
+                <li><strong>Fleet control:</strong> Locus, Fetch/Sevens, OTTO, and MiR fleets tie into Warehouse HQ missions through REST and ROS endpoints.</li>
+                <li><strong>Vision &amp; safety:</strong> Boston Dynamics Spot SDK and Standard Bots RO1 on-board AI power inspection checklists and hazard detection.</li>
+                <li><strong>Scanning &amp; labeling:</strong> Zebra DataWedge intents, Print DNA cloud APIs, and Honeywell Mobility SDK stream barcodes and labels.</li>
+                <li><strong>Reporting:</strong> Feed telemetry into our analytics to track uptime, SLA compliance, and commission eligibility.</li>
+              </ul>
+            </div>
+          </div>
+          <p class="automation-note">All hardware ships with U.S. compliance docs and remote onboarding. Existing owners can plug their robots into Warehouse HQ using the included configuration kits&mdash;no managed services required unless you request them.</p>
         </div>
       </div>
     </section>
@@ -6235,7 +6466,15 @@
       alert('Stripe checkout flows live in production. For now, track selections as part of your upgrade strategy.');
     });
 
-   document.getElementById('bundle-body').addEventListener('click', evt => {
+    const roboticsCheckoutBtn = document.getElementById('robotics-checkout');
+    if (roboticsCheckoutBtn) {
+      roboticsCheckoutBtn.addEventListener('click', () => {
+        alert('Stripe collects your robotics deployment brief. We confirm inventory and installation windows within one business day.');
+        showToast('Stripe link sent to your inbox. Expect a fulfillment call from Warehouse HQ shortly.');
+      });
+    }
+
+    document.getElementById('bundle-body').addEventListener('click', evt => {
       if (evt.target.tagName === 'INPUT') {
         showToast('Bundle updated. AI will recommend savings once usage is detected.');
       }
