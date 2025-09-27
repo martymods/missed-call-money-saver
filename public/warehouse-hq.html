@@ -1395,13 +1395,20 @@
     .badge-emoji img { width: 100%; height: 100%; object-fit: cover; }
     .badge-emoji span { display: inline-flex; }
     .badge-emoji[data-has-logo="true"] span { display: none; }
-    .brand-upload { position: relative; overflow: hidden; border-radius: 1rem; border: 1px dashed rgba(148, 163, 184, 0.45); padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.85rem; cursor: pointer; background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(14, 116, 144, 0.18)); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+    .brand-upload { position: relative; overflow: hidden; border-radius: 1rem; border: 1px dashed rgba(148, 163, 184, 0.45); padding: 0.85rem 1rem; display: flex; align-items: flex-start; gap: 0.85rem; background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(14, 116, 144, 0.18)); transition: transform 0.25s ease, box-shadow 0.25s ease; }
     .brand-upload:hover { transform: translateY(-2px); box-shadow: 0 18px 38px rgba(2, 6, 23, 0.35); border-color: rgba(56, 189, 248, 0.55); }
     .brand-upload:focus-within { outline: 2px solid rgba(56, 189, 248, 0.6); outline-offset: 3px; border-color: rgba(56, 189, 248, 0.6); }
-    .brand-upload input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .brand-upload input[type="file"] { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
     .brand-upload-icon { font-size: 1.75rem; line-height: 1; }
+    .brand-upload-copy { flex: 1; display: flex; flex-direction: column; gap: 0.35rem; }
     .brand-upload strong { display: block; font-size: 0.95rem; }
     .brand-upload small { display: block; font-size: 0.75rem; color: var(--text-muted); }
+    .brand-upload-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .brand-upload-button { border-radius: 999px; border: none; background: rgba(14, 116, 144, 0.9); color: white; font-size: 0.75rem; padding: 0.45rem 0.85rem; cursor: pointer; transition: background 0.2s ease, transform 0.2s ease; box-shadow: 0 10px 20px rgba(14, 116, 144, 0.35); }
+    .brand-upload-button:hover { background: rgba(14, 116, 144, 1); transform: translateY(-1px); }
+    .brand-upload-button:focus-visible { outline: 2px solid rgba(56, 189, 248, 0.6); outline-offset: 3px; }
+    .brand-upload-button.outline { background: transparent; color: rgba(14, 116, 144, 0.95); border: 1px solid rgba(14, 116, 144, 0.45); box-shadow: none; }
+    .brand-upload-button.outline:hover { background: rgba(14, 116, 144, 0.12); }
     .brand-upload-hint { margin-top: 0.35rem; }
     .link-button { background: none; border: none; color: var(--accent); padding: 0; font-size: 0.8rem; cursor: pointer; text-decoration: underline; margin-top: 0.25rem; }
     .link-button:hover { color: #e0f2fe; }
@@ -3155,14 +3162,19 @@
             <label>Call sign headline
               <input type="text" id="brand-call-sign" name="callSign" placeholder="Delco Logistics Fleet" />
             </label>
-            <label class="brand-upload">
-              <input type="file" id="brand-logo-input" name="logo" accept="image/*" capture="environment" />
+            <div class="brand-upload" role="group" aria-labelledby="brand-upload-title" aria-describedby="brand-upload-desc">
+              <input type="file" id="brand-logo-input" name="logo" accept="image/*" />
+              <input type="file" id="brand-logo-camera-input" accept="image/*" capture="environment" />
               <span class="brand-upload-icon" aria-hidden="true">📸</span>
-              <span>
-                <strong>Brand logo</strong>
-                <small>Snap a fresh badge or pick from your camera roll.</small>
-              </span>
-            </label>
+              <div class="brand-upload-copy">
+                <strong id="brand-upload-title">Brand logo</strong>
+                <small id="brand-upload-desc">Snap a fresh badge or upload one from your device.</small>
+                <div class="brand-upload-actions">
+                  <button type="button" class="brand-upload-button" id="brand-logo-upload-trigger">Upload image</button>
+                  <button type="button" class="brand-upload-button outline" id="brand-logo-camera-trigger">Take live photo</button>
+                </div>
+              </div>
+            </div>
             <p class="hint brand-upload-hint" id="brand-logo-hint">PNG or JPG up to 2MB (auto-optimized for cloud sync).</p>
             <button type="button" class="link-button" id="brand-logo-clear">Remove logo</button>
             <button class="cta" type="submit">Save brand preset</button>
@@ -5754,6 +5766,9 @@
       const backgroundSelect = document.getElementById('brand-background');
       const callSignInput = document.getElementById('brand-call-sign');
       const logoInput = document.getElementById('brand-logo-input');
+      const logoCameraInput = document.getElementById('brand-logo-camera-input');
+      const logoUploadTrigger = document.getElementById('brand-logo-upload-trigger');
+      const logoCameraTrigger = document.getElementById('brand-logo-camera-trigger');
       const logoClear = document.getElementById('brand-logo-clear');
       [accentInput, backgroundSelect, callSignInput].forEach(input => {
         if (!input) return;
@@ -5769,43 +5784,55 @@
           scheduleBrandSync();
         });
       });
+      async function handleLogoSelection(input){
+        if (!input) return;
+        const file = input.files?.[0];
+        if (!file) {
+          return;
+        }
+        if (!file.type.startsWith('image/')) {
+          showToast('Please choose an image file.');
+          input.value = '';
+          return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+          showToast('Logo must be 2MB or less.');
+          input.value = '';
+          return;
+        }
+        try {
+          const optimized = await processLogoFile(file);
+          state.branding = {
+            ...state.branding,
+            logoData: optimized,
+          };
+          applyBranding();
+          persist();
+          scheduleBrandSync();
+          showToast('Logo optimized and saved.');
+        } catch (err) {
+          console.warn('Logo processing failed', err);
+          if (err?.message === 'logo_too_large') {
+            showToast('Logo is still too large after compression. Please try a simpler image.');
+          } else {
+            showToast('Unable to process logo. Try another image.');
+          }
+        } finally {
+          input.value = '';
+        }
+      }
+
       if (logoInput) {
-        logoInput.addEventListener('change', async () => {
-          const file = logoInput.files?.[0];
-          if (!file) {
-            return;
-          }
-          if (!file.type.startsWith('image/')) {
-            showToast('Please choose an image file.');
-            logoInput.value = '';
-            return;
-          }
-          if (file.size > 2 * 1024 * 1024) {
-            showToast('Logo must be 2MB or less.');
-            logoInput.value = '';
-            return;
-          }
-          try {
-            const optimized = await processLogoFile(file);
-            state.branding = {
-              ...state.branding,
-              logoData: optimized,
-            };
-            applyBranding();
-            persist();
-            scheduleBrandSync();
-            showToast('Logo optimized and saved.');
-          } catch (err) {
-            console.warn('Logo processing failed', err);
-            if (err?.message === 'logo_too_large') {
-              showToast('Logo is still too large after compression. Please try a simpler image.');
-            } else {
-              showToast('Unable to process logo. Try another image.');
-            }
-          } finally {
-            logoInput.value = '';
-          }
-        });
+        logoInput.addEventListener('change', () => handleLogoSelection(logoInput));
+      }
+      if (logoCameraInput) {
+        logoCameraInput.addEventListener('change', () => handleLogoSelection(logoCameraInput));
+      }
+      if (logoUploadTrigger && logoInput) {
+        logoUploadTrigger.addEventListener('click', () => logoInput.click());
+      }
+      if (logoCameraTrigger && logoCameraInput) {
+        logoCameraTrigger.addEventListener('click', () => logoCameraInput.click());
       }
       if (logoClear) {
         logoClear.addEventListener('click', () => {
@@ -5815,6 +5842,9 @@
           };
           if (logoInput) {
             logoInput.value = '';
+          }
+          if (logoCameraInput) {
+            logoCameraInput.value = '';
           }
           applyBranding();
           persist();
