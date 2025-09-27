@@ -10,6 +10,12 @@ const SESSION_COOKIE = process.env.SESSION_COOKIE_NAME || 'whq_session';
 const SESSION_TTL_MS = Number(process.env.SESSION_TTL_MS || 1000 * 60 * 60 * 24 * 30);
 const SESSION_SAME_SITE = process.env.SESSION_SAMESITE || 'Lax';
 const SESSION_SECURE = String(process.env.SESSION_COOKIE_SECURE || '').toLowerCase() === 'true';
+const PROFILE_ROLES = ['freelancer', 'employee', 'owner'];
+const DEFAULT_PROFILE_ROLE = PROFILE_ROLES[0];
+const MAX_PROFILE_HEADLINE = 120;
+const MAX_PROFILE_SERVICE_AREA = 120;
+const MAX_PROFILE_BIO = 1000;
+const MAX_PROFILE_PHOTO_BYTES = Number(process.env.PROFILE_PHOTO_MAX_BYTES || 250000);
 
 function cookieShouldBeSecure(){
   if (SESSION_SECURE) return true;
@@ -73,6 +79,102 @@ function clientIp(req){
     return forwarded.split(',')[0].trim();
   }
   return req.socket?.remoteAddress || '';
+}
+
+function toBoolean(value){
+  return value === true || value === 'true' || value === '1' || value === 'on';
+}
+
+function cleanText(value, maxLength){
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (!maxLength || trimmed.length <= maxLength) return trimmed;
+  return trimmed.slice(0, maxLength);
+}
+
+function normalizeRole(role){
+  if (!role) return DEFAULT_PROFILE_ROLE;
+  const normalized = String(role).trim().toLowerCase();
+  return PROFILE_ROLES.includes(normalized) ? normalized : DEFAULT_PROFILE_ROLE;
+}
+
+function extractProfilePayload(source = {}){
+  const profile = source && typeof source.profile === 'object' ? source.profile : {};
+  const fallback = key => profile[key] ?? source[key];
+  return {
+    role: normalizeRole(fallback('role')),
+    headline: cleanText(fallback('headline') ?? fallback('profileHeadline') ?? '', MAX_PROFILE_HEADLINE),
+    serviceArea: cleanText(fallback('serviceArea') ?? fallback('profileServiceArea') ?? '', MAX_PROFILE_SERVICE_AREA),
+    bio: cleanText(fallback('bio') ?? fallback('profileBio') ?? '', MAX_PROFILE_BIO),
+  };
+}
+
+function normalizePhotoPayload(input){
+  if (!input || typeof input !== 'object') return null;
+  let { data, mimeType } = input;
+  if (typeof data === 'string' && data.startsWith('data:')){
+    const match = data.match(/^data:([^;]+);base64,(.*)$/);
+    if (match){
+      mimeType = match[1];
+      data = match[2];
+    }
+  }
+  if (!data || !mimeType){
+    return null;
+  }
+  const safeMime = String(mimeType || '').toLowerCase();
+  if (!/^image\/(png|jpe?g|webp|gif)$/.test(safeMime)){
+    return null;
+  }
+  const trimmed = typeof data === 'string' ? data.trim() : '';
+  if (!trimmed){
+    return null;
+  }
+  let buffer;
+  try {
+    buffer = Buffer.from(trimmed, 'base64');
+  } catch (err){
+    return null;
+  }
+  if (!buffer.length){
+    return null;
+  }
+  if (buffer.length > MAX_PROFILE_PHOTO_BYTES){
+    const error = new Error('photo_too_large');
+    error.code = 'photo_too_large';
+    throw error;
+  }
+  return {
+    data: trimmed,
+    mimeType: safeMime,
+    size: buffer.length,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function sanitizeProfile(profile){
+  const safeProfile = {
+    role: normalizeRole(profile?.role),
+    headline: cleanText(profile?.headline || '', MAX_PROFILE_HEADLINE),
+    serviceArea: cleanText(profile?.serviceArea || '', MAX_PROFILE_SERVICE_AREA),
+    bio: cleanText(profile?.bio || '', MAX_PROFILE_BIO),
+    photo: null,
+  };
+  if (profile?.photo && profile.photo.data && profile.photo.mimeType){
+    try {
+      const url = `data:${profile.photo.mimeType};base64,${profile.photo.data}`;
+      safeProfile.photo = {
+        url,
+        mimeType: profile.photo.mimeType,
+        size: profile.photo.size || Buffer.from(profile.photo.data, 'base64').length,
+        updatedAt: profile.photo.updatedAt || null,
+      };
+    } catch (err){
+      safeProfile.photo = null;
+    }
+  }
+  return safeProfile;
 }
 
 async function createSession(user, req){
@@ -157,10 +259,11 @@ function sanitizeUser(user){
   return {
     id: user._id?.toString?.() || user._id,
     email: user.email,
-    name: user.name || '',
+    name: cleanText(user.name || '', 120),
     totpEnabled: !!(user.totp && user.totp.enabled),
     brandTheme: user.brandTheme || null,
     createdAt: user.createdAt,
+    profile: sanitizeProfile(user.profile || {}),
   };
 }
 
@@ -210,16 +313,27 @@ function createRouter(){
       if (existing){
         return res.status(409).json({ error: 'email_exists' });
       }
+      const profilePayload = extractProfilePayload(req.body || {});
+      let photoPayload = null;
+      try {
+        photoPayload = normalizePhotoPayload(req.body?.profilePhoto);
+      } catch (photoErr){
+        if (photoErr?.code === 'photo_too_large'){
+          return res.status(413).json({ error: 'photo_too_large' });
+        }
+        return res.status(400).json({ error: 'invalid_photo' });
+      }
       const doc = {
         email,
         password: hashPassword(password),
-        name: String(name || '').trim(),
+        name: cleanText(name || '', 120),
         brandTheme: brandTheme || null,
         createdAt: new Date().toISOString(),
         totp: { enabled: false },
+        profile: { ...profilePayload, photo: photoPayload },
       };
       let totpProvisioning = null;
-      if (enableTotp){
+      if (toBoolean(enableTotp)){
         const { secret, otpauth } = generateTotpSecret(`Warehouse HQ (${email})`);
         doc.totp = {
           enabled: true,
@@ -355,6 +469,45 @@ function createRouter(){
       res.json({ ok: true });
     } catch (err){
       console.error('Disable TOTP error', err);
+      res.status(500).json({ error: 'server_error' });
+    }
+  });
+
+  router.post('/profile', authenticate, async (req, res) => {
+    try {
+      const { name = '' } = req.body || {};
+      const profilePayload = extractProfilePayload(req.body || {});
+      let photoPayload = null;
+      try {
+        photoPayload = normalizePhotoPayload(req.body?.profilePhoto);
+      } catch (photoErr){
+        if (photoErr?.code === 'photo_too_large'){
+          return res.status(413).json({ error: 'photo_too_large' });
+        }
+        return res.status(400).json({ error: 'invalid_photo' });
+      }
+      const removePhoto = toBoolean(req.body?.removePhoto);
+      const users = await getCollection('users');
+      const existingProfile = req.user.profile && typeof req.user.profile === 'object' ? req.user.profile : {};
+      const updatedProfile = { ...existingProfile, ...profilePayload };
+      if (photoPayload){
+        updatedProfile.photo = photoPayload;
+      } else if (removePhoto){
+        updatedProfile.photo = null;
+      }
+      const updates = {
+        name: cleanText(name || '', 120),
+        profile: updatedProfile,
+        updatedAt: new Date().toISOString(),
+      };
+      await users.updateOne({ _id: req.user._id }, { $set: updates });
+      const freshUser = { ...req.user, ...updates };
+      res.json({ ok: true, user: sanitizeUser(freshUser) });
+    } catch (err){
+      if (err?.code === 'photo_too_large'){
+        return res.status(413).json({ error: 'photo_too_large' });
+      }
+      console.error('Profile update error', err);
       res.status(500).json({ error: 'server_error' });
     }
   });

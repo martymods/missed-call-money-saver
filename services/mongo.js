@@ -4,6 +4,20 @@ const crypto = require('crypto');
 
 let MongoClient;
 let ObjectId;
+let warnedAboutMissingDriver = false;
+let warnedAboutFallback = false;
+
+function warnOnce(key, message){
+  if (key === 'driver'){
+    if (warnedAboutMissingDriver) return;
+    warnedAboutMissingDriver = true;
+  } else if (key === 'fallback'){
+    if (warnedAboutFallback) return;
+    warnedAboutFallback = true;
+  }
+  console.warn(message);
+}
+
 try {
   ({ MongoClient, ObjectId } = require('mongodb'));
 } catch (err) {
@@ -12,6 +26,7 @@ try {
     constructor(id){ this.id = id || crypto.randomUUID(); }
     toString(){ return this.id; }
   };
+  warnOnce('driver', '[mongo] MongoDB driver not installed. Using JSON file fallback – data may reset on deploy.');
 }
 
 let clientPromise = null;
@@ -20,12 +35,16 @@ const fallbackDir = path.join(__dirname, '..', 'data', 'mongo-fallback');
 
 async function connect(){
   if (!MongoClient){
+    warnOnce('fallback', '[mongo] MongoDB unavailable. Set MONGODB_URI and install the driver to persist accounts.');
     return null;
   }
   if (cachedDb) return cachedDb;
   if (!clientPromise){
     const uri = process.env.MONGODB_URI;
-    if (!uri) return null;
+    if (!uri){
+      warnOnce('fallback', '[mongo] MONGODB_URI not configured. Falling back to JSON file store – accounts will reset when the server restarts.');
+      return null;
+    }
     const client = new MongoClient(uri, {
       maxPoolSize: Number(process.env.MONGODB_MAX_POOL || 10),
     });
