@@ -6822,6 +6822,18 @@
 
       let currentContext = null;
       let activeStream = null;
+      const captureCanvas = document.createElement('canvas');
+      captureCanvas.setAttribute('aria-hidden', 'true');
+      captureCanvas.style.display = 'none';
+      const captureCtx = captureCanvas.getContext('2d', { willReadFrequently: true });
+
+      let codeReader = null;
+      let NotFoundExceptionCtor = null;
+      let scannerReadyPromise = null;
+      let scanning = false;
+      let scanFrameHandle = null;
+      let lastDetectedCode = '';
+      let lastDetectedAt = 0;
 
       const contexts = {
         inventory: {
@@ -6982,7 +6994,110 @@
         }
       }
 
+      async function ensureScannerEngine() {
+        if (codeReader) return true;
+        if (!scannerReadyPromise) {
+          scannerReadyPromise = (async () => {
+            try {
+              const [browserMod, libraryMod] = await Promise.all([
+                import('https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/+esm'),
+                import('https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/+esm')
+              ]);
+              const hints = new Map();
+              hints.set(libraryMod.DecodeHintType.POSSIBLE_FORMATS, [
+                libraryMod.BarcodeFormat.QR_CODE,
+                libraryMod.BarcodeFormat.DATA_MATRIX,
+                libraryMod.BarcodeFormat.AZTEC,
+                libraryMod.BarcodeFormat.PDF_417,
+                libraryMod.BarcodeFormat.CODE_128,
+                libraryMod.BarcodeFormat.CODE_39,
+                libraryMod.BarcodeFormat.CODE_93,
+                libraryMod.BarcodeFormat.ITF,
+                libraryMod.BarcodeFormat.EAN_13,
+                libraryMod.BarcodeFormat.EAN_8,
+                libraryMod.BarcodeFormat.UPC_A,
+                libraryMod.BarcodeFormat.UPC_E
+              ]);
+              codeReader = new browserMod.BrowserMultiFormatReader(hints, 500);
+              NotFoundExceptionCtor = libraryMod.NotFoundException;
+              return true;
+            } catch (error) {
+              console.error('Failed to initialize quick scanner', error);
+              codeReader = null;
+              NotFoundExceptionCtor = null;
+              return false;
+            }
+          })();
+        }
+        const ready = await scannerReadyPromise;
+        if (!ready || !codeReader) {
+          scannerReadyPromise = null;
+          return false;
+        }
+        return true;
+      }
+
+      async function scanFrame() {
+        if (!scanning) return;
+        if (!videoEl || !captureCtx) {
+          setStatus('Scanner not supported in this browser. Use manual entry instead.', 'error');
+          stopCamera();
+          return;
+        }
+        if (videoEl.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) {
+          scanFrameHandle = requestAnimationFrame(scanFrame);
+          return;
+        }
+        const width = videoEl.videoWidth || videoEl.clientWidth || 640;
+        const height = videoEl.videoHeight || videoEl.clientHeight || 480;
+        if (!width || !height) {
+          scanFrameHandle = requestAnimationFrame(scanFrame);
+          return;
+        }
+        if (captureCanvas.width !== width || captureCanvas.height !== height) {
+          captureCanvas.width = width;
+          captureCanvas.height = height;
+        }
+        captureCtx.drawImage(videoEl, 0, 0, width, height);
+        try {
+          const result = await codeReader.decodeFromCanvas(captureCanvas);
+          if (result) {
+            const rawText = typeof result.getText === 'function' ? result.getText() : result.text;
+            const normalized = String(rawText || '').trim();
+            if (normalized) {
+              const now = Date.now();
+              if (normalized !== lastDetectedCode || now - lastDetectedAt > 1200) {
+                lastDetectedCode = normalized;
+                lastDetectedAt = now;
+                handleScan(normalized);
+              }
+            }
+          }
+        } catch (error) {
+          if (!NotFoundExceptionCtor || !(error instanceof NotFoundExceptionCtor)) {
+            console.warn('Quick scan decode error', error);
+          }
+        }
+        if (scanning) {
+          scanFrameHandle = requestAnimationFrame(scanFrame);
+        }
+      }
+
       function stopCamera() {
+        scanning = false;
+        if (scanFrameHandle != null) {
+          cancelAnimationFrame(scanFrameHandle);
+          scanFrameHandle = null;
+        }
+        lastDetectedCode = '';
+        lastDetectedAt = 0;
+        if (codeReader && typeof codeReader.reset === 'function') {
+          try {
+            codeReader.reset();
+          } catch (err) {
+            console.debug('Quick scan reset failed', err);
+          }
+        }
         if (activeStream) {
           activeStream.getTracks().forEach(track => track.stop());
           activeStream = null;
@@ -6995,11 +7110,20 @@
 
       async function startCamera() {
         if (!modal || modal.hidden) return;
-        if (!navigator.mediaDevices?.getUserMedia) {
-          setStatus('Camera not supported. Use a handheld barcode scanner instead.', 'error');
-          return;
-        }
         try {
+          const ready = await ensureScannerEngine();
+          if (!ready || !codeReader) {
+            setStatus('Scanner engine unavailable. Use manual entry instead.', 'error');
+            return;
+          }
+          if (!navigator.mediaDevices?.getUserMedia) {
+            setStatus('Camera not supported. Use a handheld barcode scanner instead.', 'error');
+            return;
+          }
+          if (!captureCtx) {
+            setStatus('Scanner not supported in this browser. Use manual entry instead.', 'error');
+            return;
+          }
           stopCamera();
           const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
           activeStream = stream;
@@ -7008,10 +7132,14 @@
             await videoEl.play();
           }
           lineEl?.classList.add('animate');
+          codeReader.reset();
+          scanning = true;
           setStatus('Camera active. Align the sticker inside the frame.', 'info');
+          scanFrameHandle = requestAnimationFrame(scanFrame);
         } catch (error) {
           console.warn('Camera start failed', error);
           setStatus('Camera not available. Use manual entry instead.', 'error');
+          lineEl?.classList.remove('animate');
         }
       }
 
