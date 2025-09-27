@@ -3662,7 +3662,7 @@
 
         <div class="caseflow-showcase" aria-label="CaseFlow automation highlights">
           <div class="caseflow-hero">
-            <video autoplay muted loop playsinline poster="/image/CaseFlow_WorkerandCPJ-1.png">
+            <video id="caseflow-hero-video" autoplay playsinline preload="auto" controls poster="/image/CaseFlow_WorkerandCPJ-1.png">
               <source src="https://cdn.coverr.co/videos/coverr-a-forklift-in-a-warehouse-7718/1080p.mp4" type="video/mp4" />
             </video>
             <div class="caseflow-hero-content">
@@ -11027,6 +11027,38 @@
 
     document.addEventListener('global-network-refresh', evt => refreshNetworkSnapshots(evt?.detail || {}));
   })();
+
+    (function ensureCaseflowVideoPlayback() {
+      const video = document.getElementById('caseflow-hero-video');
+      if (!video) return;
+
+      video.loop = false;
+      video.muted = false;
+      video.defaultMuted = false;
+      video.volume = 1;
+
+      const attemptPlay = () => {
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.catch(() => {
+            const resumePlayback = () => {
+              video.play().catch(() => {});
+            };
+            document.addEventListener('pointerdown', resumePlayback, { once: true });
+          });
+        }
+      };
+
+      if (video.readyState >= 3) {
+        attemptPlay();
+      } else {
+        video.addEventListener('canplaythrough', attemptPlay, { once: true });
+      }
+
+      video.addEventListener('ended', () => {
+        video.currentTime = video.duration;
+      });
+    })();
 
     (function registerScannerSync() {
       if (typeof BroadcastChannel === 'function') {
