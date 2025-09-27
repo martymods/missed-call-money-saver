@@ -416,6 +416,34 @@
       color: var(--text-muted);
     }
 
+    .robotics-bundle {
+      margin-top: 1.5rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .robotics-bundle table td .hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    .robotics-bundle .bundle-totals {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+      padding-top: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .robotics-bundle .bundle-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
     .automation-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -2580,6 +2608,41 @@
         <div class="automation-intro">
           <p>Warehouses now rely on AMRs, automated forklifts, cobots, and patrol robots to move inventory, package orders, and secure the floor around the clock. We curate the vendors that offer commissions or reseller pricing, plus developer-friendly APIs so your Warehouse HQ can orchestrate every mission.</p>
           <p>Bundle robots, scanners, and labeling in one checkout: we handle payment through Stripe, drop-ship from U.S. inventory, and include integration kits so operators can go live without managed services.</p>
+        </div>
+
+        <div class="panel light robotics-bundle" id="robotics-bundler" style="display:none;">
+          <h3>Deployment Builder</h3>
+          <p class="hint">Set quantities for the hardware or patrol subscriptions you want. Totals update instantly—Stripe secures the order while we source inventory and U.S. integrators behind the scenes.</p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Package</th>
+                  <th>One-time</th>
+                  <th>Monthly</th>
+                  <th>Qty</th>
+                  <th>Extended</th>
+                </tr>
+              </thead>
+              <tbody id="robotics-bundle-body"></tbody>
+            </table>
+          </div>
+          <div class="bundle-totals">
+            <div>
+              <strong>Hardware Total:</strong> <span id="robotics-hardware-total">$0</span><br />
+              <strong>Recurring Total:</strong> <span id="robotics-monthly-total">$0/mo</span><br />
+              <span class="hint">Deposit applied to hardware. First month of patrol/service fees bills upfront.</span>
+            </div>
+            <div>
+              <strong>Deposit to Lock:</strong> <span id="robotics-deposit">$0</span>
+            </div>
+          </div>
+          <div class="bundle-actions">
+            <button class="secondary" type="button" id="robotics-pay-deposit">Lock Inventory (Deposit)</button>
+            <button class="cta" type="button" id="robotics-pay-full">Pay Hardware in Full</button>
+            <button class="secondary" type="button" id="robotics-pay-monthly">Subscription Bundle Only</button>
+          </div>
+          <p class="hint" id="robotics-bundle-note">Line-item install plans unlock after payment confirmation. We quietly pass through distributor rebates and affiliate commissions.</p>
         </div>
 
         <div class="automation-grid">
@@ -6466,13 +6529,203 @@
       alert('Stripe checkout flows live in production. For now, track selections as part of your upgrade strategy.');
     });
 
+    const roboticsPackages = [
+      { id: 'locus-runner', name: 'Locus Runner Pod', price: 35000, depositPct: 0.25, description: 'AMR tote runners with partner rebate protection.' },
+      { id: 'fetch-freight', name: 'Fetch Freight AMR', price: 98000, depositPct: 0.3, description: 'Heavy payload AMRs with REST/ROS dispatch hooks.' },
+      { id: 'spot-patrol', name: 'Spot Patrol Kit', price: 75000, depositPct: 0.25, description: 'Boston Dynamics Spot with inspection payload and SDK access.' },
+      { id: 'vecna-forklift', name: 'Vecna Autonomous Forklift', price: 128000, depositPct: 0.3, description: 'Revenue-share AGV installs with integrator rebates baked in.' },
+      { id: 'otto-fleet', name: 'OTTO / Seegrid Fleet Retrofit', price: 115000, depositPct: 0.3, description: 'LiDAR-guided conversions for existing forklift fleets.' },
+      { id: 'standard-ro1', name: 'Standard Bots RO1 Cell', price: 58000, depositPct: 0.25, description: '18kg cobot workcell with pick/pack tooling.' },
+      { id: 'ur-cell', name: 'Universal Robots UR Cell', price: 42000, depositPct: 0.25, description: 'UR+ certified kit with safety, conveyors, and QA camera slot.' },
+      { id: 'packaging-cell', name: 'Automated Packaging Cell', price: 95000, depositPct: 0.28, description: 'Case packing robot + vision + inline labeling.' },
+      { id: 'label-suite', name: 'Zebra / Honeywell Label Suite', price: 7800, depositPct: 0.2, description: 'Printers, scanners, and media credits drop-shipped from U.S. stock.' },
+      { id: 'barcode-starter', name: 'Entry Scanner Pack', price: 1500, depositPct: 0.2, description: 'Budget-friendly handhelds paired with $5 barcode media upsells.' },
+      { id: 'knightscope', name: 'Knightscope Patrol Subscription', monthly: 9500, description: 'Indoor patrol robots with referral share. Billed monthly.' },
+      { id: 'cobalt', name: 'Cobalt Robotics Watch', monthly: 6700, description: 'Full-stack security robotics subscription for large footprints.' }
+    ];
+
+    const roboticsState = {
+      quantities: new Map(),
+      hardwareTotal: 0,
+      monthlyTotal: 0,
+      depositTotal: 0
+    };
+
+    const roboticsBundleBody = document.getElementById('robotics-bundle-body');
+    const roboticsHardwareTotalEl = document.getElementById('robotics-hardware-total');
+    const roboticsMonthlyTotalEl = document.getElementById('robotics-monthly-total');
+    const roboticsDepositEl = document.getElementById('robotics-deposit');
+    const roboticsNoteEl = document.getElementById('robotics-bundle-note');
+
+    const fmtUSD = (value, suffix = '') => {
+      const amount = Number(value) || 0;
+      return `$${amount.toLocaleString()}${suffix}`;
+    };
+
+    const roundHundred = (value) => Math.ceil((Number(value) || 0) / 100) * 100;
+
+    function renderRoboticsBundler() {
+      if (!roboticsBundleBody) return;
+      roboticsBundleBody.innerHTML = roboticsPackages.map(pkg => {
+        const qty = roboticsState.quantities.get(pkg.id) ?? 0;
+        const oneTime = Number(pkg.price || 0);
+        const monthly = Number(pkg.monthly || 0);
+        const extendedHardware = oneTime * qty;
+        const extendedMonthly = monthly * qty;
+        const extendedText = [
+          extendedHardware ? fmtUSD(extendedHardware) : null,
+          extendedMonthly ? fmtUSD(extendedMonthly, '/mo') : null
+        ].filter(Boolean).join(' + ') || '—';
+        return `
+          <tr>
+            <td>
+              <strong>${pkg.name}</strong>
+              <div class="hint">${pkg.description}</div>
+            </td>
+            <td>${oneTime ? fmtUSD(oneTime) : '—'}</td>
+            <td>${monthly ? fmtUSD(monthly, '/mo') : '—'}</td>
+            <td><input type="number" min="0" step="1" value="${qty}" data-package="${pkg.id}" aria-label="${pkg.name} quantity"></td>
+            <td>${extendedText}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const totals = roboticsPackages.reduce((acc, pkg) => {
+        const qty = roboticsState.quantities.get(pkg.id) ?? 0;
+        if (!qty) return acc;
+        const oneTime = Number(pkg.price || 0);
+        const monthly = Number(pkg.monthly || 0);
+        if (oneTime) {
+          acc.hardware += oneTime * qty;
+          const pct = Number(pkg.depositPct || 0.25);
+          acc.deposit += (oneTime * qty) * pct;
+        }
+        if (monthly) {
+          acc.monthly += monthly * qty;
+        }
+        return acc;
+      }, { hardware: 0, monthly: 0, deposit: 0 });
+
+      roboticsState.hardwareTotal = totals.hardware;
+      roboticsState.monthlyTotal = totals.monthly;
+      if (totals.hardware) {
+        const depositBase = Math.max(5000, roundHundred(totals.deposit));
+        roboticsState.depositTotal = Math.min(totals.hardware, depositBase);
+      } else {
+        roboticsState.depositTotal = 0;
+      }
+
+      if (roboticsHardwareTotalEl) roboticsHardwareTotalEl.textContent = fmtUSD(roboticsState.hardwareTotal);
+      if (roboticsMonthlyTotalEl) roboticsMonthlyTotalEl.textContent = fmtUSD(roboticsState.monthlyTotal, '/mo');
+      if (roboticsDepositEl) roboticsDepositEl.textContent = roboticsState.depositTotal ? fmtUSD(roboticsState.depositTotal) : '$0';
+
+      if (roboticsNoteEl) {
+        roboticsNoteEl.textContent = roboticsState.hardwareTotal || roboticsState.monthlyTotal
+          ? 'Pricing auto-loads into Stripe. Deployment calendars unlock once funds land.'
+          : 'Line-item install plans unlock after payment confirmation. We quietly pass through distributor rebates and affiliate commissions.';
+      }
+    }
+
+    function updateRoboticsQuantity(id, value) {
+      const qty = Math.max(0, Math.floor(Number(value) || 0));
+      if (!qty) roboticsState.quantities.delete(id);
+      else roboticsState.quantities.set(id, qty);
+      renderRoboticsBundler();
+    }
+
+    async function submitRoboticsCheckout(mode) {
+      const hardware = roboticsState.hardwareTotal;
+      const monthly = roboticsState.monthlyTotal;
+      const deposit = roboticsState.depositTotal;
+
+      const selections = roboticsPackages
+        .map(pkg => {
+          const qty = roboticsState.quantities.get(pkg.id) ?? 0;
+          if (!qty) return null;
+          return `${qty}× ${pkg.name}`;
+        })
+        .filter(Boolean);
+
+      if (!selections.length) {
+        showToast('Add at least one robot, cell, or patrol subscription to proceed.');
+        return;
+      }
+
+      let chargeAmount = 0;
+      let summaryLabel = selections.join(' | ');
+      if (mode === 'full') {
+        chargeAmount = hardware + monthly;
+        summaryLabel = `Full hardware + month 1 · ${summaryLabel}`;
+      } else if (mode === 'deposit') {
+        chargeAmount = deposit + monthly;
+        summaryLabel = `Deposit + month 1 · ${summaryLabel}`;
+      } else if (mode === 'monthly') {
+        chargeAmount = monthly;
+        summaryLabel = `Subscription bundle · ${summaryLabel}`;
+      }
+
+      if (!chargeAmount || chargeAmount < 50) {
+        showToast('Select enough volume to trigger a charge.');
+        return;
+      }
+
+      const successUrl = `${window.location.origin}/warehouse-hq.html?robotics=paid`;
+      const cancelUrl = `${window.location.origin}/warehouse-hq.html?robotics=cancel`;
+
+      try {
+        const res = await fetch('/api/deal/checkout/stripe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amountCents: Math.round(chargeAmount * 100),
+            summary: summaryLabel.slice(0, 490),
+            partnerSlug: 'warehouse-robotics',
+            dealId: `warehouse_robotics_${Date.now()}`,
+            successUrl,
+            cancelUrl
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.detail || data?.error || 'stripe_error');
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+        throw new Error('missing_checkout_url');
+      } catch (err) {
+        console.error('robotics checkout failed', err);
+        showToast('Unable to launch Stripe checkout right now. Try again or contact sales.');
+      }
+    }
+
+    if (roboticsBundleBody) {
+      roboticsBundleBody.addEventListener('input', evt => {
+        const id = evt.target?.dataset?.package;
+        if (!id) return;
+        updateRoboticsQuantity(id, evt.target.value);
+      });
+    }
+
     const roboticsCheckoutBtn = document.getElementById('robotics-checkout');
     if (roboticsCheckoutBtn) {
       roboticsCheckoutBtn.addEventListener('click', () => {
-        alert('Stripe collects your robotics deployment brief. We confirm inventory and installation windows within one business day.');
-        showToast('Stripe link sent to your inbox. Expect a fulfillment call from Warehouse HQ shortly.');
+        const panel = document.getElementById('robotics-bundler');
+        if (!panel) return;
+        const open = panel.style.display === 'block';
+        panel.style.display = open ? 'none' : 'block';
+        if (!open) {
+          renderRoboticsBundler();
+          showToast('Robotics deployment builder armed. Stripe is ready when you are.');
+        }
       });
     }
+
+    const roboticsPayDeposit = document.getElementById('robotics-pay-deposit');
+    const roboticsPayFull = document.getElementById('robotics-pay-full');
+    const roboticsPayMonthly = document.getElementById('robotics-pay-monthly');
+    roboticsPayDeposit?.addEventListener('click', () => submitRoboticsCheckout('deposit'));
+    roboticsPayFull?.addEventListener('click', () => submitRoboticsCheckout('full'));
+    roboticsPayMonthly?.addEventListener('click', () => submitRoboticsCheckout('monthly'));
 
     document.getElementById('bundle-body').addEventListener('click', evt => {
       if (evt.target.tagName === 'INPUT') {
