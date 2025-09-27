@@ -2051,12 +2051,6 @@
       </div>
 
       <div class="panel light">
-        <h3>Operations Gallery</h3>
-        <p class="hint">Live visuals from community logistics floors. Mix them into your updates to make sorting &amp; labeling feel like a co-op mission.</p>
-        <div class="gallery" id="ops-gallery"></div>
-      </div>
-
-      <div class="panel light">
         <h3>Report an Issue</h3>
         <p>Our OpenAI co-pilot guides the report and launches an email to rb@dreamworld.co so nothing gets lost in transit.</p>
         <form id="support-form">
@@ -3521,31 +3515,53 @@
         img.onload = () => {
           try {
             const maxDimension = 512;
+            const minDimension = 96;
             let { width, height } = img;
             if (!width || !height){
               resolve(dataUrl);
               return;
             }
-            const scale = Math.min(1, maxDimension / Math.max(width, height));
-            const targetWidth = Math.max(1, Math.round(width * scale));
-            const targetHeight = Math.max(1, Math.round(height * scale));
             const canvas = document.createElement('canvas');
-            canvas.width = targetWidth;
-            canvas.height = targetHeight;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-            const exportMime = mimeType === 'image/png' ? 'image/png' : 'image/jpeg';
-            let quality = exportMime === 'image/jpeg' ? 0.82 : undefined;
-            let output = canvas.toDataURL(exportMime, quality);
-            while (output.length > BRAND_LOGO_MAX_LENGTH && exportMime === 'image/jpeg' && quality > 0.46){
-              quality -= 0.12;
-              output = canvas.toDataURL(exportMime, quality);
-            }
-            if (output.length > BRAND_LOGO_MAX_LENGTH){
-              reject(new Error('logo_too_large'));
+            if (!ctx){
+              resolve(dataUrl);
               return;
             }
-            resolve(output);
+            const baseScale = Math.min(1, maxDimension / Math.max(width, height));
+            let scale = baseScale;
+            let exportMime = mimeType === 'image/png' ? 'image/png' : 'image/jpeg';
+            let quality = exportMime === 'image/jpeg' ? 0.82 : 1;
+            let switchedMime = false;
+
+            for (let attempt = 0; attempt < 12; attempt += 1){
+              const targetWidth = Math.max(1, Math.round(width * scale));
+              const targetHeight = Math.max(1, Math.round(height * scale));
+              canvas.width = targetWidth;
+              canvas.height = targetHeight;
+              ctx.clearRect(0, 0, targetWidth, targetHeight);
+              ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+              const output = canvas.toDataURL(exportMime, exportMime === 'image/jpeg' ? quality : undefined);
+              if (output.length <= BRAND_LOGO_MAX_LENGTH){
+                resolve(output);
+                return;
+              }
+              if (exportMime === 'image/jpeg' && quality > 0.5){
+                quality = Math.max(0.5, +(quality - 0.12).toFixed(2));
+                continue;
+              }
+              if (Math.max(targetWidth, targetHeight) > minDimension){
+                scale = Math.max(scale * 0.8, minDimension / Math.max(width, height));
+                continue;
+              }
+              if (exportMime === 'image/png' && !switchedMime){
+                exportMime = 'image/jpeg';
+                quality = 0.82;
+                switchedMime = true;
+                continue;
+              }
+              break;
+            }
+            reject(new Error('logo_too_large'));
           } catch (err){
             reject(err);
           }
@@ -4117,7 +4133,7 @@
           } catch (err) {
             console.warn('Logo processing failed', err);
             if (err?.message === 'logo_too_large') {
-              showToast('Logo is too large to sync. Please choose a smaller image.');
+              showToast('Logo is still too large after compression. Please try a simpler image.');
             } else {
               showToast('Unable to process logo. Try another image.');
             }
@@ -4139,31 +4155,6 @@
           persist();
           scheduleBrandSync();
         });
-      }
-    }
-
-    async function loadOperationsGallery(){
-      const container = document.getElementById('ops-gallery');
-      if (!container) return;
-      container.innerHTML = '<div class="integration-table-empty">Loading gallery…</div>';
-      try {
-        const res = await fetch('https://picsum.photos/v2/list?limit=6');
-        const data = await res.json();
-        if (!Array.isArray(data) || !data.length) throw new Error('empty');
-        container.innerHTML = data.map((img, idx) => {
-          const url = `${img.download_url}?w=260&h=260&fit=crop`;
-          return `<img src="${url}" alt="Warehouse inspiration ${idx + 1}" loading="lazy" />`;
-        }).join('');
-      } catch (err){
-        const fallback = [
-          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=400&q=80',
-          'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=400&q=80',
-          'https://images.unsplash.com/photo-1581579186989-421b5f70e22e?auto=format&fit=crop&w=400&q=80',
-          'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=400&q=80',
-          'https://images.unsplash.com/photo-1515169067865-5387ec356754?auto=format&fit=crop&w=400&q=80',
-          'https://images.unsplash.com/photo-1603180465537-0fd7a7d98bc5?auto=format&fit=crop&w=400&q=80',
-        ];
-        container.innerHTML = fallback.map((url, idx) => `<img src="${url}" alt="Warehouse scene ${idx + 1}" loading="lazy" />`).join('');
       }
     }
 
@@ -4877,7 +4868,6 @@
     renderTotpUi();
     fetchIntegrationCatalog();
     loadIntegrations();
-    loadOperationsGallery();
     (async () => {
       await restoreSessionFromServer();
       await hydrateAuth();
