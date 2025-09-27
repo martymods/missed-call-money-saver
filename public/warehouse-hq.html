@@ -6477,6 +6477,11 @@
       }
     });
 
+    const fmtUSD = (value, suffix = '') => {
+      const amount = Number(value) || 0;
+      return `$${amount.toLocaleString()}${suffix}`;
+    };
+
     const bundleModules = [
       { id: 'ai-slotting', name: 'AI Slotting Optimization', price: 249, description: 'Adaptive storage recommendations using velocity & demand forecasting.' },
       { id: 'labor-gamification', name: 'Labor Gamification Suite', price: 99, description: 'XP points, leaderboards and streak-based incentives for teams.' },
@@ -6496,22 +6501,26 @@
           <tr>
             <td>${mod.name}</td>
             <td>${mod.description}</td>
-            <td>$${mod.price}</td>
+            <td>${fmtUSD(mod.price)}</td>
             <td><input type="checkbox" data-module="${mod.id}" ${checked}></td>
           </tr>
         `;
       }).join('');
-      document.getElementById('bundle-total').textContent = `$${bundleState.total}`;
+      document.getElementById('bundle-total').textContent = fmtUSD(bundleState.total);
       document.getElementById('bundle-note').textContent = bundleState.selections.size
-        ? 'Nice build! Stripe-ready checkout when you connect billing.'
+        ? 'Stripe collects month one for the modules you bundle.'
         : 'Core platform remains free. Add power-ups when you are ready.';
     }
 
     document.getElementById('open-bundler').addEventListener('click', () => {
       const panel = document.getElementById('bundler');
+      if (!panel) return;
       const visible = panel.style.display === 'block';
-      panel.style.display = visible ? 'none' : 'block';
       renderBundler();
+      panel.style.display = visible ? 'none' : 'block';
+      if (!visible) {
+        showToast('Dynamic bundler armed. Stripe checkout mirrors robotics flows.');
+      }
     });
 
     document.getElementById('bundle-body').addEventListener('change', evt => {
@@ -6525,9 +6534,61 @@
       renderBundler();
     });
 
-    document.getElementById('checkout-bundle').addEventListener('click', () => {
-      alert('Stripe checkout flows live in production. For now, track selections as part of your upgrade strategy.');
-    });
+    async function submitBundleCheckout() {
+      const selections = Array.from(bundleState.selections)
+        .map(id => bundleModules.find(mod => mod.id === id))
+        .filter(Boolean);
+
+      if (!selections.length) {
+        showToast('Select at least one module to launch checkout.');
+        return;
+      }
+
+      const monthlyTotal = bundleState.total;
+      if (!monthlyTotal || monthlyTotal < 5) {
+        showToast('Add enough monthly volume to activate checkout.');
+        return;
+      }
+
+      const summaryLabel = selections
+        .map(mod => `${mod.name} (${fmtUSD(mod.price, '/mo')})`)
+        .join(' | ');
+
+      const successUrl = `${window.location.origin}/warehouse-hq.html?bundler=paid`;
+      const cancelUrl = `${window.location.origin}/warehouse-hq.html?bundler=cancel`;
+
+      try {
+        const res = await fetch('/api/deal/checkout/stripe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amountCents: Math.round(monthlyTotal * 100),
+            summary: `Dynamic module bundle · ${summaryLabel}`.slice(0, 490),
+            partnerSlug: 'warehouse-hq-billing',
+            dealId: `warehouse_module_bundle_${Date.now()}`,
+            successUrl,
+            cancelUrl
+          })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data?.detail || data?.error || 'stripe_error');
+        }
+
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+
+        throw new Error('missing_checkout_url');
+      } catch (error) {
+        console.error('bundle checkout failed', error);
+        showToast('Unable to open Stripe checkout. Try again or contact support.');
+      }
+    }
+
+    document.getElementById('checkout-bundle').addEventListener('click', submitBundleCheckout);
 
     const roboticsPackages = [
       { id: 'locus-runner', name: 'Locus Runner Pod', price: 35000, depositPct: 0.25, description: 'AMR tote runners with partner rebate protection.' },
@@ -6556,11 +6617,6 @@
     const roboticsMonthlyTotalEl = document.getElementById('robotics-monthly-total');
     const roboticsDepositEl = document.getElementById('robotics-deposit');
     const roboticsNoteEl = document.getElementById('robotics-bundle-note');
-
-    const fmtUSD = (value, suffix = '') => {
-      const amount = Number(value) || 0;
-      return `$${amount.toLocaleString()}${suffix}`;
-    };
 
     const roundHundred = (value) => Math.ceil((Number(value) || 0) / 100) * 100;
 
@@ -6834,21 +6890,8 @@
         });
       }
 
-      function flyCard(fromEl, toEl) {
-        if (!fromEl || !toEl) return;
-        const ghost = fromEl.cloneNode(true);
-        const rectFrom = fromEl.getBoundingClientRect();
-        const rectTo = toEl.getBoundingClientRect();
-        ghost.classList.add('wh-ghost');
-        ghost.style.left = `${rectFrom.left + rectFrom.width / 2}px`;
-        ghost.style.top = `${rectFrom.top + rectFrom.height / 2}px`;
-        document.body.appendChild(ghost);
-        const dx = rectTo.left + rectTo.width / 2 - (rectFrom.left + rectFrom.width / 2);
-        const dy = rectTo.top + rectTo.height / 2 - (rectFrom.top + rectFrom.height / 2);
-        ghost.style.setProperty('--dx', `${dx}px`);
-        ghost.style.setProperty('--dy', `${dy}px`);
-        ghost.classList.add('animate');
-        setTimeout(() => ghost.remove(), 720);
+      function flyCard() {
+        // Warehouse ghost animation disabled per latest UX feedback.
       }
 
       renderFlow();
