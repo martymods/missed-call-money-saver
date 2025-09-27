@@ -588,6 +588,22 @@
     const STORAGE_KEY = 'warehouse-hq-scanner-sessions';
     const SCAN_CHANNEL_NAME = 'warehouse-hq-scan';
     const SCAN_STORAGE_EVENT_KEY = 'warehouse-hq-scan-payload';
+    const SCAN_QUEUE_KEY = 'warehouse-hq-scan-queue';
+
+    function persistScanPayload(payload) {
+      if (!payload || typeof payload !== 'object') return;
+      try {
+        const raw = localStorage.getItem(SCAN_QUEUE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        const queue = Array.isArray(parsed) ? parsed : [];
+        const filtered = queue.filter(item => item && item.id !== payload.id);
+        filtered.push(payload);
+        const trimmed = filtered.slice(-100);
+        localStorage.setItem(SCAN_QUEUE_KEY, JSON.stringify(trimmed));
+      } catch (err) {
+        console.warn('Failed to buffer scan payload', err);
+      }
+    }
 
     const MODE_CONFIG = {
       general: {
@@ -724,7 +740,11 @@
 
     function broadcastDetection(decoded, timestamp) {
       if (!config.syncMode) return;
+      const payloadId = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `scan-${Date.now()}-${Math.random().toString(16).slice(2)}`;
       const payload = {
+        id: payloadId,
         type: 'warehouse-scan',
         mode: config.syncMode,
         code: decoded.text,
@@ -733,6 +753,7 @@
         timestamp,
         quantity: 1
       };
+      persistScanPayload(payload);
       if (scanChannel) {
         try {
           scanChannel.postMessage(payload);
