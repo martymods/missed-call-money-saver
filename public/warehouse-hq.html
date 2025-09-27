@@ -1247,6 +1247,376 @@
       margin-top: 1.2rem;
     }
 
+    #account-status {
+      margin-top: 1rem;
+    }
+
+    .account-card {
+      display: flex;
+      gap: 0.85rem;
+      align-items: center;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 1rem;
+      padding: 0.85rem 1rem;
+      background: rgba(15, 23, 42, 0.65);
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+    }
+
+    .account-card-avatar {
+      width: 3.25rem;
+      height: 3.25rem;
+      border-radius: 0.85rem;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+      background: rgba(56, 189, 248, 0.18);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(226, 232, 240, 0.9);
+      font-weight: 600;
+    }
+
+    .account-card-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .account-card-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .account-card-body strong {
+      font-size: 1rem;
+    }
+
+    .account-card-tags {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .account-card-tags span {
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.55);
+    }
+
+    .account-private-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .team-identity {
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+
+    .team-identity-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .team-hq-badge {
+      display: inline-flex;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.6rem 0.85rem;
+      border-radius: 0.85rem;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.55);
+    }
+
+    .team-hq-logo,
+    .team-hq-fallback {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 0.8rem;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(56, 189, 248, 0.16);
+      box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.18);
+      font-size: 1.65rem;
+    }
+
+    .team-hq-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .team-hq-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .team-hq-copy strong {
+      font-size: 1.05rem;
+    }
+
+    .team-hq-copy span {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .team-identity-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .team-roster {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.9rem;
+    }
+
+    .roster-card {
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 0.9rem;
+      padding: 0.85rem;
+      background: rgba(15, 23, 42, 0.55);
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      position: relative;
+    }
+
+    .roster-card-header {
+      display: flex;
+      gap: 0.65rem;
+      align-items: center;
+    }
+
+    .roster-avatar {
+      width: 2.8rem;
+      height: 2.8rem;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: rgba(56, 189, 248, 0.16);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(226, 232, 240, 0.9);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .roster-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .roster-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .roster-card-body strong {
+      font-size: 0.95rem;
+    }
+
+    .roster-card-body span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .roster-tags {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .roster-tags span {
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.45);
+    }
+
+    .roster-card-public,
+    .roster-card-private {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 0.35rem;
+      align-items: flex-start;
+    }
+
+    .privacy-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      border-radius: 999px;
+      padding: 0.12rem 0.45rem;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.35);
+    }
+
+    .privacy-pill.public {
+      color: rgba(129, 221, 164, 0.9);
+      border-color: rgba(74, 222, 128, 0.45);
+      background: rgba(74, 222, 128, 0.15);
+    }
+
+    .privacy-pill.private {
+      color: rgba(248, 180, 127, 0.9);
+      border-color: rgba(248, 113, 113, 0.35);
+      background: rgba(248, 113, 113, 0.12);
+    }
+
+    .task-owner {
+      display: flex;
+      gap: 0.65rem;
+      align-items: center;
+    }
+
+    .task-owner-avatar {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.7rem;
+      overflow: hidden;
+      background: rgba(56, 189, 248, 0.14);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(226, 232, 240, 0.9);
+      font-size: 0.95rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .task-owner-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .task-owner-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .task-owner-meta strong {
+      font-size: 0.9rem;
+    }
+
+    .task-owner-meta span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .task-owner-privacy {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-top: 0.45rem;
+    }
+
+    .task-owner-privacy > div {
+      display: flex;
+      gap: 0.35rem;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .task-owner-tags {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .task-owner-tags span {
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.45);
+    }
+
+    .task-activity {
+      list-style: none;
+      margin: 0.55rem 0 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .task-activity li {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    .task-activity .activity-avatar {
+      width: 1.8rem;
+      height: 1.8rem;
+      border-radius: 0.55rem;
+      overflow: hidden;
+      background: rgba(56, 189, 248, 0.14);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: rgba(226, 232, 240, 0.9);
+      flex-shrink: 0;
+    }
+
+    .task-activity .activity-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .task-activity time {
+      font-size: 0.7rem;
+      color: rgba(148, 163, 184, 0.8);
+    }
+
+    .task-activity-meta {
+      display: flex;
+      gap: 0.35rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 0.25rem;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
     .summary-tile {
       padding: 1rem;
       border-radius: 0.9rem;
@@ -1369,7 +1739,7 @@
     .integration-card img { width: 46px; height: 46px; border-radius: 0.75rem; background: rgba(56, 189, 248, 0.12); padding: 0.4rem; }
     .integration-card .tagline { font-size: 0.8rem; color: var(--text-muted); }
     .integration-card button { align-self: flex-start; }
-    .account-status { margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-muted); }
+    .account-status { margin-top: 0.75rem; font-size: 0.95rem; color: inherit; }
     .profile-photo-field { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; }
     .profile-photo-preview { width: 100%; max-width: 160px; aspect-ratio: 1 / 1; border-radius: 1rem; border: 1px dashed rgba(148, 163, 184, 0.45); background: rgba(15, 23, 42, 0.55); display: flex; align-items: center; justify-content: center; overflow: hidden; color: rgba(148, 163, 184, 0.9); font-size: 0.85rem; padding: 0.5rem; box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.45); }
     .profile-photo-preview img { width: 100%; height: 100%; object-fit: cover; }
@@ -2944,8 +3314,14 @@
 
     <section id="labor">
       <div class="panel">
-        <h2>Teams, Labor & Playbooks</h2>
+        <h2>Teams, Labor &amp; Playbooks</h2>
         <p>Drive productivity with mission-based tasks, performance insights and gamified rewards.</p>
+        <div class="panel light team-identity" id="team-identity-panel">
+          <h3>Warehouse Identity Roll Call</h3>
+          <p class="team-identity-hint">Profiles blend public badges with private shift intel so brands can staff up fast while respecting privacy.</p>
+          <div class="team-identity-meta" id="team-identity-meta"></div>
+          <div class="team-roster" id="team-roster"></div>
+        </div>
         <div class="grid grid-2">
           <form id="task-form" class="panel light">
             <h3>Assign Task</h3>
@@ -2953,8 +3329,9 @@
               <input type="text" name="title" placeholder="Cycle count Aisle 4" required />
             </label>
             <label>Owner / Team
-              <input type="text" name="owner" placeholder="Alicia (Inbound)" />
+              <input type="text" name="owner" id="task-owner" placeholder="Alicia (Inbound)" list="team-owner-list" />
             </label>
+            <datalist id="team-owner-list"></datalist>
             <label>Type
               <select name="type">
                 <option value="Receiving">Receiving</option>
@@ -3052,7 +3429,7 @@
       <div class="panel">
         <h2>Commander Access & Security</h2>
         <p>Log in to sync integrations, personalize the interface, and unlock the RTS-style automations built for your brand.</p>
-        <div class="grid grid-2">
+        <div class="grid grid-2" id="account-forms">
           <form id="register-form" class="panel light">
             <h3>Create Command Seat</h3>
             <label>Work Email
@@ -3109,15 +3486,6 @@
           </form>
         </div>
         <div class="account-status" id="account-status">Not signed in.</div>
-        <div class="demo-credentials" id="demo-credentials">
-          <p><strong>Need quick access?</strong> Use the preloaded demo commander:</p>
-          <ul>
-            <li>Email: <code data-demo="email">captain@warehouse-hq.com</code></li>
-            <li>Password: <code data-demo="password">warehouse-demo</code></li>
-            <li>Shopify domain: <code data-demo="shop">warehouse-hq.myshopify.com</code></li>
-          </ul>
-          <p class="hint">Sign in with the credentials above to load integrations and sync the simulated Shopify workspace.</p>
-        </div>
         <div class="account-actions">
           <button class="secondary" type="button" id="logout-btn" style="display:none;">Sign out</button>
         </div>
@@ -3342,6 +3710,151 @@
     const PROFILE_PHOTO_CANVAS_MAX = 512;
     const PROFILE_PHOTO_JPEG_QUALITY = 0.72;
     const PROFILE_PHOTO_PNG_QUALITY = 0.85;
+    const MAX_TASK_ACTIVITY = 12;
+
+    function createDefaultTeamMembers(){
+      return [
+        {
+          id: crypto.randomUUID(),
+          name: 'Alicia Ramos',
+          role: 'Inbound Lead',
+          team: 'Inbound Dock',
+          headline: 'Freight intake lead • 6 yrs apparel logistics',
+          serviceArea: 'Dock 2 inbound • ASN triage • Putaway staging',
+          status: 'On floor',
+          availability: 'Shift 6a – 2p ET',
+          tags: ['Inbound', 'Employee'],
+          privateNote: 'Forklift + RF certified. Prefers 6a call time.',
+          contact: 'Slack: @alicia',
+          isFreelancer: false,
+          aliases: ['Alicia (Inbound)', 'Inbound Team'],
+          avatarSeed: 'Alicia Ramos',
+        },
+        {
+          id: crypto.randomUUID(),
+          name: 'Malik Chen',
+          role: 'Wave Picking Captain',
+          team: 'Picking Squad',
+          headline: 'D2C wave runner • Footwear & electronics',
+          serviceArea: 'Aisles 3-9 • Wave planning • Rush orders',
+          status: 'On break',
+          availability: 'Shift 2p – 10p ET',
+          tags: ['Picking', 'Employee'],
+          privateNote: 'Cross-trains new hires on RF guns.',
+          contact: 'Ext. 224 • malik@warehouse-hq.com',
+          isFreelancer: false,
+          aliases: ['Malik (Picking)', 'Picking Squad'],
+          avatarSeed: 'Malik Chen',
+        },
+        {
+          id: crypto.randomUUID(),
+          name: 'Jordan Vega',
+          role: 'Freelance Flex Operator',
+          team: 'Flex Bench',
+          headline: 'Freelancer • Cycle counts & returns triage',
+          serviceArea: 'Cycle counts • Seasonal help • Returns lab',
+          status: 'Remote check-in',
+          availability: 'On-call • Same-day booking',
+          tags: ['Freelancer'],
+          privateNote: 'Verified W-9. Prefers SMS for rush missions.',
+          contact: 'SMS: (267) 555-0188',
+          isFreelancer: true,
+          aliases: ['Jordan (Flex)', 'Freelancer Bench'],
+          avatarSeed: 'Jordan Vega',
+        }
+      ];
+    }
+
+    function ensureTeamMember(member){
+      if (!member || typeof member !== 'object') return null;
+      const id = member.id || crypto.randomUUID();
+      const name = (member.name || '').trim() || 'Crew Member';
+      const role = (member.role || 'Specialist').trim();
+      const team = (member.team || '').trim();
+      const aliases = Array.isArray(member.aliases) ? member.aliases : [];
+      const aliasSet = new Set(
+        aliases
+          .concat(team ? [`${name.split(' ')[0] || name} (${team})`] : [])
+          .map(alias => alias).filter(Boolean)
+      );
+      return {
+        id,
+        name,
+        role,
+        team,
+        headline: (member.headline || '').trim(),
+        serviceArea: (member.serviceArea || '').trim(),
+        status: (member.status || 'Offline').trim(),
+        availability: (member.availability || '').trim(),
+        tags: Array.isArray(member.tags) ? member.tags.filter(Boolean) : [],
+        privateNote: (member.privateNote || '').trim(),
+        contact: (member.contact || '').trim(),
+        isFreelancer: Boolean(member.isFreelancer),
+        avatarSeed: (member.avatarSeed || name || id).trim(),
+        photo: typeof member.photo === 'string' ? member.photo : '',
+        aliases: Array.from(aliasSet),
+      };
+    }
+
+    function normalizeTeamMembers(list){
+      const base = Array.isArray(list) && list.length ? list : createDefaultTeamMembers();
+      return base.map(ensureTeamMember).filter(Boolean);
+    }
+
+    function matchTeamMember(roster, value, memberId){
+      const normalizedRoster = Array.isArray(roster) ? roster : [];
+      if (memberId){
+        const byId = normalizedRoster.find(entry => entry.id === memberId);
+        if (byId) return byId;
+      }
+      const target = (value || '').trim().toLowerCase();
+      if (!target) return null;
+      return normalizedRoster.find(entry => {
+        if ((entry.name || '').toLowerCase() === target) return true;
+        if ((entry.role || '').toLowerCase() === target) return true;
+        if ((entry.team || '').toLowerCase() === target) return true;
+        return entry.aliases.some(alias => (alias || '').toLowerCase() === target);
+      }) || null;
+    }
+
+    function buildTaskOwnerSnapshot(member, fallbackName){
+      const name = member?.name || fallbackName || 'Unassigned';
+      return {
+        id: member?.id || null,
+        name,
+        role: member?.role || 'Unassigned',
+        team: member?.team || '',
+        headline: member?.headline || '',
+        serviceArea: member?.serviceArea || '',
+        status: member?.status || '',
+        availability: member?.availability || '',
+        tags: Array.isArray(member?.tags) ? member.tags : [],
+        privateNote: member?.privateNote || '',
+        contact: member?.contact || '',
+        isFreelancer: Boolean(member?.isFreelancer),
+        photo: member?.photo || '',
+        avatarSeed: member?.avatarSeed || name,
+      };
+    }
+
+    function ensureTaskShape(task, roster){
+      if (!task || typeof task !== 'object') return null;
+      const next = { ...task };
+      next.id = next.id || crypto.randomUUID();
+      next.title = next.title || 'Untitled mission';
+      next.status = next.status || 'open';
+      next.createdAt = next.createdAt || new Date().toISOString();
+      const ownerMember = matchTeamMember(roster, next.owner, next.ownerId);
+      if (ownerMember){
+        next.ownerId = ownerMember.id;
+      }
+      next.ownerSnapshot = buildTaskOwnerSnapshot(ownerMember, next.owner || '');
+      if (!Array.isArray(next.activity)){
+        next.activity = [];
+      }
+      return next;
+    }
+
     const photoState = { register: null, profile: null };
     let profilePhotoRemoveRequested = false;
     let lastInventoryRows = [];
@@ -3370,6 +3883,9 @@
           if (!Array.isArray(data.purchaseOrders)) data.purchaseOrders = [];
           if (!Array.isArray(data.transfers)) data.transfers = [];
           if (!Array.isArray(data.shopifyWarnings)) data.shopifyWarnings = [];
+          data.teamMembers = normalizeTeamMembers(data.teamMembers);
+          if (!Array.isArray(data.tasks)) data.tasks = [];
+          data.tasks = data.tasks.map(task => ensureTaskShape(task, data.teamMembers)).filter(Boolean);
           if (!('lastShopifySync' in data)) data.lastShopifySync = null;
           if (!('lastShopifySyncSource' in data)) data.lastShopifySyncSource = null;
           return data;
@@ -3377,7 +3893,12 @@
       } catch (err) {
         console.warn('Failed to load state', err);
       }
-      return seedState();
+      const fallback = seedState();
+      fallback.teamMembers = normalizeTeamMembers(fallback.teamMembers);
+      fallback.tasks = Array.isArray(fallback.tasks)
+        ? fallback.tasks.map(task => ensureTaskShape(task, fallback.teamMembers)).filter(Boolean)
+        : [];
+      return fallback;
     }
 
     function loadScanQueue() {
@@ -3418,6 +3939,285 @@
           photo: profile.photo && typeof profile.photo === 'object' ? profile.photo : null,
         },
       };
+    }
+
+    function authUserAsTeamMember(){
+      if (!authState || !authState.user) return null;
+      const user = ensureUserProfile(authState.user);
+      if (!user) return null;
+      const roleKey = (user.profile?.role || DEFAULT_PROFILE_ROLE).toLowerCase();
+      const baseTags = ['Command Seat'];
+      if (roleKey === 'freelancer') {
+        baseTags.push('Freelancer');
+      } else {
+        baseTags.push('Team Lead');
+      }
+      return ensureTeamMember({
+        id: user.id || user._id || 'auth-user',
+        name: (user.name || user.profile?.name || user.email || 'Command Seat').trim(),
+        role: roleLabel(roleKey),
+        team: user.profile?.serviceArea || '',
+        headline: user.profile?.headline || '',
+        serviceArea: user.profile?.serviceArea || '',
+        status: 'Signed in',
+        availability: 'Live now',
+        tags: baseTags,
+        privateNote: user.profile?.bio ? user.profile.bio.slice(0, 140) : '',
+        contact: user.email || '',
+        isFreelancer: roleKey === 'freelancer',
+        photo: user.profile?.photo?.url || '',
+        avatarSeed: user.profile?.photo?.url ? `${user.profile.photo.url}` : (user.email || user.name || 'Commander'),
+        aliases: [(user.name || user.email || 'Command Seat')],
+      });
+    }
+
+    function getRosterMembers(){
+      state.teamMembers = normalizeTeamMembers(state.teamMembers);
+      const roster = state.teamMembers.slice();
+      const authMember = authUserAsTeamMember();
+      if (authMember){
+        const existingIndex = roster.findIndex(entry => entry.id === authMember.id || entry.name === authMember.name);
+        if (existingIndex >= 0){
+          roster[existingIndex] = authMember;
+        } else {
+          roster.unshift(authMember);
+        }
+      }
+      return roster;
+    }
+
+    function avatarInitials(name){
+      if (!name) return 'HQ';
+      const tokens = name.trim().split(/\s+/).filter(Boolean);
+      if (!tokens.length) return 'HQ';
+      if (tokens.length === 1) return tokens[0].slice(0, 2).toUpperCase();
+      const first = tokens[0][0] || '';
+      const last = tokens[tokens.length - 1][0] || '';
+      const initials = (first + last).toUpperCase();
+      return initials || tokens[0].slice(0, 2).toUpperCase();
+    }
+
+    function renderAvatar({ photo, name, className, alt }){
+      const safeClass = className || 'avatar';
+      if (photo){
+        return `<span class="${safeClass}"><img src="${photo}" alt="${alt || name || 'Profile photo'}" loading="lazy" /></span>`;
+      }
+      return `<span class="${safeClass}" aria-hidden="true">${avatarInitials(name)}</span>`;
+    }
+
+    function updateOwnerDatalist(roster){
+      const datalist = document.getElementById('team-owner-list');
+      if (!datalist) return;
+      const list = Array.isArray(roster) ? roster : getRosterMembers();
+      datalist.innerHTML = list.map(member => {
+        const value = member.aliases?.[0] || member.name;
+        const label = member.role || member.team || '';
+        return `<option value="${value}">${label}</option>`;
+      }).join('');
+    }
+
+    function renderTeamRoster(rosterOverride){
+      const panel = document.getElementById('team-identity-panel');
+      const rosterShell = document.getElementById('team-roster');
+      const metaShell = document.getElementById('team-identity-meta');
+      if (!panel || !rosterShell || !metaShell) return;
+      const roster = Array.isArray(rosterOverride) ? rosterOverride : getRosterMembers();
+      const branding = state.branding || {};
+      const callSign = branding.callSign || 'Warehouse HQ';
+      const logo = branding.logoData || '';
+      const emoji = branding.emoji || '🚚';
+      const staffCount = roster.length;
+      const freelancerCount = roster.filter(member => member.isFreelancer).length;
+      const assignments = Object.fromEntries(roster.map(member => [member.id, 0]));
+      state.tasks.forEach(task => {
+        const ownerId = task?.ownerId || task?.ownerSnapshot?.id;
+        if (ownerId && typeof assignments[ownerId] === 'number' && task.status !== 'shipped'){
+          assignments[ownerId] += 1;
+        }
+      });
+      metaShell.innerHTML = `
+        <div class="team-hq-badge">
+          ${logo
+            ? `<span class="team-hq-logo"><img src="${logo}" alt="${callSign} logo" loading="lazy" /></span>`
+            : `<span class="team-hq-fallback" aria-hidden="true">${emoji}</span>`}
+          <div class="team-hq-copy">
+            <strong>${callSign}</strong>
+            <span>${staffCount} active staff • ${freelancerCount} freelancer${freelancerCount === 1 ? '' : 's'}</span>
+          </div>
+        </div>
+        <div class="team-hq-copy">
+          <span>Private notes stay inside HQ. Public badges power mission visibility.</span>
+        </div>
+      `;
+
+      rosterShell.innerHTML = roster.map(member => {
+        const assignmentCount = assignments[member.id] || 0;
+        const tagSet = new Set(Array.isArray(member.tags) ? member.tags.filter(Boolean) : []);
+        if (member.team) tagSet.add(member.team);
+        if (assignmentCount){
+          tagSet.add(`${assignmentCount} active mission${assignmentCount === 1 ? '' : 's'}`);
+        }
+        const tagsHtml = tagSet.size
+          ? `<div class="roster-tags">${Array.from(tagSet).map(tag => `<span>${tag}</span>`).join('')}</div>`
+          : '';
+        const publicSummary = [member.status, member.availability].filter(Boolean).join(' • ');
+        const privateDetails = [member.privateNote, member.contact].filter(Boolean);
+        const avatar = renderAvatar({
+          photo: member.photo,
+          name: member.name,
+          className: 'roster-avatar',
+          alt: `${member.name} avatar`,
+        });
+        const publicHtml = publicSummary
+          ? `<div class="roster-card-public"><span class="privacy-pill public">Public</span><span>${publicSummary}</span></div>`
+          : '';
+        const privateHtml = privateDetails.length
+          ? `<div class="roster-card-private"><span class="privacy-pill private">Private</span><span>${privateDetails.join(' • ')}</span></div>`
+          : '';
+        const subline = member.headline || member.serviceArea;
+        return `
+          <article class="roster-card">
+            <div class="roster-card-header">
+              ${avatar}
+              <div class="roster-card-body">
+                <strong>${member.name}</strong>
+                <span>${member.role}${member.team ? ` • ${member.team}` : ''}</span>
+                ${subline ? `<span>${subline}</span>` : ''}
+              </div>
+            </div>
+            ${tagsHtml}
+            ${publicHtml}
+            ${privateHtml}
+          </article>
+        `;
+      }).join('');
+
+      updateOwnerDatalist(roster);
+    }
+
+    function resolveTaskOwnerWithRoster(task, roster){
+      if (!task) return buildTaskOwnerSnapshot(null, '');
+      const member = matchTeamMember(roster, task.ownerSnapshot?.name || task.owner, task.ownerId);
+      if (member){
+        task.ownerId = member.id;
+        task.ownerSnapshot = buildTaskOwnerSnapshot(member, member.name);
+      } else if (!task.ownerSnapshot){
+        task.ownerSnapshot = buildTaskOwnerSnapshot(null, task.owner || '');
+      }
+      return task.ownerSnapshot;
+    }
+
+    function renderTaskOwnerCell(owner){
+      if (!owner) return '—';
+      const tags = new Set();
+      if (owner.team) tags.add(owner.team);
+      if (owner.role) tags.add(owner.role);
+      if (owner.isFreelancer) tags.add('Freelancer');
+      const tagsHtml = tags.size
+        ? `<div class="task-owner-tags">${Array.from(tags).map(tag => `<span>${tag}</span>`).join('')}</div>`
+        : '';
+      const avatar = renderAvatar({
+        photo: owner.photo,
+        name: owner.name,
+        className: 'task-owner-avatar',
+        alt: `${owner.name} avatar`,
+      });
+      const publicSummary = [owner.status, owner.availability].filter(Boolean).join(' • ');
+      const privateDetails = [owner.privateNote, owner.contact].filter(Boolean);
+      const publicHtml = publicSummary
+        ? `<div><span class="privacy-pill public">Public</span><span>${publicSummary}</span></div>`
+        : '';
+      const privateHtml = privateDetails.length
+        ? `<div><span class="privacy-pill private">Private</span><span>${privateDetails.join(' • ')}</span></div>`
+        : '';
+      return `
+        <div>
+          <div class="task-owner">
+            ${avatar}
+            <div class="task-owner-meta">
+              <strong>${owner.name}</strong>
+              ${owner.headline ? `<span>${owner.headline}</span>` : ''}
+              ${owner.serviceArea && owner.serviceArea !== owner.headline ? `<span>${owner.serviceArea}</span>` : ''}
+              ${tagsHtml}
+            </div>
+          </div>
+          ${(publicHtml || privateHtml)
+            ? `<div class="task-owner-privacy">${publicHtml}${privateHtml}</div>`
+            : ''}
+        </div>
+      `;
+    }
+
+    function renderTaskActivityList(task){
+      if (!task || !Array.isArray(task.activity) || !task.activity.length) return '';
+      const items = task.activity.slice(0, 4).map(renderTaskActivityEntry).join('');
+      return `<ul class="task-activity">${items}</ul>`;
+    }
+
+    function renderTaskActivityEntry(entry){
+      const actor = entry?.actor || {};
+      const avatar = renderAvatar({
+        photo: actor.photo,
+        name: actor.name,
+        className: 'activity-avatar',
+        alt: `${actor.name || 'Team member'} avatar`,
+      });
+      const visibility = entry?.visibility === 'public' ? 'public' : 'private';
+      const message = entry?.message || 'Updated mission';
+      const timestamp = entry?.timestamp || '';
+      const timeMarkup = timestamp ? `<time datetime="${timestamp}">${formatDateTime(timestamp)}</time>` : '';
+      return `
+        <li>
+          ${avatar}
+          <div>
+            <strong>${actor.name || 'Warehouse HQ'}</strong>
+            <div>${message}</div>
+            <div class="task-activity-meta">
+              <span class="privacy-pill ${visibility}">${visibility === 'public' ? 'Public' : 'Team'}</span>
+              ${timeMarkup}
+            </div>
+          </div>
+        </li>
+      `;
+    }
+
+    function getActiveActor(){
+      const member = authUserAsTeamMember();
+      if (member){
+        return {
+          id: member.id,
+          name: member.name,
+          role: member.role,
+          photo: member.photo,
+          avatarSeed: member.avatarSeed,
+        };
+      }
+      return {
+        id: 'hq-system',
+        name: 'Warehouse HQ Automations',
+        role: 'System',
+        photo: '',
+        avatarSeed: 'Warehouse HQ Automations',
+      };
+    }
+
+    function appendTaskActivity(task, message, visibility = 'team'){
+      if (!task) return;
+      const actor = getActiveActor();
+      const entry = {
+        id: crypto.randomUUID(),
+        actor,
+        message,
+        visibility: visibility === 'public' ? 'public' : 'team',
+        timestamp: new Date().toISOString(),
+      };
+      if (!Array.isArray(task.activity)){
+        task.activity = [];
+      }
+      task.activity.unshift(entry);
+      if (task.activity.length > MAX_TASK_ACTIVITY){
+        task.activity = task.activity.slice(0, MAX_TASK_ACTIVITY);
+      }
     }
 
     function roleLabel(role) {
@@ -3618,6 +4418,7 @@
         lastShopifySync: null,
         lastShopifySyncSource: null,
         tasks: [],
+        teamMembers: createDefaultTeamMembers(),
         gamification: [
           { id: crypto.randomUUID(), message: '🏅 Team Inbound earned "5-Star Receiver" for 99.6% accuracy this week.' },
           { id: crypto.randomUUID(), message: '🚀 Picking squad unlocked Rush Wave Boost after meeting SLA five days straight.' }
@@ -3784,6 +4585,7 @@
       if (backgroundSelect && backgroundSelect.value !== theme) {
         backgroundSelect.value = theme;
       }
+      renderTeamRoster();
     }
 
     function formatDate(dateStr) {
@@ -4281,12 +5083,20 @@
 
     function renderTasks() {
       const tbody = document.getElementById('tasks-body');
+      if (!tbody) return;
       tbody.innerHTML = '';
+      const roster = getRosterMembers();
       state.tasks.slice().reverse().forEach(task => {
+        const owner = resolveTaskOwnerWithRoster(task, roster);
+        const activityMarkup = renderTaskActivityList(task);
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${task.title}<br><span class="hint">${task.link || ''}</span></td>
-          <td>${task.owner || '—'}</td>
+          <td>
+            <strong>${task.title}</strong>
+            ${task.link ? `<div class="hint">${task.link}</div>` : ''}
+            ${activityMarkup}
+          </td>
+          <td>${renderTaskOwnerCell(owner)}</td>
           <td>${task.type}</td>
           <td>${formatDate(task.dueDate)}</td>
           <td><span class="status-pill status-${task.status}">${task.status}</span></td>
@@ -4295,11 +5105,14 @@
             <button data-action="close-task" data-id="${task.id}">Complete</button>
           </td>
         `;
-      tbody.appendChild(tr);
-    });
-    const feed = document.getElementById('gamification-feed');
-    feed.innerHTML = state.gamification.map(entry => `<li>${entry.message}</li>`).join('');
-  }
+        tbody.appendChild(tr);
+      });
+      const feed = document.getElementById('gamification-feed');
+      if (feed) {
+        feed.innerHTML = state.gamification.map(entry => `<li>${entry.message}</li>`).join('');
+      }
+      renderTeamRoster(roster);
+    }
 
     function addGamificationEvent(message) {
       if (!message) return;
@@ -5229,6 +6042,7 @@
       updateAccountStatus();
       renderTotpUi();
       renderProfilePanel();
+      renderTeamRoster();
       loadIntegrations();
       restoreSessionFromServer();
       if (wasAuthenticated){
@@ -5251,6 +6065,7 @@
       }
       renderTotpUi();
       renderProfilePanel();
+      renderTeamRoster();
     }
 
     async function restoreSessionFromServer(){
@@ -5296,21 +6111,39 @@
     function updateAccountStatus(){
       const status = document.getElementById('account-status');
       const logoutBtn = document.getElementById('logout-btn');
+      const forms = document.getElementById('account-forms');
       if (!status || !logoutBtn) return;
       if (authState && authState.user){
-        const parts = [`Signed in as ${authState.user.email}`];
-        if (authState.user.profile){
-          parts.push(roleLabel(authState.user.profile.role));
-          if (authState.user.profile.headline){
-            parts.push(authState.user.profile.headline);
-          }
-        }
-        if (authState.user.totpEnabled) parts.push('2FA enabled');
-        status.textContent = parts.join(' • ');
+        const user = ensureUserProfile(authState.user);
+        const name = user.name || user.profile?.name || user.email || 'Command Seat';
+        const profile = user.profile || {};
+        const roleText = roleLabel(profile.role);
+        const headline = profile.headline;
+        const serviceArea = profile.serviceArea;
+        const photoUrl = profile.photo?.url || '';
+        const tags = [roleText];
+        if (serviceArea) tags.push(serviceArea);
+        if (user.totpEnabled) tags.push('2FA active');
+        const tagsHtml = tags.map(tag => `<span>${tag}</span>`).join('');
+        const privateNote = user.email ? `Direct: ${user.email}` : '';
+        status.innerHTML = `
+          <div class="account-card">
+            ${renderAvatar({ photo: photoUrl, name, className: 'account-card-avatar', alt: `${name} profile photo` })}
+            <div class="account-card-body">
+              <strong>${name}</strong>
+              ${headline ? `<div>${headline}</div>` : ''}
+              ${serviceArea ? `<div class="mini-input">${serviceArea}</div>` : ''}
+              <div class="account-card-tags">${tagsHtml}</div>
+              ${privateNote ? `<div class="account-private-note">Private: ${privateNote}</div>` : ''}
+            </div>
+          </div>
+        `;
         logoutBtn.style.display = 'inline-flex';
+        if (forms) forms.style.display = 'none';
       } else {
         status.textContent = 'Not signed in.';
         logoutBtn.style.display = 'none';
+        if (forms) forms.style.display = '';
       }
     }
 
@@ -5642,6 +6475,7 @@
         persistAuth();
         renderProfilePanel();
         updateAccountStatus();
+        renderTeamRoster();
         photoState.profile = null;
         profilePhotoRemoveRequested = false;
         const fileInput = document.getElementById('profile-photo-input');
@@ -5668,6 +6502,7 @@
       updateAccountStatus();
       renderTotpUi();
       renderProfilePanel();
+      renderTeamRoster();
       loadIntegrations();
       showToast('Signed out.');
     }
@@ -6430,6 +7265,7 @@
       const idx = transitions.indexOf(task.status);
       if (idx < transitions.length - 1) {
         task.status = transitions[idx + 1];
+        appendTaskActivity(task, `Advanced to ${task.status}`, 'team');
         persist();
         renderTasks();
         showToast(`Task ${task.title} set to ${task.status}.`);
@@ -6440,6 +7276,7 @@
       const task = state.tasks.find(t => t.id === id);
       if (!task) return;
       task.status = 'shipped';
+      appendTaskActivity(task, 'Marked mission complete', 'public');
       persist();
       renderTasks();
       showToast(`Mission completed: ${task.title}.`);
@@ -6729,15 +7566,23 @@
       evt.preventDefault();
       const form = evt.target;
       const data = Object.fromEntries(new FormData(form).entries());
-      state.tasks.push({
+      const roster = getRosterMembers();
+      const ownerMatch = matchTeamMember(roster, data.owner);
+      const task = {
         id: crypto.randomUUID(),
         title: data.title,
         owner: data.owner,
+        ownerId: ownerMatch?.id || null,
+        ownerSnapshot: buildTaskOwnerSnapshot(ownerMatch, data.owner),
         type: data.type,
         dueDate: data.dueDate,
         link: data.link,
-        status: 'open'
-      });
+        status: 'open',
+        createdAt: new Date().toISOString(),
+        activity: [],
+      };
+      appendTaskActivity(task, 'Dispatched mission to floor', 'team');
+      state.tasks.push(task);
       persist();
       renderTasks();
       showToast('Task dispatched to floor.');
