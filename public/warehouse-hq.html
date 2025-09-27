@@ -358,6 +358,22 @@
       background: rgba(56, 189, 248, 0.1);
     }
 
+    tbody tr {
+      position: relative;
+    }
+
+    tbody tr.colorized::before {
+      content: "";
+      position: absolute;
+      left: 0.35rem;
+      top: 0.35rem;
+      bottom: 0.35rem;
+      width: 0.35rem;
+      border-radius: 999px;
+      background: var(--row-color, transparent);
+      box-shadow: 0 0 18px rgba(15, 23, 42, 0.18);
+    }
+
     .tag {
       display: inline-flex;
       align-items: center;
@@ -374,10 +390,119 @@
     .tag.ok { color: var(--success); border-color: rgba(74, 222, 128, 0.6); }
     .tag.risk { color: var(--danger); border-color: rgba(248, 113, 113, 0.6); }
 
+    .color-field {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .color-field input[type="color"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(15, 23, 42, 0.25);
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .panel.light .color-field input[type="color"] {
+      border-color: rgba(148, 163, 184, 0.35);
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.12) inset;
+    }
+
+    .color-field input[type="color"]::-webkit-color-swatch {
+      border-radius: 0.65rem;
+      border: none;
+    }
+
+    .color-field input[type="color"]::-moz-color-swatch {
+      border-radius: 0.65rem;
+      border: none;
+    }
+
+    .color-field-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .panel.light .color-field-toggle {
+      color: rgba(30, 41, 59, 0.65);
+    }
+
+    .color-field-toggle input {
+      margin: 0;
+    }
+
+    .color-field .link-button {
+      font-size: 0.75rem;
+    }
+
+    .color-hint {
+      display: block;
+      margin-top: 0.35rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .panel.light .color-hint {
+      color: rgba(30, 41, 59, 0.55);
+    }
+
     .table-scroll {
       overflow-x: auto;
       border-radius: 0.75rem;
       border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .color-chip {
+      display: inline-flex;
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 999px;
+      background: var(--chip-color, #38bdf8);
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.35);
+    }
+
+    .panel.light .color-chip {
+      box-shadow: 0 0 0 1px rgba(30, 41, 59, 0.25);
+    }
+
+    .product-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .product-label strong {
+      display: block;
+    }
+
+    #inventory-toolbar {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    #inventory-toolbar select {
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      color: var(--text);
+      border-radius: 0.75rem;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .panel.light #inventory-toolbar select {
+      background: rgba(248, 250, 252, 0.9);
+      border-color: rgba(148, 163, 184, 0.45);
+      color: #0f172a;
     }
 
     .badge {
@@ -1364,6 +1489,17 @@
             <label>Reorder Point
               <input type="number" name="reorder" min="0" value="10" />
             </label>
+            <label class="color-lane">Color lane (optional)
+              <div class="color-field">
+                <input type="color" id="item-color" value="#38bdf8" data-default="#38bdf8" aria-label="Select color lane" />
+                <span class="color-field-toggle">
+                  <input type="checkbox" id="item-color-toggle" aria-label="Enable color lane" />
+                  <span>Highlight inventory rows with this color</span>
+                </span>
+                <button type="button" class="link-button" id="item-color-clear">Clear</button>
+              </div>
+              <span class="color-hint">Match the color coding teams use across handheld apps.</span>
+            </label>
             <label>Lot / Batch
               <input type="text" name="lot" placeholder="LOT-2025-04" />
             </label>
@@ -1392,6 +1528,12 @@
               <button class="toolbar" type="button" id="print-stickers-btn">🖨 Print Stickers</button>
               <input type="search" id="inventory-search" placeholder="Search SKU, name, lot…" />
               <select id="warehouse-filter"></select>
+              <select id="inventory-sort" aria-label="Sort inventory">
+                <option value="sku">Sort: SKU (A→Z)</option>
+                <option value="status">Sort: Status (priority)</option>
+                <option value="qty">Sort: Quantity (high→low)</option>
+                <option value="color">Sort: Color lanes</option>
+              </select>
             </div>
           </div>
           <div class="table-scroll">
@@ -2118,6 +2260,7 @@
     const BRAND_LOGO_MAX_LENGTH = 240000; // ~180KB payload cap for safe API uploads
     const MANUAL_FORM_HINT = 'Use this form for manual keys or fallback credentials. One-click providers finish automatically below.';
     const integrationFormHint = document.getElementById('integration-form-hint');
+    const HEX_COLOR_REGEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
     let lastInventoryRows = [];
     if (integrationFormHint) {
       integrationFormHint.textContent = MANUAL_FORM_HINT;
@@ -2131,6 +2274,10 @@
           if (!data.branding) {
             data.branding = seedState().branding;
           }
+          if (!Array.isArray(data.items)) data.items = [];
+          data.items.forEach(item => {
+            item.color = sanitizeColor(item.color);
+          });
           if (!Array.isArray(data.collections)) data.collections = [];
           if (!Array.isArray(data.giftCards)) data.giftCards = [];
           if (!Array.isArray(data.purchaseOrders)) data.purchaseOrders = [];
@@ -2159,6 +2306,21 @@
         console.warn('Failed to load auth state', err);
       }
       return { token: null, user: null };
+    }
+
+    function sanitizeColor(value) {
+      if (typeof value !== 'string') return '';
+      const trimmed = value.trim();
+      if (!HEX_COLOR_REGEX.test(trimmed)) return '';
+      if (trimmed.length === 4) {
+        const expanded = trimmed
+          .slice(1)
+          .split('')
+          .map(ch => ch + ch)
+          .join('');
+        return `#${expanded.toLowerCase()}`;
+      }
+      return trimmed.toLowerCase();
     }
 
     function isAuthenticated(){
@@ -2631,6 +2793,47 @@
       return warehouse ? warehouse.name : 'Unassigned';
     }
 
+    function getItemColor(item) {
+      if (!item) return '';
+      const color = sanitizeColor(item.color);
+      if (color !== (item.color || '')) {
+        item.color = color;
+      }
+      return color;
+    }
+
+    function getInventoryStatusMeta(item) {
+      const quantity = Number(item?.quantity) || 0;
+      const reorder = Number(item?.reorder) || 0;
+      if (quantity <= reorder) {
+        return { label: 'Reorder', className: 'low', priority: 0 };
+      }
+      if (quantity < reorder * 1.5) {
+        return { label: 'Monitor', className: 'risk', priority: 1 };
+      }
+      return { label: 'Healthy', className: 'ok', priority: 2 };
+    }
+
+    function inventoryComparator(a, b, mode = 'sku') {
+      if (mode === 'qty') {
+        const diff = (Number(b.quantity) || 0) - (Number(a.quantity) || 0);
+        if (diff !== 0) return diff;
+      } else if (mode === 'status') {
+        const diff = getInventoryStatusMeta(a).priority - getInventoryStatusMeta(b).priority;
+        if (diff !== 0) return diff;
+      } else if (mode === 'color') {
+        const colorA = getItemColor(a);
+        const colorB = getItemColor(b);
+        if (colorA && !colorB) return -1;
+        if (!colorA && colorB) return 1;
+        if (colorA && colorB) {
+          const colorDiff = colorA.localeCompare(colorB);
+          if (colorDiff !== 0) return colorDiff;
+        }
+      }
+      return a.sku.localeCompare(b.sku);
+    }
+
     function findOrCreateItem({ sku, name = '', variant = '', category = '' }) {
       let item = state.items.find(it => it.sku.toLowerCase() === sku.toLowerCase());
       if (!item) {
@@ -2646,7 +2849,8 @@
           reorder: 0,
           lot: '',
           expiry: '',
-          unitCost: 0
+          unitCost: 0,
+          color: ''
         };
         state.items.push(item);
       }
@@ -2669,8 +2873,11 @@
 
     function renderInventory() {
       const tbody = document.getElementById('inventory-body');
-      const search = document.getElementById('inventory-search').value.toLowerCase();
+      const searchInput = document.getElementById('inventory-search');
+      const search = (searchInput ? searchInput.value : '').toLowerCase();
       const warehouseFilter = document.getElementById('warehouse-filter').value;
+      const sortSelect = document.getElementById('inventory-sort');
+      const sortMode = sortSelect ? sortSelect.value : 'sku';
       tbody.innerHTML = '';
       const rows = state.items
         .filter(item => {
@@ -2678,18 +2885,32 @@
           const matchesWarehouse = warehouseFilter === 'all' || warehouseFilter === '' || item.warehouseId === warehouseFilter;
           return matchesSearch && matchesWarehouse;
         })
-        .sort((a, b) => a.sku.localeCompare(b.sku));
+        .sort((a, b) => inventoryComparator(a, b, sortMode));
       lastInventoryRows = rows.slice();
       rows.forEach(item => {
-        const status = item.quantity <= (item.reorder || 0)
-          ? '<span class="tag low">Reorder</span>'
-          : item.quantity < (item.reorder || 0) * 1.5
-            ? '<span class="tag risk">Monitor</span>'
-            : '<span class="tag ok">Healthy</span>';
+        const statusMeta = getInventoryStatusMeta(item);
+        const status = `<span class="tag ${statusMeta.className}">${statusMeta.label}</span>`;
+        const color = getItemColor(item);
+        const colorChip = color
+          ? `<span class="color-chip" style="--chip-color:${color}" aria-hidden="true"></span><span class="sr-only">Color lane ${color}</span>`
+          : '';
         const tr = document.createElement('tr');
+        if (color) {
+          tr.classList.add('colorized');
+          tr.style.setProperty('--row-color', color);
+          tr.dataset.color = color;
+        }
         tr.innerHTML = `
           <td><strong>${item.sku}</strong><br><span class="hint">${item.category || '—'}</span></td>
-          <td>${item.name}<br><span class="hint">${item.variant || ''}</span></td>
+          <td>
+            <div class="product-label">
+              ${colorChip}
+              <div>
+                ${item.name}
+                <br><span class="hint">${item.variant || ''}</span>
+              </div>
+            </div>
+          </td>
           <td>${getWarehouseName(item.warehouseId)}</td>
           <td>${item.location || '—'}</td>
           <td>${item.quantity}</td>
@@ -3294,6 +3515,7 @@
           lot: '',
           expiry: '',
           unitCost,
+          color: '',
         });
       });
       state.items = items;
@@ -3344,6 +3566,7 @@
         lot: '',
         expiry: '',
         unitCost: item.price != null ? Number(item.price) : 0,
+        color: sanitizeColor(item.color),
       }));
       state.items = inventoryRows;
       persist();
@@ -4603,11 +4826,22 @@
       item.lot = data.lot;
       item.expiry = data.expiry;
       item.unitCost = Number(data.unitCost) || 0;
+      const colorInput = document.getElementById('item-color');
+      const colorToggle = document.getElementById('item-color-toggle');
+      const selectedColor = colorToggle?.checked ? sanitizeColor(colorInput?.value) : '';
+      item.color = selectedColor;
       persist();
       renderInventory();
       renderStats();
       showToast('SKU saved.');
       form.reset();
+      if (colorToggle) {
+        colorToggle.checked = false;
+      }
+      if (colorInput) {
+        const defaultColor = colorInput.getAttribute('data-default') || '#38bdf8';
+        colorInput.value = defaultColor;
+      }
     });
 
     document.getElementById('order-form').addEventListener('submit', evt => {
@@ -4650,6 +4884,24 @@
 
     document.getElementById('inventory-search').addEventListener('input', renderInventory);
     document.getElementById('warehouse-filter').addEventListener('change', renderInventory);
+    const inventorySortSelect = document.getElementById('inventory-sort');
+    if (inventorySortSelect) {
+      inventorySortSelect.addEventListener('change', renderInventory);
+    }
+    const itemColorClear = document.getElementById('item-color-clear');
+    if (itemColorClear) {
+      itemColorClear.addEventListener('click', () => {
+        const colorInput = document.getElementById('item-color');
+        const colorToggle = document.getElementById('item-color-toggle');
+        if (colorInput) {
+          const defaultColor = colorInput.getAttribute('data-default') || '#38bdf8';
+          colorInput.value = defaultColor;
+        }
+        if (colorToggle) {
+          colorToggle.checked = false;
+        }
+      });
+    }
     const printStickersBtn = document.getElementById('print-stickers-btn');
     if (printStickersBtn) {
       printStickersBtn.addEventListener('click', () => openStickerPrint(lastInventoryRows));
@@ -4914,6 +5166,12 @@
         try {
           const data = JSON.parse(event.target.result);
           Object.assign(state, data);
+          if (!Array.isArray(state.items)) {
+            state.items = [];
+          }
+          state.items.forEach(item => {
+            item.color = sanitizeColor(item.color);
+          });
           persist();
           initializeUI();
           showToast('Workspace imported.');
