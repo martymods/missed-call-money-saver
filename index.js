@@ -20,6 +20,7 @@ const createShopifyRouter = require('./routes/shopify');
 const createAuditRouter = require('./routes/audit');
 const createDesignRouter = require('./routes/design');
 const createTeamRouter = require('./routes/teams');
+const createWarehouseRouter = require('./routes/warehouse');
 const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
 
 const jwt = require('jsonwebtoken');
@@ -86,6 +87,7 @@ app.use('/api/shopify', createShopifyRouter());
 app.use('/api/audit', createAuditRouter());
 app.use('/api/design', createDesignRouter());
 app.use('/api/teams', createTeamRouter());
+app.use('/api/warehouse', createWarehouseRouter());
 
 // 👉 Serve the landing page & assets from /public
 app.use(express.static(path.join(__dirname, 'public')));
