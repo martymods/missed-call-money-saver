@@ -47,7 +47,7 @@
     header {
       position: sticky;
       top: 0;
-      z-index: 60;
+      z-index: 1600;
       backdrop-filter: blur(16px);
       background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.8));
       border-bottom: 1px solid var(--border);
@@ -464,6 +464,8 @@
       position: relative;
       padding-top: 56.25%;
       background: rgba(15, 23, 42, 0.75);
+      border-radius: inherit;
+      overflow: hidden;
     }
 
     .automation-video iframe {
@@ -472,6 +474,56 @@
       width: 100%;
       height: 100%;
       border: 0;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+
+    .automation-video .video-shell.video-loaded iframe {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .video-play-trigger {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      border: none;
+      border-radius: inherit;
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.85), rgba(37, 99, 235, 0.35));
+      color: #f8fafc;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease, opacity 0.3s ease;
+      z-index: 5;
+    }
+
+    .video-play-trigger:hover,
+    .video-play-trigger:focus-visible {
+      transform: scale(1.02);
+      background: linear-gradient(160deg, rgba(56, 189, 248, 0.55), rgba(37, 99, 235, 0.45));
+      outline: none;
+    }
+
+    .video-play-icon {
+      font-size: 1.75rem;
+      line-height: 1;
+    }
+
+    .video-play-copy {
+      font-size: 0.85rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .video-shell.video-loaded .video-play-trigger {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .automation-video .video-caption {
@@ -1003,7 +1055,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
-      z-index: 1100;
+      z-index: 1800;
     }
 
     .nav-overlay.active {
@@ -1761,25 +1813,25 @@
       height: var(--nav-toggle-size);
       border-radius: 0.85rem;
       border: 1px solid rgba(56, 189, 248, 0.55);
-      background: rgba(2, 6, 23, 0.88);
+      background: rgba(2, 6, 23, 0.9);
       color: #f8fafc;
       position: relative;
       cursor: pointer;
       transition: border 0.2s ease, background 0.2s ease, transform 0.2s ease;
       box-shadow: 0 16px 34px rgba(2, 6, 23, 0.55);
       backdrop-filter: blur(8px);
-      z-index: 1600;
+      z-index: 2000;
     }
 
     .nav-toggle:hover,
     .nav-toggle:focus-visible {
-      border-color: rgba(56, 189, 248, 0.75);
-      background: rgba(56, 189, 248, 0.18);
+      border-color: rgba(56, 189, 248, 0.85);
+      background: rgba(56, 189, 248, 0.22);
       outline: none;
       transform: translateY(-1px);
     }
 
-    .nav-toggle .line {
+    .nav-toggle-bar {
       display: block;
       width: 1.5rem;
       height: 2px;
@@ -1789,20 +1841,20 @@
       transition: transform 0.25s ease, opacity 0.25s ease;
     }
 
-    .nav-toggle .line:nth-of-type(1) { transform: translateY(-0.5rem); }
-    .nav-toggle .line:nth-of-type(2) { transform: translateY(0); }
-    .nav-toggle .line:nth-of-type(3) { transform: translateY(0.5rem); }
+    .nav-toggle-bar:nth-of-type(1) { transform: translateY(-0.5rem); }
+    .nav-toggle-bar:nth-of-type(2) { transform: translateY(0); }
+    .nav-toggle-bar:nth-of-type(3) { transform: translateY(0.5rem); }
 
-    .nav-toggle[aria-expanded="true"] .line:nth-of-type(1) {
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-of-type(1) {
       transform: translateY(0) rotate(45deg);
     }
 
-    .nav-toggle[aria-expanded="true"] .line:nth-of-type(2) {
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-of-type(2) {
       opacity: 0;
       transform: translateY(0);
     }
 
-    .nav-toggle[aria-expanded="true"] .line:nth-of-type(3) {
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-of-type(3) {
       transform: translateY(0) rotate(-45deg);
     }
 
@@ -2558,7 +2610,7 @@
         transition: transform 0.3s ease;
         pointer-events: none;
         visibility: hidden;
-        z-index: 1200;
+        z-index: 1900;
       }
 
       nav[data-open="true"] {
@@ -2865,11 +2917,11 @@
         </div>
         <div class="flex header-actions">
           <div class="badge">Multi-tenant • Cloud-Ready • Free Forever Core</div>
-          <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="hq-navigation" aria-label="Toggle navigation menu">
+          <button id="nav-menu-toggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="hq-navigation" aria-label="Toggle navigation menu">
             <span class="sr-only">Toggle navigation</span>
-            <span class="line" aria-hidden="true"></span>
-            <span class="line" aria-hidden="true"></span>
-            <span class="line" aria-hidden="true"></span>
+            <span class="nav-toggle-bar" aria-hidden="true"></span>
+            <span class="nav-toggle-bar" aria-hidden="true"></span>
+            <span class="nav-toggle-bar" aria-hidden="true"></span>
           </button>
         </div>
       </div>
@@ -3615,7 +3667,11 @@
 
         <div class="automation-video" aria-label="Automation in motion">
           <div class="video-shell">
-            <iframe src="https://player.vimeo.com/video/1122534209?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1&amp;loop=1" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Warehouse automation highlight reel" loading="lazy"></iframe>
+            <iframe src="" data-src="https://player.vimeo.com/video/1122534209?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1&amp;loop=1" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" title="Warehouse automation highlight reel" loading="lazy" allowfullscreen></iframe>
+            <button class="video-play-trigger" type="button">
+              <span class="video-play-icon" aria-hidden="true">▶</span>
+              <span class="video-play-copy">Play automation highlight</span>
+            </button>
           </div>
           <div class="video-caption">
             <h3>Automation in Motion</h3>
@@ -8915,31 +8971,30 @@
       }
     }
 
-   function handleNavigation() {
+    function handleNavigation() {
       const nav = document.getElementById('hq-navigation') || document.querySelector('header nav');
       if (!nav) return;
-      const buttons = Array.from(nav.querySelectorAll('button'));
       const sections = Array.from(document.querySelectorAll('main section'));
-      const toggle = document.querySelector('.nav-toggle');
+      const buttons = Array.from(nav.querySelectorAll('button'));
+      const toggle = document.getElementById('nav-menu-toggle') || document.querySelector('.nav-toggle');
       const overlay = document.querySelector('.nav-overlay');
       const mobileQuery = window.matchMedia('(max-width: 960px)');
 
-      const syncAria = () => {
-        if (!mobileQuery.matches) {
-          nav.removeAttribute('aria-hidden');
-          return;
-        }
-        const isOpen = nav.getAttribute('data-open') === 'true';
-        nav.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-      };
+      const isOpen = () => nav.getAttribute('data-open') === 'true';
 
-      const setNavOpen = open => {
-        nav.setAttribute('data-open', open ? 'true' : 'false');
+      const syncState = open => {
+        const next = Boolean(open);
+        nav.setAttribute('data-open', next ? 'true' : 'false');
+        if (mobileQuery.matches) {
+          nav.setAttribute('aria-hidden', next ? 'false' : 'true');
+        } else {
+          nav.removeAttribute('aria-hidden');
+        }
         if (toggle) {
-          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+          toggle.setAttribute('aria-expanded', next ? 'true' : 'false');
         }
         if (overlay) {
-          if (open) {
+          if (next) {
             overlay.classList.add('active');
             overlay.removeAttribute('hidden');
           } else {
@@ -8947,29 +9002,27 @@
             overlay.setAttribute('hidden', '');
           }
         }
-        document.body.classList.toggle('nav-open', open);
-        syncAria();
+        document.body.classList.toggle('nav-open', next);
       };
 
-      syncAria();
-      setNavOpen(nav.getAttribute('data-open') === 'true');
+      syncState(isOpen());
 
       if (toggle) {
         toggle.addEventListener('click', () => {
-          const currentlyOpen = nav.getAttribute('data-open') === 'true';
-          setNavOpen(!currentlyOpen);
+          syncState(!isOpen());
         });
       }
 
       if (overlay) {
-        overlay.addEventListener('click', () => setNavOpen(false));
+        overlay.addEventListener('click', () => syncState(false));
       }
 
       const handleQueryChange = event => {
         if (!event.matches) {
-          setNavOpen(false);
+          syncState(false);
+          nav.removeAttribute('aria-hidden');
         } else {
-          syncAria();
+          syncState(isOpen());
         }
       };
 
@@ -8980,9 +9033,11 @@
       }
 
       document.addEventListener('keydown', evt => {
-        if (evt.key === 'Escape' && nav.getAttribute('data-open') === 'true') {
-          setNavOpen(false);
-          toggle?.focus();
+        if (evt.key === 'Escape' && isOpen()) {
+          syncState(false);
+          if (toggle) {
+            toggle.focus();
+          }
         }
       });
 
@@ -8993,9 +9048,11 @@
           return;
         }
         buttons
-          .filter(b => b.dataset.target)
-          .forEach(b => b.classList.remove('active'));
-        triggerBtn?.classList.add('active');
+          .filter(btn => btn.dataset.target)
+          .forEach(btn => btn.classList.remove('active'));
+        if (triggerBtn) {
+          triggerBtn.classList.add('active');
+        }
         sections.forEach(sec => sec.classList.remove('active'));
         section.classList.add('active');
       };
@@ -9005,7 +9062,7 @@
           const linkAttr = btn.getAttribute('data-link');
           if (linkAttr) {
             if (mobileQuery.matches) {
-              setNavOpen(false);
+              syncState(false);
             }
             const resolved = (() => {
               if (linkAttr.startsWith('http')) {
@@ -9034,12 +9091,12 @@
 
           activateSection(target, btn);
           if (mobileQuery.matches) {
-            setNavOpen(false);
+            syncState(false);
           }
         });
       });
 
-      const defaultBtn = buttons.find(b => b.dataset.target && b.classList.contains('active'));
+      const defaultBtn = buttons.find(btn => btn.dataset.target && btn.classList.contains('active'));
       if (defaultBtn) {
         activateSection(defaultBtn.dataset.target, defaultBtn);
       }
@@ -9231,6 +9288,57 @@
         showToast('Supplier purchase logged and synced to missions.');
         form.reset();
       });
+    }
+
+    function detectMobileSafari() {
+      const ua = navigator.userAgent || '';
+      const isIOS = /(iPad|iPhone|iPod)/.test(ua);
+      const isSafariLike = /Safari/.test(ua) && !/(Chrome|CriOS|FxiOS|OPiOS|EdgiOS)/.test(ua);
+      const isTouchMac = /Macintosh/.test(ua) && 'ontouchend' in document;
+      return (isIOS && isSafariLike) || isTouchMac;
+    }
+
+    function setupAutomationVideo() {
+      const shell = document.querySelector('.automation-video .video-shell');
+      if (!shell) return;
+      const iframe = shell.querySelector('iframe');
+      if (!iframe) return;
+      const trigger = shell.querySelector('.video-play-trigger');
+      const embedSrc = iframe.getAttribute('data-src');
+      if (!embedSrc) {
+        shell.classList.add('video-loaded');
+        return;
+      }
+
+      const loadVideo = () => {
+        if (iframe.src === embedSrc) {
+          shell.classList.add('video-loaded');
+          return;
+        }
+        iframe.src = embedSrc;
+        shell.classList.add('video-loaded');
+        if (trigger) {
+          trigger.disabled = true;
+          trigger.setAttribute('aria-hidden', 'true');
+        }
+      };
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const isNarrow = window.matchMedia('(max-width: 960px)').matches;
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+      const shouldDefer = prefersReducedMotion || detectMobileSafari() || (isNarrow && hasTouch);
+
+      if (!shouldDefer) {
+        loadVideo();
+        return;
+      }
+
+      if (trigger) {
+        trigger.addEventListener('click', () => {
+          loadVideo();
+        }, { once: true });
+      }
+
     }
 
     const launchSourcingBtn = document.getElementById('launch-sourcing');
@@ -10437,6 +10545,7 @@
       }
     }
 
+    setupAutomationVideo();
     applyBranding();
     initBrandingControls();
     updateAccountStatus();
