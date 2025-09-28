@@ -1752,34 +1752,36 @@
       border: 0;
     }
 
-    .menu-toggle {
+    .nav-toggle {
+      --nav-toggle-size: 2.75rem;
       display: none;
       align-items: center;
       justify-content: center;
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: 0.75rem;
-      border: 1px solid rgba(56, 189, 248, 0.45);
-      background: rgba(2, 6, 23, 0.85);
+      width: var(--nav-toggle-size);
+      height: var(--nav-toggle-size);
+      border-radius: 0.85rem;
+      border: 1px solid rgba(56, 189, 248, 0.55);
+      background: rgba(2, 6, 23, 0.88);
       color: #f8fafc;
       position: relative;
       cursor: pointer;
-      transition: border 0.2s ease, background 0.2s ease;
-      box-shadow: 0 10px 24px rgba(2, 6, 23, 0.45);
-      backdrop-filter: blur(6px);
-      z-index: 1300;
+      transition: border 0.2s ease, background 0.2s ease, transform 0.2s ease;
+      box-shadow: 0 16px 34px rgba(2, 6, 23, 0.55);
+      backdrop-filter: blur(8px);
+      z-index: 1600;
     }
 
-    .menu-toggle:hover,
-    .menu-toggle:focus-visible {
-      border-color: rgba(56, 189, 248, 0.7);
-      background: rgba(56, 189, 248, 0.16);
+    .nav-toggle:hover,
+    .nav-toggle:focus-visible {
+      border-color: rgba(56, 189, 248, 0.75);
+      background: rgba(56, 189, 248, 0.18);
       outline: none;
+      transform: translateY(-1px);
     }
 
-    .menu-toggle .line {
+    .nav-toggle .line {
       display: block;
-      width: 1.4rem;
+      width: 1.5rem;
       height: 2px;
       background: currentColor;
       border-radius: 999px;
@@ -1787,20 +1789,20 @@
       transition: transform 0.25s ease, opacity 0.25s ease;
     }
 
-    .menu-toggle .line:nth-of-type(1) { transform: translateY(-0.45rem); }
-    .menu-toggle .line:nth-of-type(2) { transform: translateY(0); }
-    .menu-toggle .line:nth-of-type(3) { transform: translateY(0.45rem); }
+    .nav-toggle .line:nth-of-type(1) { transform: translateY(-0.5rem); }
+    .nav-toggle .line:nth-of-type(2) { transform: translateY(0); }
+    .nav-toggle .line:nth-of-type(3) { transform: translateY(0.5rem); }
 
-    .menu-toggle[aria-expanded="true"] .line:nth-of-type(1) {
+    .nav-toggle[aria-expanded="true"] .line:nth-of-type(1) {
       transform: translateY(0) rotate(45deg);
     }
 
-    .menu-toggle[aria-expanded="true"] .line:nth-of-type(2) {
+    .nav-toggle[aria-expanded="true"] .line:nth-of-type(2) {
       opacity: 0;
       transform: translateY(0);
     }
 
-    .menu-toggle[aria-expanded="true"] .line:nth-of-type(3) {
+    .nav-toggle[aria-expanded="true"] .line:nth-of-type(3) {
       transform: translateY(0) rotate(-45deg);
     }
 
@@ -2533,7 +2535,7 @@
         align-items: flex-start;
       }
 
-      .menu-toggle {
+      .nav-toggle {
         display: inline-flex;
       }
 
@@ -2863,7 +2865,7 @@
         </div>
         <div class="flex header-actions">
           <div class="badge">Multi-tenant • Cloud-Ready • Free Forever Core</div>
-          <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="hq-navigation">
+          <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="hq-navigation" aria-label="Toggle navigation menu">
             <span class="sr-only">Toggle navigation</span>
             <span class="line" aria-hidden="true"></span>
             <span class="line" aria-hidden="true"></span>
@@ -4648,6 +4650,27 @@
     ];
     const LABOR_DEFAULT_CHANNEL = 'All Hands';
 
+    function generateId(){
+      try {
+        if (typeof crypto !== 'undefined') {
+          if (typeof crypto.randomUUID === 'function') {
+            return crypto.randomUUID();
+          }
+          if (typeof crypto.getRandomValues === 'function') {
+            const bytes = new Uint8Array(16);
+            crypto.getRandomValues(bytes);
+            bytes[6] = (bytes[6] & 0x0f) | 0x40;
+            bytes[8] = (bytes[8] & 0x3f) | 0x80;
+            const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0'));
+            return `${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10).join('')}`;
+          }
+        }
+      } catch (err) {
+        console.warn('Falling back to Math.random ID generator', err);
+      }
+      return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
     function saveWorkspaceMode(mode) {
       try {
         localStorage.setItem(MODE_STORAGE_KEY, mode);
@@ -4721,7 +4744,7 @@
         : [];
       if (Array.isArray(snapshot.gamification)) {
         state.gamification = snapshot.gamification
-          .map(entry => ({ id: entry.id || crypto.randomUUID(), message: (entry.message || '').trim() }))
+          .map(entry => ({ id: entry.id || generateId(), message: (entry.message || '').trim() }))
           .filter(entry => entry.message);
       }
       state.updatedAt = snapshot.updatedAt || new Date().toISOString();
@@ -4825,7 +4848,7 @@
     function createDefaultTeamMembers(){
       return [
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           name: 'Alicia Ramos',
           role: 'Inbound Lead',
           team: 'Inbound Dock',
@@ -4841,7 +4864,7 @@
           avatarSeed: 'Alicia Ramos',
         },
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           name: 'Malik Chen',
           role: 'Wave Picking Captain',
           team: 'Picking Squad',
@@ -4857,7 +4880,7 @@
           avatarSeed: 'Malik Chen',
         },
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           name: 'Jordan Vega',
           role: 'Freelance Flex Operator',
           team: 'Flex Bench',
@@ -4884,7 +4907,7 @@
       const picking = roster[1] || null;
       return [
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           title: 'Inbound Dock AM',
           zone: 'Dock 2 • Philadelphia',
           date: today,
@@ -4898,12 +4921,12 @@
           notes: 'Stage pallets for wave 1 and capture ASN variances.',
           status: 'published',
           mobileActions: [
-            { id: crypto.randomUUID(), message: 'Roster published to mobile board.', timestamp: new Date(now.getTime() - 30 * 60 * 1000).toISOString(), level: 'info' },
-            { id: crypto.randomUUID(), message: 'Jordan flagged a late arrival – swap suggested for 10:00 slot.', timestamp: new Date(now.getTime() - 10 * 60 * 1000).toISOString(), level: 'alert' }
+            { id: generateId(), message: 'Roster published to mobile board.', timestamp: new Date(now.getTime() - 30 * 60 * 1000).toISOString(), level: 'info' },
+            { id: generateId(), message: 'Jordan flagged a late arrival – swap suggested for 10:00 slot.', timestamp: new Date(now.getTime() - 10 * 60 * 1000).toISOString(), level: 'alert' }
           ]
         },
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           title: 'Wave Picking PM',
           zone: 'Aisles 3-9 • Mezzanine',
           date: tomorrow,
@@ -4917,7 +4940,7 @@
           notes: 'Prep rush orders, confirm replen before 18:00, and sync with carrier cut-offs.',
           status: 'published',
           mobileActions: [
-            { id: crypto.randomUUID(), message: 'Draft shift ready – awaiting acknowledgements.', timestamp: new Date(now.getTime() + 3 * 60 * 60 * 1000).toISOString(), level: 'info' }
+            { id: generateId(), message: 'Draft shift ready – awaiting acknowledgements.', timestamp: new Date(now.getTime() + 3 * 60 * 60 * 1000).toISOString(), level: 'info' }
           ]
         }
       ];
@@ -4931,7 +4954,7 @@
       const now = new Date();
       return [
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           memberId: inbound?.id || null,
           member: inbound?.name || 'Inbound Lead',
           shiftId: inboundShift?.id || null,
@@ -4942,7 +4965,7 @@
           geo: { lat: 39.9527, lng: -75.1652, accuracy: 8 }
         },
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           memberId: flex?.id || null,
           member: flex?.name || 'Flex Operator',
           shiftId: inboundShift?.id || null,
@@ -4953,7 +4976,7 @@
           geo: { lat: 39.9531, lng: -75.166, accuracy: 12 }
         },
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           memberId: inbound?.id || null,
           member: inbound?.name || 'Inbound Lead',
           shiftId: inboundShift?.id || null,
@@ -4964,7 +4987,7 @@
           geo: { lat: 39.9526, lng: -75.1659, accuracy: 5 }
         },
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           memberId: pickingShift ? pickingShift.ownerId : null,
           member: pickingShift?.owner || 'Picking Captain',
           shiftId: pickingShift?.id || null,
@@ -4983,7 +5006,7 @@
       const author = inbound ? inbound.name : 'Warehouse HQ';
       return [
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           message: 'Inbound Dock AM shift published. Confirm your slots in the mobile app.',
           channel: 'Inbound Dock',
           priority: 'normal',
@@ -4992,7 +5015,7 @@
           authorId: inbound?.id || null
         },
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           message: 'Malik requested coverage for 16:00–18:00. Flex bench, tap to claim.',
           channel: 'Outbound Wave',
           priority: 'medium',
@@ -5000,7 +5023,7 @@
           author: 'Warehouse HQ'
         },
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           message: 'Leadership metric: 92% of today’s shifts acknowledged. Need two more confirmations.',
           channel: 'Leadership Standup',
           priority: 'normal',
@@ -5012,7 +5035,7 @@
 
     function ensureTeamMember(member){
       if (!member || typeof member !== 'object') return null;
-      const id = member.id || crypto.randomUUID();
+      const id = member.id || generateId();
       const name = (member.name || '').trim() || 'Crew Member';
       const role = (member.role || 'Specialist').trim();
       const team = (member.team || '').trim();
@@ -5088,7 +5111,7 @@
     function ensureTaskShape(task, roster){
       if (!task || typeof task !== 'object') return null;
       const next = { ...task };
-      next.id = next.id || crypto.randomUUID();
+      next.id = next.id || generateId();
       next.title = next.title || 'Untitled mission';
       next.status = next.status || 'open';
       next.createdAt = next.createdAt || new Date().toISOString();
@@ -5113,7 +5136,7 @@
     function ensureShift(shift, roster){
       if (!shift || typeof shift !== 'object') return null;
       const next = { ...shift };
-      next.id = next.id || crypto.randomUUID();
+      next.id = next.id || generateId();
       next.title = (next.title || 'Warehouse Shift').trim();
       next.zone = (next.zone || '').trim();
       next.date = next.date || new Date().toISOString().slice(0, 10);
@@ -5146,7 +5169,7 @@
       }
       next.mobileActions = next.mobileActions.filter(Boolean).map(entry => {
         const item = { ...entry };
-        item.id = item.id || crypto.randomUUID();
+        item.id = item.id || generateId();
         item.message = (item.message || '').trim() || 'Shift update';
         item.timestamp = normalizeTimestamp(item.timestamp) || new Date().toISOString();
         item.level = (item.level || 'info').toLowerCase();
@@ -5164,7 +5187,7 @@
     function ensureTimePunch(entry, roster, shifts){
       if (!entry || typeof entry !== 'object') return null;
       const punch = { ...entry };
-      punch.id = punch.id || crypto.randomUUID();
+      punch.id = punch.id || generateId();
       const allowedTypes = ['clock-in', 'clock-out', 'break-start', 'break-end', 'gps-check', 'call-out'];
       punch.type = (punch.type || 'clock-in').toLowerCase();
       if (!allowedTypes.includes(punch.type)) punch.type = 'clock-in';
@@ -5194,7 +5217,7 @@
     function ensureLaborBroadcast(entry, roster){
       if (!entry || typeof entry !== 'object') return null;
       const broadcast = { ...entry };
-      broadcast.id = broadcast.id || crypto.randomUUID();
+      broadcast.id = broadcast.id || generateId();
       broadcast.message = (broadcast.message || '').trim();
       if (!broadcast.message) return null;
       broadcast.channel = (broadcast.channel || LABOR_DEFAULT_CHANNEL).trim() || LABOR_DEFAULT_CHANNEL;
@@ -5235,7 +5258,7 @@
       if (!shift) return null;
       if (!Array.isArray(shift.mobileActions)) shift.mobileActions = [];
       const entry = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         message: message.trim(),
         timestamp: normalizeTimestamp(options.timestamp) || new Date().toISOString(),
         level: (options.level || 'info').toLowerCase(),
@@ -5360,7 +5383,7 @@
       data.laborBroadcasts = data.laborBroadcasts.map(entry => ensureLaborBroadcast(entry, data.teamMembers)).filter(Boolean);
       if (!Array.isArray(data.gamification)) data.gamification = [];
       data.gamification = data.gamification
-        .map(entry => ({ id: entry.id || crypto.randomUUID(), message: (entry.message || '').trim() }))
+        .map(entry => ({ id: entry.id || generateId(), message: (entry.message || '').trim() }))
         .filter(entry => entry.message);
       if (!('lastShopifySync' in data)) data.lastShopifySync = null;
       if (!('lastShopifySyncSource' in data)) data.lastShopifySyncSource = null;
@@ -5672,7 +5695,7 @@
       if (!task) return;
       const actor = getActiveActor();
       const entry = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         actor,
         message,
         visibility: visibility === 'public' ? 'public' : 'team',
@@ -5885,8 +5908,8 @@
       return {
         generatedAt: now,
         warehouses: [
-          { id: crypto.randomUUID(), name: 'Delco Fulfillment East', type: 'Fulfillment Center', capacity: 1200, notes: 'Philadelphia, PA – robotics ready' },
-          { id: crypto.randomUUID(), name: 'SoCal Climate Hub', type: 'Cold Storage', capacity: 600, notes: 'Los Angeles, CA – FEFO picking enforced' }
+          { id: generateId(), name: 'Delco Fulfillment East', type: 'Fulfillment Center', capacity: 1200, notes: 'Philadelphia, PA – robotics ready' },
+          { id: generateId(), name: 'SoCal Climate Hub', type: 'Cold Storage', capacity: 600, notes: 'Los Angeles, CA – FEFO picking enforced' }
         ],
         items: [],
         orders: [],
@@ -5906,8 +5929,8 @@
         laborBroadcasts,
         teamMembers,
         gamification: [
-          { id: crypto.randomUUID(), message: '🏅 Team Inbound earned "5-Star Receiver" for 99.6% accuracy this week.' },
-          { id: crypto.randomUUID(), message: '🚀 Picking squad unlocked Rush Wave Boost after meeting SLA five days straight.' }
+          { id: generateId(), message: '🏅 Team Inbound earned "5-Star Receiver" for 99.6% accuracy this week.' },
+          { id: generateId(), message: '🚀 Picking squad unlocked Rush Wave Boost after meeting SLA five days straight.' }
         ],
         branding: {
           accent: '#38bdf8',
@@ -6454,7 +6477,7 @@
       let item = state.items.find(it => it.sku.toLowerCase() === sku.toLowerCase());
       if (!item) {
         item = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           sku,
           name: name || sku,
           variant,
@@ -6654,7 +6677,7 @@
 
     function addGamificationEvent(message) {
       if (!message) return;
-      state.gamification.unshift({ id: crypto.randomUUID(), message });
+      state.gamification.unshift({ id: generateId(), message });
       if (state.gamification.length > 20) {
         state.gamification = state.gamification.slice(0, 20);
       }
@@ -7208,7 +7231,7 @@
         const warehouseId = state.warehouses[0]?.id || '';
         const dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         state.orders.push({
-          id: crypto.randomUUID(),
+          id: generateId(),
           orderId,
           customer: 'Quick scan',
           warehouseId,
@@ -7235,7 +7258,7 @@
       const item = findOrCreateItem({ sku: normalized });
       item.quantity = (Number(item.quantity) || 0) + qty;
       const receipt = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         reference: payload.reference || `SCAN-${normalized}`,
         supplier: payload.supplier || 'Quick scan',
         warehouseId: item.warehouseId || state.warehouses[0]?.id || '',
@@ -7259,7 +7282,7 @@
       const orderId = String(code || '').trim().toUpperCase();
       if (!orderId) return null;
       const shipment = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         orderId,
         carrier: payload.carrier || 'Quick scan',
         tracking: payload.tracking || `SCAN-${Math.random().toString(36).slice(2, 10).toUpperCase()}`,
@@ -7285,7 +7308,7 @@
       if (!normalized) return null;
       const qty = Math.max(1, Number(payload.quantity) || 1);
       const ret = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         orderId: payload.orderId ? String(payload.orderId).trim() || normalized : normalized,
         sku: normalized,
         quantity: qty,
@@ -7602,7 +7625,7 @@
           let warehouse = warehousesByName.get(key);
           if (!warehouse) {
             warehouse = {
-              id: crypto.randomUUID(),
+              id: generateId(),
               name: locationName,
               type: 'Shopify Location',
               capacity: 0,
@@ -7614,7 +7637,7 @@
           warehouseId = warehouse.id;
         }
         items.push({
-          id: crypto.randomUUID(),
+          id: generateId(),
           sku,
           name,
           variant: variantLabel,
@@ -7651,7 +7674,7 @@
       const inventory = Array.isArray(data.inventory) ? data.inventory : [];
       if (locations.length){
         state.warehouses = locations.map(loc => ({
-          id: String(loc.id || crypto.randomUUID()),
+          id: String(loc.id || generateId()),
           name: loc.name || `Location ${loc.id}`,
           type: loc.active ? 'Shopify Location' : 'Inactive Location',
           capacity: 0,
@@ -8897,7 +8920,7 @@
       if (!nav) return;
       const buttons = Array.from(nav.querySelectorAll('button'));
       const sections = Array.from(document.querySelectorAll('main section'));
-      const toggle = document.querySelector('.menu-toggle');
+      const toggle = document.querySelector('.nav-toggle');
       const overlay = document.querySelector('.nav-overlay');
       const mobileQuery = window.matchMedia('(max-width: 960px)');
 
@@ -9099,7 +9122,7 @@
       const form = evt.target;
       const data = Object.fromEntries(new FormData(form).entries());
       state.warehouses.push({
-        id: crypto.randomUUID(),
+        id: generateId(),
         name: data.name,
         type: data.type,
         capacity: Number(data.capacity) || 0,
@@ -9157,7 +9180,7 @@
         return;
       }
       const order = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         orderId: data.orderId,
         customer: data.customer,
         warehouseId: data.warehouse,
@@ -9190,7 +9213,7 @@
         const notes = (data.notes || '').trim();
         const createdAt = new Date().toISOString();
         state.purchaseOrders.push({
-          id: crypto.randomUUID(),
+          id: generateId(),
           name: `${vendor} PO ${createdAt.slice(0, 10)}`,
           vendor,
           expectedAt,
@@ -9690,7 +9713,7 @@
       if (data.warehouse) item.warehouseId = data.warehouse;
       item.location = data.location || item.location;
       state.receipts.push({
-        id: crypto.randomUUID(),
+        id: generateId(),
         reference: data.reference,
         supplier: data.supplier,
         warehouseId: data.warehouse,
@@ -9715,7 +9738,7 @@
       const form = evt.target;
       const data = Object.fromEntries(new FormData(form).entries());
       state.shipments.push({
-        id: crypto.randomUUID(),
+        id: generateId(),
         orderId: data.orderId,
         carrier: data.carrier,
         tracking: data.tracking,
@@ -9741,7 +9764,7 @@
       const form = evt.target;
       const data = Object.fromEntries(new FormData(form).entries());
       state.returns.push({
-        id: crypto.randomUUID(),
+        id: generateId(),
         orderId: data.orderId,
         sku: data.sku,
         quantity: Number(data.quantity) || 0,
@@ -9803,7 +9826,7 @@
           return;
         }
         const task = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           title: data.title,
           owner: data.owner,
           ownerId: ownerMatch?.id || null,
