@@ -9,7 +9,8 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' }); // 👈 NEW
 const APP_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://www.delcotechdivision.com';
 
-const { sendSMS } = require('./services/twilioClient');
+const { twiml: { VoiceResponse } } = require('twilio');
+const { sendSMS, client: twilioClient } = require('./services/twilioClient');
 const { upsertByPhone, findAll } = require('./services/sheets');
 const { subscribeCalendlyWebhook } = require('./services/calendly');
 const { setStep, setField, get: getState } = require('./lib/leadStore');
@@ -55,6 +56,29 @@ const app = express();
 const BODY_LIMIT = process.env.REQUEST_BODY_LIMIT || '15mb';
 
 const demoBootstrapPromise = bootstrapDemoData();
+
+const CALLER_VOICE_PRESETS = {
+  warm: { voice: 'Polly.Joanna', language: 'en-US' },
+  bold: { voice: 'Polly.Matthew', language: 'en-US' },
+  calm: { voice: 'Polly.Amy', language: 'en-GB' },
+};
+
+function normalizePhoneNumber(value) {
+  if (!value) return '';
+  let digits = String(value).trim();
+  digits = digits.replace(/[^\d+]/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('+')) return digits;
+  if (digits.startsWith('00')) return `+${digits.slice(2)}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+  if (digits.length === 10) return `+1${digits}`;
+  if (!digits.startsWith('+')) return `+${digits}`;
+  return digits;
+}
+
+function sanitizeLine(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -137,6 +161,83 @@ app.get('/config', (_, res) => {
       shopDomain: DEMO_DEFAULTS.shopDomain,
     } : null,
   });
+});
+
+app.post('/api/cold-caller/dial', async (req, res) => {
+  try {
+    const {
+      to,
+      leadName = '',
+      goal = '',
+      intro = '',
+      script = '',
+      voice = 'warm',
+      handoffNumber = '',
+    } = req.body || {};
+
+    const toNumber = normalizePhoneNumber(to);
+    if (!toNumber) {
+      return res.status(400).json({ error: 'invalid_to' });
+    }
+
+    const fromNumber = normalizePhoneNumber(process.env.TWILIO_NUMBER);
+    if (!fromNumber) {
+      return res.status(500).json({ error: 'missing_from_number' });
+    }
+
+    const presetKey = String(voice || '').toLowerCase();
+    const preset = CALLER_VOICE_PRESETS[presetKey] || CALLER_VOICE_PRESETS.warm;
+
+    const introLine = sanitizeLine(intro)
+      || (leadName ? `Hi ${leadName}, this is your Delco concierge checking in.` : 'Hi there, this is your Delco concierge checking in.');
+
+    const providedLines = String(script || '')
+      .split(/\r?\n/)
+      .map(sanitizeLine)
+      .filter(Boolean);
+
+    const fallbackLines = [
+      goal ? `I'm calling because ${goal}.` : 'We spotted a fresh opportunity on your property journey.',
+      'I just need a moment to walk you through the next steps.',
+      'Does now still work to talk?'
+    ];
+
+    const lines = providedLines.length ? providedLines : fallbackLines;
+
+    const voiceResponse = new VoiceResponse();
+    const gather = voiceResponse.gather({ input: 'speech', timeout: 4, speechTimeout: 'auto' });
+    const gatherLines = [introLine, ...lines];
+    gatherLines.forEach((line, index) => {
+      gather.say({ voice: preset.voice, language: preset.language }, line);
+      if (index < gatherLines.length - 1) {
+        gather.pause({ length: 1 });
+      }
+    });
+
+    const sanitizedHandoff = sanitizeLine(handoffNumber);
+    if (sanitizedHandoff) {
+      const handoff = normalizePhoneNumber(sanitizedHandoff);
+      if (!handoff) {
+        return res.status(400).json({ error: 'invalid_handoff' });
+      }
+      voiceResponse.say({ voice: preset.voice, language: preset.language }, 'One moment while I connect you to a teammate.');
+      voiceResponse.dial(handoff);
+    } else {
+      voiceResponse.say({ voice: preset.voice, language: preset.language }, 'I will text over the details after this call. Talk soon!');
+    }
+
+    const call = await twilioClient.calls.create({
+      to: toNumber,
+      from: fromNumber,
+      twiml: voiceResponse.toString(),
+      machineDetection: 'DetectMessageEnd',
+    });
+
+    return res.json({ sid: call.sid });
+  } catch (error) {
+    console.error('Cold caller dial error:', error?.message || error, error);
+    return res.status(500).json({ error: 'dial_failed' });
+  }
 });
 
 // ---------------------------------------------------------------------
