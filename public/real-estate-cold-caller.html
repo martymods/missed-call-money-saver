@@ -183,6 +183,35 @@
       </div>
     </section>
 
+    <section class="section" id="ai-architecture">
+      <h2>Cold-Calling AI Agent Architecture</h2>
+      <p class="lead">Deploy a fully AI-driven cold caller that connects Twilio voice, large language models, and lifelike speech so every outreach feels like a real agent on the line.</p>
+      <p>Outbound calls originate from Twilio Programmable Voice, then stream through ConversationRelay to your backend where GPT-4 or GPT-4o interprets every word. The AI&rsquo;s response text feeds straight into ElevenLabs (or another TTS) for natural playback&mdash;or use OpenAI&rsquo;s Realtime API for end-to-end speech-to-speech. The loop of live audio, GPT reasoning, and expressive speech repeats until the conversation wraps.</p>
+      <ol>
+        <li><strong>Outbound call:</strong> Twilio dials the lead and hands the audio stream to ConversationRelay.</li>
+        <li><strong>Speech input:</strong> Realtime transcription (OpenAI Realtime API or Twilio STT) pipes the caller&rsquo;s words into the GPT prompt.</li>
+        <li><strong>AI response:</strong> The LLM generates the next reply based on the conversation state and your playbook.</li>
+        <li><strong>Speech output:</strong> ElevenLabs or another TTS renders the response in a human voice and plays it back instantly.</li>
+      </ol>
+      <h3>Key Components &amp; Services</h3>
+      <ul>
+        <li><strong>Twilio Programmable Voice:</strong> Place outbound calls or receive inbound leads, then route audio to ConversationRelay or a custom media stream via TwiML webhooks.</li>
+        <li><strong>Twilio ConversationRelay:</strong> Managed WebSocket service that handles streaming audio, barge-in, and JSON exchanges with your LLM, dramatically simplifying real-time plumbing.</li>
+        <li><strong>AI Large Language Model:</strong> GPT-4 or GPT-4o crafts dynamic, contextual responses. Provision API keys and Realtime access as needed.</li>
+        <li><strong>Speech Recognition:</strong> Use Twilio STT, OpenAI Whisper, or GPT-4o&rsquo;s built-in transcription when ConversationRelay is paired with Realtime models.</li>
+        <li><strong>Text-to-Speech:</strong> ElevenLabs delivers over a thousand expressive voices and plugs directly into ConversationRelay; Google WaveNet or Amazon Polly are alternatives.</li>
+        <li><strong>Prompt Engineering:</strong> Define the agent persona, insert CRM data dynamically, and keep replies concise for natural pacing.</li>
+      </ul>
+      <h3>Implementation Steps</h3>
+      <ol>
+        <li><strong>Configure Twilio + ConversationRelay:</strong> Attach a voice-capable number, return <code>&lt;Connect&gt;&lt;ConversationRelay /&gt;&lt;/Connect&gt;</code> from your webhook, and point it to your WebSocket handler.</li>
+        <li><strong>Build the AI backend:</strong> Host Node.js or Python services that receive ConversationRelay events, call the LLM, and stream replies back over Twilio.</li>
+        <li><strong>Integrate ElevenLabs:</strong> Choose branded voices via ConversationRelay or direct API calls so every answer sounds convincingly human.</li>
+        <li><strong>Program dynamic behavior:</strong> Feed CRM context into GPT prompts, leverage function-calling to update calendars, and route hot leads to humans when needed.</li>
+        <li><strong>Log and analyze:</strong> Store call recordings, transcripts, and outcomes inside your CRM for continuous QA and training.</li>
+      </ol>
+    </section>
+
     <section class="section" id="workflow">
       <h2>Free-first lead engine</h2>
       <p class="lead">Start with public data: FSBO listings, saved searches, probate and pre-foreclosure rolls, and social signals. Our fetchers respect rate limits, dedupe duplicates, and score leads for motivation.</p>
