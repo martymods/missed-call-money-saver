@@ -183,33 +183,56 @@
       </div>
     </section>
 
-    <section class="section" id="ai-architecture">
-      <h2>Cold-Calling AI Agent Architecture</h2>
-      <p class="lead">Deploy a fully AI-driven cold caller that connects Twilio voice, large language models, and lifelike speech so every outreach feels like a real agent on the line.</p>
-      <p>Outbound calls originate from Twilio Programmable Voice, then stream through ConversationRelay to your backend where GPT-4 or GPT-4o interprets every word. The AI&rsquo;s response text feeds straight into ElevenLabs (or another TTS) for natural playback&mdash;or use OpenAI&rsquo;s Realtime API for end-to-end speech-to-speech. The loop of live audio, GPT reasoning, and expressive speech repeats until the conversation wraps.</p>
-      <ol>
-        <li><strong>Outbound call:</strong> Twilio dials the lead and hands the audio stream to ConversationRelay.</li>
-        <li><strong>Speech input:</strong> Realtime transcription (OpenAI Realtime API or Twilio STT) pipes the caller&rsquo;s words into the GPT prompt.</li>
-        <li><strong>AI response:</strong> The LLM generates the next reply based on the conversation state and your playbook.</li>
-        <li><strong>Speech output:</strong> ElevenLabs or another TTS renders the response in a human voice and plays it back instantly.</li>
-      </ol>
-      <h3>Key Components &amp; Services</h3>
-      <ul>
-        <li><strong>Twilio Programmable Voice:</strong> Place outbound calls or receive inbound leads, then route audio to ConversationRelay or a custom media stream via TwiML webhooks.</li>
-        <li><strong>Twilio ConversationRelay:</strong> Managed WebSocket service that handles streaming audio, barge-in, and JSON exchanges with your LLM, dramatically simplifying real-time plumbing.</li>
-        <li><strong>AI Large Language Model:</strong> GPT-4 or GPT-4o crafts dynamic, contextual responses. Provision API keys and Realtime access as needed.</li>
-        <li><strong>Speech Recognition:</strong> Use Twilio STT, OpenAI Whisper, or GPT-4o&rsquo;s built-in transcription when ConversationRelay is paired with Realtime models.</li>
-        <li><strong>Text-to-Speech:</strong> ElevenLabs delivers over a thousand expressive voices and plugs directly into ConversationRelay; Google WaveNet or Amazon Polly are alternatives.</li>
-        <li><strong>Prompt Engineering:</strong> Define the agent persona, insert CRM data dynamically, and keep replies concise for natural pacing.</li>
-      </ul>
-      <h3>Implementation Steps</h3>
-      <ol>
-        <li><strong>Configure Twilio + ConversationRelay:</strong> Attach a voice-capable number, return <code>&lt;Connect&gt;&lt;ConversationRelay /&gt;&lt;/Connect&gt;</code> from your webhook, and point it to your WebSocket handler.</li>
-        <li><strong>Build the AI backend:</strong> Host Node.js or Python services that receive ConversationRelay events, call the LLM, and stream replies back over Twilio.</li>
-        <li><strong>Integrate ElevenLabs:</strong> Choose branded voices via ConversationRelay or direct API calls so every answer sounds convincingly human.</li>
-        <li><strong>Program dynamic behavior:</strong> Feed CRM context into GPT prompts, leverage function-calling to update calendars, and route hot leads to humans when needed.</li>
-        <li><strong>Log and analyze:</strong> Store call recordings, transcripts, and outcomes inside your CRM for continuous QA and training.</li>
-      </ol>
+    <section class="section" id="live-caller">
+      <h2>Lifelike AI cold caller</h2>
+      <p class="lead">Trigger a real Twilio call without leaving this page. We package the intro, talking points, and optional live handoff into TwiML and send it using your configured <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, and <code>TWILIO_NUMBER</code>.</p>
+      <div class="ai-lab">
+        <form id="callerForm">
+          <label>Lead name
+            <input name="leadName" type="text" placeholder="e.g. Dana Investor"/>
+          </label>
+          <label>Lead phone (E.164)
+            <input name="to" type="tel" placeholder="+16105550123" required/>
+          </label>
+          <label>Goal of the call
+            <input name="goal" type="text" placeholder="Secure a listing consultation"/>
+          </label>
+          <label>Opening line
+            <textarea name="intro" placeholder="Hi Dana, this is Alex from Delco Realty. Thanks for requesting a valuation."></textarea>
+          </label>
+          <label>Talking points (one per line)
+            <textarea name="script" placeholder="We found three buyers already active nearby.
+Your consultation holds your price for 48 hours.
+Can I send the booking link to lock your time?" rows="5"></textarea>
+          </label>
+          <label>Voice preset
+            <select name="voice">
+              <option value="warm">Warm &amp; friendly (Polly.Joanna)</option>
+              <option value="bold">Bold &amp; confident (Polly.Matthew)</option>
+              <option value="calm">Calm &amp; precise (Polly.Amy)</option>
+            </select>
+          </label>
+          <label>Optional live handoff number
+            <input name="handoffNumber" type="tel" placeholder="Team mate number"/>
+          </label>
+          <button class="btn" type="submit">Start live call</button>
+          <div class="status" id="callerStatus">Idle. Configure the call details and press start.</div>
+        </form>
+        <div class="ai-output">
+          <div class="ai-output-header">
+            <h3 style="font-size:20px">Twilio script preview</h3>
+          </div>
+          <pre id="callerPreview">&lt;Response&gt;
+  &lt;Gather input="speech" timeout="4" speechTimeout="auto"&gt;
+    &lt;Say voice="Polly.Joanna" language="en-US"&gt;Hi there, this is your Delco concierge calling with a quick update.&lt;/Say&gt;
+    &lt;Say voice="Polly.Joanna" language="en-US"&gt;Share your talking points above to customize this preview.&lt;/Say&gt;
+  &lt;/Gather&gt;
+  &lt;Say voice="Polly.Joanna" language="en-US"&gt;If you need a teammate, add their number for an instant handoff.&lt;/Say&gt;
+  &lt;Say voice="Polly.Joanna" language="en-US"&gt;Talk soon!&lt;/Say&gt;
+&lt;/Response&gt;</pre>
+          <div class="status" id="callerMeta">Calls originate from your configured <code>TWILIO_NUMBER</code>. Twilio credentials never leave the server.</div>
+        </div>
+      </div>
     </section>
 
     <section class="section" id="workflow">
@@ -568,6 +591,113 @@
         window.setTimeout(() => { copyBtn.textContent = 'Copy to clipboard'; }, 1800);
       }
     });
+
+    // Live caller builder
+    const callerForm = document.getElementById('callerForm');
+    const callerPreview = document.getElementById('callerPreview');
+    const callerStatus = document.getElementById('callerStatus');
+    const callerMeta = document.getElementById('callerMeta');
+
+    if(callerForm){
+      const callerSubmit = callerForm.querySelector('button[type="submit"]');
+      const voiceLabels = {
+        warm: 'Warm & friendly (Polly.Joanna)',
+        bold: 'Bold & confident (Polly.Matthew)',
+        calm: 'Calm & precise (Polly.Amy)'
+      };
+      const voiceMap = {
+        warm: { voice: 'Polly.Joanna', language: 'en-US' },
+        bold: { voice: 'Polly.Matthew', language: 'en-US' },
+        calm: { voice: 'Polly.Amy', language: 'en-GB' }
+      };
+
+      function getCallerState(){
+        const formData = new FormData(callerForm);
+        return {
+          leadName: (formData.get('leadName') || '').trim(),
+          to: (formData.get('to') || '').trim(),
+          goal: (formData.get('goal') || '').trim(),
+          intro: (formData.get('intro') || '').trim(),
+          script: (formData.get('script') || '').trim(),
+          voice: formData.get('voice') || 'warm',
+          handoffNumber: (formData.get('handoffNumber') || '').trim()
+        };
+      }
+
+      function buildPreview(state){
+        const preset = voiceMap[state.voice] || voiceMap.warm;
+        const sayAttr = `voice="${preset.voice}" language="${preset.language}"`;
+        const introLine = state.intro || (state.leadName
+          ? `Hi ${state.leadName}, this is your Delco concierge checking in.`
+          : 'Hi there, this is your Delco concierge checking in.');
+        const scriptLines = state.script
+          ? state.script.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
+          : [
+              state.goal ? `I’m calling because ${state.goal}.` : 'We spotted a fresh opportunity on your property journey.',
+              'I just need a moment to walk you through the next steps.',
+              'Does now still work to talk?'
+            ];
+        const gatherLines = [introLine, ...scriptLines];
+        const handoff = state.handoffNumber
+          ? [`  <Say ${sayAttr}>One moment while I connect you to a teammate.</Say>`, `  <Dial>${state.handoffNumber}</Dial>`]
+          : [`  <Say ${sayAttr}>I’ll text over the summary after this call. Talk soon!</Say>`];
+
+        const gatherXml = gatherLines.map((line, index) => {
+          const pause = index === gatherLines.length - 1 ? '' : `\n    <Pause length="1"/>`;
+          return `    <Say ${sayAttr}>${line}</Say>${pause}`;
+        }).join('\n');
+
+        return `&lt;Response&gt;\n  &lt;Gather input="speech" timeout="4" speechTimeout="auto"&gt;\n${gatherXml}\n  &lt;/Gather&gt;\n${handoff.join('\n')}\n&lt;/Response&gt;`;
+      }
+
+      function updateCallerPreview(){
+        const state = getCallerState();
+        if(callerPreview){
+          callerPreview.textContent = buildPreview(state);
+        }
+        if(callerMeta){
+          const label = voiceLabels[state.voice] || voiceLabels.warm;
+          const handoffText = state.handoffNumber ? `Handoff: ${state.handoffNumber}` : 'No live handoff configured yet';
+          callerMeta.textContent = `${label}. ${handoffText}. Calls originate from your configured TWILIO_NUMBER.`;
+        }
+      }
+
+      async function startCall(){
+        const state = getCallerState();
+        if(!state.to){
+          callerStatus.textContent = 'Add a lead phone number in E.164 format (+15551234567).';
+          return;
+        }
+        callerStatus.textContent = 'Dialing via Twilio…';
+        callerSubmit?.setAttribute('disabled', 'true');
+        try {
+          const response = await fetch('/api/cold-caller/dial', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(state)
+          });
+          const data = await response.json().catch(() => ({}));
+          if(!response.ok || !data?.sid){
+            const errMsg = data?.error ? ` (${data.error})` : '';
+            throw new Error(`Unable to start call${errMsg}`);
+          }
+          callerStatus.textContent = `Call launched! Twilio SID ${data.sid}.`;
+        } catch (error) {
+          callerStatus.textContent = `Call failed: ${error.message}`;
+        } finally {
+          callerSubmit?.removeAttribute('disabled');
+        }
+      }
+
+      callerForm.addEventListener('input', updateCallerPreview);
+      callerForm.addEventListener('change', updateCallerPreview);
+      callerForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        startCall();
+      });
+
+      updateCallerPreview();
+    }
 
     // Guided tour setup
     const startTourBtn = document.getElementById('startTour');
