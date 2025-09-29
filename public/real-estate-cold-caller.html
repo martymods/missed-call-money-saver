@@ -185,7 +185,7 @@
 
     <section class="section" id="live-caller">
       <h2>Lifelike AI cold caller</h2>
-      <p class="lead">Trigger a real Twilio call without leaving this page. We package the intro, talking points, and optional live handoff into TwiML and send it using your configured <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, and <code>TWILIO_NUMBER</code>.</p>
+      <p class="lead">Launch a concierge-style call right from this page. Add your lead, outline the goal, drop in talking points, and press start when you’re ready for the system to dial.</p>
       <div class="ai-lab">
         <form id="callerForm">
           <label>Lead name
@@ -218,20 +218,6 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
           <button class="btn" type="submit">Start live call</button>
           <div class="status" id="callerStatus">Idle. Configure the call details and press start.</div>
         </form>
-        <div class="ai-output">
-          <div class="ai-output-header">
-            <h3 style="font-size:20px">Twilio script preview</h3>
-          </div>
-          <pre id="callerPreview">&lt;Response&gt;
-  &lt;Gather input="speech" timeout="4" speechTimeout="auto"&gt;
-    &lt;Say voice="Polly.Joanna" language="en-US"&gt;Hi there, this is your Delco concierge calling with a quick update.&lt;/Say&gt;
-    &lt;Say voice="Polly.Joanna" language="en-US"&gt;Share your talking points above to customize this preview.&lt;/Say&gt;
-  &lt;/Gather&gt;
-  &lt;Say voice="Polly.Joanna" language="en-US"&gt;If you need a teammate, add their number for an instant handoff.&lt;/Say&gt;
-  &lt;Say voice="Polly.Joanna" language="en-US"&gt;Talk soon!&lt;/Say&gt;
-&lt;/Response&gt;</pre>
-          <div class="status" id="callerMeta">Calls originate from your configured <code>TWILIO_NUMBER</code>. Twilio credentials never leave the server.</div>
-        </div>
       </div>
     </section>
 
