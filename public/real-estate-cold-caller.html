@@ -218,6 +218,13 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
           <button class="btn" type="submit">Start live call</button>
           <div class="status" id="callerStatus">Idle. Configure the call details and press start.</div>
         </form>
+        <div class="ai-output call-feed">
+          <div class="ai-output-header">
+            <h3 style="font-size:20px">Live call storyboard</h3>
+          </div>
+          <pre id="callerPreview">Adjust the lead details to see the live call storyboard, from dial to voicemail.</pre>
+          <div class="status" id="callerMeta">Warm &amp; friendly (Polly.Joanna). No live handoff configured yet. Calls originate from your configured TWILIO_NUMBER.</div>
+        </div>
       </div>
     </section>
 
@@ -596,6 +603,12 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         bold: { voice: 'Polly.Matthew', language: 'en-US' },
         calm: { voice: 'Polly.Amy', language: 'en-GB' }
       };
+      const fallbackCaller = {
+        leadName: 'roscoe',
+        to: '+6105153658',
+        goal: 'Secure a listing consultation',
+        script: `We found three buyers already active nearby.\nYour consultation holds your price for 48 hours.\nCan I send the booking link to lock your time?`
+      };
 
       function getCallerState(){
         const formData = new FormData(callerForm);
@@ -612,28 +625,90 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
 
       function buildPreview(state){
         const preset = voiceMap[state.voice] || voiceMap.warm;
-        const sayAttr = `voice="${preset.voice}" language="${preset.language}"`;
-        const introLine = state.intro || (state.leadName
-          ? `Hi ${state.leadName}, this is your Delco concierge checking in.`
-          : 'Hi there, this is your Delco concierge checking in.');
-        const scriptLines = state.script
-          ? state.script.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
-          : [
-              state.goal ? `I’m calling because ${state.goal}.` : 'We spotted a fresh opportunity on your property journey.',
-              'I just need a moment to walk you through the next steps.',
-              'Does now still work to talk?'
-            ];
-        const gatherLines = [introLine, ...scriptLines];
-        const handoff = state.handoffNumber
-          ? [`  <Say ${sayAttr}>One moment while I connect you to a teammate.</Say>`, `  <Dial>${state.handoffNumber}</Dial>`]
-          : [`  <Say ${sayAttr}>I’ll text over the summary after this call. Talk soon!</Say>`];
+        const voiceLabel = voiceLabels[state.voice] || voiceLabels.warm;
+        const leadName = state.leadName || fallbackCaller.leadName;
+        const toNumber = state.to || fallbackCaller.to;
+        const goal = state.goal || fallbackCaller.goal;
+        const introLine = state.intro
+          ? state.intro
+          : (leadName
+            ? `Hi ${leadName}, this is Alex from Delco Realty. Thanks for requesting a valuation.`
+            : 'Hi there, this is Alex from Delco Realty. Thanks for requesting a valuation.');
+        const scriptSource = state.script ? state.script : fallbackCaller.script;
+        const scriptLines = scriptSource
+          .split(/\r?\n/)
+          .map(line => line.trim())
+          .filter(Boolean);
 
+        const sayAttr = `voice="${preset.voice}" language="${preset.language}"`;
+        const gatherLines = [introLine, ...scriptLines];
         const gatherXml = gatherLines.map((line, index) => {
           const pause = index === gatherLines.length - 1 ? '' : `\n    <Pause length="1"/>`;
           return `    <Say ${sayAttr}>${line}</Say>${pause}`;
         }).join('\n');
+        const handoff = state.handoffNumber
+          ? [`  <Say ${sayAttr}>One moment while I connect you to a teammate.</Say>`, `  <Dial>${state.handoffNumber}</Dial>`]
+          : [`  <Say ${sayAttr}>I’ll text over the summary after this call. Talk soon!</Say>`];
+        const twiml = `&lt;Response&gt;\n  &lt;Gather input="speech" timeout="4" speechTimeout="auto"&gt;\n${gatherXml}\n  &lt;/Gather&gt;\n${handoff.join('\n')}\n&lt;/Response&gt;`;
 
-        return `&lt;Response&gt;\n  &lt;Gather input="speech" timeout="4" speechTimeout="auto"&gt;\n${gatherXml}\n  &lt;/Gather&gt;\n${handoff.join('\n')}\n&lt;/Response&gt;`;
+        const cleanGoal = goal.trim().replace(/\s+/g, ' ') || fallbackCaller.goal;
+        const safeGoal = cleanGoal || fallbackCaller.goal;
+        const goalSimple = safeGoal.replace(/\.$/, '');
+        const goalSentence = goalSimple
+          ? `We're calling to ${goalSimple.charAt(0).toLowerCase()}${goalSimple.slice(1)}.`
+          : 'We\'re calling to secure a listing consultation.';
+
+        const toTitle = (text) => text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+        const leadTag = leadName ? toTitle(leadName) : 'Lead';
+        const leadMid = leadName ? leadTag : 'the lead';
+        const leadStart = leadName ? leadTag : 'The lead';
+        const timeline = [
+          `Twilio dials ${toNumber || 'the lead phone'} from your configured number.`,
+          `When ${leadMid} answers, the concierge uses the ${voiceLabel} voice to deliver the intro.`,
+          'The system listens after each sentence with speech detection and a 4-second timeout.',
+          state.handoffNumber
+            ? `If ${leadMid} asks for a human, Twilio bridges ${state.handoffNumber} for a warm handoff.`
+            : `${leadStart} hears every talking point before we promise a follow-up text.`,
+          'All turns are logged so you can review the conversation or jump in live.'
+        ];
+
+        const dialogLines = [
+          `Agent (${preset.voice}): ${introLine}`,
+          `${leadTag}: [Greets you back or confirms if now works.]`
+        ];
+        scriptLines.forEach((line, index) => {
+          dialogLines.push(`Agent (${preset.voice}): ${line}`);
+          const responseHint = index === scriptLines.length - 1
+            ? `${leadTag}: [Gives a yes/no so you can book, bill, or transfer.]`
+            : `${leadTag}: [Shares details or objections — auto-transcribed in your call log.]`;
+          dialogLines.push(responseHint);
+        });
+
+        const voicemailLine = `Hi ${leadName || 'there'}, it's Alex from Delco Realty. I spotted active buyers nearby and can hold your price for 48 hours. Call or text back and I'll send the booking link.`;
+
+        const leadSummaryName = toTitle(leadName || '') || 'Not set';
+        const leadSummaryPhone = toNumber || 'Add phone in E.164';
+
+        return [
+          'Live call storyboard (auto-updating)',
+          '-------------------------------------',
+          `Lead: ${leadSummaryName} (${leadSummaryPhone})`,
+          `Goal: ${safeGoal}`,
+          `OpenAI summary: ${goalSentence}`,
+          `Voice preset: ${voiceLabel}`,
+          '',
+          'Play-by-play:',
+          ...timeline.map((line, idx) => `${idx + 1}. ${line}`),
+          '',
+          'Dialog rehearsal:',
+          ...dialogLines,
+          '',
+          'If nobody picks up:',
+          `Voicemail plan: ${voicemailLine}`,
+          '',
+          'Twilio instructions:',
+          twiml
+        ].join('\n');
       }
 
       function updateCallerPreview(){
@@ -643,8 +718,10 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         }
         if(callerMeta){
           const label = voiceLabels[state.voice] || voiceLabels.warm;
-          const handoffText = state.handoffNumber ? `Handoff: ${state.handoffNumber}` : 'No live handoff configured yet';
-          callerMeta.textContent = `${label}. ${handoffText}. Calls originate from your configured TWILIO_NUMBER.`;
+          const handoffText = state.handoffNumber
+            ? `Warm handoff ready at ${state.handoffNumber}.`
+            : 'No live handoff configured yet — concierge stays on the line.';
+          callerMeta.textContent = `${label}. ${handoffText} Calls originate from your configured TWILIO_NUMBER. Adjust any field to redraw the storyboard.`;
         }
       }
 
