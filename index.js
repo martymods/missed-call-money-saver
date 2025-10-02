@@ -88,7 +88,7 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob: https://*",
   "media-src 'self' data: blob: https://cdn.coverr.co https://player.vimeo.com",
   "connect-src 'self' https: wss: data:",
-  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://assets.calendly.com https://www.youtube.com https://player.vimeo.com",
+  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://assets.calendly.com https://calendly.com https://*.calendly.com https://www.youtube.com https://player.vimeo.com",
   "form-action 'self' https://hooks.stripe.com",
   "base-uri 'self'",
   "object-src 'none'",
