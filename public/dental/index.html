@@ -261,18 +261,59 @@
       transform:rotate(12deg);
     }
 
-    .media-row{
+    .media-showcase{
       display:grid;
-      grid-template-columns:1.1fr 0.9fr;
-      gap:20px;
-      align-items:stretch;
+      grid-template-columns:minmax(0, 380px) minmax(0, 1fr);
+      gap:32px;
+      align-items:center;
     }
-    @media(max-width:920px){.media-row{grid-template-columns:1fr}}
-    .media-card{border-radius:var(--radius);overflow:hidden;position:relative;box-shadow:var(--shadow);animation:float 12s ease-in-out infinite}
-    .media-card:nth-child(2){animation-delay:-4s}
-    .media-card img{height:100%;width:100%;object-fit:cover}
-    .media-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,0),rgba(15,23,42,0.35));}
-    .media-card span{position:absolute;left:20px;bottom:18px;color:#fff;font-weight:600}
+    @media(max-width:1024px){.media-showcase{grid-template-columns:1fr;gap:26px}}
+    .media-profile{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      padding:28px;
+      border-radius:var(--radius);
+      background:var(--glass-bg);
+      border:1px solid var(--glass-border);
+      backdrop-filter:blur(14px) saturate(140%);
+      -webkit-backdrop-filter:blur(14px) saturate(140%);
+      box-shadow:var(--shadow);
+    }
+    .media-profile img{
+      width:120px;
+      height:120px;
+      border-radius:50%;
+      object-fit:cover;
+      box-shadow:0 18px 40px rgba(15,23,42,0.16);
+    }
+    .media-profile blockquote{
+      margin:0;
+      font-size:18px;
+      line-height:1.6;
+      color:var(--ink);
+    }
+    .media-profile cite{
+      font-style:normal;
+      color:var(--muted);
+      font-weight:600;
+      letter-spacing:0.01em;
+    }
+    .media-illustration{
+      border-radius:var(--radius);
+      background:#fff;
+      border:1px solid rgba(15,23,42,0.08);
+      box-shadow:var(--shadow);
+      padding:24px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .media-illustration img{
+      width:100%;
+      height:auto;
+      object-fit:contain;
+    }
 
     .demo-section{padding:32px;border-radius:calc(var(--radius) + 4px);background:#ffffffeb;border:1px solid rgba(15,23,42,0.08);box-shadow:0 28px 72px rgba(15,23,42,0.14);}
     .demo-grid{display:grid;grid-template-columns:1.05fr 0.95fr;gap:26px}
@@ -491,18 +532,14 @@
         <h2>Built for modern dental teams</h2>
         <p>Whether you’re a single-location practice or a multi-site group, Delco Tech Division keeps patients delighted and ops streamlined.</p>
       </div>
-      <div class="media-row">
-        <div class="media-card">
-          <img src="dental-appointment.jpg" alt="Patient scheduling a dental appointment" loading="lazy" />
-          <span>Book in real time with deposits handled automatically.</span>
-        </div>
-        <div class="media-card">
-          <img src="customer-service.jpg" alt="AI receptionist assisting a patient over the phone" loading="lazy" />
-          <span>AI receptionist handles phone + SMS + email with empathy.</span>
-        </div>
-        <div class="media-card">
-          <img src="dental-team.jpg" alt="Dental team reviewing schedule" loading="lazy" />
-          <span>Your team dashboard shows every action and transcript.</span>
+      <div class="media-showcase">
+        <article class="media-profile">
+          <img src="bert.png" alt="Dr. Bert, modern dentist" loading="lazy" />
+          <blockquote>“Our front desk finally has breathing room. Delco’s AI books, verifies, and follows up without missing a beat.”</blockquote>
+          <cite>Dr. Bert Nguyen • Owner, Brightside Dental</cite>
+        </article>
+        <div class="media-illustration">
+          <img src="rem.png" alt="AI workflow keeping dental ops running smoothly" loading="lazy" />
         </div>
       </div>
     </section>
@@ -869,9 +906,7 @@
       const images = [
         {src:'dental-appointment.jpg', alt:'Patient confirming dental appointment time'},
         {src:'customer-service.jpg', alt:'AI receptionist supporting a dental office'},
-        {src:'dental-team.jpg', alt:'Dental team collaborating at the front desk'},
-        {src:'rem.png', alt:'AI scheduling workflow illustration'},
-        {src:'bert.png', alt:'AI assistant interface example'}
+        {src:'dental-team.jpg', alt:'Dental team collaborating at the front desk'}
       ];
       const slidesEl = document.getElementById('slides');
       const dotsEl = document.getElementById('dots');
