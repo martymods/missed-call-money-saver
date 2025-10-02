@@ -9,44 +9,116 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     body{margin:0;background:#0b0f19;color:#e6ebf5;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+    a{color:#9fb9ff;text-decoration:none}
     .wrap{max-width:760px;margin:0 auto;padding:28px}
-    .card{background:#121829;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px;margin-top:18px}
-    .btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;background:linear-gradient(180deg,#7c5cff,#5b3bff);color:white;cursor:pointer;display:inline-block;text-decoration:none}
+    .card{background:rgba(18,24,41,0.92);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:26px;margin-top:18px;box-shadow:0 26px 60px rgba(8,12,27,0.45)}
+    h2{margin:0;font-weight:800;letter-spacing:-0.01em}
     .muted{color:#99a3b3}
+    .plan-name{font-size:20px;font-weight:700;margin:12px 0 6px}
+    .plan-price{font-size:18px;font-weight:600;margin:0 0 16px;color:#c3ccff}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 18px;border-radius:14px;border:1px solid rgba(92,125,255,0.5);background:linear-gradient(135deg,#5b3bff,#7c5cff);color:#fff;font-weight:700;cursor:pointer;box-shadow:0 30px 68px rgba(92,125,255,0.35);transition:transform .25s ease, box-shadow .25s ease;position:relative;overflow:hidden}
+    .btn::after{content:"";position:absolute;inset:-16px;border-radius:inherit;background:radial-gradient(circle at 30% 20%,rgba(124,92,255,0.45),transparent 65%);opacity:.85;z-index:-1;transition:opacity .25s ease}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 36px 72px rgba(92,125,255,0.45)}
+    .btn:hover::after{opacity:1}
+    .btn[disabled]{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+    .notice{margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(37,99,235,0.12);border:1px solid rgba(148,163,184,0.25);color:#cbd5f5;font-size:14px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <h2>Secure Checkout</h2>
+    <p class="muted">Lock in onboarding and your first month below. We’ll redirect you to Stripe for payment.</p>
     <div class="card">
-      <p class="muted">Plan: <b id="planName"></b></p>
-      <p>Click the button below to complete your order via Stripe Checkout.</p>
-      <a id="payBtn" class="btn" href="#" target="_blank" rel="noopener">Pay with Stripe</a>
-      <p class="muted" style="margin-top:10px">You’ll get an email receipt and be redirected to setup. Questions? <a href="mailto:support@delcotechdivision.com">support@delcotechdivision.com</a></p>
-      <p><a class="muted" href="index.html">← Back</a></p>
+      <div id="status" class="notice" style="display:none"></div>
+      <div class="plan-name" id="planName">Loading plan…</div>
+      <div class="plan-price" id="planPrice"></div>
+      <p class="muted" id="planDesc"></p>
+      <button class="btn" id="payBtn" type="button">Launch secure checkout</button>
+      <p class="muted" style="margin-top:16px">Questions? <a href="mailto:support@delcotechdivision.com">support@delcotechdivision.com</a></p>
+      <p style="margin-top:18px"><a class="muted" href="index.html">← Back</a></p>
     </div>
   </div>
 
-<script>
-  // Paste your live Stripe Payment Links here
-  const STRIPE_LINKS = {
-    starter: "https://buy.stripe.com/9B69AT4Yt2nj9x53QpabK03",
-    growth:  "https://buy.stripe.com/4gM6oHez31jf4cL9aJabK04",
-    pro:     "https://buy.stripe.com/4gM14n1Mh1jf9x572BabK05"
-  };
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const requestedPlan = (params.get('plan') || 'starter').toLowerCase();
+    const canceled = params.get('canceled');
 
-  const p = new URLSearchParams(location.search).get('plan') || 'starter';
-  const labels = {starter:'Starter ($149/mo)', growth:'Growth ($249/mo)', pro:'Pro ($449/mo)'};
-  document.getElementById('planName').textContent = labels[p] || labels.starter;
+    const statusEl = document.getElementById('status');
+    const planNameEl = document.getElementById('planName');
+    const planPriceEl = document.getElementById('planPrice');
+    const planDescEl = document.getElementById('planDesc');
+    const payBtn = document.getElementById('payBtn');
 
-  const a = document.getElementById('payBtn');
-  a.href = STRIPE_LINKS[p] || '#';
-  a.addEventListener('click', (e) => {
-    if(a.href === '#'){
-      e.preventDefault();
-      alert('Add your Stripe Checkout link in STRIPE_LINKS before going live.');
+    if(canceled){
+      statusEl.textContent = 'Checkout was canceled. You can reopen it below when you are ready.';
+      statusEl.style.display = 'block';
     }
-  });
-</script>
+
+    let stripeClient = null;
+    let selectedPlan = null;
+
+    function formatCurrency(amount){
+      return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 }).format(amount);
+    }
+
+    async function launchCheckout(){
+      if(!selectedPlan) return;
+      payBtn.disabled = true;
+      try{
+        const res = await fetch('/api/dental/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan: selectedPlan.slug })
+        });
+        const data = await res.json().catch(() => ({}));
+        if(!res.ok){
+          throw new Error(data?.error || 'checkout_unavailable');
+        }
+        if(data.url){
+          window.location.href = data.url;
+          return;
+        }
+        if(data.id && stripeClient){
+          await stripeClient.redirectToCheckout({ sessionId: data.id });
+          return;
+        }
+        throw new Error('missing_checkout_url');
+      }catch(err){
+        console.error('dental checkout failed', err);
+        alert('Unable to open Stripe checkout right now. Please try again or contact support.');
+      }finally{
+        payBtn.disabled = false;
+      }
+    }
+
+    payBtn.addEventListener('click', launchCheckout);
+
+    fetch('/config').then(r => r.json()).then(cfg => {
+      if(cfg?.stripePk){
+        stripeClient = Stripe(cfg.stripePk);
+      }
+      const plans = Array.isArray(cfg?.dentalPlans) ? cfg.dentalPlans : [];
+      selectedPlan = plans.find(p => p.slug === requestedPlan) || plans[0];
+
+      if(!selectedPlan){
+        planNameEl.textContent = 'Plan not found';
+        planPriceEl.textContent = '';
+        planDescEl.textContent = 'Reach out to support and we will get you the correct pricing link.';
+        payBtn.disabled = true;
+        return;
+      }
+
+      planNameEl.textContent = selectedPlan.name;
+      planPriceEl.textContent = `${formatCurrency(selectedPlan.setup)} setup • ${formatCurrency(selectedPlan.monthly)} / month`;
+      planDescEl.textContent = selectedPlan.description || '';
+      payBtn.textContent = `Secure ${selectedPlan.name}`;
+    }).catch(() => {
+      planNameEl.textContent = 'Plan unavailable';
+      planDescEl.textContent = 'We could not load pricing details. Refresh or contact support.';
+      payBtn.disabled = true;
+    });
+  </script>
 </body>
 </html>
