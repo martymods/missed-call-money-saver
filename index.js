@@ -142,6 +142,30 @@ const CAL_LINK = process.env.CALENDLY_SCHEDULING_LINK || '#';
 const REVIEW_LINK = process.env.REVIEW_LINK || '';
 const DIAL_TIMEOUT = parseInt(process.env.DIAL_TIMEOUT || '20', 10);
 
+const DENTAL_PLANS = [
+  {
+    slug: 'starter',
+    name: 'Starter Smile',
+    setupCents: 19900,
+    monthlyCents: 14900,
+    description: '1 provider, 1 location. Includes insurance eligibility + missed-call text back.',
+  },
+  {
+    slug: 'growth',
+    name: 'Growth Practice',
+    setupCents: 49900,
+    monthlyCents: 34900,
+    description: 'Up to 3 providers, 2 locations. Deposits, recall campaigns, WhatsApp intake.',
+  },
+  {
+    slug: 'premium',
+    name: 'Premium Care',
+    setupCents: 99900,
+    monthlyCents: 79900,
+    description: 'Unlimited providers, up to 5 locations. Multi-location dashboards + co-pay estimates.',
+  },
+];
+
 // Health
 app.get('/health', (_, res) => res.json({ ok: true }));
 
@@ -160,6 +184,13 @@ app.get('/config', (_, res) => {
     demoShopify: shouldBootstrapDemo ? {
       shopDomain: DEMO_DEFAULTS.shopDomain,
     } : null,
+    dentalPlans: DENTAL_PLANS.map(plan => ({
+      slug: plan.slug,
+      name: plan.name,
+      setup: plan.setupCents / 100,
+      monthly: plan.monthlyCents / 100,
+      description: plan.description,
+    })),
   });
 });
 
@@ -267,6 +298,71 @@ app.post('/api/create-checkout-session', async (req, res) => {
     return res.json({ id: session.id });
   } catch (e) {
     console.error('Stripe session error:', e?.raw?.message || e?.message, e);
+    return res.status(500).json({ error: 'stripe_error' });
+  }
+});
+
+app.post('/api/dental/checkout', async (req, res) => {
+  try {
+    const slug = String(req.body?.plan || '').toLowerCase();
+    const plan = DENTAL_PLANS.find(p => p.slug === slug);
+
+    if (!plan) {
+      return res.status(400).json({ error: 'invalid_plan' });
+    }
+
+    const lineItems = [];
+
+    if (plan.monthlyCents) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          unit_amount: plan.monthlyCents,
+          recurring: { interval: 'month' },
+          product_data: {
+            name: `${plan.name} — Monthly Subscription`,
+          },
+        },
+        quantity: 1,
+      });
+    }
+
+    if (plan.setupCents) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          unit_amount: plan.setupCents,
+          product_data: {
+            name: `${plan.name} — Onboarding & Setup`,
+          },
+        },
+        quantity: 1,
+      });
+    }
+
+    if (!lineItems.length) {
+      return res.status(400).json({ error: 'unsupported_plan' });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      allow_promotion_codes: true,
+      line_items: lineItems,
+      success_url: `${APP_BASE_URL}/dental/thank-you.html?plan=${plan.slug}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${APP_BASE_URL}/dental/checkout.html?plan=${plan.slug}&canceled=1`,
+      metadata: {
+        productLine: 'dental-ai',
+        plan: plan.slug,
+      },
+    });
+
+    if (session?.url) {
+      return res.json({ url: session.url });
+    }
+
+    return res.json({ id: session.id });
+  } catch (error) {
+    console.error('Dental checkout error:', error?.raw?.message || error?.message, error);
     return res.status(500).json({ error: 'stripe_error' });
   }
 });
