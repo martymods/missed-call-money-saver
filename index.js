@@ -3,6 +3,8 @@ const express = require('express');
 const dayjs = require('dayjs');
 const cron = require('node-cron');
 const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
 const Stripe = require('stripe');
 const OpenAI = require('openai');                           // 👈 NEW
 const { Readable } = require('stream');
@@ -64,6 +66,12 @@ const app = express();
 const BODY_LIMIT = process.env.REQUEST_BODY_LIMIT || '15mb';
 
 const demoBootstrapPromise = bootstrapDemoData();
+
+const TTS_CACHE_DIR = path.join(__dirname, '.cache', 'tts');
+fs.mkdirSync(TTS_CACHE_DIR, { recursive: true });
+
+const COLD_CALLER_SMS_LINK = process.env.COLD_CALLER_SMS_LINK
+  || 'https://www.delcotechdivision.com/real-estate-cold-caller.html';
 
 const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
 const FALLBACK_ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
@@ -175,6 +183,222 @@ function buildTtsUrl(text, variantKey, base) {
   return absoluteUrl(path, base || DEFAULT_APP_BASE_URL);
 }
 
+const ttsCachePromises = new Map();
+
+function base64UrlEncode(str) {
+  return Buffer.from(String(str), 'utf8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+function base64UrlDecode(str) {
+  if (!str) return '';
+  let normalized = String(str).replace(/-/g, '+').replace(/_/g, '/');
+  while (normalized.length % 4 !== 0) {
+    normalized += '=';
+  }
+  return Buffer.from(normalized, 'base64').toString('utf8');
+}
+
+function encodeCallState(state) {
+  try {
+    return base64UrlEncode(JSON.stringify(state || {}));
+  } catch (error) {
+    console.error('[ColdCaller] Failed to encode call state', error);
+    return '';
+  }
+}
+
+function decodeCallState(encoded) {
+  try {
+    const json = base64UrlDecode(encoded);
+    if (!json) return null;
+    return JSON.parse(json);
+  } catch (error) {
+    console.error('[ColdCaller] Failed to decode call state', error);
+    return null;
+  }
+}
+
+async function ensureTtsClip({ text, variantKey, preset, baseUrl }) {
+  if (!USE_ELEVENLABS) {
+    return '';
+  }
+
+  const sanitized = sanitizeForTts(text);
+  if (!sanitized) {
+    return '';
+  }
+
+  const resolvedVariant = variantKey || preset?.variant || 'warm';
+  const resolvedPreset = preset || ELEVENLABS_PRESETS[resolvedVariant] || ELEVENLABS_PRESETS.warm;
+  const voiceId = resolvedPreset?.voiceId || ELEVENLABS_DEFAULT_VOICE_ID;
+  if (!voiceId) {
+    return '';
+  }
+
+  const hash = crypto
+    .createHash('sha1')
+    .update(JSON.stringify([resolvedVariant, voiceId, sanitized]))
+    .digest('hex');
+
+  const filename = `${hash}.mp3`;
+  const filePath = path.join(TTS_CACHE_DIR, filename);
+  const url = absoluteUrl(`/static/tts/${filename}`, baseUrl || DEFAULT_APP_BASE_URL);
+
+  try {
+    await fs.promises.access(filePath, fs.constants.F_OK);
+    return url;
+  } catch (error) {
+    // Cache miss, continue to fetch
+  }
+
+  if (ttsCachePromises.has(hash)) {
+    await ttsCachePromises.get(hash);
+    return url;
+  }
+
+  const fetchPromise = (async () => {
+    const response = await streamElevenLabsAudio({
+      text: sanitized,
+      preset: resolvedPreset,
+      voiceId,
+    });
+
+    if (!response?.ok) {
+      const bodyText = response ? await response.text().catch(() => '') : '';
+      throw new Error(`ElevenLabs cache miss failed (${response?.status || 'no-status'}): ${bodyText.slice(0, 160)}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    await fs.promises.writeFile(filePath, buffer);
+  })();
+
+  ttsCachePromises.set(hash, fetchPromise);
+
+  try {
+    await fetchPromise;
+    return url;
+  } catch (error) {
+    console.error('[ColdCaller] Failed to cache TTS clip', {
+      message: error?.message || error,
+      variant: resolvedVariant,
+      textPreview: sanitized.slice(0, 80),
+    });
+    try {
+      await fs.promises.rm(filePath, { force: true });
+    } catch (_) {
+      // ignore cleanup errors
+    }
+    return buildTtsUrl(sanitized, resolvedVariant, baseUrl);
+  } finally {
+    ttsCachePromises.delete(hash);
+  }
+}
+
+async function appendSpeech(target, text, { variantKey, preset, baseUrl }) {
+  const sanitized = sanitizeForTts(text);
+  if (!sanitized) {
+    return;
+  }
+
+  const resolvedVariant = variantKey || preset?.variant || 'warm';
+  const resolvedPreset = preset || CALLER_VOICE_PRESETS[resolvedVariant] || CALLER_VOICE_PRESETS.warm;
+
+  if (USE_ELEVENLABS) {
+    const clipUrl = await ensureTtsClip({ text: sanitized, variantKey: resolvedVariant, preset: resolvedPreset, baseUrl });
+    if (clipUrl) {
+      target.play(clipUrl);
+      return;
+    }
+  }
+
+  const voice = resolvedPreset?.voice || 'Polly.Joanna';
+  const language = resolvedPreset?.language || 'en-US';
+  target.say({ voice, language }, sanitized);
+}
+
+const callSmsTracker = new Map();
+const CALL_SMS_TRACKER_LIMIT = 500;
+
+function resolveVariantPreset(variantKey) {
+  const variant = variantKey || 'warm';
+  const preset = CALLER_VOICE_PRESETS[variant] || CALLER_VOICE_PRESETS.warm;
+  return { variant, preset };
+}
+
+function extractLeadNumber(body) {
+  const candidate = body?.To || body?.Called || body?.Caller || body?.From || '';
+  return normalizePhoneNumber(candidate);
+}
+
+function normalizeSpeech(text) {
+  return String(text || '').trim().toLowerCase();
+}
+
+function isAffirmativeSpeech(text) {
+  if (!text) return false;
+  return /(yes|yeah|yep|sure|ok|okay|affirmative|correct|go ahead|do it|sounds good|works|alright|please)/i.test(text);
+}
+
+function isNegativeSpeech(text) {
+  if (!text) return false;
+  return /(no|not now|later|busy|stop|don't|do not|cant|cannot|can't|maybe another time|another time|nope|hang up)/i.test(text);
+}
+
+function requestsLink(text) {
+  if (!text) return false;
+  return /(text|send|link|message|sms|email it|email me)/i.test(text);
+}
+
+function detectLeadIntent(text) {
+  if (!text) return '';
+  if (/(buy|buyer|purchase|acquir)/i.test(text)) return 'buy';
+  if (/(sell|listing|list|seller)/i.test(text)) return 'sell';
+  if (/(invest|investment|investor|portfolio)/i.test(text)) return 'invest';
+  if (/(rent|rental|tenant|lease)/i.test(text)) return 'rent';
+  return '';
+}
+
+async function sendColdCallerLink(toNumber, callSid) {
+  const normalized = normalizePhoneNumber(toNumber);
+  if (!normalized) {
+    return false;
+  }
+
+  if (callSid && callSmsTracker.has(callSid)) {
+    return false;
+  }
+
+  try {
+    await sendSMS(normalized, `Here's the quick link: ${COLD_CALLER_SMS_LINK}`);
+    if (callSid) {
+      callSmsTracker.set(callSid, Date.now());
+      if (callSmsTracker.size > CALL_SMS_TRACKER_LIMIT) {
+        const oldestKey = callSmsTracker.keys().next().value;
+        if (oldestKey) {
+          callSmsTracker.delete(oldestKey);
+        }
+      }
+    }
+    return true;
+  } catch (error) {
+    console.error('[ColdCaller] Failed to send SMS link', {
+      message: error?.message || error,
+      to: normalized,
+    });
+    return false;
+  }
+}
+
+function clearCallSmsRecord(callSid) {
+  if (!callSid) return;
+  callSmsTracker.delete(callSid);
+}
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.jsdelivr.net https://assets.calendly.com https://player.vimeo.com",
@@ -208,6 +432,12 @@ app.use('/api/audit', createAuditRouter());
 app.use('/api/design', createDesignRouter());
 app.use('/api/teams', createTeamRouter());
 app.use('/api/warehouse', createWarehouseRouter());
+
+app.use('/static/tts', express.static(TTS_CACHE_DIR, {
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  },
+}));
 
 // 👉 Serve the landing page & assets from /public
 app.use(express.static(path.join(__dirname, 'public')));
@@ -467,59 +697,97 @@ app.post('/api/cold-caller/dial', async (req, res) => {
     };
     console.info('[ColdCaller] Dial request received', logPayload);
 
-    const introLine = sanitizeLine(intro)
-      || (leadName ? `Hi ${leadName}, this is your Delco concierge checking in.` : 'Hi there, this is your Delco concierge checking in.');
+    const sanitizedIntro = sanitizeLine(intro);
+    const greetingLine = leadName
+      ? `Hey ${leadName}, Alex with Delco Realty.`
+      : 'Hey, Alex with Delco Realty.';
+    const quickIntroLine = sanitizedIntro
+      || (goal ? `Quick question about ${goal}.` : 'Quick question for you.');
+    const introQuestionLine = 'Do you have a minute right now?';
 
     const providedLines = String(script || '')
       .split(/\r?\n/)
       .map(sanitizeLine)
       .filter(Boolean);
 
-    const fallbackLines = [
-      goal ? `I'm calling because ${goal}.` : 'We spotted a fresh opportunity on your property journey.',
-      'I just need a moment to walk you through the next steps.',
-      'Does now still work to talk?'
-    ];
-
-    const lines = providedLines.length ? providedLines : fallbackLines;
-
-    const voiceResponse = new VoiceResponse();
-    const gather = voiceResponse.gather({ input: 'speech', timeout: 4, speechTimeout: 'auto' });
-    const gatherLines = [introLine, ...lines];
-    gatherLines.forEach((line, index) => {
-      const sanitizedLine = sanitizeForTts(line);
-      if (!sanitizedLine) return;
-      if (USE_ELEVENLABS) {
-        gather.play(buildTtsUrl(sanitizedLine, variantKey, appBaseUrl));
-      } else {
-        gather.say({ voice: preset.voice, language: preset.language }, sanitizedLine);
-      }
-      if (index < gatherLines.length - 1) {
-        gather.pause({ length: 1 });
-      }
-    });
+    const positiveAckLine = leadName ? `Appreciate it, ${leadName}.` : 'Appreciate it.';
+    const valueBridgeLine = providedLines[0]
+      || (goal ? `It's about ${goal}.` : 'We spotted something worth a quick look.');
+    const qualifierQuestion = providedLines[1]
+      || 'Are you looking to buy, sell, or invest in the next 90 days?';
+    const smsOfferLine = providedLines[2]
+      || 'I just texted you a quick link so you can see the options.';
+    const declineLine = providedLines[3]
+      || 'No worries — I just texted you the link. Have a great day!';
+    const handoffPromptLine = providedLines[4]
+      || 'Want me to connect you with a teammate now?';
+    const connectLine = 'One moment while I connect you to a teammate.';
 
     const sanitizedHandoff = sanitizeLine(handoffNumber);
+    let handoff = '';
     if (sanitizedHandoff) {
-      const handoff = normalizePhoneNumber(sanitizedHandoff);
+      handoff = normalizePhoneNumber(sanitizedHandoff);
       if (!handoff) {
         return res.status(400).json({ error: 'invalid_handoff' });
       }
-      const connectLine = 'One moment while I connect you to a teammate.';
-      if (USE_ELEVENLABS) {
-        voiceResponse.play(buildTtsUrl(connectLine, variantKey, appBaseUrl));
-      } else {
-        voiceResponse.say({ voice: preset.voice, language: preset.language }, connectLine);
-      }
-      voiceResponse.dial(handoff);
-    } else {
-      const closingLine = 'I will text over the details after this call. Talk soon!';
-      if (USE_ELEVENLABS) {
-        voiceResponse.play(buildTtsUrl(closingLine, variantKey, appBaseUrl));
-      } else {
-        voiceResponse.say({ voice: preset.voice, language: preset.language }, closingLine);
-      }
     }
+
+    const callState = {
+      variant: variantKey,
+      introLines: [quickIntroLine, introQuestionLine].filter(Boolean),
+      positiveAckLine,
+      valueBridgeLine,
+      qualifierQuestion,
+      smsOfferLine,
+      declineLine,
+      handoffPromptLine,
+      connectLine,
+      handoffNumber: handoff,
+    };
+    const encodedState = encodeCallState(callState);
+    const introAction = absoluteUrl(`/voice/cold-caller/intro?state=${encodedState}`, appBaseUrl);
+
+    if (USE_ELEVENLABS) {
+      const warmupLines = [
+        greetingLine,
+        quickIntroLine,
+        introQuestionLine,
+        positiveAckLine,
+        valueBridgeLine,
+        qualifierQuestion,
+        smsOfferLine,
+        declineLine,
+        handoffPromptLine,
+        connectLine,
+      ].filter(Boolean);
+
+      await Promise.all(warmupLines.map(line =>
+        ensureTtsClip({ text: line, variantKey, preset, baseUrl: appBaseUrl })
+          .catch((error) => {
+            console.warn('[ColdCaller] Warmup TTS failed', { message: error?.message || error });
+            return null;
+          })
+      ));
+    }
+
+    const voiceResponse = new VoiceResponse();
+    await appendSpeech(voiceResponse, greetingLine, { variantKey, preset, baseUrl: appBaseUrl });
+
+    const gather = voiceResponse.gather({
+      input: 'speech',
+      method: 'POST',
+      action: introAction,
+      speechTimeout: 'auto',
+      timeout: 5,
+      bargeIn: 'true',
+      actionOnEmptyResult: true,
+    });
+
+    await appendSpeech(gather, quickIntroLine, { variantKey, preset, baseUrl: appBaseUrl });
+    gather.pause({ length: 1 });
+    await appendSpeech(gather, introQuestionLine, { variantKey, preset, baseUrl: appBaseUrl });
+
+    voiceResponse.redirect(introAction);
 
     const twiml = voiceResponse.toString();
     console.info('[ColdCaller] TwiML preview', twiml.slice(0, 400) + (twiml.length > 400 ? '…' : ''));
@@ -554,6 +822,334 @@ app.post('/api/cold-caller/dial', async (req, res) => {
       };
     }
     return res.status(statusCode).json(payload);
+  }
+});
+
+app.post('/voice/cold-caller/intro', async (req, res) => {
+  try {
+    const stateToken = typeof req.query?.state === 'string' ? req.query.state : '';
+    const state = decodeCallState(stateToken) || {};
+    const appBaseUrl = resolveAppBaseUrl(req);
+    const { variant, preset } = resolveVariantPreset(state.variant);
+    const speech = normalizeSpeech(req.body?.SpeechResult);
+    const callSid = req.body?.CallSid || '';
+    const leadNumber = extractLeadNumber(req.body);
+    const wantsLinkNow = requestsLink(speech);
+
+    if (isNegativeSpeech(speech) || wantsLinkNow) {
+      if (leadNumber) {
+        await sendColdCallerLink(leadNumber, callSid);
+      }
+      const response = new VoiceResponse();
+      await appendSpeech(response, state.declineLine || 'No worries — I just texted you the link. Have a great day!', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+      response.hangup();
+      return res.type('text/xml').send(response.toString());
+    }
+
+    if (isAffirmativeSpeech(speech)) {
+      const response = new VoiceResponse();
+      await appendSpeech(response, state.positiveAckLine || 'Appreciate it.', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+
+      const qualifyState = encodeCallState(state);
+      const qualifyAction = absoluteUrl(`/voice/cold-caller/qualify?state=${qualifyState}`, appBaseUrl);
+      const gather = response.gather({
+        input: 'speech',
+        method: 'POST',
+        action: qualifyAction,
+        speechTimeout: 'auto',
+        timeout: 6,
+        bargeIn: 'true',
+        actionOnEmptyResult: true,
+      });
+
+      await appendSpeech(gather, state.valueBridgeLine || 'We spotted something worth a quick look.', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+      gather.pause({ length: 1 });
+      await appendSpeech(gather, state.qualifierQuestion || 'Are you looking to buy, sell, or invest in the next 90 days?', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+
+      response.redirect(qualifyAction);
+      return res.type('text/xml').send(response.toString());
+    }
+
+    const response = new VoiceResponse();
+    const introState = encodeCallState(state);
+    const introAction = absoluteUrl(`/voice/cold-caller/intro?state=${introState}`, appBaseUrl);
+    const gather = response.gather({
+      input: 'speech',
+      method: 'POST',
+      action: introAction,
+      speechTimeout: 'auto',
+      timeout: 5,
+      bargeIn: 'true',
+      actionOnEmptyResult: true,
+    });
+
+    const introLines = Array.isArray(state.introLines) ? state.introLines : [];
+    for (let i = 0; i < introLines.length; i += 1) {
+      await appendSpeech(gather, introLines[i], { variantKey: variant, preset, baseUrl: appBaseUrl });
+      if (i < introLines.length - 1) {
+        gather.pause({ length: 1 });
+      }
+    }
+
+    response.redirect(introAction);
+    return res.type('text/xml').send(response.toString());
+  } catch (error) {
+    console.error('[ColdCaller] Intro handler error', {
+      message: error?.message || error,
+      stack: error?.stack,
+    });
+    const { variant, preset } = resolveVariantPreset();
+    const appBaseUrl = resolveAppBaseUrl(req);
+    const fallback = new VoiceResponse();
+    await appendSpeech(fallback, 'Thanks for your time. Talk soon!', {
+      variantKey: variant,
+      preset,
+      baseUrl: appBaseUrl,
+    });
+    fallback.hangup();
+    return res.type('text/xml').send(fallback.toString());
+  }
+});
+
+app.post('/voice/cold-caller/qualify', async (req, res) => {
+  try {
+    const stateToken = typeof req.query?.state === 'string' ? req.query.state : '';
+    const state = decodeCallState(stateToken) || {};
+    const appBaseUrl = resolveAppBaseUrl(req);
+    const { variant, preset } = resolveVariantPreset(state.variant);
+    const speech = normalizeSpeech(req.body?.SpeechResult);
+    const callSid = req.body?.CallSid || '';
+    const leadNumber = extractLeadNumber(req.body);
+    const wantsLinkNow = requestsLink(speech);
+
+    if (!speech) {
+      const response = new VoiceResponse();
+      const qualifyState = encodeCallState(state);
+      const qualifyAction = absoluteUrl(`/voice/cold-caller/qualify?state=${qualifyState}`, appBaseUrl);
+      const gather = response.gather({
+        input: 'speech',
+        method: 'POST',
+        action: qualifyAction,
+        speechTimeout: 'auto',
+        timeout: 6,
+        bargeIn: 'true',
+        actionOnEmptyResult: true,
+      });
+      await appendSpeech(gather, state.qualifierQuestion || 'Are you looking to buy, sell, or invest in the next 90 days?', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+      response.redirect(qualifyAction);
+      return res.type('text/xml').send(response.toString());
+    }
+
+    if (isNegativeSpeech(speech) && !wantsLinkNow) {
+      if (leadNumber) {
+        await sendColdCallerLink(leadNumber, callSid);
+      }
+      const response = new VoiceResponse();
+      await appendSpeech(response, state.declineLine || 'No worries — I just texted you the link. Have a great day!', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+      response.hangup();
+      return res.type('text/xml').send(response.toString());
+    }
+
+    if (leadNumber) {
+      await sendColdCallerLink(leadNumber, callSid);
+    }
+
+    const intent = detectLeadIntent(speech);
+    const intentLineMap = {
+      buy: 'Great — we will send over buying options that fit.',
+      sell: 'Great — let us talk about getting top dollar for you.',
+      invest: 'Awesome — I have a couple investment plays to text you.',
+      rent: 'Perfect — I will text over the top rentals right now.',
+    };
+    const intentLine = intentLineMap[intent] || state.valueBridgeLine || 'Perfect — let me text you the details.';
+
+    const response = new VoiceResponse();
+    await appendSpeech(response, intentLine, {
+      variantKey: variant,
+      preset,
+      baseUrl: appBaseUrl,
+    });
+    await appendSpeech(response, state.smsOfferLine || 'I just texted you a quick link so you can see the options.', {
+      variantKey: variant,
+      preset,
+      baseUrl: appBaseUrl,
+    });
+
+    if (state.handoffNumber) {
+      const handoffState = encodeCallState(state);
+      const handoffAction = absoluteUrl(`/voice/cold-caller/handoff?state=${handoffState}`, appBaseUrl);
+      const gather = response.gather({
+        input: 'speech',
+        method: 'POST',
+        action: handoffAction,
+        speechTimeout: 'auto',
+        timeout: 5,
+        bargeIn: 'true',
+        actionOnEmptyResult: true,
+      });
+      await appendSpeech(gather, state.handoffPromptLine || 'Want me to connect you with a teammate now?', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+      response.redirect(handoffAction);
+    } else {
+      await appendSpeech(response, 'Talk soon!', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+      response.hangup();
+    }
+
+    return res.type('text/xml').send(response.toString());
+  } catch (error) {
+    console.error('[ColdCaller] Qualify handler error', {
+      message: error?.message || error,
+      stack: error?.stack,
+    });
+    const { variant, preset } = resolveVariantPreset();
+    const appBaseUrl = resolveAppBaseUrl(req);
+    const fallback = new VoiceResponse();
+    await appendSpeech(fallback, 'Appreciate your time — we will follow up by text.', {
+      variantKey: variant,
+      preset,
+      baseUrl: appBaseUrl,
+    });
+    fallback.hangup();
+    return res.type('text/xml').send(fallback.toString());
+  }
+});
+
+app.post('/voice/cold-caller/handoff', async (req, res) => {
+  try {
+    const stateToken = typeof req.query?.state === 'string' ? req.query.state : '';
+    const state = decodeCallState(stateToken) || {};
+    const appBaseUrl = resolveAppBaseUrl(req);
+    const { variant, preset } = resolveVariantPreset(state.variant);
+    const speech = normalizeSpeech(req.body?.SpeechResult);
+    const callSid = req.body?.CallSid || '';
+    const leadNumber = extractLeadNumber(req.body);
+    const wantsLinkNow = requestsLink(speech);
+    const handoffNumber = state.handoffNumber || '';
+
+    if (!handoffNumber) {
+      const response = new VoiceResponse();
+    await appendSpeech(response, state.smsOfferLine || 'I will follow up with the details shortly.', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+      response.hangup();
+      return res.type('text/xml').send(response.toString());
+    }
+
+    if (!speech) {
+      const response = new VoiceResponse();
+      const handoffState = encodeCallState(state);
+      const handoffAction = absoluteUrl(`/voice/cold-caller/handoff?state=${handoffState}`, appBaseUrl);
+      const gather = response.gather({
+        input: 'speech',
+        method: 'POST',
+        action: handoffAction,
+        speechTimeout: 'auto',
+        timeout: 5,
+        bargeIn: 'true',
+        actionOnEmptyResult: true,
+      });
+      await appendSpeech(gather, state.handoffPromptLine || 'Want me to connect you with a teammate now?', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+      response.redirect(handoffAction);
+      return res.type('text/xml').send(response.toString());
+    }
+
+    if (isAffirmativeSpeech(speech)) {
+      const response = new VoiceResponse();
+      await appendSpeech(response, state.connectLine || 'One moment while I connect you to a teammate.', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+      clearCallSmsRecord(callSid);
+      response.dial(handoffNumber);
+      return res.type('text/xml').send(response.toString());
+    }
+
+    if (isNegativeSpeech(speech) || wantsLinkNow) {
+      if (leadNumber) {
+        await sendColdCallerLink(leadNumber, callSid);
+      }
+      const response = new VoiceResponse();
+      await appendSpeech(response, state.smsOfferLine || 'No worries — I just texted you the link.', {
+        variantKey: variant,
+        preset,
+        baseUrl: appBaseUrl,
+      });
+      response.hangup();
+      return res.type('text/xml').send(response.toString());
+    }
+
+    const response = new VoiceResponse();
+    const handoffState = encodeCallState(state);
+    const handoffAction = absoluteUrl(`/voice/cold-caller/handoff?state=${handoffState}`, appBaseUrl);
+    const gather = response.gather({
+      input: 'speech',
+      method: 'POST',
+      action: handoffAction,
+      speechTimeout: 'auto',
+      timeout: 5,
+      bargeIn: 'true',
+      actionOnEmptyResult: true,
+    });
+    await appendSpeech(gather, state.handoffPromptLine || 'Want me to connect you with a teammate now?', {
+      variantKey: variant,
+      preset,
+      baseUrl: appBaseUrl,
+    });
+    response.redirect(handoffAction);
+    return res.type('text/xml').send(response.toString());
+  } catch (error) {
+    console.error('[ColdCaller] Handoff handler error', {
+      message: error?.message || error,
+      stack: error?.stack,
+    });
+    const { variant, preset } = resolveVariantPreset();
+    const appBaseUrl = resolveAppBaseUrl(req);
+    const fallback = new VoiceResponse();
+    await appendSpeech(fallback, 'Appreciate your time — we will follow up by text.', {
+      variantKey: variant,
+      preset,
+      baseUrl: appBaseUrl,
+    });
+    fallback.hangup();
+    return res.type('text/xml').send(fallback.toString());
   }
 });
 
@@ -732,12 +1328,10 @@ app.post('/api/eligibility/check', async (req, res) => {
 // 🔥 NEW: OpenAI chat endpoint
 // ---------------------------------------------------------------------
 // --- Chat endpoint (logs to JSONL & returns reply) ---
-const fs = require('fs');
-const { randomUUID } = require('crypto');
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const convId = String(req.body?.convId || randomUUID());
+    const convId = String(req.body?.convId || crypto.randomUUID());
     const incoming = Array.isArray(req.body?.messages) ? req.body.messages : [];
 
     // recent, trimmed history
