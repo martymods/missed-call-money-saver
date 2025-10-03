@@ -218,9 +218,9 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
           </label>
           <label>Voice preset
             <select name="voice">
-              <option value="warm">Warm &amp; friendly (Polly.Joanna)</option>
-              <option value="bold">Bold &amp; confident (Polly.Matthew)</option>
-              <option value="calm">Calm &amp; precise (Polly.Amy)</option>
+              <option value="warm">Warm &amp; friendly (ElevenLabs)</option>
+              <option value="bold">Bold &amp; confident (ElevenLabs)</option>
+              <option value="calm">Calm &amp; precise (ElevenLabs)</option>
             </select>
           </label>
           <label>Optional live handoff number
@@ -234,7 +234,7 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
             <h3 style="font-size:20px">Live call storyboard</h3>
           </div>
           <pre id="callerPreview">Adjust the lead details to see the live call storyboard, from dial to voicemail.</pre>
-          <div class="status" id="callerMeta">Warm &amp; friendly (Polly.Joanna). No live handoff configured yet. Calls originate from your configured TWILIO_NUMBER.</div>
+          <div class="status" id="callerMeta">Warm &amp; friendly (ElevenLabs). No live handoff configured yet. Calls originate from your configured TWILIO_NUMBER.</div>
         </div>
       </div>
     </section>
@@ -489,8 +489,10 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
     const scriptMeta = document.getElementById('scriptMeta');
     const copyBtn = document.getElementById('copyScript');
     const speakBtn = document.getElementById('speakScript');
-    const speechSupport = 'speechSynthesis' in window;
-    let scriptVoiceName = '';
+    let activeAudio = null;
+    let activeAudioSource = null;
+    let activeAudioCleanup = null;
+    let preferredVoiceVariant = 'warm';
 
     function resetVoiceButton(){
       if(!speakBtn) return;
@@ -498,59 +500,73 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
       speakBtn.textContent = 'Play voice demo';
     }
 
+    function stopActiveAudio(reason = 'stop'){
+      if(activeAudio){
+        try {
+          activeAudio.pause();
+          activeAudio.currentTime = 0;
+        } catch (_) {}
+      }
+      const cleanup = activeAudioCleanup;
+      activeAudio = null;
+      activeAudioCleanup = null;
+      activeAudioSource = null;
+      if(typeof cleanup === 'function'){
+        cleanup(reason);
+      }
+    }
+
     function stopVoicePreview(){
-      if(speechSupport){
-        window.speechSynthesis.cancel();
+      const wasScript = activeAudioSource === 'script';
+      stopActiveAudio('stop');
+      if(!wasScript){
+        resetVoiceButton();
       }
-      resetVoiceButton();
     }
 
-    function chooseVoice(){
-      if(!speechSupport) return null;
-      const voices = window.speechSynthesis.getVoices();
-      if(!voices.length) return null;
-      const preferredPatterns = [/Neural/i, /Natural/i, /WaveNet/i, /One/i];
-      for(const pattern of preferredPatterns){
-        const match = voices.find(v => pattern.test(v.name));
-        if(match){
-          scriptVoiceName = match.name;
-          return match;
+    async function playElevenLabsVoice(text, options = {}){
+      const trimmed = (text || '').trim();
+      if(!trimmed) throw new Error('No text provided');
+      const params = new URLSearchParams();
+      params.set('t', trimmed.slice(0, 800));
+      if(options.variant){
+        params.set('variant', options.variant);
+      }
+      const audioUrl = `/audio/tts?${params.toString()}`;
+      stopActiveAudio('interrupt');
+      const audio = new Audio(audioUrl);
+      activeAudio = audio;
+      activeAudioSource = options.source || null;
+      activeAudioCleanup = (reason) => {
+        if(reason === 'error'){
+          options.onError?.();
+        } else {
+          options.onEnd?.();
         }
-      }
-      const fallback = voices.find(v => v.default && v.lang && v.lang.startsWith('en'))
-        || voices.find(v => v.lang && v.lang.startsWith('en'))
-        || voices[0];
-      scriptVoiceName = fallback?.name || '';
-      return fallback;
-    }
-
-    function speakScriptText(text){
-      if(!speechSupport || !text) return;
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voice = chooseVoice();
-      if(voice) utterance.voice = voice;
-      utterance.rate = 0.94;
-      utterance.pitch = 1;
-      utterance.onend = resetVoiceButton;
-      utterance.onerror = resetVoiceButton;
-      if(speakBtn){
-        speakBtn.textContent = 'Playing… Tap to stop';
-      }
-      window.speechSynthesis.speak(utterance);
-    }
-
-    if(speechSupport){
-      window.speechSynthesis.addEventListener('voiceschanged', () => {
-        window.speechSynthesis.getVoices();
-        if(!scriptVoiceName) chooseVoice();
+      };
+      audio.addEventListener('ended', () => {
+        if(activeAudio === audio){
+          stopActiveAudio('ended');
+        }
       });
-      if(!scriptVoiceName){
-        window.setTimeout(() => { if(!scriptVoiceName) chooseVoice(); }, 400);
+      audio.addEventListener('error', () => {
+        if(activeAudio === audio){
+          stopActiveAudio('error');
+        }
+      });
+      options.onStart?.();
+      try {
+        await audio.play();
+      } catch (err) {
+        if(activeAudio === audio){
+          stopActiveAudio('error');
+        }
+        if(!options.silentError){
+          console.error('ElevenLabs preview failed', err);
+        }
+        throw err;
       }
-    } else if(speakBtn){
-      speakBtn.disabled = true;
-      speakBtn.textContent = 'Voice preview unavailable';
+      return audio;
     }
 
     function fallbackScript(payload){
@@ -604,15 +620,10 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
 
     if(callerForm){
       const callerSubmit = callerForm.querySelector('button[type="submit"]');
-      const voiceLabels = {
-        warm: 'Warm & friendly (Polly.Joanna)',
-        bold: 'Bold & confident (Polly.Matthew)',
-        calm: 'Calm & precise (Polly.Amy)'
-      };
-      const voiceMap = {
-        warm: { voice: 'Polly.Joanna', language: 'en-US' },
-        bold: { voice: 'Polly.Matthew', language: 'en-US' },
-        calm: { voice: 'Polly.Amy', language: 'en-GB' }
+      const voicePresets = {
+        warm: { label: 'Warm & friendly (ElevenLabs)', variant: 'warm' },
+        bold: { label: 'Bold & confident (ElevenLabs)', variant: 'bold' },
+        calm: { label: 'Calm & precise (ElevenLabs)', variant: 'calm' }
       };
       const US_PREFIX = '+1';
       const phoneLocalInput = callerForm.querySelector('[name="toLocal"]');
@@ -669,8 +680,18 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
       }
 
       function buildPreview(state){
-        const preset = voiceMap[state.voice] || voiceMap.warm;
-        const voiceLabel = voiceLabels[state.voice] || voiceLabels.warm;
+        const preset = voicePresets[state.voice] || voicePresets.warm;
+        const voiceLabel = preset.label || voicePresets.warm.label;
+        const variant = preset.variant || state.voice || 'warm';
+        const previewBase = `${window.location.origin}/audio/tts`;
+        const toPreviewUrl = (text) => {
+          const trimmed = (text || '').trim().slice(0, 800);
+          if(!trimmed) return '';
+          const params = new URLSearchParams();
+          params.set('t', trimmed);
+          params.set('variant', variant);
+          return `${previewBase}?${params.toString()}`.replace(/&/g, '&amp;');
+        };
         const leadName = state.leadName || fallbackCaller.leadName;
         const toNumber = state.to || fallbackCaller.to;
         const toLocal = state.toLocal || fallbackCaller.toLocal;
@@ -687,15 +708,18 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
           .map(line => line.trim())
           .filter(Boolean);
 
-        const sayAttr = `voice="${preset.voice}" language="${preset.language}"`;
         const gatherLines = [introLine, ...scriptLines];
         const gatherXml = gatherLines.map((line, index) => {
+          const url = toPreviewUrl(line);
+          if(!url) return '';
           const pause = index === gatherLines.length - 1 ? '' : `\n    <Pause length="1"/>`;
-          return `    <Say ${sayAttr}>${line}</Say>${pause}`;
-        }).join('\n');
-        const handoff = state.handoffNumber
-          ? [`  <Say ${sayAttr}>One moment while I connect you to a teammate.</Say>`, `  <Dial>${state.handoffNumber}</Dial>`]
-          : [`  <Say ${sayAttr}>I’ll text over the summary after this call. Talk soon!</Say>`];
+          return `    <Play>${url}</Play>${pause}`;
+        }).filter(Boolean).join('\n');
+        const connectUrl = toPreviewUrl('One moment while I connect you to a teammate.');
+        const closingUrl = toPreviewUrl('I’ll text over the summary after this call. Talk soon!');
+        const handoff = state.handoffNumber && connectUrl
+          ? [`  <Play>${connectUrl}</Play>`, `  <Dial>${state.handoffNumber}</Dial>`]
+          : (closingUrl ? [`  <Play>${closingUrl}</Play>`] : []);
         const twiml = `&lt;Response&gt;\n  &lt;Gather input="speech" timeout="4" speechTimeout="auto"&gt;\n${gatherXml}\n  &lt;/Gather&gt;\n${handoff.join('\n')}\n&lt;/Response&gt;`;
 
         const cleanGoal = goal.trim().replace(/\s+/g, ' ') || fallbackCaller.goal;
@@ -712,7 +736,7 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         const handoffDisplay = state.handoffNumber ? (formatDisplayPhone(state.handoffNumber) || state.handoffNumber) : '';
         const timeline = [
           `Twilio dials ${displayPhone || 'the lead phone'} from your configured number.`,
-          `When ${leadMid} answers, the concierge uses the ${voiceLabel} voice to deliver the intro.`,
+          `When ${leadMid} answers, the concierge uses the ${voiceLabel} voice powered by ElevenLabs to deliver the intro.`,
           'The system listens after each sentence with speech detection and a 4-second timeout.',
           state.handoffNumber
             ? `If ${leadMid} asks for a human, Twilio bridges ${handoffDisplay || state.handoffNumber} for a warm handoff.`
@@ -721,11 +745,11 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         ];
 
         const dialogLines = [
-          `Agent (${preset.voice}): ${introLine}`,
+          `Agent (${voiceLabel}): ${introLine}`,
           `${leadTag}: [Greets you back or confirms if now works.]`
         ];
         scriptLines.forEach((line, index) => {
-          dialogLines.push(`Agent (${preset.voice}): ${line}`);
+          dialogLines.push(`Agent (${voiceLabel}): ${line}`);
           const responseHint = index === scriptLines.length - 1
             ? `${leadTag}: [Gives a yes/no so you can book, bill, or transfer.]`
             : `${leadTag}: [Shares details or objections — auto-transcribed in your call log.]`;
@@ -761,16 +785,19 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
 
       function updateCallerPreview(){
         const state = getCallerState();
+        const preset = voicePresets[state.voice] || voicePresets.warm;
+        const voiceLabel = preset.label || voicePresets.warm.label;
+        const variant = preset.variant || state.voice || 'warm';
+        preferredVoiceVariant = variant;
         if(callerPreview){
           callerPreview.textContent = buildPreview(state);
         }
         if(callerMeta){
-          const label = voiceLabels[state.voice] || voiceLabels.warm;
           const handoffDisplay = state.handoffNumber ? (formatDisplayPhone(state.handoffNumber) || state.handoffNumber) : '';
           const handoffText = state.handoffNumber
             ? `Warm handoff ready at ${handoffDisplay}.`
             : 'No live handoff configured yet — concierge stays on the line.';
-          callerMeta.textContent = `${label}. ${handoffText} Calls originate from your configured TWILIO_NUMBER. Adjust any field to redraw the storyboard.`;
+          callerMeta.textContent = `${voiceLabel}. ${handoffText} Calls originate from your configured TWILIO_NUMBER. Adjust any field to redraw the storyboard.`;
         }
       }
 
@@ -871,32 +898,15 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
       }
     }
 
-    function chooseTourVoice(){
-      if(!speechSupport) return null;
-      const voices = window.speechSynthesis.getVoices();
-      if(!voices.length) return null;
-      const alternate = voices.filter(v => v.name !== scriptVoiceName);
-      const pools = alternate.length ? alternate : voices;
-      const preferred = [/Female/i, /Samantha/i, /Jenny/i, /Aria/i, /Olivia/i];
-      for(const pattern of preferred){
-        const match = pools.find(v => pattern.test(v.name));
-        if(match) return match;
-      }
-      const langMatch = pools.find(v => v.lang && v.lang.startsWith('en'));
-      if(langMatch) return langMatch;
-      return pools[0];
-    }
-
     function narrateTourStep(step){
-      if(!speechSupport) return;
-      stopVoicePreview();
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(`${step.title}. ${step.narration || step.body}`);
-      const voice = chooseTourVoice();
-      if(voice) utterance.voice = voice;
-      utterance.rate = 1.02;
-      utterance.pitch = 1.08;
-      window.speechSynthesis.speak(utterance);
+      const narration = `${step.title}. ${step.narration || step.body}`;
+      playElevenLabsVoice(narration, {
+        variant: 'calm',
+        source: 'tour',
+        silentError: true,
+        onError: () => {},
+        onEnd: () => {}
+      }).catch(() => {});
     }
 
     function showTourStep(index){
@@ -936,9 +946,7 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
       clearHighlight();
       tourOverlay.classList.remove('active');
       tourOverlay.setAttribute('aria-hidden', 'true');
-      if(speechSupport){
-        window.speechSynthesis.cancel();
-      }
+      stopActiveAudio('stop');
     }
 
     startTourBtn?.addEventListener('click', openTour);
@@ -956,23 +964,35 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
     tourSkip?.addEventListener('click', closeTour);
     tourBackdrop?.addEventListener('click', closeTour);
 
-    speakBtn?.addEventListener('click', () => {
-      if(!speechSupport){
-        speakBtn.disabled = true;
-        speakBtn.textContent = 'Voice preview unavailable';
+    speakBtn?.addEventListener('click', async () => {
+      if(activeAudio && activeAudioSource === 'script'){
+        stopVoicePreview();
         return;
       }
-      const text = scriptOutput.textContent.trim();
+      const text = (scriptOutput.textContent || '').trim();
       if(!text){
         speakBtn.textContent = 'Add script details first';
         window.setTimeout(resetVoiceButton, 2000);
         return;
       }
-      if(window.speechSynthesis.speaking){
-        stopVoicePreview();
-        return;
-      }
-      speakScriptText(text);
+      speakBtn.disabled = true;
+      speakBtn.textContent = 'Loading ElevenLabs…';
+      try {
+        await playElevenLabsVoice(text, {
+          variant: preferredVoiceVariant || 'warm',
+          source: 'script',
+          onStart: () => {
+            speakBtn.disabled = false;
+            speakBtn.textContent = 'Playing… Tap to stop';
+          },
+          onEnd: resetVoiceButton,
+          onError: () => {
+            speakBtn.disabled = false;
+            speakBtn.textContent = 'Voice preview unavailable';
+            window.setTimeout(resetVoiceButton, 2000);
+          },
+        });
+      } catch (_) {}
     });
   </script>
 </body>

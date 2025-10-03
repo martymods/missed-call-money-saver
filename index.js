@@ -5,6 +5,7 @@ const cron = require('node-cron');
 const path = require('path');
 const Stripe = require('stripe');
 const OpenAI = require('openai');                           // 👈 NEW
+const { Readable } = require('stream');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' }); // 👈 NEW
 const APP_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://www.delcotechdivision.com';
@@ -57,11 +58,57 @@ const BODY_LIMIT = process.env.REQUEST_BODY_LIMIT || '15mb';
 
 const demoBootstrapPromise = bootstrapDemoData();
 
-const CALLER_VOICE_PRESETS = {
-  warm: { voice: 'Polly.Joanna', language: 'en-US' },
-  bold: { voice: 'Polly.Matthew', language: 'en-US' },
-  calm: { voice: 'Polly.Amy', language: 'en-GB' },
+const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
+const FALLBACK_ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
+const ELEVENLABS_DEFAULT_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || FALLBACK_ELEVENLABS_VOICE_ID;
+const ELEVENLABS_PRESETS = {
+  warm: {
+    label: 'Warm & friendly (ElevenLabs)',
+    variant: 'warm',
+    voiceId: process.env.ELEVENLABS_VOICE_ID_WARM || ELEVENLABS_DEFAULT_VOICE_ID,
+    modelId: ELEVENLABS_MODEL_ID,
+    voiceSettings: {
+      stability: 0.48,
+      similarity_boost: 0.9,
+      style: 0.55,
+      use_speaker_boost: true,
+    },
+  },
+  bold: {
+    label: 'Bold & confident (ElevenLabs)',
+    variant: 'bold',
+    voiceId: process.env.ELEVENLABS_VOICE_ID_BOLD || ELEVENLABS_DEFAULT_VOICE_ID,
+    modelId: ELEVENLABS_MODEL_ID,
+    voiceSettings: {
+      stability: 0.32,
+      similarity_boost: 0.88,
+      style: 0.2,
+      use_speaker_boost: true,
+    },
+  },
+  calm: {
+    label: 'Calm & precise (ElevenLabs)',
+    variant: 'calm',
+    voiceId: process.env.ELEVENLABS_VOICE_ID_CALM || ELEVENLABS_DEFAULT_VOICE_ID,
+    modelId: ELEVENLABS_MODEL_ID,
+    voiceSettings: {
+      stability: 0.72,
+      similarity_boost: 0.92,
+      style: 0.12,
+      use_speaker_boost: true,
+    },
+  },
 };
+
+const POLLY_PRESETS = {
+  warm: { label: 'Warm & friendly (Polly.Joanna)', voice: 'Polly.Joanna', language: 'en-US', variant: 'warm' },
+  bold: { label: 'Bold & confident (Polly.Matthew)', voice: 'Polly.Matthew', language: 'en-US', variant: 'bold' },
+  calm: { label: 'Calm & precise (Polly.Amy)', voice: 'Polly.Amy', language: 'en-GB', variant: 'calm' },
+};
+
+const USE_ELEVENLABS = Boolean(process.env.ELEVENLABS_API_KEY);
+
+const CALLER_VOICE_PRESETS = USE_ELEVENLABS ? ELEVENLABS_PRESETS : POLLY_PRESETS;
 
 function normalizePhoneNumber(value) {
   if (!value) return '';
@@ -78,6 +125,26 @@ function normalizePhoneNumber(value) {
 
 function sanitizeLine(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function sanitizeForTts(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, 800);
+}
+
+function absoluteUrl(pathname = '/') {
+  const base = (APP_BASE_URL || '').replace(/\/$/, '');
+  const suffix = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  return `${base}${suffix}`;
+}
+
+function buildTtsUrl(text, variantKey) {
+  const sanitized = sanitizeForTts(text);
+  const params = new URLSearchParams();
+  if (sanitized) params.set('t', sanitized);
+  if (variantKey) params.set('variant', variantKey);
+  const search = params.toString();
+  const path = `/audio/tts${search ? `?${search}` : ''}`;
+  return absoluteUrl(path);
 }
 
 const contentSecurityPolicy = [
@@ -116,6 +183,54 @@ app.use('/api/warehouse', createWarehouseRouter());
 
 // 👉 Serve the landing page & assets from /public
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/audio/tts', async (req, res) => {
+  if (!USE_ELEVENLABS) {
+    return res.status(503).send('ElevenLabs voice is not configured.');
+  }
+
+  try {
+    const rawText = typeof req.query?.t === 'string' ? req.query.t : '';
+    const text = sanitizeForTts(rawText) || 'Hello from ElevenLabs.';
+    const variantKey = typeof req.query?.variant === 'string'
+      ? req.query.variant.toLowerCase()
+      : 'warm';
+    const preset = ELEVENLABS_PRESETS[variantKey] || ELEVENLABS_PRESETS.warm;
+    const voiceId = preset.voiceId || ELEVENLABS_DEFAULT_VOICE_ID;
+    if (!voiceId) {
+      return res.status(500).send('Missing ElevenLabs voice.');
+    }
+
+    const apiKey = process.env.ELEVENLABS_API_KEY;
+    const endpoint = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=1&output_format=mp3_44100_128`;
+    const body = {
+      text,
+      model_id: preset.modelId || ELEVENLABS_MODEL_ID,
+      voice_settings: preset.voiceSettings,
+    };
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok || !response.body) {
+      const message = await response.text().catch(() => '');
+      return res.status(502).send(`ElevenLabs error: ${message}`);
+    }
+
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'no-store');
+    Readable.fromWeb(response.body).pipe(res);
+  } catch (error) {
+    console.error('ElevenLabs TTS proxy error:', error?.message || error);
+    res.status(500).send('ElevenLabs TTS unavailable.');
+  }
+});
 
 // One canonical booking URL for the site + SMS
 app.get('/book', (req, res) => {
@@ -218,6 +333,7 @@ app.post('/api/cold-caller/dial', async (req, res) => {
 
     const presetKey = String(voice || '').toLowerCase();
     const preset = CALLER_VOICE_PRESETS[presetKey] || CALLER_VOICE_PRESETS.warm;
+    const variantKey = preset?.variant || presetKey || 'warm';
 
     const introLine = sanitizeLine(intro)
       || (leadName ? `Hi ${leadName}, this is your Delco concierge checking in.` : 'Hi there, this is your Delco concierge checking in.');
@@ -239,7 +355,13 @@ app.post('/api/cold-caller/dial', async (req, res) => {
     const gather = voiceResponse.gather({ input: 'speech', timeout: 4, speechTimeout: 'auto' });
     const gatherLines = [introLine, ...lines];
     gatherLines.forEach((line, index) => {
-      gather.say({ voice: preset.voice, language: preset.language }, line);
+      const sanitizedLine = sanitizeForTts(line);
+      if (!sanitizedLine) return;
+      if (USE_ELEVENLABS) {
+        gather.play(buildTtsUrl(sanitizedLine, variantKey));
+      } else {
+        gather.say({ voice: preset.voice, language: preset.language }, sanitizedLine);
+      }
       if (index < gatherLines.length - 1) {
         gather.pause({ length: 1 });
       }
@@ -251,10 +373,20 @@ app.post('/api/cold-caller/dial', async (req, res) => {
       if (!handoff) {
         return res.status(400).json({ error: 'invalid_handoff' });
       }
-      voiceResponse.say({ voice: preset.voice, language: preset.language }, 'One moment while I connect you to a teammate.');
+      const connectLine = 'One moment while I connect you to a teammate.';
+      if (USE_ELEVENLABS) {
+        voiceResponse.play(buildTtsUrl(connectLine, variantKey));
+      } else {
+        voiceResponse.say({ voice: preset.voice, language: preset.language }, connectLine);
+      }
       voiceResponse.dial(handoff);
     } else {
-      voiceResponse.say({ voice: preset.voice, language: preset.language }, 'I will text over the details after this call. Talk soon!');
+      const closingLine = 'I will text over the details after this call. Talk soon!';
+      if (USE_ELEVENLABS) {
+        voiceResponse.play(buildTtsUrl(closingLine, variantKey));
+      } else {
+        voiceResponse.say({ voice: preset.voice, language: preset.language }, closingLine);
+      }
     }
 
     const call = await twilioClient.calls.create({
