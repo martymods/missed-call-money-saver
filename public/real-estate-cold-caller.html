@@ -127,6 +127,26 @@
     .copy-btn{align-self:flex-start;padding:10px 14px;border-radius:10px;background:rgba(70,194,255,.16);color:#cfe7ff;border:1px solid rgba(70,194,255,.4);cursor:pointer}
     .voice-btn{background:rgba(84,104,255,.24);border:1px solid rgba(84,104,255,.48)}
 
+    .call-visual{position:relative;border-radius:18px;overflow:hidden;border:1px solid rgba(84,104,255,.28);background:linear-gradient(180deg,rgba(14,18,43,.65),rgba(14,18,43,.35));box-shadow:0 24px 60px rgba(5,12,34,.55);transition:box-shadow .3s ease,transform .3s ease;margin-top:-4px}
+    .call-visual img{width:100%;display:block;transition:filter .35s ease,transform .35s ease}
+    .call-visual.is-live img{filter:blur(8px) saturate(.8);transform:scale(1.02)}
+    .call-visual-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;background:rgba(4,8,21,.55);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .35s ease}
+    .call-visual.is-live .call-visual-overlay{opacity:1;pointer-events:auto}
+    .call-visual-spinner{width:46px;height:46px;border-radius:50%;border:3px solid rgba(143,160,216,.45);border-top-color:var(--accent);animation:spin 1s linear infinite}
+    .call-visual-dialog{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px}
+    .call-visual-line{opacity:0;transform:translateY(8px);background:rgba(5,12,34,.78);border:1px solid rgba(84,104,255,.4);border-radius:14px;padding:10px 12px;font-size:13px;color:#dbe4ff;line-height:1.45;box-shadow:0 18px 38px rgba(4,8,21,.45);transition:opacity .35s ease,transform .35s ease}
+    .call-visual-line span{display:block;font-size:11px;letter-spacing:.32px;text-transform:uppercase;color:#94a4de;margin-bottom:4px}
+    .call-visual-line.lead{margin-left:auto;background:rgba(70,194,255,.22);border-color:rgba(70,194,255,.4);color:#f3f7ff;box-shadow:0 18px 38px rgba(5,12,34,.55)}
+    .call-visual-line.lead span{color:rgba(233,243,255,.88)}
+    .call-visual-line.show{opacity:1;transform:translateY(0)}
+    .call-visual-ended{position:absolute;bottom:18px;right:18px;padding:9px 16px;border-radius:999px;background:rgba(20,12,24,.82);border:1px solid rgba(247,112,102,.6);color:#fce3de;font-size:12px;font-weight:700;letter-spacing:.32px;text-transform:uppercase;opacity:0;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease;pointer-events:none}
+    .call-visual.is-ended .call-visual-ended{opacity:1;transform:translateY(0)}
+
+    @keyframes spin{
+      from{transform:rotate(0)}
+      to{transform:rotate(360deg)}
+    }
+
     .cta-panel{margin-top:48px;background:linear-gradient(135deg,rgba(70,194,255,.25),rgba(84,104,255,.35));border-radius:22px;padding:28px;border:1px solid rgba(255,255,255,.2);display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));align-items:center}
     .cta-panel h3{font-size:26px}
     .cta-panel p{color:#0c1327;font-weight:600}
@@ -372,6 +392,14 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
           </label>
           <button class="btn" type="submit">Start live call</button>
           <div class="status" id="callerStatus">Idle. Configure the call details and press start.</div>
+          <div class="call-visual" id="callVisual">
+            <img src="/image/lifelike%20AI%20cold%20caller.png" alt="Animated concierge preparing to place a call" loading="lazy"/>
+            <div class="call-visual-overlay" id="callVisualOverlay" aria-hidden="true">
+              <div class="call-visual-spinner" aria-hidden="true"></div>
+              <div class="call-visual-dialog" id="callVisualDialog" aria-live="polite"></div>
+            </div>
+            <div class="call-visual-ended" id="callVisualEnded" aria-hidden="true">Call ended</div>
+          </div>
         </form>
         <div class="ai-output call-feed">
           <div class="ai-output-header">
@@ -1028,6 +1056,86 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
     const callerPreview = document.getElementById('callerPreview');
     const callerStatus = document.getElementById('callerStatus');
     const callerMeta = document.getElementById('callerMeta');
+    const callVisual = document.getElementById('callVisual');
+    const callVisualOverlay = document.getElementById('callVisualOverlay');
+    const callVisualDialog = document.getElementById('callVisualDialog');
+    const callVisualEnded = document.getElementById('callVisualEnded');
+    let callVisualTimers = [];
+    let callVisualEndTimeout = null;
+
+    function clearCallVisualTimers(){
+      callVisualTimers.forEach((timer) => window.clearTimeout(timer));
+      callVisualTimers = [];
+      if(callVisualEndTimeout){
+        window.clearTimeout(callVisualEndTimeout);
+        callVisualEndTimeout = null;
+      }
+    }
+
+    function resetCallVisual(){
+      if(!callVisual) return;
+      clearCallVisualTimers();
+      callVisual.classList.remove('is-live', 'is-ended');
+      if(callVisualOverlay){
+        callVisualOverlay.setAttribute('aria-hidden', 'true');
+      }
+      if(callVisualDialog){
+        callVisualDialog.innerHTML = '';
+      }
+      if(callVisualEnded){
+        callVisualEnded.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    function showCallEnded(){
+      if(!callVisual) return;
+      callVisual.classList.remove('is-live');
+      callVisual.classList.add('is-ended');
+      if(callVisualOverlay){
+        callVisualOverlay.setAttribute('aria-hidden', 'true');
+      }
+      if(callVisualEnded){
+        callVisualEnded.setAttribute('aria-hidden', 'false');
+      }
+      callVisualEndTimeout = window.setTimeout(() => {
+        resetCallVisual();
+      }, 2500);
+    }
+
+    function showCallInProgress(lines){
+      if(!callVisual) return;
+      clearCallVisualTimers();
+      callVisual.classList.add('is-live');
+      callVisual.classList.remove('is-ended');
+      if(callVisualOverlay){
+        callVisualOverlay.setAttribute('aria-hidden', 'false');
+      }
+      if(callVisualEnded){
+        callVisualEnded.setAttribute('aria-hidden', 'true');
+      }
+      if(callVisualDialog){
+        callVisualDialog.innerHTML = '';
+        lines.forEach((line, index) => {
+          const timer = window.setTimeout(() => {
+            if(!callVisualDialog) return;
+            const bubble = document.createElement('div');
+            bubble.className = `call-visual-line ${line.role === 'lead' ? 'lead' : 'agent'}`;
+            const label = document.createElement('span');
+            label.textContent = line.label;
+            bubble.appendChild(label);
+            bubble.append(line.text);
+            callVisualDialog.appendChild(bubble);
+            window.requestAnimationFrame(() => {
+              bubble.classList.add('show');
+            });
+          }, index * 900);
+          callVisualTimers.push(timer);
+        });
+      }
+      callVisualEndTimeout = window.setTimeout(() => {
+        showCallEnded();
+      }, Math.max((lines.length * 900) + 2200, 4600));
+    }
 
     if(callerForm){
       const callerSubmit = callerForm.querySelector('button[type="submit"]');
@@ -1223,6 +1331,7 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
           callerStatus.textContent = 'Enter a full 10-digit U.S. number so we can dial it as +1.';
           return;
         }
+        resetCallVisual();
         const { toLocal, ...payload } = state;
         payload.origin = 'real-estate-cold-caller';
         const debugPayload = {
@@ -1255,12 +1364,24 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
           }
           callerStatus.textContent = `Call launched! Twilio SID ${data.sid}.`;
           console.info('[ColdCaller] Dial launched', { sid: data.sid });
+          const agentLabel = 'Agent';
+          const leadLabel = payload.leadName || 'Lead';
+          const introLine = payload.intro?.trim() || 'Hi there, this is your concierge from Delco Realty.';
+          const scriptLines = (payload.script || '').split(/\n+/).map((line) => line.trim()).filter(Boolean);
+          const talkingPoint = scriptLines[0] || 'We found three buyers already active nearby.';
+          const lines = [
+            { role: 'agent', label: agentLabel, text: introLine },
+            { role: 'lead', label: leadLabel, text: 'Sounds good — can you share what you found?' },
+            { role: 'agent', label: agentLabel, text: talkingPoint }
+          ];
+          showCallInProgress(lines);
         } catch (error) {
           callerStatus.textContent = `Call failed: ${error.message}`;
           console.error('[ColdCaller] Dial request failed', {
             message: error?.message || error,
             stack: error?.stack || null,
           });
+          resetCallVisual();
         } finally {
           callerSubmit?.removeAttribute('disabled');
         }
@@ -1273,6 +1394,7 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         startCall();
       });
 
+      resetCallVisual();
       updateCallerPreview();
     }
 
