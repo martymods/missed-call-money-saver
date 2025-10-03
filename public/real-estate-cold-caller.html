@@ -74,6 +74,12 @@
     .ai-lab label{font-size:13px;color:#9aa4c9;text-transform:uppercase;letter-spacing:.3px}
     .ai-lab input,.ai-lab select,.ai-lab textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:10px;color:#f6f8ff;resize:vertical}
     .ai-lab textarea{min-height:180px}
+    .phone-label .phone-control{margin-top:6px;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:6px 10px}
+    .phone-label .phone-control input{flex:1;background:transparent;border:none;color:#f6f8ff;padding:6px 0;font-size:16px;letter-spacing:.3px;font-variant-numeric:tabular-nums}
+    .phone-label .phone-control input:focus{outline:none}
+    .phone-label .phone-prefix{font-weight:700;color:#f6f8ff}
+    .phone-label .phone-flag{font-size:18px;line-height:1}
+    .phone-label .phone-hint{display:block;margin-top:6px;font-size:12px;color:#8fa0d8}
     .ai-output{background:linear-gradient(180deg,rgba(14,18,43,.65),rgba(14,18,43,.35));border:1px solid rgba(84,104,255,.28);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px}
     .ai-output-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
     .script-actions{display:flex;gap:8px;flex-wrap:wrap}
@@ -191,8 +197,13 @@
           <label>Lead name
             <input name="leadName" type="text" placeholder="e.g. Dana Investor"/>
           </label>
-          <label>Lead phone (E.164)
-            <input name="to" type="tel" placeholder="+16105550123" required/>
+          <label class="phone-label">Lead phone (E.164)
+            <div class="phone-control">
+              <span class="phone-flag" aria-hidden="true">🇺🇸</span>
+              <span class="phone-prefix">+1</span>
+              <input name="toLocal" type="tel" inputmode="tel" autocomplete="tel" placeholder="6105550123" maxlength="10" required aria-label="US phone number without country code"/>
+            </div>
+            <span class="phone-hint">U.S. numbers only. We'll format +1 E.164 for Twilio automatically.</span>
           </label>
           <label>Goal of the call
             <input name="goal" type="text" placeholder="Secure a listing consultation"/>
@@ -603,18 +614,52 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         bold: { voice: 'Polly.Matthew', language: 'en-US' },
         calm: { voice: 'Polly.Amy', language: 'en-GB' }
       };
+      const US_PREFIX = '+1';
+      const phoneLocalInput = callerForm.querySelector('[name="toLocal"]');
+
+      function sanitizeLocalDigits(value){
+        let digits = String(value || '').replace(/[^\d]/g, '');
+        if (digits.length === 11 && digits.startsWith('1')) {
+          digits = digits.slice(1);
+        }
+        return digits.slice(0, 10);
+      }
+
+      function toE164(localDigits){
+        const digits = sanitizeLocalDigits(localDigits);
+        return digits ? `${US_PREFIX}${digits}` : '';
+      }
+
+      function formatDisplayPhone(value){
+        const digits = sanitizeLocalDigits(value);
+        if (!digits) return '';
+        if (digits.length >= 10) {
+          return `${US_PREFIX} (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+        }
+        return `${US_PREFIX} ${digits}`;
+      }
+
       const fallbackCaller = {
-        leadName: 'roscoe',
-        to: '+6105153658',
+        leadName: 'Roscoe',
+        toLocal: '6105550123',
         goal: 'Secure a listing consultation',
         script: `We found three buyers already active nearby.\nYour consultation holds your price for 48 hours.\nCan I send the booking link to lock your time?`
       };
+      fallbackCaller.to = toE164(fallbackCaller.toLocal);
+      fallbackCaller.displayPhone = formatDisplayPhone(fallbackCaller.toLocal);
 
       function getCallerState(){
         const formData = new FormData(callerForm);
+        const rawLocal = formData.get('toLocal') || '';
+        const toLocal = sanitizeLocalDigits(rawLocal);
+        if (phoneLocalInput && phoneLocalInput.value !== toLocal) {
+          phoneLocalInput.value = toLocal;
+        }
+        const to = toE164(toLocal);
         return {
           leadName: (formData.get('leadName') || '').trim(),
-          to: (formData.get('to') || '').trim(),
+          to,
+          toLocal,
           goal: (formData.get('goal') || '').trim(),
           intro: (formData.get('intro') || '').trim(),
           script: (formData.get('script') || '').trim(),
@@ -628,6 +673,8 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         const voiceLabel = voiceLabels[state.voice] || voiceLabels.warm;
         const leadName = state.leadName || fallbackCaller.leadName;
         const toNumber = state.to || fallbackCaller.to;
+        const toLocal = state.toLocal || fallbackCaller.toLocal;
+        const displayPhone = formatDisplayPhone(toLocal) || fallbackCaller.displayPhone || toNumber;
         const goal = state.goal || fallbackCaller.goal;
         const introLine = state.intro
           ? state.intro
@@ -662,12 +709,13 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         const leadTag = leadName ? toTitle(leadName) : 'Lead';
         const leadMid = leadName ? leadTag : 'the lead';
         const leadStart = leadName ? leadTag : 'The lead';
+        const handoffDisplay = state.handoffNumber ? (formatDisplayPhone(state.handoffNumber) || state.handoffNumber) : '';
         const timeline = [
-          `Twilio dials ${toNumber || 'the lead phone'} from your configured number.`,
+          `Twilio dials ${displayPhone || 'the lead phone'} from your configured number.`,
           `When ${leadMid} answers, the concierge uses the ${voiceLabel} voice to deliver the intro.`,
           'The system listens after each sentence with speech detection and a 4-second timeout.',
           state.handoffNumber
-            ? `If ${leadMid} asks for a human, Twilio bridges ${state.handoffNumber} for a warm handoff.`
+            ? `If ${leadMid} asks for a human, Twilio bridges ${handoffDisplay || state.handoffNumber} for a warm handoff.`
             : `${leadStart} hears every talking point before we promise a follow-up text.`,
           'All turns are logged so you can review the conversation or jump in live.'
         ];
@@ -687,7 +735,7 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         const voicemailLine = `Hi ${leadName || 'there'}, it's Alex from Delco Realty. I spotted active buyers nearby and can hold your price for 48 hours. Call or text back and I'll send the booking link.`;
 
         const leadSummaryName = toTitle(leadName || '') || 'Not set';
-        const leadSummaryPhone = toNumber || 'Add phone in E.164';
+        const leadSummaryPhone = displayPhone || 'Add phone in E.164';
 
         return [
           'Live call storyboard (auto-updating)',
@@ -718,8 +766,9 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         }
         if(callerMeta){
           const label = voiceLabels[state.voice] || voiceLabels.warm;
+          const handoffDisplay = state.handoffNumber ? (formatDisplayPhone(state.handoffNumber) || state.handoffNumber) : '';
           const handoffText = state.handoffNumber
-            ? `Warm handoff ready at ${state.handoffNumber}.`
+            ? `Warm handoff ready at ${handoffDisplay}.`
             : 'No live handoff configured yet — concierge stays on the line.';
           callerMeta.textContent = `${label}. ${handoffText} Calls originate from your configured TWILIO_NUMBER. Adjust any field to redraw the storyboard.`;
         }
@@ -728,16 +777,23 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
       async function startCall(){
         const state = getCallerState();
         if(!state.to){
-          callerStatus.textContent = 'Add a lead phone number in E.164 format (+15551234567).';
+          callerStatus.textContent = 'Add a U.S. lead phone number (10 digits).';
           return;
         }
+        const digitsOnly = state.to.replace(/[^\d]/g, '');
+        if(digitsOnly.length !== 11){
+          callerStatus.textContent = 'Enter a full 10-digit U.S. number so we can dial it as +1.';
+          return;
+        }
+        const { toLocal, ...payload } = state;
+        payload.origin = 'real-estate-cold-caller';
         callerStatus.textContent = 'Dialing via Twilio…';
         callerSubmit?.setAttribute('disabled', 'true');
         try {
           const response = await fetch('/api/cold-caller/dial', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(state)
+            body: JSON.stringify(payload)
           });
           const data = await response.json().catch(() => ({}));
           if(!response.ok || !data?.sid){
