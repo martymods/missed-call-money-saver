@@ -52,6 +52,29 @@
     ul{margin:0;padding-left:18px;color:#d8defc}
     li{margin-bottom:8px}
 
+    .pricing-arena{margin-top:58px}
+    .pricing-arena h2{font-size:30px;margin-bottom:12px}
+    .pricing-arena .lead{max-width:720px;margin-bottom:26px}
+    .pricing-grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));align-items:stretch}
+    .plan-card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;position:relative;display:flex;flex-direction:column;gap:16px;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+    .plan-card::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 18% 15%,rgba(70,194,255,.22),transparent 65%);pointer-events:none;opacity:.6;transition:opacity .2s ease}
+    .plan-card.active{transform:translateY(-4px);border-color:rgba(84,104,255,.45);box-shadow:0 26px 70px rgba(10,18,46,.6)}
+    .plan-card.active::before{opacity:.95}
+    .plan-card[data-featured="true"]{border-color:rgba(70,194,255,.55);box-shadow:0 30px 80px rgba(8,16,44,.72)}
+    .plan-header{display:flex;flex-direction:column;gap:10px}
+    .plan-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(84,104,255,.18);border:1px solid rgba(84,104,255,.35);color:#c6d6ff;font-size:11px;font-weight:700;letter-spacing:.32px;text-transform:uppercase}
+    .plan-card h3{font-size:22px}
+    .plan-sub{color:#c5ceff;font-size:15px;line-height:1.6}
+    .plan-price{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+    .plan-price .plan-cost{font-size:26px;font-weight:800;color:#fff}
+    .plan-price .plan-setup{font-size:13px;color:#8fa0d8}
+    .plan-features{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;color:#d9e3ff;font-size:14px}
+    .plan-features li{display:flex;gap:8px;align-items:flex-start}
+    .plan-features li::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-top:6px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 12px rgba(70,194,255,.55)}
+    .plan-card .btn{justify-content:center;margin-top:auto}
+    .btn[data-loading="1"], .btn:disabled{opacity:.6;pointer-events:none}
+    .lead-action{min-width:120px}
+
     .pipeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;counter-reset:step}
     .pipeline .stage{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;position:relative;display:flex;flex-direction:column;gap:8px;min-height:200px}
     .pipeline .stage::before{counter-increment:step;content:"0" counter(step);position:absolute;top:16px;right:16px;font-weight:900;font-size:32px;color:rgba(70,194,255,.16)}
@@ -131,6 +154,7 @@
       .h1{font-size:30px}
       header{position:relative}
       .cta-panel{grid-template-columns:1fr;padding:26px}
+      .pricing-grid{grid-template-columns:1fr}
       .table-wrap{overflow:visible}
       thead{display:none}
       table,tbody,tr,td{display:block;width:100%}
@@ -168,7 +192,7 @@
         <h1 class="h1">AI-powered cold calling for agents who close</h1>
         <p class="sub">Scrape motivated buyer & seller lists from free public sources, launch compliant outreach, and drive every interested caller straight to payment, booking, or a live closer. Stripe, Calendly, and Twilio are already wired in.</p>
         <div class="hero-actions tour-launch">
-          <a class="btn" href="/checkout">Launch Stripe Checkout</a>
+          <button class="btn" type="button" data-realestate-checkout="signal">Launch Stripe Checkout</button>
           <a class="btn ghost" href="tel:+16105550123">Transfer to Live Floor</a>
           <button class="btn ghost" type="button" id="startTour">Guided tour</button>
         </div>
@@ -186,6 +210,81 @@
           <li>Works with your existing Twilio number & recordings</li>
           <li>Stripe Link & Apple Pay ready for reservation fees</li>
         </ul>
+      </div>
+    </section>
+
+    <section class="section pricing-arena" id="plans">
+      <h2>Choose your command loadout</h2>
+      <p class="lead">Select the kit that matches your pipeline. Every option includes Stripe pay links, Calendly booking, and Sheets logging—the upgrades add voice firepower when you need it.</p>
+      <div class="pricing-grid">
+        <article class="plan-card" id="plan-solo" data-plan="solo">
+          <div class="plan-header">
+            <span class="plan-badge">Tier 1</span>
+            <h3 data-plan-name="solo">Solo Agent Sprint</h3>
+            <p class="plan-sub" data-plan-description="solo">SMS-first follow up for agents who want quick replies without live dialing.</p>
+          </div>
+          <div class="plan-price" data-plan-price="solo">
+            <div class="plan-cost" data-role="monthly">$159 / month</div>
+            <div class="plan-setup" data-role="setup">$149 setup</div>
+          </div>
+          <ul class="plan-features" data-plan-features="solo">
+            <li>SMS concierge + instant pay links</li>
+            <li>Weekly public data drops</li>
+            <li>Calendly + Sheets logging</li>
+          </ul>
+          <button class="btn" type="button" data-realestate-checkout="solo" data-plan-button="solo">Activate Solo Sprint</button>
+        </article>
+        <article class="plan-card" id="plan-signal" data-plan="signal" data-featured="true">
+          <div class="plan-header">
+            <span class="plan-badge">Tier 2</span>
+            <h3 data-plan-name="signal">Signal Team Stack</h3>
+            <p class="plan-sub" data-plan-description="signal">Add standard-voice dialing and instant script swaps for small teams.</p>
+          </div>
+          <div class="plan-price" data-plan-price="signal">
+            <div class="plan-cost" data-role="monthly">$349 / month</div>
+            <div class="plan-setup" data-role="setup">$299 setup</div>
+          </div>
+          <ul class="plan-features" data-plan-features="signal">
+            <li>Non-premium AI voice dialer</li>
+            <li>Shared script vault + objection swaps</li>
+            <li>Instant text &amp; email recaps</li>
+          </ul>
+          <button class="btn" type="button" data-realestate-checkout="signal" data-plan-button="signal">Launch Signal Stack</button>
+        </article>
+        <article class="plan-card" id="plan-squadron" data-plan="squadron">
+          <div class="plan-header">
+            <span class="plan-badge">Tier 3</span>
+            <h3 data-plan-name="squadron">Power Dial Squadron</h3>
+            <p class="plan-sub" data-plan-description="squadron">Speech recognition branches, transfer logic, and script coaching for high-volume floors.</p>
+          </div>
+          <div class="plan-price" data-plan-price="squadron">
+            <div class="plan-cost" data-role="monthly">$649 / month</div>
+            <div class="plan-setup" data-role="setup">$449 setup</div>
+          </div>
+          <ul class="plan-features" data-plan-features="squadron">
+            <li>Speech recognition + sentiment tags</li>
+            <li>Round-robin queues &amp; transfers</li>
+            <li>Live script coach adjustments</li>
+          </ul>
+          <button class="btn" type="button" data-realestate-checkout="squadron" data-plan-button="squadron">Deploy Power Dial</button>
+        </article>
+        <article class="plan-card" id="plan-enterprise" data-plan="enterprise">
+          <div class="plan-header">
+            <span class="plan-badge">Tier 4</span>
+            <h3 data-plan-name="enterprise">Enterprise Command</h3>
+            <p class="plan-sub" data-plan-description="enterprise">Premium voice cloning, multilingual routing, and custom integrations for brokerage HQs.</p>
+          </div>
+          <div class="plan-price" data-plan-price="enterprise">
+            <div class="plan-cost" data-role="monthly">$1,299 / month</div>
+            <div class="plan-setup" data-role="setup">$699 setup</div>
+          </div>
+          <ul class="plan-features" data-plan-features="enterprise">
+            <li>Premium cloned voices &amp; personas</li>
+            <li>Multilingual speech + translation</li>
+            <li>Custom CRM and Slack automations</li>
+          </ul>
+          <button class="btn" type="button" data-realestate-checkout="enterprise" data-plan-button="enterprise">Secure Enterprise Command</button>
+        </article>
       </div>
     </section>
 
@@ -395,7 +494,7 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         <p>Queue fresh leads, copy the script, and drop your Stripe checkout link in under five minutes. All hosted on the Delco infrastructure you already trust.</p>
       </div>
       <div class="hero-actions">
-        <a class="btn" href="/checkout">Collect a Reservation Fee</a>
+        <button class="btn" type="button" data-realestate-checkout="signal">Collect a Reservation Fee</button>
         <a class="btn ghost" href="/book">Book Strategy Session</a>
       </div>
     </section>
@@ -424,45 +523,232 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
     </div>
   </div>
 
+  <script src="https://js.stripe.com/v3/"></script>
   <script>
     const leadRows = document.getElementById('leadRows');
     const stageFilter = document.getElementById('stageFilter');
     const sourceFilter = document.getElementById('sourceFilter');
     const searchFilter = document.getElementById('searchFilter');
+    const planCards = Array.from(document.querySelectorAll('.plan-card'));
     let leadData = [];
+    let stripeClient = null;
+
+    const PLAN_BUTTON_VERBS = {
+      solo: 'Activate',
+      signal: 'Launch',
+      squadron: 'Deploy',
+      enterprise: 'Secure',
+    };
+
+    function escapeHtml(str = ''){
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(str = ''){
+      return escapeHtml(str);
+    }
+
+    function formatCurrency(amount){
+      if(typeof amount !== 'number' || Number.isNaN(amount)) return '';
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+    }
+
+    function suggestPlanSlug(lead = {}){
+      const preferred = String(lead.plan || lead.planSlug || '').toLowerCase();
+      if(preferred) return preferred;
+      const stage = String(lead.stage || '').toLowerCase();
+      const motivation = String(lead.motivation || '').toLowerCase();
+      const notes = String(lead.notes || '').toLowerCase();
+      if(/enterprise|brokerage|multi|franchise/.test(stage) || /enterprise|portfolio|brokerage|multi|franchise/.test(motivation)){
+        return 'enterprise';
+      }
+      if(/follow|qualified|warm/.test(stage) || /dial|call|team|volume|queue/.test(motivation) || /team/.test(notes)){
+        return 'squadron';
+      }
+      if(/nurture|new/.test(stage) || /sms|text|drip/.test(motivation)){
+        return 'solo';
+      }
+      return 'signal';
+    }
+
+    function setActivePlan(slug){
+      if(!slug) return;
+      planCards.forEach(card => {
+        if(!card) return;
+        const isMatch = card.dataset.plan === slug;
+        card.classList.toggle('active', isMatch);
+      });
+    }
 
     function renderLeads(){
-      const stageVal = stageFilter.value.toLowerCase();
-      const sourceVal = sourceFilter.value.toLowerCase();
-      const q = searchFilter.value.trim().toLowerCase();
+      if(!leadRows) return;
+      const stageVal = (stageFilter?.value || '').toLowerCase();
+      const sourceVal = (sourceFilter?.value || '').toLowerCase();
+      const q = (searchFilter?.value || '').trim().toLowerCase();
       const rows = leadData.filter(lead => {
-        const stageMatch = !stageVal || (lead.stage || '').toLowerCase() === stageVal;
-        const sourceMatch = !sourceVal || (lead.source || '').toLowerCase() === sourceVal;
-        const searchMatch = !q || [lead.name, lead.city, lead.motivation, lead.notes].some(v => String(v).toLowerCase().includes(q));
+        const stageMatch = !stageVal || String(lead.stage || '').toLowerCase() === stageVal;
+        const sourceMatch = !sourceVal || String(lead.source || '').toLowerCase() === sourceVal;
+        const searchMatch = !q || [lead.name, lead.city, lead.motivation, lead.notes]
+          .some(v => String(v || '').toLowerCase().includes(q));
         return stageMatch && sourceMatch && searchMatch;
       }).map(lead => {
-        const tel = lead.phone ? `tel:${lead.phone.replace(/[^+\d]/g,'')}` : '#';
-        const checkoutLink = `/checkout?lead=${encodeURIComponent(lead.name || '')}`;
+        const phoneDigits = lead.phone ? lead.phone.replace(/[^+\d]/g,'') : '';
+        const chips = [];
+        if(lead.city) chips.push(`<div class="chip">${escapeHtml(lead.city)}</div>`);
+        if(lead.leadType) chips.push(`<div class="chip">${escapeHtml(lead.leadType)}</div>`);
+        const planSlug = suggestPlanSlug(lead);
+        const planAttr = escapeAttr(planSlug);
+        const nameAttr = escapeAttr(lead.name || '');
+        const callControl = phoneDigits
+          ? `<a class="btn ghost" style="padding:6px 10px;font-size:12px" href="tel:${phoneDigits}">Call</a>`
+          : `<button class="btn ghost" style="padding:6px 10px;font-size:12px" type="button" disabled title="Add phone number">Call</button>`;
+        const textControl = phoneDigits
+          ? `<button type="button" class="btn ghost lead-action" style="padding:6px 10px;font-size:12px" data-action="text-link" data-phone="${phoneDigits}" data-name="${nameAttr}" data-plan="${planAttr}">Text link</button>`
+          : `<button type="button" class="btn ghost lead-action" style="padding:6px 10px;font-size:12px" disabled title="Add phone number">Text link</button>`;
         const bookLink = `/book?lead=${encodeURIComponent(lead.name || '')}`;
+        const bookControl = `<a class="btn ghost" style="padding:6px 10px;font-size:12px" href="${bookLink}">Book</a>`;
         return `<tr>
           <td data-label="Lead">
-            <div><strong>${lead.name}</strong></div>
-            <div class="chip">${lead.city || ''}</div>
-            <div class="chip">${lead.leadType || ''}</div>
+            <div><strong>${escapeHtml(lead.name || 'Lead')}</strong></div>
+            ${chips.join('')}
           </td>
-          <td data-label="Source">${lead.source || ''}</td>
-          <td data-label="Stage">${lead.stage || ''}</td>
-          <td data-label="Motivation">${lead.motivation || ''}</td>
+          <td data-label="Source">${escapeHtml(lead.source || '')}</td>
+          <td data-label="Stage">${escapeHtml(lead.stage || '')}</td>
+          <td data-label="Motivation">${escapeHtml(lead.motivation || '')}</td>
           <td data-label="Actions">
             <div class="actions">
-              <a class="btn ghost" style="padding:6px 10px;font-size:12px" href="${tel}">Call</a>
-              <a class="btn ghost" style="padding:6px 10px;font-size:12px" href="${checkoutLink}">Send pay link</a>
-              <a class="btn ghost" style="padding:6px 10px;font-size:12px" href="${bookLink}">Book</a>
+              ${callControl}
+              ${textControl}
+              ${bookControl}
             </div>
           </td>
         </tr>`;
       }).join('');
       leadRows.innerHTML = rows || `<tr><td colspan="5" style="text-align:center;padding:30px;color:#8e97b6">No leads match right now. Try clearing filters.</td></tr>`;
+    }
+
+    function updatePlanCardFromConfig(plan){
+      if(!plan || !plan.slug) return;
+      const slug = plan.slug;
+      const nameEl = document.querySelector(`[data-plan-name="${slug}"]`);
+      if(nameEl && plan.name){
+        nameEl.textContent = plan.name;
+      }
+      const descEl = document.querySelector(`[data-plan-description="${slug}"]`);
+      if(descEl && plan.description){
+        descEl.textContent = plan.description;
+      }
+      const priceEl = document.querySelector(`[data-plan-price="${slug}"]`);
+      if(priceEl){
+        const monthlyEl = priceEl.querySelector('[data-role="monthly"]');
+        const setupEl = priceEl.querySelector('[data-role="setup"]');
+        if(monthlyEl && typeof plan.monthly === 'number'){
+          monthlyEl.textContent = `${formatCurrency(plan.monthly)} / month`;
+        }
+        if(setupEl && typeof plan.setup === 'number'){
+          setupEl.textContent = `${formatCurrency(plan.setup)} setup`;
+        }
+      }
+      const featuresEl = document.querySelector(`[data-plan-features="${slug}"]`);
+      if(featuresEl && Array.isArray(plan.features) && plan.features.length){
+        featuresEl.innerHTML = plan.features.map(feature => `<li>${escapeHtml(feature)}</li>`).join('');
+      }
+      const buttonEl = document.querySelector(`[data-plan-button="${slug}"]`);
+      if(buttonEl){
+        const verb = PLAN_BUTTON_VERBS[slug] || 'Start';
+        buttonEl.textContent = `${verb} ${plan.name}`;
+      }
+    }
+
+    async function startRealEstateCheckout(plan, source){
+      if(!plan) return;
+      const btn = source instanceof HTMLElement ? source : null;
+      const originalText = btn ? btn.textContent : '';
+      if(btn){
+        btn.dataset.loading = '1';
+        btn.disabled = true;
+        btn.textContent = 'Loading…';
+      }
+
+      try{
+        const res = await fetch('/api/real-estate/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan })
+        });
+        const data = await res.json().catch(() => ({}));
+        if(!res.ok){
+          throw new Error(data?.error || 'checkout_unavailable');
+        }
+
+        if(data.url){
+          window.location.href = data.url;
+          return;
+        }
+
+        if(data.id && stripeClient){
+          await stripeClient.redirectToCheckout({ sessionId: data.id });
+          return;
+        }
+
+        throw new Error('missing_checkout_url');
+      }catch(err){
+        console.error('[ColdCaller] Unable to start checkout', err);
+        alert('Unable to open Stripe checkout right now. Please try again or contact support.');
+      }finally{
+        if(btn){
+          delete btn.dataset.loading;
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
+      }
+    }
+
+    async function sendLeadCheckoutLink(button){
+      if(!button) return;
+      const phone = button.getAttribute('data-phone');
+      if(!phone){
+        return;
+      }
+      const plan = button.getAttribute('data-plan') || '';
+      const leadName = button.getAttribute('data-name') || '';
+      const originalText = button.textContent;
+      button.dataset.loading = '1';
+      button.disabled = true;
+      button.textContent = 'Texting…';
+
+      try{
+        const response = await fetch('/api/real-estate/text-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, plan, lead: leadName })
+        });
+        const data = await response.json().catch(() => ({}));
+        if(!response.ok || data?.ok !== true){
+          throw new Error(data?.error || 'text_failed');
+        }
+        button.textContent = 'Text sent!';
+        button.dataset.sent = '1';
+      }catch(err){
+        console.error('[ColdCaller] Text link failed', { message: err?.message || err });
+        button.textContent = 'Retry text';
+      }finally{
+        window.setTimeout(() => {
+          delete button.dataset.loading;
+          button.disabled = false;
+          if(button.dataset.sent === '1'){
+            button.textContent = 'Text again';
+          } else {
+            button.textContent = originalText;
+          }
+          delete button.dataset.sent;
+        }, 2000);
+      }
     }
 
     fetch('/data/real-estate-leads.json')
@@ -475,12 +761,49 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         renderLeads();
       });
 
-    stageFilter.addEventListener('change', renderLeads);
-    sourceFilter.addEventListener('change', renderLeads);
-    searchFilter.addEventListener('input', () => {
+    stageFilter?.addEventListener('change', renderLeads);
+    sourceFilter?.addEventListener('change', renderLeads);
+    searchFilter?.addEventListener('input', () => {
       window.clearTimeout(searchFilter._t);
       searchFilter._t = window.setTimeout(renderLeads, 150);
     });
+
+    if(leadRows){
+      leadRows.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-action="text-link"]');
+        if(button){
+          event.preventDefault();
+          sendLeadCheckoutLink(button);
+        }
+      });
+    }
+
+    document.querySelectorAll('[data-realestate-checkout]').forEach(el => {
+      el.addEventListener('click', event => {
+        event.preventDefault();
+        const plan = el.getAttribute('data-realestate-checkout');
+        if(plan){
+          setActivePlan(plan);
+          startRealEstateCheckout(plan, el);
+        }
+      });
+    });
+
+    planCards.forEach(card => {
+      card.addEventListener('mouseenter', () => setActivePlan(card.dataset.plan));
+      card.addEventListener('focusin', () => setActivePlan(card.dataset.plan));
+    });
+
+    setActivePlan('signal');
+
+    fetch('/config').then(r => r.json()).then(cfg => {
+      if(cfg?.stripePk && typeof Stripe === 'function'){
+        stripeClient = Stripe(cfg.stripePk);
+      }
+      if(Array.isArray(cfg?.realEstatePlans)){
+        cfg.realEstatePlans.forEach(updatePlanCardFromConfig);
+      }
+    }).catch(() => {});
 
     // AI script generator
     const scriptForm = document.getElementById('scriptForm');

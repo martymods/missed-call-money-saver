@@ -630,6 +630,57 @@ const DENTAL_PLANS = [
   },
 ];
 
+const REAL_ESTATE_PLANS = [
+  {
+    slug: 'solo',
+    name: 'Solo Agent Sprint',
+    setupCents: 14900,
+    monthlyCents: 15900,
+    description: '1 agent seat. SMS concierge follow-up, auto lead capture, checkout links. No outbound voice.',
+    features: [
+      'SMS lead rescue + pay links',
+      'Public data scrapers (FSBO, expired)',
+      'Calendly + Sheets logging',
+    ],
+  },
+  {
+    slug: 'signal',
+    name: 'Signal Team Stack',
+    setupCents: 29900,
+    monthlyCents: 34900,
+    description: 'Up to 3 agents. Adds non-premium AI dialing with standard voices, instant text scripts.',
+    features: [
+      'Non-premium AI voice dialer (US/CA)',
+      'Shared script vault + objection swaps',
+      'Instant text + email recaps',
+    ],
+  },
+  {
+    slug: 'squadron',
+    name: 'Power Dial Squadron',
+    setupCents: 44900,
+    monthlyCents: 64900,
+    description: 'High-volume teams. Multi-seat queue, speech recognition branches, live scoreboard.',
+    features: [
+      'Speech recognition + sentiment tags',
+      'Round-robin queues & transfers',
+      'Script coach with real-time edits',
+    ],
+  },
+  {
+    slug: 'enterprise',
+    name: 'Enterprise Command',
+    setupCents: 69900,
+    monthlyCents: 129900,
+    description: 'Enterprise brokers. Premium voice cloning, multilingual routing, CRM + Slack sync.',
+    features: [
+      'Premium cloned voices & personas',
+      'Multilingual speech + translation',
+      'Custom CRM, Slack, Sheets automations',
+    ],
+  },
+];
+
 // Health
 app.get('/health', (_, res) => res.json({ ok: true }));
 
@@ -655,7 +706,112 @@ app.get('/config', (_, res) => {
       monthly: plan.monthlyCents / 100,
       description: plan.description,
     })),
+    realEstatePlans: REAL_ESTATE_PLANS.map(plan => ({
+      slug: plan.slug,
+      name: plan.name,
+      setup: plan.setupCents / 100,
+      monthly: plan.monthlyCents / 100,
+      description: plan.description,
+      features: plan.features,
+    })),
   });
+});
+
+app.post('/api/real-estate/checkout', async (req, res) => {
+  try {
+    const slug = String(req.body?.plan || '').toLowerCase();
+    const plan = REAL_ESTATE_PLANS.find(p => p.slug === slug);
+
+    if (!plan) {
+      return res.status(400).json({ error: 'invalid_plan' });
+    }
+
+    const lineItems = [];
+
+    if (plan.monthlyCents) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          unit_amount: plan.monthlyCents,
+          recurring: { interval: 'month' },
+          product_data: {
+            name: `${plan.name} — Monthly Subscription`,
+          },
+        },
+        quantity: 1,
+      });
+    }
+
+    if (plan.setupCents) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          unit_amount: plan.setupCents,
+          product_data: {
+            name: `${plan.name} — Onboarding & Setup`,
+          },
+        },
+        quantity: 1,
+      });
+    }
+
+    if (!lineItems.length) {
+      return res.status(400).json({ error: 'unsupported_plan' });
+    }
+
+    const baseUrl = resolveAppBaseUrl(req);
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      allow_promotion_codes: true,
+      line_items: lineItems,
+      success_url: `${baseUrl}/real-estate-cold-caller.html?plan=${plan.slug}&checkout=success`,
+      cancel_url: `${baseUrl}/real-estate-cold-caller.html?plan=${plan.slug}&checkout=cancel`,
+      metadata: {
+        productLine: 'real-estate-cold-caller',
+        plan: plan.slug,
+      },
+    });
+
+    if (session?.url) {
+      return res.json({ url: session.url });
+    }
+
+    return res.json({ id: session.id });
+  } catch (error) {
+    console.error('Real estate checkout error:', error?.raw?.message || error?.message, error);
+    return res.status(500).json({ error: 'stripe_error' });
+  }
+});
+
+app.post('/api/real-estate/text-link', async (req, res) => {
+  try {
+    const { phone, lead = '', plan: planSlug = '' } = req.body || {};
+    const normalized = normalizePhoneNumber(phone);
+
+    if (!normalized) {
+      return res.status(400).json({ error: 'invalid_phone' });
+    }
+
+    const plan = REAL_ESTATE_PLANS.find(p => p.slug === String(planSlug || '').toLowerCase()) || null;
+    const leadName = sanitizeLine(lead).split(' ')[0] || '';
+    const greeting = leadName ? `Hey ${leadName},` : 'Hey there,';
+    const baseUrl = resolveAppBaseUrl(req);
+    const anchor = plan ? `#plan-${plan.slug}` : '#plans';
+    const link = `${baseUrl}/real-estate-cold-caller.html${anchor}`;
+    const highlight = plan
+      ? `Recommended loadout: ${plan.name}.`
+      : 'Here is the control deck for our real estate command center.';
+
+    const message = `${greeting} it's ${BUSINESS}. ${highlight} Grab your spot here: ${link} — Reply STOP to opt out.`;
+
+    await sendSMS(normalized, message);
+
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error('Real estate SMS link error:', error?.message || error, error);
+    return res.status(500).json({ error: 'sms_failed' });
+  }
 });
 
 app.post('/api/cold-caller/dial', async (req, res) => {
