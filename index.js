@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const fsp = fs.promises;
 const crypto = require('crypto');
+const { EventEmitter } = require('events');
 const Stripe = require('stripe');
 const OpenAI = require('openai');                           // 👈 NEW
 const { Readable } = require('stream');
@@ -80,6 +81,17 @@ const CSV_ROOT_ABSOLUTE = path.resolve(CSV_ROOT_DIR);
 const CSV_PREVIEW_ROW_LIMIT = Number(process.env.CSV_PREVIEW_ROW_LIMIT || 200);
 const CSV_AUTOMATION_MAX_LEADS = Number(process.env.CSV_AUTOMATION_MAX_LEADS || 150);
 const CSV_AUTOMATION_PARSE_LIMIT = CSV_AUTOMATION_MAX_LEADS + 400; // buffer for skips
+
+const automationEmitter = new EventEmitter();
+automationEmitter.setMaxListeners(100);
+
+function publishAutomationEvent(event){
+  if(!event || typeof event !== 'object') return;
+  automationEmitter.emit('automation', {
+    ...event,
+    timestamp: new Date().toISOString(),
+  });
+}
 
 const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
 const FALLBACK_ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
@@ -2641,6 +2653,57 @@ app.post('/api/lead', async (req, res) => {
   }
 });
 
+app.get('/api/activity-stream', (req, res) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+  if (typeof res.flushHeaders === 'function') {
+    res.flushHeaders();
+  }
+
+  let closed = false;
+  const keepAlive = setInterval(() => {
+    if (closed) return;
+    try {
+      res.write(': keep-alive\n\n');
+    } catch (error) {
+      console.warn('[Admin] SSE keep-alive failed', error?.message || error);
+    }
+  }, 15000);
+
+  const sendEvent = (payload) => {
+    if (closed) return;
+    try {
+      res.write(`data: ${JSON.stringify(payload)}\n\n`);
+    } catch (error) {
+      console.warn('[Admin] SSE write failed', error?.message || error);
+    }
+  };
+
+  const handleAutomationEvent = (payload) => sendEvent(payload);
+  automationEmitter.on('automation', handleAutomationEvent);
+
+  sendEvent({ type: 'stream:connected' });
+
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    clearInterval(keepAlive);
+    automationEmitter.off('automation', handleAutomationEvent);
+    try {
+      res.end();
+    } catch (error) {
+      // ignore
+    }
+  };
+
+  req.on('close', close);
+  req.on('error', close);
+  res.on('close', close);
+});
+
 app.get('/api/csv-files', async (req, res) => {
   try {
     const items = await scanCsvDirectory(CSV_ROOT_DIR);
@@ -2786,8 +2849,11 @@ app.post('/api/csv-files/pitch', async (req, res) => {
 });
 
 app.post('/api/csv-files/launch-call', async (req, res) => {
+  const body = req.body || {};
+  const runId = typeof body.runId === 'string' ? body.runId.slice(0, 80) : null;
+
   try {
-    const { path: relativePath, limit, callConfig = {}, pitch = {} } = req.body || {};
+    const { path: relativePath, limit, callConfig = {}, pitch = {} } = body;
     if (!relativePath) {
       return res.status(400).json({ error: 'missing_path' });
     }
@@ -2802,6 +2868,15 @@ app.post('/api/csv-files/launch-call', async (req, res) => {
     const desiredLimit = Number(limit) || CSV_AUTOMATION_MAX_LEADS;
     const leadLimit = Math.max(1, Math.min(CSV_AUTOMATION_MAX_LEADS, desiredLimit));
     const selectedLeads = dataset.leads.slice(0, leadLimit);
+    if (runId) {
+      publishAutomationEvent({
+        type: 'automation:start',
+        mode: 'call',
+        runId,
+        dataset: dataset.file.name,
+        total: selectedLeads.length,
+      });
+    }
     const baseScriptLines = String(callConfig?.script || '')
       .split(/\r?\n/)
       .map(sanitizeLine)
@@ -2841,6 +2916,23 @@ app.post('/api/csv-files/launch-call', async (req, res) => {
         datasetName,
       ].filter(Boolean);
 
+      const eventLead = {
+        name: lead.name,
+        phone: maskPhoneNumberForLog(lead.phone),
+        context: lead.context,
+      };
+      const attemptIndex = results.length + 1;
+      if (runId) {
+        publishAutomationEvent({
+          type: 'call:attempt',
+          mode: 'call',
+          runId,
+          lead: eventLead,
+          index: attemptIndex,
+          total: selectedLeads.length,
+        });
+      }
+
       try {
         const response = await queueColdCallerCall({
           to: lead.phone,
@@ -2853,38 +2945,75 @@ app.post('/api/csv-files/launch-call', async (req, res) => {
           appBaseUrl,
         });
         queued += 1;
-        results.push({
+        const result = {
           ok: true,
           sid: response.sid,
-          lead: {
-            name: lead.name,
-            phone: maskPhoneNumberForLog(lead.phone),
-            context: lead.context,
-          },
-        });
+          lead: eventLead,
+        };
+        results.push(result);
+        if (runId) {
+          publishAutomationEvent({
+            type: 'call:queued',
+            mode: 'call',
+            runId,
+            lead: eventLead,
+            sid: response.sid,
+            index: attemptIndex,
+            total: selectedLeads.length,
+          });
+        }
       } catch (error) {
-        results.push({
+        const failure = {
           ok: false,
           error: {
             message: error?.message || 'Call failed',
             code: error?.code || null,
             status: error?.status || null,
           },
-          lead: {
-            name: lead.name,
-            phone: maskPhoneNumberForLog(lead.phone),
-            context: lead.context,
-          },
-        });
+          lead: eventLead,
+        };
+        results.push(failure);
+        if (runId) {
+          publishAutomationEvent({
+            type: 'call:error',
+            mode: 'call',
+            runId,
+            lead: eventLead,
+            error: {
+              message: failure.error.message,
+              code: failure.error.code,
+              status: failure.error.status,
+            },
+            index: attemptIndex,
+            total: selectedLeads.length,
+          });
+        }
       }
+    }
+
+    const attempted = selectedLeads.length;
+    const failedCount = attempted - queued;
+    const summary = attempted
+      ? `Calls queued for ${queued}/${attempted} leads${failedCount ? ` — ${failedCount} failed.` : '.'}`
+      : 'No leads were queued.';
+    if (runId) {
+      publishAutomationEvent({
+        type: 'automation:complete',
+        mode: 'call',
+        runId,
+        queued,
+        attempted,
+        failed: failedCount,
+        message: summary,
+      });
     }
 
     res.json({
       ok: true,
       file: dataset.file,
-      attempted: selectedLeads.length,
+      attempted,
       queued,
-      failed: selectedLeads.length - queued,
+      failed: failedCount,
       totalLeads: dataset.leads.length,
       skippedRows: dataset.skipped.length + Math.max(dataset.leads.length - selectedLeads.length, 0),
       limit: CSV_AUTOMATION_MAX_LEADS,
@@ -2893,13 +3022,28 @@ app.post('/api/csv-files/launch-call', async (req, res) => {
   } catch (error) {
     const status = error?.code === 'invalid_csv_path' ? 400 : 500;
     console.error('[Admin] CSV bulk call failed', { message: error?.message || error });
+    if (runId) {
+      publishAutomationEvent({
+        type: 'automation:error',
+        mode: 'call',
+        runId,
+        message: error?.message || 'Call automation failed',
+        error: {
+          code: error?.code || null,
+          status,
+        },
+      });
+    }
     res.status(status).json({ error: 'csv_call_failed', code: error?.code || null });
   }
 });
 
 app.post('/api/csv-files/send-sms', async (req, res) => {
+  const body = req.body || {};
+  const runId = typeof body.runId === 'string' ? body.runId.slice(0, 80) : null;
+
   try {
-    const { path: relativePath, limit, message = '', pitch = {} } = req.body || {};
+    const { path: relativePath, limit, message = '', pitch = {} } = body;
     if (!relativePath) {
       return res.status(400).json({ error: 'missing_path' });
     }
@@ -2912,6 +3056,15 @@ app.post('/api/csv-files/send-sms', async (req, res) => {
     const desiredLimit = Number(limit) || CSV_AUTOMATION_MAX_LEADS;
     const leadLimit = Math.max(1, Math.min(CSV_AUTOMATION_MAX_LEADS, desiredLimit));
     const selectedLeads = dataset.leads.slice(0, leadLimit);
+    if (runId) {
+      publishAutomationEvent({
+        type: 'automation:start',
+        mode: 'sms',
+        runId,
+        dataset: dataset.file.name,
+        total: selectedLeads.length,
+      });
+    }
     const datasetName = dataset.file.name.replace(/\.csv$/i, '');
 
     const baseMessage = sanitizeLine(message)
@@ -2936,43 +3089,96 @@ app.post('/api/csv-files/send-sms', async (req, res) => {
         .filter(Boolean);
       const finalMessage = messageParts.join('\n');
 
+      const eventLead = {
+        name: lead.name,
+        phone: maskPhoneNumberForLog(lead.phone),
+        context: lead.context,
+      };
+      const attemptIndex = results.length + 1;
+      if (runId) {
+        publishAutomationEvent({
+          type: 'sms:attempt',
+          mode: 'sms',
+          runId,
+          lead: eventLead,
+          index: attemptIndex,
+          total: selectedLeads.length,
+        });
+      }
+
       try {
         await sendSMS(lead.phone, finalMessage, {
           source: 'admin_csv_sms',
           dataset: datasetName,
         });
         sent += 1;
-        results.push({
+        const result = {
           ok: true,
-          lead: {
-            name: lead.name,
-            phone: maskPhoneNumberForLog(lead.phone),
-            context: lead.context,
-          },
-        });
+          lead: eventLead,
+        };
+        results.push(result);
+        if (runId) {
+          publishAutomationEvent({
+            type: 'sms:sent',
+            mode: 'sms',
+            runId,
+            lead: eventLead,
+            index: attemptIndex,
+            total: selectedLeads.length,
+          });
+        }
       } catch (error) {
-        results.push({
+        const failure = {
           ok: false,
           error: {
             message: error?.message || 'SMS failed',
             code: error?.code || null,
             status: error?.status || null,
           },
-          lead: {
-            name: lead.name,
-            phone: maskPhoneNumberForLog(lead.phone),
-            context: lead.context,
-          },
-        });
+          lead: eventLead,
+        };
+        results.push(failure);
+        if (runId) {
+          publishAutomationEvent({
+            type: 'sms:error',
+            mode: 'sms',
+            runId,
+            lead: eventLead,
+            error: {
+              message: failure.error.message,
+              code: failure.error.code,
+              status: failure.error.status,
+            },
+            index: attemptIndex,
+            total: selectedLeads.length,
+          });
+        }
       }
+    }
+
+    const attempted = selectedLeads.length;
+    const failedCount = attempted - sent;
+    const summary = attempted
+      ? `SMS sent to ${sent}/${attempted} leads${failedCount ? ` — ${failedCount} failed.` : '.'}`
+      : 'No messages were sent.';
+    if (runId) {
+      publishAutomationEvent({
+        type: 'automation:complete',
+        mode: 'sms',
+        runId,
+        sent,
+        attempted,
+        failed: failedCount,
+        message: summary,
+      });
     }
 
     res.json({
       ok: true,
       file: dataset.file,
-      attempted: selectedLeads.length,
+      attempted,
       sent,
-      failed: selectedLeads.length - sent,
+      failed: failedCount,
       totalLeads: dataset.leads.length,
       skippedRows: dataset.skipped.length + Math.max(dataset.leads.length - selectedLeads.length, 0),
       limit: CSV_AUTOMATION_MAX_LEADS,
@@ -2981,6 +3187,18 @@ app.post('/api/csv-files/send-sms', async (req, res) => {
   } catch (error) {
     const status = error?.code === 'invalid_csv_path' ? 400 : 500;
     console.error('[Admin] CSV bulk SMS failed', { message: error?.message || error });
+    if (runId) {
+      publishAutomationEvent({
+        type: 'automation:error',
+        mode: 'sms',
+        runId,
+        message: error?.message || 'SMS automation failed',
+        error: {
+          code: error?.code || null,
+          status,
+        },
+      });
+    }
     res.status(status).json({ error: 'csv_sms_failed', code: error?.code || null });
   }
 });
