@@ -18,16 +18,20 @@
    - Set **Messaging webhook** (POST) to: `https://YOUR_DOMAIN/sms`
    - In `.env`, set `TWILIO_NUMBER`, `FORWARD_TO_NUMBER`.
 
-5) Calendly (optional)
+5) ElevenLabs voice + fallback
+   - Put your ElevenLabs API key in `.env` as `ELEVENLABS_API_KEY` and optional voice IDs.
+   - (Optional) Add `OPENAI_API_KEY` to enable automatic OpenAI TTS fallback if ElevenLabs quota is exceeded.
+
+6) Calendly (optional)
    - Put your personal scheduling link in `.env` as `CALENDLY_SCHEDULING_LINK`.
    - To auto-mark bookings + send review SMS, create a Personal Access Token and put it in `.env` as `CALENDLY_TOKEN`.
    - The server will attempt to subscribe to a webhook at `/calendly/webhook` on boot.
 
-6) Local dev
+7) Local dev
    - Run `npm run start`
    - Use `ngrok http 3000`, set APP_BASE_URL to your ngrok URL, and update Twilio webhooks to point there.
 
-7) Test
+8) Test
    - Call your Twilio number from your phone; let it ring out → you should get an SMS.
    - Or GET `/simulate/missed-call?from=+1YYYYYYYYYY`
    - Reply with your name → bot asks your need → bot replies with your Calendly link.

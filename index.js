@@ -212,6 +212,80 @@ app.use('/api/warehouse', createWarehouseRouter());
 // 👉 Serve the landing page & assets from /public
 app.use(express.static(path.join(__dirname, 'public')));
 
+function parseElevenLabsError(message) {
+  if (!message) return null;
+  try {
+    const parsed = JSON.parse(message);
+    if (parsed?.detail) {
+      return {
+        code: parsed.detail.status || null,
+        detail: parsed.detail.message || message,
+      };
+    }
+    return {
+      code: parsed.status || null,
+      detail: parsed.message || message,
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
+async function streamElevenLabsAudio({ text, preset, voiceId }) {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  const endpoint = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=1&output_format=mp3_44100_128`;
+  const body = {
+    text,
+    model_id: preset.modelId || ELEVENLABS_MODEL_ID,
+    voice_settings: preset.voiceSettings,
+  };
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'xi-api-key': apiKey,
+      'content-type': 'application/json',
+      accept: 'audio/mpeg',
+    },
+    body: JSON.stringify(body),
+  });
+
+  return response;
+}
+
+async function streamOpenAITts({ text, res }) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return false;
+  }
+
+  const voice = process.env.OPENAI_TTS_VOICE || 'alloy';
+  const model = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts';
+
+  try {
+    console.info('[ColdCaller] Using OpenAI TTS fallback', { model, voice, textLength: text.length });
+    const speech = await openai.audio.speech.create({
+      model,
+      voice,
+      input: text,
+      format: 'mp3',
+    });
+
+    const arrayBuffer = await speech.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(buffer);
+    return true;
+  } catch (error) {
+    console.error('[ColdCaller] OpenAI TTS fallback failed', {
+      message: error?.message || error,
+      stack: error?.stack,
+    });
+    return false;
+  }
+}
+
 app.get('/audio/tts', async (req, res) => {
   if (!USE_ELEVENLABS) {
     return res.status(503).send('ElevenLabs voice is not configured.');
@@ -236,38 +310,38 @@ app.get('/audio/tts', async (req, res) => {
       query: req.query,
     });
 
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    const endpoint = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=1&output_format=mp3_44100_128`;
-    const body = {
-      text,
-      model_id: preset.modelId || ELEVENLABS_MODEL_ID,
-      voice_settings: preset.voiceSettings,
-    };
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'xi-api-key': apiKey,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
+    const response = await streamElevenLabsAudio({ text, preset, voiceId });
 
     console.info('[ColdCaller] ElevenLabs response received', { status: response.status });
 
-    if (!response.ok || !response.body) {
-      const message = await response.text().catch(() => '');
-      console.error('[ColdCaller] ElevenLabs error response', {
-        status: response.status,
-        message,
-      });
-      return res.status(502).send(`ElevenLabs error: ${message}`);
+    if (response.ok && response.body) {
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Cache-Control', 'no-store');
+      Readable.fromWeb(response.body).pipe(res);
+      console.info('[ColdCaller] ElevenLabs audio proxied successfully');
+      return;
     }
 
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Cache-Control', 'no-store');
-    Readable.fromWeb(response.body).pipe(res);
-    console.info('[ColdCaller] ElevenLabs audio proxied successfully');
+    const errorMessage = await response.text().catch(() => '');
+    const parsedError = parseElevenLabsError(errorMessage);
+    const quotaExceeded = (response.status === 401 || response.status === 402 || response.status === 429)
+      && parsedError?.code === 'quota_exceeded';
+
+    console.error('[ColdCaller] ElevenLabs error response', {
+      status: response.status,
+      message: errorMessage,
+      parsed: parsedError,
+    });
+
+    if (quotaExceeded) {
+      const fallbackSuccess = await streamOpenAITts({ text, res });
+      if (fallbackSuccess) {
+        return;
+      }
+      return res.status(429).send('ElevenLabs quota exceeded and fallback unavailable.');
+    }
+
+    return res.status(502).send(`ElevenLabs error: ${errorMessage}`);
   } catch (error) {
     console.error('[ColdCaller] ElevenLabs TTS proxy error', {
       message: error?.message || error,
