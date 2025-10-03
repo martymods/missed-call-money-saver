@@ -4,6 +4,7 @@ const dayjs = require('dayjs');
 const cron = require('node-cron');
 const path = require('path');
 const fs = require('fs');
+const fsp = fs.promises;
 const crypto = require('crypto');
 const Stripe = require('stripe');
 const OpenAI = require('openai');                           // 👈 NEW
@@ -71,8 +72,10 @@ const TTS_CACHE_DIR = path.join(__dirname, '.cache', 'tts');
 fs.mkdirSync(TTS_CACHE_DIR, { recursive: true });
 
 const COLD_CALLER_SMS_LINK = process.env.COLD_CALLER_SMS_LINK
-  || 'https://www.delcotechdivision.com/real-estate-cold-caller.html';
+  || 'https://www.delcotechdivision.com/';
 const COLD_CALLER_SMS_MEDIA = `${APP_BASE_URL}/image/${encodeURIComponent('lifelike AI cold caller.png')}`;
+
+const CSV_ROOT_DIR = path.join(__dirname, 'public', 'csvFIles');
 
 const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
 const FALLBACK_ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
@@ -417,6 +420,62 @@ function detectLeadIntent(text) {
   if (/(invest|investment|investor|portfolio)/i.test(text)) return 'invest';
   if (/(rent|rental|tenant|lease)/i.test(text)) return 'rent';
   return '';
+}
+
+async function scanCsvDirectory(dirPath, relativePath = '') {
+  let entries;
+  try {
+    entries = await fsp.readdir(dirPath, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+
+  const items = [];
+  for (const entry of entries) {
+    if (!entry) continue;
+    if (entry.name.startsWith('.')) continue;
+    const absoluteChild = path.join(dirPath, entry.name);
+    const relativeChild = relativePath ? path.join(relativePath, entry.name) : entry.name;
+    if (entry.isDirectory()) {
+      const children = await scanCsvDirectory(absoluteChild, relativeChild);
+      items.push({
+        type: 'directory',
+        name: entry.name,
+        path: relativeChild.split(path.sep).join('/'),
+        items: children,
+      });
+      continue;
+    }
+    if (!entry.isFile()) continue;
+    if (!/\.csv$/i.test(entry.name)) continue;
+    let stats = null;
+    try {
+      stats = await fsp.stat(absoluteChild);
+    } catch (error) {
+      stats = null;
+    }
+    const normalizedPath = relativeChild.split(path.sep).join('/');
+    items.push({
+      type: 'file',
+      name: entry.name,
+      path: normalizedPath,
+      url: `/csvFIles/${normalizedPath}`,
+      size: stats ? stats.size : null,
+      modified: stats ? stats.mtime.toISOString() : null,
+    });
+  }
+
+  items.sort((a, b) => {
+    if (a.type !== b.type) {
+      return a.type === 'directory' ? -1 : 1;
+    }
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+  });
+
+  return items;
 }
 
 async function sendColdCallerLink(toNumber, callSid) {
@@ -1771,6 +1830,30 @@ app.post('/voice/after', async (req, res) => {
   }
 });
 
+app.post('/api/admin/send-text', async (req, res) => {
+  try {
+    const to = normalizePhoneNumber(req.body?.to);
+    const rawMessage = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+    if (!to) {
+      return res.status(400).json({ error: 'invalid_to' });
+    }
+
+    const link = COLD_CALLER_SMS_LINK;
+    const baseMessage = rawMessage || 'Quick follow-up from DelcoTech — ready to automate your inbound calls and bookings.';
+    const finalMessage = baseMessage.includes(link) ? baseMessage : `${baseMessage}\n${link}`;
+
+    console.info('[Admin] Manual SMS request', { to: maskPhoneNumberForLog(to) });
+    await sendSMS(to, finalMessage, {
+      source: 'admin_manual_sms',
+    });
+
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error('[Admin] Manual SMS failed', { message: error?.message || error });
+    res.status(500).json({ error: 'sms_failed' });
+  }
+});
+
 // ---------------------------------------------------------------------
 // Twilio SMS: name -> need -> Calendly link
 // ---------------------------------------------------------------------
@@ -2276,6 +2359,16 @@ app.post('/api/lead', async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ ok: false, error: 'lead_store_failed' });
+  }
+});
+
+app.get('/api/csv-files', async (req, res) => {
+  try {
+    const items = await scanCsvDirectory(CSV_ROOT_DIR);
+    res.json({ root: 'csvFIles', items });
+  } catch (error) {
+    console.error('[Admin] CSV scan failed', { message: error?.message || error });
+    res.status(500).json({ error: 'csv_scan_failed' });
   }
 });
 

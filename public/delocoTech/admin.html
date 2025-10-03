@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>DelcoTech Ops Console</title>
+  <meta name="description" content="Admin console for DelcoTech automations: launch live cold calls, text follow-ups, and review lead CSVs."/>
+  <style>
+    :root{
+      --bg:#050816;
+      --card:#0d142c;
+      --panel:#111b38;
+      --ink:#f3f5ff;
+      --muted:#8d97c4;
+      --accent:#5a7cff;
+      --accent2:#364dff;
+      --success:#19d180;
+      --danger:#ff6b6b;
+      --border:rgba(255,255,255,.12);
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Inter",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;min-height:100%}
+    h1,h2,h3{margin:0 0 8px;font-weight:800;line-height:1.2}
+    p{margin:0 0 12px;color:var(--muted)}
+    a{color:#cfe0ff}
+    .wrap{max-width:1180px;margin:auto;padding:20px 16px 80px;display:flex;flex-direction:column;gap:28px}
+    header{display:flex;flex-direction:column;gap:18px;padding:20px;background:linear-gradient(160deg,rgba(90,124,255,.22),rgba(17,27,56,.85));border:1px solid rgba(255,255,255,.14);border-radius:20px;box-shadow:0 25px 80px rgba(23,32,68,.55)}
+    header h1{font-size:32px}
+    header .intro{max-width:720px;font-size:17px;color:#d6dcff}
+    header .stats{display:flex;flex-wrap:wrap;gap:12px}
+    .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);padding:6px 12px;border-radius:999px;font-weight:700;font-size:13px;color:#e6ebff;text-transform:uppercase;letter-spacing:.4px}
+    section{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px 20px;box-shadow:0 22px 60px rgba(0,0,0,.45)}
+    section header{background:none;border:none;border-radius:0;padding:0;box-shadow:none}
+    .section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .section-title h2{font-size:24px}
+    .section-title button{margin-left:auto}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+    label{display:flex;flex-direction:column;gap:6px;font-weight:600;color:#dfe3ff;font-size:15px}
+    input,textarea,select{border-radius:12px;border:1px solid rgba(255,255,255,.14);background:var(--panel);color:var(--ink);padding:11px 12px;font:15px/1.4 "Inter",system-ui,sans-serif;box-shadow:inset 0 0 0 1px rgba(0,0,0,.28)}
+    textarea{min-height:90px;resize:vertical}
+    input:focus,textarea:focus,select:focus{outline:2px solid rgba(90,124,255,.55);outline-offset:2px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;border:none;font-weight:700;font-size:15px;background:linear-gradient(180deg,var(--accent),var(--accent2));color:white;cursor:pointer;box-shadow:0 16px 36px rgba(64,94,255,.35);transition:transform .18s ease,box-shadow .18s ease}
+    .btn.secondary{background:rgba(255,255,255,.08);box-shadow:none;border:1px solid rgba(255,255,255,.16)}
+    .btn:disabled{opacity:.6;cursor:not-allowed;box-shadow:none;transform:none}
+    .btn:not(:disabled):active{transform:translateY(1px);box-shadow:0 6px 18px rgba(64,94,255,.35)}
+    .status{margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#dbe4ff;font-size:14px;white-space:pre-wrap}
+    .status.success{border-color:rgba(25,209,128,.4);color:#cafff1;background:rgba(25,209,128,.12)}
+    .status.error{border-color:rgba(255,107,107,.4);color:#ffd6d6;background:rgba(255,107,107,.12)}
+    .flex{display:flex;flex-direction:column;gap:16px}
+    .two-column{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+    .storyboard{background:var(--panel);border-radius:16px;border:1px solid rgba(255,255,255,.14);padding:16px;min-height:220px;font-family:"SFMono-Regular",Menlo,Consolas,monospace;font-size:13px;line-height:1.4;color:#d0d9ff;white-space:pre-wrap}
+    .call-meta{font-size:13px;color:var(--muted);margin-top:8px}
+    .call-visual{position:relative;border-radius:16px;overflow:hidden;background:radial-gradient(circle at top,#1e2c68,#0a0f26);border:1px solid rgba(255,255,255,.12);min-height:260px;display:flex;align-items:center;justify-content:center;color:#f0f3ff;text-align:center;padding:18px}
+    .call-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,8,22,.45),rgba(5,8,22,.75));opacity:0;transition:opacity .3s ease}
+    .call-visual.is-live::after{opacity:1}
+    .call-visual .overlay{position:absolute;inset:18px;border-radius:14px;border:1px solid rgba(255,255,255,.18);padding:14px;display:flex;flex-direction:column;gap:10px;justify-content:flex-start;overflow:auto;background:rgba(5,8,22,.55)}
+    .call-visual-bubble{opacity:0;transform:translateY(6px);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);text-align:left;font-size:14px;transition:opacity .25s ease,transform .25s ease}
+    .call-visual-bubble.show{opacity:1;transform:translateY(0)}
+    .call-visual-bubble .label{display:block;font-weight:700;color:#9fb6ff;font-size:12px;text-transform:uppercase;letter-spacing:.35px;margin-bottom:4px}
+    .call-visual .ended{display:none;position:absolute;inset:auto 18px 18px;background:rgba(16,24,52,.9);border:1px solid rgba(255,255,255,.16);padding:12px;border-radius:12px;font-weight:700}
+    .call-visual.is-ended .ended{display:block}
+    .csv-browser{display:grid;grid-template-columns:minmax(260px,320px) 1fr;gap:18px}
+    @media(max-width:900px){.csv-browser{grid-template-columns:1fr}}
+    .csv-tree{background:var(--panel);border-radius:16px;border:1px solid rgba(255,255,255,.12);padding:14px;max-height:440px;overflow:auto;font-size:14px}
+    .csv-tree details{padding:6px 0}
+    .csv-tree summary{cursor:pointer;font-weight:700;color:#d6dcff}
+    .csv-tree ul{list-style:none;padding-left:16px;margin:6px 0}
+    .csv-tree li{margin:6px 0;display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .csv-tree button{font-size:12px;padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(90,124,255,.18);color:#e3e9ff;cursor:pointer}
+    .csv-viewer{background:var(--panel);border-radius:16px;border:1px solid rgba(255,255,255,.12);padding:16px;min-height:320px;display:flex;flex-direction:column;gap:10px}
+    .csv-preview{flex:1 1 auto;overflow:auto;background:rgba(5,8,22,.45);border-radius:12px;border:1px solid rgba(255,255,255,.08);padding:12px;font-family:"SFMono-Regular",Menlo,Consolas,monospace;font-size:13px;color:#d1dcff;white-space:pre}
+    .csv-meta{font-size:13px;color:var(--muted)}
+    .refresh-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .refresh-row button{margin:0}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>DelcoTech Concierge Console</h1>
+      <p class="intro">Real dialer, real texts, real leads. Launch the lifelike cold caller over Twilio, drop ElevenLabs-powered talk tracks, and push the closer link via SMS without leaving this tab. The CSV browser below stays in sync with <code>public/csvFIles</code> automatically, so drag in new lead lists and refresh here.</p>
+      <div class="stats">
+        <span class="pill">ElevenLabs voice ready</span>
+        <span class="pill">OpenAI pitch composer</span>
+        <span class="pill">Twilio direct dial</span>
+      </div>
+    </header>
+
+    <section id="call-launcher">
+      <div class="section-title">
+        <h2>Lifelike AI cold caller</h2>
+      </div>
+      <p>Queue a concierge-style call. Every conversation ends with a texted closer link to <strong>https://www.delcotechdivision.com/</strong> no matter how the lead responds.</p>
+      <div class="two-column">
+        <form id="callerForm" class="flex">
+          <label>Lead name
+            <input type="text" name="leadName" placeholder="e.g. Roscoe" autocomplete="name"/>
+          </label>
+          <label>Lead phone (U.S. E.164)
+            <input type="tel" name="toLocal" inputmode="tel" autocomplete="tel" placeholder="6105550199" maxlength="14" required/>
+          </label>
+          <label>Goal of the call
+            <input type="text" name="goal" placeholder="Secure a listing consultation"/>
+          </label>
+          <label>Opening line
+            <textarea name="intro" placeholder="Hi Dana, this is Alex from Delco Realty. Thanks for requesting a valuation."></textarea>
+          </label>
+          <label>Talking points (one per line)
+            <textarea name="script" rows="5" placeholder="We found three buyers already active nearby.
+Your consultation holds your price for 48 hours.
+Can I send the booking link to lock your time?"></textarea>
+          </label>
+          <label>Voice preset
+            <select name="voice">
+              <option value="warm">Warm &amp; friendly (ElevenLabs)</option>
+              <option value="bold">Bold &amp; confident (ElevenLabs)</option>
+              <option value="calm">Calm &amp; precise (ElevenLabs)</option>
+            </select>
+          </label>
+          <label>Optional live handoff number
+            <input type="tel" name="handoffNumber" placeholder="Team mate number"/>
+          </label>
+          <button type="submit" class="btn">Start live call</button>
+          <div id="callerStatus" class="status">Idle — configure the call and press start.</div>
+        </form>
+        <div class="flex">
+          <div class="call-visual" id="callVisual">
+            <div class="overlay" id="callOverlay" aria-live="polite"></div>
+            <div class="ended" id="callEnded">Call ended</div>
+          </div>
+          <div>
+            <div class="storyboard" id="callerPreview">Adjust inputs to generate the live storyboard.</div>
+            <div class="call-meta" id="callerMeta">Warm &amp; friendly (ElevenLabs). No live handoff configured yet — concierge stays on the line. Calls originate from your configured TWILIO_NUMBER.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="text-launcher">
+      <div class="section-title">
+        <h2>Manual SMS closer</h2>
+      </div>
+      <p>Fire off a direct text with the closer link appended automatically. Perfect for fast follow-ups or booking confirmations that need a human touch.</p>
+      <form id="textForm" class="grid">
+        <label>Recipient (U.S. E.164)
+          <input type="tel" name="to" placeholder="6105550199" inputmode="tel" required/>
+        </label>
+        <label>Message body
+          <textarea name="message" rows="3" placeholder="Quick follow-up: we can lock in your consultation and automate inbound calls for your team. Reply if you want me to hold a slot."></textarea>
+        </label>
+        <button type="submit" class="btn">Send text with closer link</button>
+      </form>
+      <div id="textStatus" class="status">SMS ready. We'll append https://www.delcotechdivision.com/ automatically if you leave it out.</div>
+    </section>
+
+    <section id="csv-browser">
+      <div class="section-title">
+        <h2>CSV intelligence feed</h2>
+        <button type="button" id="csvRefresh" class="btn secondary">Refresh folders</button>
+      </div>
+      <p>Every directory and CSV inside <code>public/csvFIles</code> is listed below. Drop in new files and refresh to inspect the live contents instantly.</p>
+      <div class="csv-browser">
+        <div>
+          <div class="csv-tree" id="csvTree">Scanning folders…</div>
+        </div>
+        <div class="csv-viewer">
+          <div class="csv-meta" id="csvMeta">Select a CSV file to preview up to the first 400 lines.</div>
+          <div class="csv-preview" id="csvPreview">Waiting for selection…</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const callerForm = document.getElementById('callerForm');
+    const callerStatus = document.getElementById('callerStatus');
+    const callerPreview = document.getElementById('callerPreview');
+    const callerMeta = document.getElementById('callerMeta');
+    const callVisual = document.getElementById('callVisual');
+    const callOverlay = document.getElementById('callOverlay');
+    const callEnded = document.getElementById('callEnded');
+
+    const voicePresets = {
+      warm: { label: 'Warm & friendly (ElevenLabs)', variant: 'warm' },
+      bold: { label: 'Bold & confident (ElevenLabs)', variant: 'bold' },
+      calm: { label: 'Calm & precise (ElevenLabs)', variant: 'calm' }
+    };
+
+    const US_PREFIX = '+1';
+    let overlayTimers = [];
+    let overlayResetTimer = null;
+
+    function sanitizeLocalDigits(value){
+      let digits = String(value || '').replace(/[^\d]/g, '');
+      if(digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+      return digits.slice(0, 10);
+    }
+
+    function toE164(local){
+      const digits = sanitizeLocalDigits(local);
+      return digits.length === 10 ? `${US_PREFIX}${digits}` : '';
+    }
+
+    function formatDisplay(value){
+      const digits = sanitizeLocalDigits(value);
+      if(digits.length < 10) return digits ? `${US_PREFIX} ${digits}` : '';
+      return `${US_PREFIX} (${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6,10)}`;
+    }
+
+    function getCallerState(){
+      const formData = new FormData(callerForm);
+      const toLocal = formData.get('toLocal') || '';
+      const payload = {
+        leadName: formData.get('leadName') || '',
+        goal: formData.get('goal') || '',
+        intro: formData.get('intro') || '',
+        script: formData.get('script') || '',
+        voice: formData.get('voice') || 'warm',
+        handoffNumber: formData.get('handoffNumber') || '',
+        toLocal
+      };
+      payload.to = toE164(toLocal);
+      return payload;
+    }
+
+    function buildStoryboard(state){
+      const lead = state.leadName?.trim() || 'Lead';
+      const intro = state.intro?.trim() || 'Hi there, this is Alex from DelcoTech on a quick concierge call.';
+      const talkingPoints = (state.script || '').split(/\n+/).map((line) => line.trim()).filter(Boolean);
+      const pointA = talkingPoints[0] || 'We found three prospects already warm in your territory.';
+      const pointB = talkingPoints[1] || 'We cover booking, scheduling, and lead capture hands-free.';
+      const pointC = talkingPoints[2] || 'I just texted you the DelcoTech automation link to lock your spot.';
+      return [
+        `Lead: ${lead} (${state.to ? formatDisplay(state.to) : 'add number'})`,
+        `Goal: ${state.goal || 'Secure a listing consultation'}`,
+        '',
+        'Play-by-play:',
+        `1. Twilio dials ${state.to ? formatDisplay(state.to) : 'the lead'} from your configured number.`,
+        '2. ElevenLabs streams the concierge intro and listens after each beat.',
+        `3. Talking points hit:`,
+        `   • ${pointA}`,
+        `   • ${pointB}`,
+        `   • ${pointC}`,
+        '4. SMS follow-up fires with https://www.delcotechdivision.com/ as the closer.',
+        '',
+        'Dialog rehearsal:',
+        `Agent (${voicePresets[state.voice]?.label || voicePresets.warm.label}): ${intro}`,
+        `${lead}: [Responds]`,
+        `Agent: ${pointA}`,
+        `${lead}: [Objection or interest logged]`,
+        `Agent: ${pointB}`,
+        `${lead}: [Signals interest]`,
+        `Agent: ${pointC}`,
+        `${lead}: [We close with the texted link]`
+      ].join('\n');
+    }
+
+    function updateStoryboard(){
+      const state = getCallerState();
+      const preset = voicePresets[state.voice] || voicePresets.warm;
+      callerPreview.textContent = buildStoryboard(state);
+      const handoffDisplay = state.handoffNumber ? (formatDisplay(state.handoffNumber) || state.handoffNumber) : '';
+      callerMeta.textContent = `${preset.label}. ${handoffDisplay ? `Warm handoff ready at ${handoffDisplay}.` : 'No live handoff configured yet — concierge stays on the line.'} Calls originate from your configured TWILIO_NUMBER.`;
+    }
+
+    function resetOverlay(){
+      overlayTimers.forEach((timer) => window.clearTimeout(timer));
+      overlayTimers = [];
+      if(overlayResetTimer){
+        window.clearTimeout(overlayResetTimer);
+        overlayResetTimer = null;
+      }
+      if(callOverlay){
+        callOverlay.innerHTML = '';
+      }
+      if(callVisual){
+        callVisual.classList.remove('is-live','is-ended');
+      }
+    }
+
+    function showOverlayLines(lines){
+      if(!callOverlay || !callVisual) return;
+      resetOverlay();
+      callVisual.classList.add('is-live');
+      lines.forEach((line, index) => {
+        const timer = window.setTimeout(() => {
+          const bubble = document.createElement('div');
+          bubble.className = 'call-visual-bubble';
+          const label = document.createElement('span');
+          label.className = 'label';
+          label.textContent = line.label;
+          bubble.appendChild(label);
+          bubble.append(line.text);
+          callOverlay.appendChild(bubble);
+          requestAnimationFrame(() => { bubble.classList.add('show'); });
+        }, index * 900);
+        overlayTimers.push(timer);
+      });
+      overlayResetTimer = window.setTimeout(() => {
+        callVisual.classList.remove('is-live');
+        callVisual.classList.add('is-ended');
+      }, Math.max((lines.length * 900) + 2400, 4800));
+    }
+
+    async function startCall(){
+      const state = getCallerState();
+      if(!state.to){
+        callerStatus.textContent = 'Add a 10-digit U.S. phone number so we can dial it as +1.';
+        callerStatus.className = 'status error';
+        return;
+      }
+      callerStatus.textContent = 'Dialing via Twilio…';
+      callerStatus.className = 'status';
+      const submitBtn = callerForm.querySelector('button[type="submit"]');
+      submitBtn?.setAttribute('disabled','true');
+      resetOverlay();
+      try{
+        const payload = { ...state };
+        delete payload.toLocal;
+        payload.origin = 'delcotech-admin';
+        const response = await fetch('/api/cold-caller/dial', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(() => ({}));
+        if(!response.ok || !data?.sid){
+          const errMsg = data?.error ? ` (${data.error})` : '';
+          throw new Error(`Unable to start call${errMsg}`);
+        }
+        callerStatus.textContent = `Call launched! Twilio SID ${data.sid}.`;
+        callerStatus.className = 'status success';
+        const leadLabel = state.leadName || 'Lead';
+        const talking = (state.script || '').split(/\n+/).map((line) => line.trim()).filter(Boolean);
+        const lines = [
+          { label:'Agent', text: state.intro?.trim() || 'Hi there, this is Alex from DelcoTech.' },
+          { label: leadLabel, text: 'Sounds good — what do you have for me?' },
+          { label:'Agent', text: talking[0] || 'We already spotted motivated activity in your area.' },
+          { label:'Agent', text: 'I just texted you the automation link so you can lock in.' }
+        ];
+        showOverlayLines(lines);
+      }catch(error){
+        callerStatus.textContent = `Call failed: ${error.message}`;
+        callerStatus.className = 'status error';
+        console.error('[Admin] Cold caller failed', error);
+        resetOverlay();
+      }finally{
+        submitBtn?.removeAttribute('disabled');
+      }
+    }
+
+    if(callerForm){
+      callerForm.addEventListener('input', updateStoryboard);
+      callerForm.addEventListener('change', updateStoryboard);
+      callerForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        startCall();
+      });
+      updateStoryboard();
+    }
+
+    const textForm = document.getElementById('textForm');
+    const textStatus = document.getElementById('textStatus');
+    if(textForm){
+      textForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(textForm);
+        const to = formData.get('to') || '';
+        const message = (formData.get('message') || '').trim();
+        textStatus.textContent = 'Sending text via Twilio…';
+        textStatus.className = 'status';
+        try{
+          const response = await fetch('/api/admin/send-text', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ to, message })
+          });
+          const data = await response.json().catch(() => ({}));
+          if(!response.ok || !data?.ok){
+            const errMsg = data?.error ? ` (${data.error})` : '';
+            throw new Error(`Unable to send SMS${errMsg}`);
+          }
+          textStatus.textContent = 'SMS sent! Closer link included.';
+          textStatus.className = 'status success';
+        }catch(error){
+          textStatus.textContent = `SMS failed: ${error.message}`;
+          textStatus.className = 'status error';
+          console.error('[Admin] SMS send failed', error);
+        }
+      });
+    }
+
+    const csvTree = document.getElementById('csvTree');
+    const csvPreview = document.getElementById('csvPreview');
+    const csvMeta = document.getElementById('csvMeta');
+    const csvRefresh = document.getElementById('csvRefresh');
+
+    function createTreeList(items){
+      const list = document.createElement('ul');
+      items.forEach((item) => {
+        if(item.type === 'directory'){
+          const details = document.createElement('details');
+          const summary = document.createElement('summary');
+          summary.textContent = item.name;
+          details.appendChild(summary);
+          details.appendChild(createTreeList(item.items || []));
+          const li = document.createElement('li');
+          li.appendChild(details);
+          list.appendChild(li);
+        } else if(item.type === 'file'){
+          const li = document.createElement('li');
+          const span = document.createElement('span');
+          span.textContent = item.name;
+          li.appendChild(span);
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = 'Preview';
+          button.addEventListener('click', () => previewCsv(item));
+          li.appendChild(button);
+          list.appendChild(li);
+        }
+      });
+      if(!list.children.length){
+        const empty = document.createElement('li');
+        empty.textContent = 'No CSV files yet.';
+        list.appendChild(empty);
+      }
+      return list;
+    }
+
+    async function previewCsv(file){
+      csvMeta.textContent = `Loading ${file.path}…`;
+      csvPreview.textContent = '';
+      try{
+        const response = await fetch(file.url, { cache: 'no-store' });
+        if(!response.ok){
+          throw new Error(`Unable to fetch file (${response.status})`);
+        }
+        const text = await response.text();
+        const lines = text.split(/\r?\n/).slice(0, 400);
+        csvPreview.textContent = lines.join('\n');
+        const details = [];
+        if(file.path) details.push(`Path: ${file.path}`);
+        if(file.size != null) details.push(`Size: ${(file.size/1024).toFixed(1)} KB`);
+        if(file.modified) details.push(`Updated: ${new Date(file.modified).toLocaleString()}`);
+        csvMeta.textContent = details.join(' • ') || 'Preview ready.';
+      }catch(error){
+        csvMeta.textContent = `Failed to load ${file.path || file.name}: ${error.message}`;
+        csvPreview.textContent = '';
+        console.error('[Admin] CSV preview failed', error);
+      }
+    }
+
+    async function loadCsvTree(){
+      if(csvTree){
+        csvTree.textContent = 'Scanning folders…';
+      }
+      csvMeta.textContent = 'Select a CSV file to preview up to the first 400 lines.';
+      csvPreview.textContent = 'Waiting for selection…';
+      try{
+        const response = await fetch('/api/csv-files', { cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if(!response.ok){
+          throw new Error(`Unable to scan directories (${response.status})`);
+        }
+        const items = Array.isArray(data?.items) ? data.items : [];
+        if(csvTree){
+          csvTree.innerHTML = '';
+          csvTree.appendChild(createTreeList(items));
+        }
+        if(!items.length && csvTree){
+          csvTree.textContent = 'No CSV files detected yet. Drop folders into public/csvFIles and refresh.';
+        }
+      }catch(error){
+        if(csvTree){
+          csvTree.textContent = `Failed to scan csvFIles: ${error.message}`;
+        }
+        console.error('[Admin] CSV scan failed', error);
+      }
+    }
+
+    if(csvRefresh){
+      csvRefresh.addEventListener('click', () => loadCsvTree());
+    }
+
+    loadCsvTree();
+  </script>
+</body>
+</html>
