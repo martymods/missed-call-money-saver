@@ -76,6 +76,10 @@ const COLD_CALLER_SMS_LINK = process.env.COLD_CALLER_SMS_LINK
 const COLD_CALLER_SMS_MEDIA = `${APP_BASE_URL}/image/${encodeURIComponent('lifelike AI cold caller.png')}`;
 
 const CSV_ROOT_DIR = path.join(__dirname, 'public', 'csvFIles');
+const CSV_ROOT_ABSOLUTE = path.resolve(CSV_ROOT_DIR);
+const CSV_PREVIEW_ROW_LIMIT = Number(process.env.CSV_PREVIEW_ROW_LIMIT || 200);
+const CSV_AUTOMATION_MAX_LEADS = Number(process.env.CSV_AUTOMATION_MAX_LEADS || 150);
+const CSV_AUTOMATION_PARSE_LIMIT = CSV_AUTOMATION_MAX_LEADS + 400; // buffer for skips
 
 const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
 const FALLBACK_ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
@@ -476,6 +480,262 @@ async function scanCsvDirectory(dirPath, relativePath = '') {
   });
 
   return items;
+}
+
+function normalizeCsvRelativePath(value = '') {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) {
+    return '';
+  }
+  const normalized = path.normalize(trimmed).replace(/^\.(\\|\/)/, '');
+  return normalized.replace(/^[\\/]+/, '');
+}
+
+function resolveCsvFile(relativePath = '') {
+  const normalized = normalizeCsvRelativePath(relativePath);
+  const absolute = path.resolve(path.join(CSV_ROOT_DIR, normalized));
+  const rootPrefix = `${CSV_ROOT_ABSOLUTE}${path.sep}`;
+  if (absolute !== CSV_ROOT_ABSOLUTE && !absolute.startsWith(rootPrefix)) {
+    const error = new Error('invalid_csv_path');
+    error.code = 'invalid_csv_path';
+    throw error;
+  }
+  return { relative: normalized, absolute };
+}
+
+function stripBom(value) {
+  if (!value) return value;
+  return value.replace(/^\ufeff/, '');
+}
+
+function tidyCell(value) {
+  if (value == null) return '';
+  return stripBom(String(value).replace(/\r/g, '')).trim();
+}
+
+function parseCsvText(text, { maxRows = 1000 } = {}) {
+  const rows = [];
+  if (!text) return rows;
+  const limit = Math.max(1, Math.min(maxRows, 10000));
+  let current = [];
+  let cell = '';
+  let inQuotes = false;
+
+  const pushCell = () => {
+    current.push(tidyCell(cell));
+    cell = '';
+  };
+
+  const pushRow = () => {
+    if (!inQuotes) {
+      rows.push(current);
+      current = [];
+    }
+  };
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    if (char === '"') {
+      if (inQuotes && text[i + 1] === '"') {
+        cell += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+    if (char === ',' && !inQuotes) {
+      pushCell();
+      continue;
+    }
+    if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && text[i + 1] === '\n') {
+        i += 1;
+      }
+      pushCell();
+      pushRow();
+      if (rows.length >= limit) {
+        return rows;
+      }
+      continue;
+    }
+    cell += char;
+  }
+
+  pushCell();
+  if (current.length || cell) {
+    pushRow();
+  }
+
+  return rows.slice(0, limit);
+}
+
+function guessColumnType(label, samples = []) {
+  const lower = String(label || '').toLowerCase();
+  if (/email|e-mail/.test(lower)) return 'email';
+  if (/phone|cell|mobile|contact|tel|sms|dial/.test(lower)) return 'phone';
+  if (/first\s*name/.test(lower)) return 'first_name';
+  if (/last\s*name|surname/.test(lower)) return 'last_name';
+  if (/name/.test(lower)) return 'name';
+  if (/company|business|firm|broker|agency|organization/.test(lower)) return 'company';
+  if (/city|town|metro/.test(lower)) return 'city';
+  if (/state|region|province/.test(lower)) return 'state';
+  if (/zip|postal|postcode/.test(lower)) return 'postal';
+  if (/title|role|position/.test(lower)) return 'title';
+  if (/industry|sector|vertical/.test(lower)) return 'industry';
+  if (/status|stage|priority/.test(lower)) return 'status';
+
+  const trimmedSamples = samples.filter(Boolean).map((sample) => String(sample).trim());
+  if (trimmedSamples.some((sample) => /@/.test(sample))) return 'email';
+  if (trimmedSamples.some((sample) => sample.replace(/[^\d]/g, '').length >= 10)) return 'phone';
+  if (trimmedSamples.length && trimmedSamples.every((sample) => /^(mr\.?|mrs\.?|ms\.?|dr\.?|[A-Za-z])[\w\s'.-]*$/.test(sample))) {
+    return 'name';
+  }
+  return 'text';
+}
+
+function buildColumnSummaries(header, dataRows) {
+  return header.map((label, index) => {
+    const samples = [];
+    for (const row of dataRows) {
+      const value = tidyCell(row[index]);
+      if (value) {
+        samples.push(value);
+      }
+      if (samples.length >= 3) break;
+    }
+    return {
+      index,
+      key: `c_${index}`,
+      label: label || `Column ${index + 1}`,
+      lowerLabel: String(label || '').toLowerCase(),
+      type: guessColumnType(label, samples),
+      samples,
+    };
+  });
+}
+
+function summarizeRecordForContext(record, exclude = new Set(), limit = 3) {
+  const parts = [];
+  for (const [key, value] of Object.entries(record)) {
+    if (!value) continue;
+    if (exclude.has(key)) continue;
+    if (/email|e-mail/.test(key)) continue;
+    const cleanKey = key.replace(/_/g, ' ');
+    parts.push(`${cleanKey}: ${value}`);
+    if (parts.length >= limit) break;
+  }
+  return parts.join(' • ');
+}
+
+function buildLeadRecords(columns, dataRows) {
+  const leads = [];
+  const skipped = [];
+  const phoneColumns = columns.filter((col) => col.type === 'phone');
+  const firstNameColumn = columns.find((col) => col.type === 'first_name');
+  const lastNameColumn = columns.find((col) => col.type === 'last_name');
+  const fullNameColumn = columns.find((col) => col.type === 'name');
+  const companyColumn = columns.find((col) => col.type === 'company');
+
+  const seenPhones = new Set();
+
+  dataRows.forEach((row, rowIndex) => {
+    const record = {};
+    columns.forEach((col) => {
+      record[col.label || `Column ${col.index + 1}`] = tidyCell(row[col.index]);
+    });
+
+    let phoneValue = '';
+    if (phoneColumns.length) {
+      for (const phoneCol of phoneColumns) {
+        const candidate = tidyCell(row[phoneCol.index]);
+        if (candidate) {
+          phoneValue = candidate;
+          break;
+        }
+      }
+    } else {
+      for (const value of row) {
+        const candidate = tidyCell(value);
+        if (candidate && candidate.replace(/[^\d]/g, '').length >= 10) {
+          phoneValue = candidate;
+          break;
+        }
+      }
+    }
+
+    const normalizedPhone = normalizePhoneNumber(phoneValue);
+    if (!normalizedPhone) {
+      skipped.push({ index: rowIndex + 1, reason: 'missing_phone', record });
+      return;
+    }
+    if (seenPhones.has(normalizedPhone)) {
+      skipped.push({ index: rowIndex + 1, reason: 'duplicate_phone', record });
+      return;
+    }
+
+    let leadName = '';
+    if (fullNameColumn) {
+      leadName = tidyCell(row[fullNameColumn.index]);
+    }
+    const firstName = tidyCell(firstNameColumn ? row[firstNameColumn.index] : '');
+    const lastName = tidyCell(lastNameColumn ? row[lastNameColumn.index] : '');
+    if (!leadName) {
+      leadName = [firstName, lastName].filter(Boolean).join(' ').trim();
+    }
+    if (!leadName) {
+      leadName = tidyCell(companyColumn ? row[companyColumn.index] : '') || 'Lead';
+    }
+
+    const excludeKeys = new Set();
+    [fullNameColumn, firstNameColumn, lastNameColumn, companyColumn, ...phoneColumns].forEach((col) => {
+      if (col) {
+        excludeKeys.add(col.label || `Column ${col.index + 1}`);
+      }
+    });
+    const context = summarizeRecordForContext(record, excludeKeys, 3);
+
+    leads.push({
+      name: leadName || 'Lead',
+      phone: normalizedPhone,
+      firstName: firstName || leadName.split(' ')[0] || '',
+      record,
+      context,
+    });
+    seenPhones.add(normalizedPhone);
+  });
+
+  return { leads, skipped };
+}
+
+async function loadCsvAutomationData(relativePath, { maxRows = CSV_AUTOMATION_PARSE_LIMIT } = {}) {
+  const { absolute, relative } = resolveCsvFile(relativePath);
+  const text = await fsp.readFile(absolute, 'utf8');
+  const rows = parseCsvText(text, { maxRows });
+  const header = rows[0] || [];
+  const dataRows = rows.slice(1);
+  const columns = buildColumnSummaries(header, dataRows);
+  const { leads, skipped } = buildLeadRecords(columns, dataRows);
+  let stats = null;
+  try {
+    stats = await fsp.stat(absolute);
+  } catch (error) {
+    stats = null;
+  }
+
+  return {
+    file: {
+      path: relative,
+      name: path.basename(relative),
+      size: stats ? stats.size : null,
+      modified: stats ? stats.mtime.toISOString() : null,
+    },
+    header,
+    dataRows,
+    columns,
+    leads,
+    skipped,
+  };
 }
 
 async function sendColdCallerLink(toNumber, callSid) {
@@ -989,83 +1249,104 @@ app.post('/api/real-estate/text-link', async (req, res) => {
   }
 });
 
-app.post('/api/cold-caller/dial', async (req, res) => {
-  try {
-    const {
-      to,
-      leadName = '',
-      goal = '',
-      intro = '',
-      script = '',
-      voice = 'warm',
-      handoffNumber = '',
-    } = req.body || {};
+async function queueColdCallerCall({
+  to,
+  leadName = '',
+  goal = '',
+  intro = '',
+  script = '',
+  voice = 'warm',
+  handoffNumber = '',
+  appBaseUrl = DEFAULT_APP_BASE_URL,
+}) {
+  const toNumber = normalizePhoneNumber(to);
+  if (!toNumber) {
+    const error = new Error('invalid_to');
+    error.code = 'invalid_to';
+    throw error;
+  }
 
-    const toNumber = normalizePhoneNumber(to);
-    if (!toNumber) {
-      return res.status(400).json({ error: 'invalid_to' });
+  const fromNumber = normalizePhoneNumber(process.env.TWILIO_NUMBER);
+  if (!fromNumber) {
+    const error = new Error('missing_from_number');
+    error.code = 'missing_from_number';
+    throw error;
+  }
+
+  const presetKey = String(voice || '').toLowerCase();
+  const preset = CALLER_VOICE_PRESETS[presetKey] || CALLER_VOICE_PRESETS.warm;
+  const variantKey = preset?.variant || presetKey || 'warm';
+
+  const logPayload = {
+    to: maskPhoneNumberForLog(toNumber),
+    leadName: leadName ? '[redacted]' : '',
+    goal: goal ? goal.slice(0, 120) : '',
+    intro: intro ? intro.slice(0, 120) : '',
+    scriptLength: script ? String(script).length : 0,
+    variant: variantKey,
+    handoffConfigured: Boolean(handoffNumber),
+    appBaseUrl,
+  };
+  console.info('[ColdCaller] Dial request received', logPayload);
+
+  const sanitizedIntro = sanitizeLine(intro);
+  const greetingLine = leadName
+    ? `Hey ${leadName}, Alex with Delco Realty.`
+    : 'Hey, Alex with Delco Realty.';
+  const quickIntroLine = sanitizedIntro
+    || (goal ? `Quick question about ${goal}.` : 'Quick question for you.');
+  const introQuestionLine = 'Do you have a minute right now?';
+
+  const providedLines = String(script || '')
+    .split(/\r?\n/)
+    .map(sanitizeLine)
+    .filter(Boolean);
+
+  const positiveAckLine = leadName ? `Appreciate it, ${leadName}.` : 'Appreciate it.';
+  const valueBridgeLine = providedLines[0]
+    || (goal ? `It's about ${goal}.` : 'We spotted something worth a quick look.');
+  const qualifierQuestion = providedLines[1]
+    || 'Are you looking to buy, sell, or invest in the next 90 days?';
+  const smsOfferLine = providedLines[2]
+    || 'I just texted you a quick link so you can see the options.';
+  const declineLine = providedLines[3]
+    || 'No worries — I just texted you the link. Have a great day!';
+  const handoffPromptLine = providedLines[4]
+    || 'Want me to connect you with a teammate now?';
+  const connectLine = 'One moment while I connect you to a teammate.';
+
+  const sanitizedHandoff = sanitizeLine(handoffNumber);
+  let handoff = '';
+  if (sanitizedHandoff) {
+    handoff = normalizePhoneNumber(sanitizedHandoff);
+    if (!handoff) {
+      const error = new Error('invalid_handoff');
+      error.code = 'invalid_handoff';
+      throw error;
     }
+  }
 
-    const fromNumber = normalizePhoneNumber(process.env.TWILIO_NUMBER);
-    if (!fromNumber) {
-      return res.status(500).json({ error: 'missing_from_number' });
-    }
+  const callState = {
+    variant: variantKey,
+    introLines: [quickIntroLine, introQuestionLine].filter(Boolean),
+    positiveAckLine,
+    valueBridgeLine,
+    qualifierQuestion,
+    smsOfferLine,
+    declineLine,
+    handoffPromptLine,
+    connectLine,
+    handoffNumber: handoff,
+    prefillIntent: '',
+  };
+  const encodedState = encodeCallState(callState);
+  const introAction = absoluteUrl(`/voice/cold-caller/intro?state=${encodedState}`, appBaseUrl);
 
-    const presetKey = String(voice || '').toLowerCase();
-    const preset = CALLER_VOICE_PRESETS[presetKey] || CALLER_VOICE_PRESETS.warm;
-    const variantKey = preset?.variant || presetKey || 'warm';
-    const appBaseUrl = resolveAppBaseUrl(req);
-
-    const logPayload = {
-      to: maskPhoneNumberForLog(toNumber),
-      leadName: leadName ? '[redacted]' : '',
-      goal: goal ? goal.slice(0, 120) : '',
-      intro: intro ? intro.slice(0, 120) : '',
-      scriptLength: script ? String(script).length : 0,
-      variant: variantKey,
-      handoffConfigured: Boolean(handoffNumber),
-      appBaseUrl,
-    };
-    console.info('[ColdCaller] Dial request received', logPayload);
-
-    const sanitizedIntro = sanitizeLine(intro);
-    const greetingLine = leadName
-      ? `Hey ${leadName}, Alex with Delco Realty.`
-      : 'Hey, Alex with Delco Realty.';
-    const quickIntroLine = sanitizedIntro
-      || (goal ? `Quick question about ${goal}.` : 'Quick question for you.');
-    const introQuestionLine = 'Do you have a minute right now?';
-
-    const providedLines = String(script || '')
-      .split(/\r?\n/)
-      .map(sanitizeLine)
-      .filter(Boolean);
-
-    const positiveAckLine = leadName ? `Appreciate it, ${leadName}.` : 'Appreciate it.';
-    const valueBridgeLine = providedLines[0]
-      || (goal ? `It's about ${goal}.` : 'We spotted something worth a quick look.');
-    const qualifierQuestion = providedLines[1]
-      || 'Are you looking to buy, sell, or invest in the next 90 days?';
-    const smsOfferLine = providedLines[2]
-      || 'I just texted you a quick link so you can see the options.';
-    const declineLine = providedLines[3]
-      || 'No worries — I just texted you the link. Have a great day!';
-    const handoffPromptLine = providedLines[4]
-      || 'Want me to connect you with a teammate now?';
-    const connectLine = 'One moment while I connect you to a teammate.';
-
-    const sanitizedHandoff = sanitizeLine(handoffNumber);
-    let handoff = '';
-    if (sanitizedHandoff) {
-      handoff = normalizePhoneNumber(sanitizedHandoff);
-      if (!handoff) {
-        return res.status(400).json({ error: 'invalid_handoff' });
-      }
-    }
-
-    const callState = {
-      variant: variantKey,
-      introLines: [quickIntroLine, introQuestionLine].filter(Boolean),
+  if (USE_ELEVENLABS) {
+    const warmupLines = [
+      greetingLine,
+      quickIntroLine,
+      introQuestionLine,
       positiveAckLine,
       valueBridgeLine,
       qualifierQuestion,
@@ -1073,67 +1354,56 @@ app.post('/api/cold-caller/dial', async (req, res) => {
       declineLine,
       handoffPromptLine,
       connectLine,
-      handoffNumber: handoff,
-      prefillIntent: '',
-    };
-    const encodedState = encodeCallState(callState);
-    const introAction = absoluteUrl(`/voice/cold-caller/intro?state=${encodedState}`, appBaseUrl);
+    ].filter(Boolean);
 
-    if (USE_ELEVENLABS) {
-      const warmupLines = [
-        greetingLine,
-        quickIntroLine,
-        introQuestionLine,
-        positiveAckLine,
-        valueBridgeLine,
-        qualifierQuestion,
-        smsOfferLine,
-        declineLine,
-        handoffPromptLine,
-        connectLine,
-      ].filter(Boolean);
+    await Promise.all(warmupLines.map((line) =>
+      ensureTtsClip({ text: line, variantKey, preset, baseUrl: appBaseUrl })
+        .catch((error) => {
+          console.warn('[ColdCaller] Warmup TTS failed', { message: error?.message || error });
+          return null;
+        })
+    ));
+  }
 
-      await Promise.all(warmupLines.map(line =>
-        ensureTtsClip({ text: line, variantKey, preset, baseUrl: appBaseUrl })
-          .catch((error) => {
-            console.warn('[ColdCaller] Warmup TTS failed', { message: error?.message || error });
-            return null;
-          })
-      ));
-    }
+  const voiceResponse = new VoiceResponse();
+  await appendSpeech(voiceResponse, greetingLine, { variantKey, preset, baseUrl: appBaseUrl });
 
-    const voiceResponse = new VoiceResponse();
-    await appendSpeech(voiceResponse, greetingLine, { variantKey, preset, baseUrl: appBaseUrl });
+  const gather = voiceResponse.gather({
+    input: 'speech',
+    method: 'POST',
+    action: introAction,
+    speechTimeout: 'auto',
+    timeout: 5,
+    bargeIn: 'true',
+    actionOnEmptyResult: true,
+  });
 
-    const gather = voiceResponse.gather({
-      input: 'speech',
-      method: 'POST',
-      action: introAction,
-      speechTimeout: 'auto',
-      timeout: 5,
-      bargeIn: 'true',
-      actionOnEmptyResult: true,
-    });
+  await appendSpeech(gather, quickIntroLine, { variantKey, preset, baseUrl: appBaseUrl });
+  gather.pause({ length: 1 });
+  await appendSpeech(gather, introQuestionLine, { variantKey, preset, baseUrl: appBaseUrl });
 
-    await appendSpeech(gather, quickIntroLine, { variantKey, preset, baseUrl: appBaseUrl });
-    gather.pause({ length: 1 });
-    await appendSpeech(gather, introQuestionLine, { variantKey, preset, baseUrl: appBaseUrl });
+  voiceResponse.redirect(introAction);
 
-    voiceResponse.redirect(introAction);
+  const twiml = voiceResponse.toString();
+  console.info('[ColdCaller] TwiML preview', twiml.slice(0, 400) + (twiml.length > 400 ? '…' : ''));
 
-    const twiml = voiceResponse.toString();
-    console.info('[ColdCaller] TwiML preview', twiml.slice(0, 400) + (twiml.length > 400 ? '…' : ''));
+  const call = await twilioClient.calls.create({
+    to: toNumber,
+    from: fromNumber,
+    twiml,
+    machineDetection: 'DetectMessageEnd',
+  });
 
-    const call = await twilioClient.calls.create({
-      to: toNumber,
-      from: fromNumber,
-      twiml,
-      machineDetection: 'DetectMessageEnd',
-    });
+  console.info('[ColdCaller] Twilio call queued', { sid: call.sid, to: maskPhoneNumberForLog(toNumber) });
 
-    console.info('[ColdCaller] Twilio call queued', { sid: call.sid, to: maskPhoneNumberForLog(toNumber) });
+  return { sid: call.sid, to: toNumber, variant: variantKey };
+}
 
-    return res.json({ sid: call.sid });
+app.post('/api/cold-caller/dial', async (req, res) => {
+  try {
+    const appBaseUrl = resolveAppBaseUrl(req);
+    const result = await queueColdCallerCall({ ...req.body, appBaseUrl });
+    return res.json({ sid: result.sid });
   } catch (error) {
     const errorInfo = {
       message: error?.message || 'Unknown error',
@@ -1144,6 +1414,15 @@ app.post('/api/cold-caller/dial', async (req, res) => {
       responseData: error?.response?.data,
     };
     console.error('[ColdCaller] Dial error', errorInfo);
+    if (error?.code === 'invalid_to') {
+      return res.status(400).json({ error: 'invalid_to' });
+    }
+    if (error?.code === 'invalid_handoff') {
+      return res.status(400).json({ error: 'invalid_handoff' });
+    }
+    if (error?.code === 'missing_from_number') {
+      return res.status(500).json({ error: 'missing_from_number' });
+    }
     const statusCode = Number(error?.status) || 500;
     const payload = { error: 'dial_failed' };
     if (error?.code || error?.moreInfo) {
@@ -2369,6 +2648,340 @@ app.get('/api/csv-files', async (req, res) => {
   } catch (error) {
     console.error('[Admin] CSV scan failed', { message: error?.message || error });
     res.status(500).json({ error: 'csv_scan_failed' });
+  }
+});
+
+app.post('/api/csv-files/preview', async (req, res) => {
+  try {
+    const relativePath = req.body?.path;
+    if (!relativePath) {
+      return res.status(400).json({ error: 'missing_path' });
+    }
+
+    const dataset = await loadCsvAutomationData(relativePath, {
+      maxRows: CSV_PREVIEW_ROW_LIMIT + 1,
+    });
+
+    const header = dataset.header.map((value) => tidyCell(value));
+    const previewLimit = Math.max(1, CSV_PREVIEW_ROW_LIMIT);
+    const previewRows = dataset.dataRows.slice(0, previewLimit);
+    const rows = previewRows.map((row) => header.map((_, index) => tidyCell(row[index])));
+    const skippedByReason = dataset.skipped.reduce((acc, item) => {
+      const reason = item.reason || 'other';
+      acc[reason] = (acc[reason] || 0) + 1;
+      return acc;
+    }, {});
+
+    const leadPreview = dataset.leads.slice(0, 5).map((lead) => ({
+      name: lead.name,
+      phone: maskPhoneNumberForLog(lead.phone),
+      context: lead.context,
+    }));
+
+    res.json({
+      file: dataset.file,
+      header,
+      rows,
+      totalRows: dataset.dataRows.length,
+      validLeads: dataset.leads.length,
+      skippedRows: dataset.skipped.length,
+      skippedByReason,
+      truncated: dataset.dataRows.length > previewLimit,
+      columns: dataset.columns.map((col) => ({
+        index: col.index,
+        label: col.label,
+        type: col.type,
+        samples: col.samples,
+      })),
+      leadsPreview: leadPreview,
+      pitchAvailable: Boolean(process.env.OPENAI_API_KEY),
+      automationLimit: CSV_AUTOMATION_MAX_LEADS,
+    });
+  } catch (error) {
+    const status = error?.code === 'invalid_csv_path' ? 400 : 500;
+    console.error('[Admin] CSV preview failed', { message: error?.message || error });
+    res.status(status).json({ error: 'csv_preview_failed', code: error?.code || null });
+  }
+});
+
+app.post('/api/csv-files/pitch', async (req, res) => {
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(503).json({ error: 'openai_unavailable' });
+  }
+
+  try {
+    const relativePath = req.body?.path;
+    if (!relativePath) {
+      return res.status(400).json({ error: 'missing_path' });
+    }
+
+    const dataset = await loadCsvAutomationData(relativePath, {
+      maxRows: Math.min(CSV_AUTOMATION_PARSE_LIMIT, 80),
+    });
+
+    const sampleRows = dataset.dataRows.slice(0, 10).map((row) => {
+      const record = {};
+      dataset.header.forEach((col, index) => {
+        const key = tidyCell(col) || `Column ${index + 1}`;
+        record[key] = tidyCell(row[index]);
+      });
+      return record;
+    });
+
+    const contextSnippets = dataset.leads
+      .map((lead) => lead.context)
+      .filter(Boolean)
+      .slice(0, 8);
+
+    const systemPrompt = 'You are the DelcoTech revenue strategist. Given a lead list description, craft a concise outreach pitch. Respond in JSON with keys headline, valueProps (array of 3), callOpener, callBeats (array of 3), callCloser, smsIntro, smsValue, smsCloser.';
+    const userPrompt = [
+      `CSV File: ${dataset.file.name}`,
+      `Column labels: ${dataset.columns.map((col) => col.label).join(', ') || 'n/a'}`,
+      sampleRows.length ? `Sample leads: ${JSON.stringify(sampleRows, null, 2)}` : 'Sample leads: none',
+      contextSnippets.length ? `Context clues: ${contextSnippets.join(' | ')}` : 'Context clues: none',
+      'Task: return JSON only. Build a headline for this campaign, three sharp value props, a call opener and three beats, and SMS copy that references the list insights. Keep lines under 160 characters and use energetic but professional tone. Do not mention placeholders.'
+    ].join('\n');
+
+    const completion = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      temperature: 0.6,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+    });
+
+    const rawContent = completion.choices?.[0]?.message?.content || '';
+    const jsonText = rawContent.replace(/```json|```/g, '').trim();
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonText);
+    } catch (parseError) {
+      console.warn('[Admin] CSV pitch JSON parse failed', { message: parseError?.message || parseError, raw: rawContent });
+      parsed = {};
+    }
+
+    const pitch = {
+      headline: sanitizeLine(parsed?.headline) || `High-intent outreach for ${dataset.file.name.replace(/\.csv$/i, '')}`,
+      valueProps: Array.isArray(parsed?.valueProps)
+        ? parsed.valueProps.map((item) => sanitizeLine(item)).filter(Boolean).slice(0, 4)
+        : [],
+      callOpener: sanitizeLine(parsed?.callOpener) || sanitizeLine(parsed?.callScript?.opener) || '',
+      callBeats: Array.isArray(parsed?.callBeats)
+        ? parsed.callBeats.map((item) => sanitizeLine(item)).filter(Boolean).slice(0, 5)
+        : [],
+      callCloser: sanitizeLine(parsed?.callCloser) || '',
+      smsIntro: sanitizeLine(parsed?.smsIntro) || '',
+      smsValue: sanitizeLine(parsed?.smsValue) || '',
+      smsCloser: sanitizeLine(parsed?.smsCloser) || '',
+      raw: rawContent,
+    };
+
+    res.json({ pitch, file: dataset.file });
+  } catch (error) {
+    const status = error?.code === 'invalid_csv_path' ? 400 : 500;
+    console.error('[Admin] CSV pitch failed', { message: error?.message || error });
+    res.status(status).json({ error: 'csv_pitch_failed', code: error?.code || null });
+  }
+});
+
+app.post('/api/csv-files/launch-call', async (req, res) => {
+  try {
+    const { path: relativePath, limit, callConfig = {}, pitch = {} } = req.body || {};
+    if (!relativePath) {
+      return res.status(400).json({ error: 'missing_path' });
+    }
+
+    const dataset = await loadCsvAutomationData(relativePath, { maxRows: CSV_AUTOMATION_PARSE_LIMIT });
+    if (!dataset.leads.length) {
+      return res.status(400).json({ error: 'no_leads' });
+    }
+
+    const appBaseUrl = resolveAppBaseUrl(req);
+    const datasetName = dataset.file.name.replace(/\.csv$/i, '');
+    const desiredLimit = Number(limit) || CSV_AUTOMATION_MAX_LEADS;
+    const leadLimit = Math.max(1, Math.min(CSV_AUTOMATION_MAX_LEADS, desiredLimit));
+    const selectedLeads = dataset.leads.slice(0, leadLimit);
+    const baseScriptLines = String(callConfig?.script || '')
+      .split(/\r?\n/)
+      .map(sanitizeLine)
+      .filter(Boolean);
+    const pitchBeats = Array.isArray(pitch?.callBeats)
+      ? pitch.callBeats.map(sanitizeLine).filter(Boolean)
+      : [];
+
+    const results = [];
+    let queued = 0;
+
+    for (const lead of selectedLeads) {
+      const personalizedLines = [];
+      if (lead.context) {
+        personalizedLines.push(`Lead context: ${lead.context}`);
+      }
+      const scriptLines = [...baseScriptLines];
+      pitchBeats.forEach((line) => {
+        if (line && !scriptLines.includes(line)) {
+          scriptLines.push(line);
+        }
+      });
+      personalizedLines.forEach((line) => {
+        if (line && !scriptLines.includes(line)) {
+          scriptLines.push(line);
+        }
+      });
+
+      const introCandidates = [
+        sanitizeLine(callConfig?.intro),
+        sanitizeLine(pitch?.callOpener),
+        lead.context ? `We spotted ${lead.context}.` : '',
+      ].filter(Boolean);
+      const goalCandidates = [
+        sanitizeLine(callConfig?.goal),
+        sanitizeLine(pitch?.headline),
+        datasetName,
+      ].filter(Boolean);
+
+      try {
+        const response = await queueColdCallerCall({
+          to: lead.phone,
+          leadName: lead.name,
+          goal: goalCandidates[0] || datasetName,
+          intro: introCandidates[0] || '',
+          script: scriptLines.join('\n'),
+          voice: callConfig?.voice || 'warm',
+          handoffNumber: callConfig?.handoffNumber || '',
+          appBaseUrl,
+        });
+        queued += 1;
+        results.push({
+          ok: true,
+          sid: response.sid,
+          lead: {
+            name: lead.name,
+            phone: maskPhoneNumberForLog(lead.phone),
+            context: lead.context,
+          },
+        });
+      } catch (error) {
+        results.push({
+          ok: false,
+          error: {
+            message: error?.message || 'Call failed',
+            code: error?.code || null,
+            status: error?.status || null,
+          },
+          lead: {
+            name: lead.name,
+            phone: maskPhoneNumberForLog(lead.phone),
+            context: lead.context,
+          },
+        });
+      }
+    }
+
+    res.json({
+      ok: true,
+      file: dataset.file,
+      attempted: selectedLeads.length,
+      queued,
+      failed: selectedLeads.length - queued,
+      totalLeads: dataset.leads.length,
+      skippedRows: dataset.skipped.length + Math.max(dataset.leads.length - selectedLeads.length, 0),
+      limit: CSV_AUTOMATION_MAX_LEADS,
+      results,
+    });
+  } catch (error) {
+    const status = error?.code === 'invalid_csv_path' ? 400 : 500;
+    console.error('[Admin] CSV bulk call failed', { message: error?.message || error });
+    res.status(status).json({ error: 'csv_call_failed', code: error?.code || null });
+  }
+});
+
+app.post('/api/csv-files/send-sms', async (req, res) => {
+  try {
+    const { path: relativePath, limit, message = '', pitch = {} } = req.body || {};
+    if (!relativePath) {
+      return res.status(400).json({ error: 'missing_path' });
+    }
+
+    const dataset = await loadCsvAutomationData(relativePath, { maxRows: CSV_AUTOMATION_PARSE_LIMIT });
+    if (!dataset.leads.length) {
+      return res.status(400).json({ error: 'no_leads' });
+    }
+
+    const desiredLimit = Number(limit) || CSV_AUTOMATION_MAX_LEADS;
+    const leadLimit = Math.max(1, Math.min(CSV_AUTOMATION_MAX_LEADS, desiredLimit));
+    const selectedLeads = dataset.leads.slice(0, leadLimit);
+    const datasetName = dataset.file.name.replace(/\.csv$/i, '');
+
+    const baseMessage = sanitizeLine(message)
+      || sanitizeLine(pitch?.smsIntro)
+      || `Quick insight for ${datasetName} — let's automate the outreach.`;
+    const valueLine = sanitizeLine(pitch?.smsValue) || '';
+    let closerLine = sanitizeLine(pitch?.smsCloser) || `Lock a slot: ${COLD_CALLER_SMS_LINK}`;
+    if (!closerLine.includes(COLD_CALLER_SMS_LINK)) {
+      closerLine = `${closerLine} ${COLD_CALLER_SMS_LINK}`.trim();
+    }
+
+    const results = [];
+    let sent = 0;
+
+    for (const lead of selectedLeads) {
+      const greeting = lead.firstName
+        ? `Hi ${lead.firstName}, it's ${BUSINESS} from DelcoTech.`
+        : `Hi there, it's ${BUSINESS} from DelcoTech.`;
+      const contextLine = lead.context ? `Saw ${lead.context}.` : '';
+      const messageParts = [greeting, baseMessage, valueLine, contextLine, closerLine]
+        .map((line) => sanitizeLine(line))
+        .filter(Boolean);
+      const finalMessage = messageParts.join('\n');
+
+      try {
+        await sendSMS(lead.phone, finalMessage, {
+          source: 'admin_csv_sms',
+          dataset: datasetName,
+        });
+        sent += 1;
+        results.push({
+          ok: true,
+          lead: {
+            name: lead.name,
+            phone: maskPhoneNumberForLog(lead.phone),
+            context: lead.context,
+          },
+        });
+      } catch (error) {
+        results.push({
+          ok: false,
+          error: {
+            message: error?.message || 'SMS failed',
+            code: error?.code || null,
+            status: error?.status || null,
+          },
+          lead: {
+            name: lead.name,
+            phone: maskPhoneNumberForLog(lead.phone),
+            context: lead.context,
+          },
+        });
+      }
+    }
+
+    res.json({
+      ok: true,
+      file: dataset.file,
+      attempted: selectedLeads.length,
+      sent,
+      failed: selectedLeads.length - sent,
+      totalLeads: dataset.leads.length,
+      skippedRows: dataset.skipped.length + Math.max(dataset.leads.length - selectedLeads.length, 0),
+      limit: CSV_AUTOMATION_MAX_LEADS,
+      results,
+    });
+  } catch (error) {
+    const status = error?.code === 'invalid_csv_path' ? 400 : 500;
+    console.error('[Admin] CSV bulk SMS failed', { message: error?.message || error });
+    res.status(status).json({ error: 'csv_sms_failed', code: error?.code || null });
   }
 });
 
