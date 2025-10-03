@@ -416,7 +416,15 @@ async function sendColdCallerLink(toNumber, callSid) {
   }
 
   try {
-    await sendSMS(normalized, `Here's the quick link: ${COLD_CALLER_SMS_LINK}`);
+    await sendSMS(
+      normalized,
+      `Here's the quick link: ${COLD_CALLER_SMS_LINK}`,
+      {
+        source: 'cold_caller_auto_link',
+        callSid: callSid || null,
+        originalTo: toNumber,
+      }
+    );
     if (callSid) {
       callSmsTracker.set(callSid, Date.now());
       if (callSmsTracker.size > CALL_SMS_TRACKER_LIMIT) {
@@ -891,7 +899,12 @@ app.post('/api/real-estate/text-link', async (req, res) => {
 
     const message = `${greeting} it's ${BUSINESS}. ${highlight} Grab your spot here: ${link} — Reply STOP to opt out.`;
 
-    await sendSMS(normalized, message);
+    await sendSMS(normalized, message, {
+      source: 'real_estate_text_link',
+      plan: plan?.slug || '',
+      leadName: leadName || '',
+      appBaseUrl: baseUrl,
+    });
 
     return res.json({ ok: true });
   } catch (error) {
@@ -1732,7 +1745,11 @@ app.post('/voice/after', async (req, res) => {
     await sendSMS(
       from,
       `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name? ` +
-      `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`
+      `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`,
+      {
+        source: 'missed_call_follow_up',
+        callStatus,
+      }
     );
   }
 });
@@ -1843,7 +1860,14 @@ cron.schedule('*/5 * * * *', async () => {
       const alreadySent = status && status.includes('review_sent');
 
       if (status === 'booked' && due && !alreadySent) {
-        await sendSMS(phone, `Thanks for visiting ${BUSINESS}! Mind leaving a quick review? ${REVIEW_LINK}`);
+        await sendSMS(
+          phone,
+          `Thanks for visiting ${BUSINESS}! Mind leaving a quick review? ${REVIEW_LINK}`,
+          {
+            source: 'review_request_cron',
+            apptEnd,
+          }
+        );
         await upsertByPhone(phone, { status: 'review_sent' });
       }
     }
@@ -2287,7 +2311,10 @@ app.get('/simulate/missed-call', async (req, res) => {
   await sendSMS(
     from,
     `Hey, it's ${BUSINESS}. Sorry we missed your call. What's your name? ` +
-    `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`
+    `Book anytime: ${CAL_LINK} — Reply STOP to stop, HELP for help.`,
+    {
+      source: 'simulate_missed_call',
+    }
   );
 
   res.json({ ok: true });
