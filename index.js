@@ -72,6 +72,7 @@ fs.mkdirSync(TTS_CACHE_DIR, { recursive: true });
 
 const COLD_CALLER_SMS_LINK = process.env.COLD_CALLER_SMS_LINK
   || 'https://www.delcotechdivision.com/real-estate-cold-caller.html';
+const COLD_CALLER_SMS_MEDIA = `${APP_BASE_URL}/image/${encodeURIComponent('lifelike AI cold caller.png')}`;
 
 const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
 const FALLBACK_ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
@@ -436,7 +437,10 @@ async function sendColdCallerLink(toNumber, callSid) {
         source: 'cold_caller_auto_link',
         callSid: callSid || null,
         originalTo: toNumber,
-      }
+      },
+      {
+        mediaUrl: [COLD_CALLER_SMS_MEDIA],
+      },
     );
     if (callSid) {
       callSmsTracker.set(callSid, Date.now());

@@ -46,11 +46,11 @@ function redactBody(value, max = 320) {
   return `${value.slice(0, max)}… (${value.length - max} more chars)`;
 }
 
-async function sendSMS(to, body, context = {}) {
-  const payload = { to, body };
+async function sendSMS(to, body, context = {}, twilioOptions = {}) {
+  const payload = { to, body, ...twilioOptions };
   if (process.env.MESSAGING_SERVICE_SID) {
     payload.messagingServiceSid = process.env.MESSAGING_SERVICE_SID;
-  } else {
+  } else if (!payload.from) {
     payload.from = process.env.TWILIO_NUMBER;
   }
 
@@ -67,6 +67,11 @@ async function sendSMS(to, body, context = {}) {
     from: maskPhone(payload.from || null),
     context: maskContext(context),
     bodyPreview: redactBody(body, 160),
+    mediaCount: Array.isArray(payload.mediaUrl)
+      ? payload.mediaUrl.length
+      : payload.mediaUrl
+        ? 1
+        : 0,
   };
   console.info('[SMS] Attempting to send message', attemptLog);
 
