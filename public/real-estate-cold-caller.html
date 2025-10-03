@@ -539,9 +539,23 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
       let audio = null;
 
       try {
+        console.info('[ColdCaller] Previewing ElevenLabs audio', {
+          audioUrl,
+          variant: options.variant || null,
+          source: options.source || null,
+        });
         const response = await fetch(audioUrl, { cache: 'no-store' });
+        console.info('[ColdCaller] Preview response status', {
+          audioUrl,
+          status: response.status,
+        });
         if(!response.ok){
           const message = await response.text().catch(() => '') || `HTTP ${response.status}`;
+          console.error('[ColdCaller] Preview fetch rejected', {
+            audioUrl,
+            status: response.status,
+            message,
+          });
           const error = new Error(`ElevenLabs preview unavailable: ${message}`);
           error.status = response.status;
           throw error;
@@ -586,8 +600,13 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
           }
           options.onError?.();
         }
+        const errorDetails = {
+          audioUrl,
+          message: err?.message || err,
+          status: err?.status || null,
+        };
         if(!options.silentError){
-          console.error('ElevenLabs preview failed', err);
+          console.error('[ColdCaller] ElevenLabs preview failed', errorDetails);
         }
         throw err;
       }
@@ -838,6 +857,17 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
         }
         const { toLocal, ...payload } = state;
         payload.origin = 'real-estate-cold-caller';
+        const debugPayload = {
+          to: payload.to,
+          leadName: payload.leadName ? '[provided]' : '',
+          goal: payload.goal ? `${payload.goal.slice(0, 120)}${payload.goal.length > 120 ? '…' : ''}` : '',
+          intro: payload.intro ? `${payload.intro.slice(0, 120)}${payload.intro.length > 120 ? '…' : ''}` : '',
+          script: payload.script ? `${payload.script.slice(0, 120)}${payload.script.length > 120 ? '…' : ''}` : '',
+          voice: payload.voice,
+          handoffNumber: payload.handoffNumber ? '[provided]' : '',
+          origin: payload.origin,
+        };
+        console.info('[ColdCaller] Starting dial', debugPayload);
         callerStatus.textContent = 'Dialing via Twilio…';
         callerSubmit?.setAttribute('disabled', 'true');
         try {
@@ -846,14 +876,23 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
+          console.info('[ColdCaller] Dial response received', { status: response.status });
           const data = await response.json().catch(() => ({}));
+          if(data?.error){
+            console.error('[ColdCaller] Dial API error payload', data);
+          }
           if(!response.ok || !data?.sid){
             const errMsg = data?.error ? ` (${data.error})` : '';
             throw new Error(`Unable to start call${errMsg}`);
           }
           callerStatus.textContent = `Call launched! Twilio SID ${data.sid}.`;
+          console.info('[ColdCaller] Dial launched', { sid: data.sid });
         } catch (error) {
           callerStatus.textContent = `Call failed: ${error.message}`;
+          console.error('[ColdCaller] Dial request failed', {
+            message: error?.message || error,
+            stack: error?.stack || null,
+          });
         } finally {
           callerSubmit?.removeAttribute('disabled');
         }
