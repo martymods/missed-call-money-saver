@@ -76,6 +76,14 @@ const COLD_CALLER_SMS_LINK = process.env.COLD_CALLER_SMS_LINK
 const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
 const FALLBACK_ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
 const ELEVENLABS_DEFAULT_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || FALLBACK_ELEVENLABS_VOICE_ID;
+const ELEVENLABS_MAX_CONCURRENCY = Math.max(1, Number(process.env.ELEVENLABS_MAX_CONCURRENCY || '4'));
+const ELEVENLABS_MAX_ATTEMPTS = Math.max(1, Number(process.env.ELEVENLABS_MAX_ATTEMPTS || '3'));
+const ELEVENLABS_RETRY_BASE_DELAY_MS = Math.max(50, Number(process.env.ELEVENLABS_RETRY_BASE_DELAY_MS || '300'));
+const ELEVENLABS_RETRY_MAX_DELAY_MS = Math.max(
+  ELEVENLABS_RETRY_BASE_DELAY_MS,
+  Number(process.env.ELEVENLABS_RETRY_MAX_DELAY_MS || '2000'),
+);
+const ELEVENLABS_RETRY_JITTER_MS = Math.max(0, Number(process.env.ELEVENLABS_RETRY_JITTER_MS || '120'));
 const ELEVENLABS_PRESETS = {
   warm: {
     label: 'Warm & friendly (ElevenLabs)',
@@ -184,6 +192,40 @@ function buildTtsUrl(text, variantKey, base) {
 }
 
 const ttsCachePromises = new Map();
+let activeElevenLabsRequests = 0;
+const elevenLabsQueue = [];
+const scheduleElevenLabsNext = typeof setImmediate === 'function'
+  ? setImmediate
+  : (fn) => setTimeout(fn, 0);
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function acquireElevenLabsSlot() {
+  if (ELEVENLABS_MAX_CONCURRENCY <= 0) {
+    return () => {};
+  }
+
+  return new Promise(resolve => {
+    const tryAcquire = () => {
+      if (activeElevenLabsRequests < ELEVENLABS_MAX_CONCURRENCY) {
+        activeElevenLabsRequests += 1;
+        resolve(() => {
+          activeElevenLabsRequests = Math.max(0, activeElevenLabsRequests - 1);
+          const next = elevenLabsQueue.shift();
+          if (next) {
+            scheduleElevenLabsNext(next);
+          }
+        });
+      } else {
+        elevenLabsQueue.push(tryAcquire);
+      }
+    };
+
+    tryAcquire();
+  });
+}
 
 function base64UrlEncode(str) {
   return Buffer.from(String(str), 'utf8')
@@ -470,17 +512,61 @@ async function streamElevenLabsAudio({ text, preset, voiceId }) {
     voice_settings: preset.voiceSettings,
   };
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'xi-api-key': apiKey,
-      'content-type': 'application/json',
-      accept: 'audio/mpeg',
-    },
-    body: JSON.stringify(body),
-  });
+  const release = await acquireElevenLabsSlot();
 
-  return response;
+  try {
+    let attempt = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      attempt += 1;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': apiKey,
+          'content-type': 'application/json',
+          accept: 'audio/mpeg',
+        },
+        body: JSON.stringify(body),
+      });
+
+      const shouldRetry = response.status === 429 && attempt < ELEVENLABS_MAX_ATTEMPTS;
+      if (!shouldRetry) {
+        return response;
+      }
+
+      const retryAfterHeader = Number(response.headers?.get?.('retry-after'));
+      const baseDelay = Number.isFinite(retryAfterHeader) && retryAfterHeader >= 0
+        ? retryAfterHeader * 1000
+        : ELEVENLABS_RETRY_BASE_DELAY_MS * (2 ** (attempt - 1));
+      const jitter = ELEVENLABS_RETRY_JITTER_MS ? Math.random() * ELEVENLABS_RETRY_JITTER_MS : 0;
+      const delayMs = Math.min(ELEVENLABS_RETRY_MAX_DELAY_MS, baseDelay + jitter);
+
+      console.warn('[ColdCaller] ElevenLabs 429 received, retrying', {
+        attempt,
+        delayMs: Math.round(delayMs),
+      });
+
+      if (response?.body?.cancel) {
+        try {
+          response.body.cancel();
+        } catch (err) {
+          console.warn('[ColdCaller] Failed to cancel ElevenLabs response body', err?.message || err);
+        }
+      } else if (response?.body?.destroy) {
+        try {
+          response.body.destroy();
+        } catch (err) {
+          console.warn('[ColdCaller] Failed to destroy ElevenLabs response body', err?.message || err);
+        }
+      }
+
+      await wait(delayMs);
+    }
+  } finally {
+    if (typeof release === 'function') {
+      release();
+    }
+  }
 }
 
 async function streamOpenAITts({ text, res }) {
@@ -899,6 +985,7 @@ app.post('/api/cold-caller/dial', async (req, res) => {
       handoffPromptLine,
       connectLine,
       handoffNumber: handoff,
+      prefillIntent: '',
     };
     const encodedState = encodeCallState(callState);
     const introAction = absoluteUrl(`/voice/cold-caller/intro?state=${encodedState}`, appBaseUrl);
@@ -991,6 +1078,8 @@ app.post('/voice/cold-caller/intro', async (req, res) => {
     const callSid = req.body?.CallSid || '';
     const leadNumber = extractLeadNumber(req.body);
     const wantsLinkNow = requestsLink(speech);
+    const intent = detectLeadIntent(speech);
+    const hasIntent = Boolean(intent);
 
     if (isNegativeSpeech(speech) || wantsLinkNow) {
       if (leadNumber) {
@@ -1006,7 +1095,10 @@ app.post('/voice/cold-caller/intro', async (req, res) => {
       return res.type('text/xml').send(response.toString());
     }
 
-    if (isAffirmativeSpeech(speech)) {
+    if (isAffirmativeSpeech(speech) || hasIntent) {
+      const nextState = hasIntent && intent !== state.prefillIntent
+        ? { ...state, prefillIntent: intent }
+        : state;
       const response = new VoiceResponse();
       await appendSpeech(response, state.positiveAckLine || 'Appreciate it.', {
         variantKey: variant,
@@ -1014,7 +1106,7 @@ app.post('/voice/cold-caller/intro', async (req, res) => {
         baseUrl: appBaseUrl,
       });
 
-      const qualifyState = encodeCallState(state);
+      const qualifyState = encodeCallState(nextState);
       const qualifyAction = absoluteUrl(`/voice/cold-caller/qualify?state=${qualifyState}`, appBaseUrl);
       const gather = response.gather({
         input: 'speech',
@@ -1089,7 +1181,11 @@ app.post('/voice/cold-caller/qualify', async (req, res) => {
     const state = decodeCallState(stateToken) || {};
     const appBaseUrl = resolveAppBaseUrl(req);
     const { variant, preset } = resolveVariantPreset(state.variant);
-    const speech = normalizeSpeech(req.body?.SpeechResult);
+    const prefillIntent = typeof state.prefillIntent === 'string' ? state.prefillIntent : '';
+    let speech = normalizeSpeech(req.body?.SpeechResult);
+    if (!speech && prefillIntent) {
+      speech = prefillIntent;
+    }
     const callSid = req.body?.CallSid || '';
     const leadNumber = extractLeadNumber(req.body);
     const wantsLinkNow = requestsLink(speech);
