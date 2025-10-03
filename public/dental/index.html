@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Delco Tech Division — Dental AI Reception</title>
   <meta name="description" content="Delco Tech Division delivers human-like AI phone reception, SMS follow-up, scheduling, waitlists, and real insurance verification for American dental practices." />
+  <link rel="icon" type="image/png" href="toothICONfavi.PNG" sizes="32x32" />
+  <link rel="shortcut icon" href="toothICONfavi.PNG" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -69,16 +71,22 @@
     .brand{
       display:flex;
       align-items:center;
-      gap:10px;
+      gap:12px;
       font-weight:800;
       letter-spacing:-0.01em;
       color:var(--ink);
       white-space:nowrap;
     }
     .brand-dot{
-      width:12px;height:12px;border-radius:50%;
-      background:radial-gradient(circle at 30% 30%, #60a5fa, #1d4ed8);
-      box-shadow:0 0 14px rgba(37,99,235,0.5);
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      display:block;
+      object-fit:cover;
+      overflow:hidden;
+      box-shadow:0 0 18px rgba(37,99,235,0.38);
+      border:2px solid rgba(255,255,255,0.9);
+      background:#fff;
     }
     nav.nav-links{display:flex;align-items:center;gap:22px;font-weight:600}
     nav.nav-links a{color:var(--ink);opacity:0.72;transition:opacity .25s ease}
@@ -195,6 +203,14 @@
     }
     .btn.ghost:hover{transform:translateY(-2px);background:rgba(255,255,255,0.9)}
     .btn:hover::after{opacity:1}
+    .btn[data-state="loading"]{
+      pointer-events:none;
+      opacity:0.82;
+    }
+    .btn[data-state="playing"]{
+      transform:translateY(-2px);
+      box-shadow:0 26px 58px rgba(37,99,235,0.26);
+    }
 
     .hero-stats{
       display:flex;
@@ -332,11 +348,74 @@
       display:flex;
       align-items:center;
       justify-content:center;
+      position:relative;
+      cursor:pointer;
+      transition:transform .3s ease, box-shadow .3s ease;
+      overflow:hidden;
+      font:inherit;
+      appearance:none;
+      -webkit-appearance:none;
+    }
+    .media-illustration:hover,
+    .media-illustration:focus-visible{
+      transform:translateY(-2px);
+      box-shadow:0 28px 68px rgba(37,99,235,0.22);
+    }
+    .media-illustration:focus-visible{
+      outline:3px solid var(--accent);
+      outline-offset:4px;
+    }
+    .media-illustration:disabled{
+      cursor:not-allowed;
+      opacity:0.92;
     }
     .media-illustration img{
       width:100%;
       height:auto;
       object-fit:contain;
+      transition:transform .35s ease, filter .35s ease;
+    }
+    .media-illustration.is-playing img{
+      transform:scale(1.02);
+      filter:saturate(1.08);
+    }
+    .media-illustration.is-loading img{
+      filter:saturate(0.92);
+    }
+    .audio-demo-indicator{
+      position:absolute;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background:rgba(15,23,42,0.85);
+      color:#fff;
+      padding:10px 18px;
+      border-radius:999px;
+      box-shadow:0 20px 46px rgba(15,23,42,0.28);
+      font-weight:600;
+      font-size:14px;
+      transition:opacity .3s ease, transform .3s ease;
+    }
+    .audio-demo-icon{
+      display:inline-block;
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      background:linear-gradient(135deg, var(--accent), var(--brand));
+      box-shadow:0 0 0 0 rgba(34,211,238,0.6);
+      animation:pulseGlow 2.2s ease-in-out infinite;
+    }
+    .audio-demo.is-playing .audio-demo-indicator{
+      background:linear-gradient(130deg, var(--brand), var(--brand-dark));
+    }
+    .audio-demo.is-playing .audio-demo-icon{
+      animation:pulseGlowActive 1.5s ease-in-out infinite;
+    }
+    .audio-demo.is-loading .audio-demo-indicator{
+      opacity:0.92;
     }
 
     .demo-section{padding:32px;border-radius:calc(var(--radius) + 4px);background:#ffffffeb;border:1px solid rgba(15,23,42,0.08);box-shadow:0 28px 72px rgba(15,23,42,0.14);}
@@ -423,6 +502,14 @@
       0%,100%{transform:scale(1);opacity:1}
       50%{transform:scale(1.5);opacity:.4}
     }
+    @keyframes pulseGlow{
+      0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(34,211,238,0.55);}
+      50%{transform:scale(1.25);box-shadow:0 0 0 7px rgba(34,211,238,0);}
+    }
+    @keyframes pulseGlowActive{
+      0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(96,165,250,0.65);}
+      50%{transform:scale(1.32);box-shadow:0 0 0 9px rgba(96,165,250,0);}
+    }
     @keyframes fadeUp{
       from{opacity:0;transform:translate3d(0,24px,0)}
       to{opacity:1;transform:translate3d(0,0,0)}
@@ -440,7 +527,7 @@
 <body>
   <header class="site-header">
     <a class="brand" href="/">
-      <span class="brand-dot"></span>
+      <img class="brand-dot" src="toothICON.PNG" alt="Delco Dental icon" loading="lazy" />
       Delco Tech Division — Dental
     </a>
     <button id="navToggle" class="hamburger" aria-label="Open menu" aria-expanded="false">
@@ -464,7 +551,7 @@
         <div class="cta-row">
           <button class="btn primary" type="button" data-checkout="starter">Activate AI receptionist</button>
           <button class="btn ghost" type="button" id="ctaDemo">Book 15-minute demo</button>
-          <a class="btn ghost" href="tel:+14848614068">Hear the AI receptionist</a>
+          <button class="btn ghost" type="button" id="hearReceptionistBtn" aria-pressed="false">Hear the AI receptionist</button>
         </div>
         <div class="hero-stats">
           <div><span>24/7</span> phone + SMS coverage</div>
@@ -576,9 +663,13 @@
           <blockquote>“Our front desk finally has breathing room. Delco’s AI books, verifies, and follows up without missing a beat.”</blockquote>
           <cite>Dr. Kiser Patel • Practice Manager, Riverfront Smiles Dental</cite>
         </article>
-        <div class="media-illustration">
+        <button type="button" class="media-illustration audio-demo" id="callSampleButton" aria-pressed="false">
           <img src="rem.png" alt="AI workflow keeping dental ops running smoothly" loading="lazy" />
-        </div>
+          <span class="audio-demo-indicator">
+            <span class="audio-demo-icon" aria-hidden="true"></span>
+            <span data-role="label" aria-live="polite">Tap to hear the call sample</span>
+          </span>
+        </button>
       </div>
     </section>
 
@@ -799,6 +890,241 @@
       });
       window.addEventListener('resize', () => {
         if(window.innerWidth > 760) navMenu.classList.remove('open');
+      });
+    }
+
+    const CALL_SAMPLE_TEXT = "Hi Sarah, it's time for your routine dental-up. Tap to book your appointment now!";
+    const RECEPTIONIST_PITCH_TEXT = "Human-like AI phone reception that books, texts, and verifies insurance for you. Answer every call with a natural voice assistant that follows your protocols, fills schedules from the waitlist, texts confirmations, and runs real insurance coverage checks—so your front desk can focus on patient experience. Bring her into your practice today and let her handle the rest of the work for you. She's ready when you are.";
+    const CALL_SAMPLE_VARIANT = 'warm';
+    const RECEPTIONIST_VARIANT = 'bold';
+
+    let activeAudio = null;
+    let activeAudioCleanup = null;
+    let activeAudioSource = null;
+
+    function stopActiveAudio(reason = 'stop'){
+      if(activeAudio){
+        try {
+          activeAudio.pause();
+          activeAudio.currentTime = 0;
+        } catch (_) {}
+      }
+      const cleanup = activeAudioCleanup;
+      activeAudio = null;
+      activeAudioCleanup = null;
+      activeAudioSource = null;
+      if(typeof cleanup === 'function'){
+        cleanup(reason);
+      }
+    }
+
+    async function playElevenLabsVoice(text, options = {}){
+      const trimmed = (text || '').trim();
+      if(!trimmed) throw new Error('No text provided');
+
+      const params = new URLSearchParams();
+      params.set('t', trimmed.slice(0, 800));
+      if(options.variant){
+        params.set('variant', options.variant);
+      }
+      const audioUrl = `/audio/tts?${params.toString()}`;
+
+      stopActiveAudio('interrupt');
+
+      let objectUrl = null;
+      let audio = null;
+
+      try {
+        const response = await fetch(audioUrl, { cache: 'no-store' });
+        if(!response.ok){
+          const message = await response.text().catch(() => '') || `HTTP ${response.status}`;
+          const error = new Error(message);
+          error.status = response.status;
+          throw error;
+        }
+
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+        audio = new Audio(objectUrl);
+        activeAudio = audio;
+        activeAudioSource = options.source || null;
+        activeAudioCleanup = (reason) => {
+          if(objectUrl){
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+          }
+          if(reason === 'error'){
+            options.onError?.();
+          } else if(reason === 'ended'){
+            options.onEnd?.();
+          } else {
+            options.onStop?.();
+          }
+        };
+        audio.addEventListener('ended', () => {
+          if(activeAudio === audio){
+            stopActiveAudio('ended');
+          }
+        });
+        audio.addEventListener('error', () => {
+          if(activeAudio === audio){
+            stopActiveAudio('error');
+          }
+        });
+        options.onStart?.();
+        await audio.play();
+        options.onPlay?.();
+        return audio;
+      } catch (err) {
+        if(audio && activeAudio === audio){
+          stopActiveAudio('error');
+        } else {
+          if(objectUrl){
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+          }
+          options.onError?.();
+        }
+        throw err;
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if(document.hidden){
+        stopActiveAudio('stop');
+      }
+    });
+    window.addEventListener('pagehide', () => stopActiveAudio('stop'));
+
+    const callSampleBtn = document.getElementById('callSampleButton');
+    if(callSampleBtn){
+      const labelEl = callSampleBtn.querySelector('[data-role="label"]');
+      const defaultLabel = labelEl ? labelEl.textContent.trim() : 'Tap to hear the call sample';
+      let resetTimer = null;
+
+      function resetCallSample(message){
+        if(resetTimer){
+          clearTimeout(resetTimer);
+          resetTimer = null;
+        }
+        callSampleBtn.disabled = false;
+        callSampleBtn.classList.remove('is-loading', 'is-playing');
+        callSampleBtn.setAttribute('aria-pressed', 'false');
+        if(labelEl){
+          labelEl.textContent = message || defaultLabel;
+          if(message){
+            resetTimer = setTimeout(() => {
+              if(!callSampleBtn.classList.contains('is-playing')){
+                labelEl.textContent = defaultLabel;
+              }
+            }, 3600);
+          }
+        }
+      }
+
+      callSampleBtn.addEventListener('click', async () => {
+        if(activeAudio && activeAudioSource === 'call-sample'){
+          stopActiveAudio('stop');
+          return;
+        }
+
+        try {
+          await playElevenLabsVoice(CALL_SAMPLE_TEXT, {
+            variant: CALL_SAMPLE_VARIANT,
+            source: 'call-sample',
+            onStart: () => {
+              callSampleBtn.disabled = true;
+              callSampleBtn.classList.add('is-loading');
+              if(labelEl){
+                labelEl.textContent = 'Bringing our AI receptionist to the line…';
+              }
+            },
+            onPlay: () => {
+              callSampleBtn.disabled = false;
+              callSampleBtn.classList.remove('is-loading');
+              callSampleBtn.classList.add('is-playing');
+              callSampleBtn.setAttribute('aria-pressed', 'true');
+              if(labelEl){
+                labelEl.textContent = 'Playing call reminder… tap again to stop';
+              }
+            },
+            onStop: () => {
+              resetCallSample();
+            },
+            onEnd: () => {
+              resetCallSample();
+            },
+            onError: () => {
+              resetCallSample('Voice sample unavailable — please try again soon');
+            }
+          });
+        } catch (error) {
+          console.error('[Dental] Unable to play call sample', error);
+          if(!callSampleBtn.classList.contains('is-playing')){
+            resetCallSample('Voice sample unavailable — please try again soon');
+          }
+        }
+      });
+    }
+
+    const receptionistBtn = document.getElementById('hearReceptionistBtn');
+    if(receptionistBtn){
+      const defaultText = receptionistBtn.textContent.trim();
+      let revertTimer = null;
+
+      function resetReceptionist(message){
+        if(revertTimer){
+          clearTimeout(revertTimer);
+          revertTimer = null;
+        }
+        receptionistBtn.disabled = false;
+        delete receptionistBtn.dataset.state;
+        receptionistBtn.setAttribute('aria-pressed', 'false');
+        receptionistBtn.textContent = message || defaultText;
+        if(message){
+          revertTimer = setTimeout(() => {
+            if(receptionistBtn.getAttribute('aria-pressed') === 'false'){
+              receptionistBtn.textContent = defaultText;
+            }
+          }, 3600);
+        }
+      }
+
+      receptionistBtn.addEventListener('click', async () => {
+        if(activeAudio && activeAudioSource === 'receptionist-demo'){
+          stopActiveAudio('stop');
+          return;
+        }
+
+        try {
+          await playElevenLabsVoice(RECEPTIONIST_PITCH_TEXT, {
+            variant: RECEPTIONIST_VARIANT,
+            source: 'receptionist-demo',
+            onStart: () => {
+              receptionistBtn.dataset.state = 'loading';
+              receptionistBtn.disabled = true;
+              receptionistBtn.textContent = 'Connecting to our AI receptionist…';
+            },
+            onPlay: () => {
+              receptionistBtn.disabled = false;
+              receptionistBtn.dataset.state = 'playing';
+              receptionistBtn.setAttribute('aria-pressed', 'true');
+              receptionistBtn.textContent = 'AI receptionist is speaking… tap to stop';
+            },
+            onStop: () => {
+              resetReceptionist();
+            },
+            onEnd: () => {
+              resetReceptionist();
+            },
+            onError: () => {
+              resetReceptionist('Voice preview unavailable — please try again soon');
+            }
+          });
+        } catch (error) {
+          console.error('[Dental] Unable to play receptionist demo', error);
+          resetReceptionist('Voice preview unavailable — please try again soon');
+        }
       });
     }
 
