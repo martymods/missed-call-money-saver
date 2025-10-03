@@ -8,7 +8,9 @@ const OpenAI = require('openai');                           // 👈 NEW
 const { Readable } = require('stream');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' }); // 👈 NEW
-const APP_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://www.delcotechdivision.com';
+const STATIC_APP_BASE_URL = process.env.PUBLIC_BASE_URL || process.env.APP_BASE_URL || '';
+const DEFAULT_APP_BASE_URL = (STATIC_APP_BASE_URL || 'https://www.delcotechdivision.com').replace(/\/$/, '');
+const APP_BASE_URL = DEFAULT_APP_BASE_URL;
 
 const fetch = global.fetch || require('node-fetch');
 if (!global.fetch) {
@@ -136,20 +138,41 @@ function sanitizeForTts(value) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, 800);
 }
 
-function absoluteUrl(pathname = '/') {
-  const base = (APP_BASE_URL || '').replace(/\/$/, '');
-  const suffix = pathname.startsWith('/') ? pathname : `/${pathname}`;
-  return `${base}${suffix}`;
+function resolveAppBaseUrl(req) {
+  const envBase = (STATIC_APP_BASE_URL || '').trim();
+  if (envBase) {
+    return envBase.replace(/\/$/, '');
+  }
+
+  if (req) {
+    const forwardedHost = req.headers?.['x-forwarded-host'];
+    const hostHeader = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost;
+    const host = hostHeader || req.get?.('host') || '';
+    if (host) {
+      const protoHeader = req.headers?.['x-forwarded-proto'];
+      const forwardedProto = Array.isArray(protoHeader) ? protoHeader[0] : (protoHeader || '');
+      const protocol = forwardedProto.split(',')[0] || req.protocol || 'https';
+      return `${protocol}://${host}`.replace(/\/$/, '');
+    }
+  }
+
+  return DEFAULT_APP_BASE_URL;
 }
 
-function buildTtsUrl(text, variantKey) {
+function absoluteUrl(pathname = '/', base) {
+  const resolvedBase = (base || '').replace(/\/$/, '');
+  const suffix = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  return `${resolvedBase}${suffix}`;
+}
+
+function buildTtsUrl(text, variantKey, base) {
   const sanitized = sanitizeForTts(text);
   const params = new URLSearchParams();
   if (sanitized) params.set('t', sanitized);
   if (variantKey) params.set('variant', variantKey);
   const search = params.toString();
   const path = `/audio/tts${search ? `?${search}` : ''}`;
-  return absoluteUrl(path);
+  return absoluteUrl(path, base || DEFAULT_APP_BASE_URL);
 }
 
 const contentSecurityPolicy = [
@@ -206,6 +229,13 @@ app.get('/audio/tts', async (req, res) => {
       return res.status(500).send('Missing ElevenLabs voice.');
     }
 
+    console.info('[ColdCaller] /audio/tts request', {
+      variant: variantKey,
+      textLength: text.length,
+      textPreview: text.slice(0, 80),
+      query: req.query,
+    });
+
     const apiKey = process.env.ELEVENLABS_API_KEY;
     const endpoint = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?optimize_streaming_latency=1&output_format=mp3_44100_128`;
     const body = {
@@ -223,16 +253,26 @@ app.get('/audio/tts', async (req, res) => {
       body: JSON.stringify(body),
     });
 
+    console.info('[ColdCaller] ElevenLabs response received', { status: response.status });
+
     if (!response.ok || !response.body) {
       const message = await response.text().catch(() => '');
+      console.error('[ColdCaller] ElevenLabs error response', {
+        status: response.status,
+        message,
+      });
       return res.status(502).send(`ElevenLabs error: ${message}`);
     }
 
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'no-store');
     Readable.fromWeb(response.body).pipe(res);
+    console.info('[ColdCaller] ElevenLabs audio proxied successfully');
   } catch (error) {
-    console.error('ElevenLabs TTS proxy error:', error?.message || error);
+    console.error('[ColdCaller] ElevenLabs TTS proxy error', {
+      message: error?.message || error,
+      stack: error?.stack,
+    });
     res.status(500).send('ElevenLabs TTS unavailable.');
   }
 });
@@ -339,6 +379,19 @@ app.post('/api/cold-caller/dial', async (req, res) => {
     const presetKey = String(voice || '').toLowerCase();
     const preset = CALLER_VOICE_PRESETS[presetKey] || CALLER_VOICE_PRESETS.warm;
     const variantKey = preset?.variant || presetKey || 'warm';
+    const appBaseUrl = resolveAppBaseUrl(req);
+
+    const logPayload = {
+      to: toNumber,
+      leadName: leadName ? '[redacted]' : '',
+      goal: goal ? goal.slice(0, 120) : '',
+      intro: intro ? intro.slice(0, 120) : '',
+      scriptLength: script ? String(script).length : 0,
+      variant: variantKey,
+      handoffConfigured: Boolean(handoffNumber),
+      appBaseUrl,
+    };
+    console.info('[ColdCaller] Dial request received', logPayload);
 
     const introLine = sanitizeLine(intro)
       || (leadName ? `Hi ${leadName}, this is your Delco concierge checking in.` : 'Hi there, this is your Delco concierge checking in.');
@@ -363,7 +416,7 @@ app.post('/api/cold-caller/dial', async (req, res) => {
       const sanitizedLine = sanitizeForTts(line);
       if (!sanitizedLine) return;
       if (USE_ELEVENLABS) {
-        gather.play(buildTtsUrl(sanitizedLine, variantKey));
+        gather.play(buildTtsUrl(sanitizedLine, variantKey, appBaseUrl));
       } else {
         gather.say({ voice: preset.voice, language: preset.language }, sanitizedLine);
       }
@@ -380,7 +433,7 @@ app.post('/api/cold-caller/dial', async (req, res) => {
       }
       const connectLine = 'One moment while I connect you to a teammate.';
       if (USE_ELEVENLABS) {
-        voiceResponse.play(buildTtsUrl(connectLine, variantKey));
+        voiceResponse.play(buildTtsUrl(connectLine, variantKey, appBaseUrl));
       } else {
         voiceResponse.say({ voice: preset.voice, language: preset.language }, connectLine);
       }
@@ -388,23 +441,45 @@ app.post('/api/cold-caller/dial', async (req, res) => {
     } else {
       const closingLine = 'I will text over the details after this call. Talk soon!';
       if (USE_ELEVENLABS) {
-        voiceResponse.play(buildTtsUrl(closingLine, variantKey));
+        voiceResponse.play(buildTtsUrl(closingLine, variantKey, appBaseUrl));
       } else {
         voiceResponse.say({ voice: preset.voice, language: preset.language }, closingLine);
       }
     }
 
+    const twiml = voiceResponse.toString();
+    console.info('[ColdCaller] TwiML preview', twiml.slice(0, 400) + (twiml.length > 400 ? '…' : ''));
+
     const call = await twilioClient.calls.create({
       to: toNumber,
       from: fromNumber,
-      twiml: voiceResponse.toString(),
+      twiml,
       machineDetection: 'DetectMessageEnd',
     });
 
+    console.info('[ColdCaller] Twilio call queued', { sid: call.sid, to: toNumber });
+
     return res.json({ sid: call.sid });
   } catch (error) {
-    console.error('Cold caller dial error:', error?.message || error, error);
-    return res.status(500).json({ error: 'dial_failed' });
+    const errorInfo = {
+      message: error?.message || 'Unknown error',
+      code: error?.code,
+      status: error?.status,
+      moreInfo: error?.moreInfo,
+      details: error?.details,
+      responseData: error?.response?.data,
+    };
+    console.error('[ColdCaller] Dial error', errorInfo);
+    const statusCode = Number(error?.status) || 500;
+    const payload = { error: 'dial_failed' };
+    if (error?.code || error?.moreInfo) {
+      payload.twilio = {
+        code: error.code,
+        moreInfo: error.moreInfo,
+        status: error.status,
+      };
+    }
+    return res.status(statusCode).json(payload);
   }
 });
 
