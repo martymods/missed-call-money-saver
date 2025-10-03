@@ -2,6 +2,40 @@ require('dotenv').config();
 const twilio = require('twilio');
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
+function maskPhone(value) {
+  if (!value) {
+    return value;
+  }
+  const str = String(value).trim();
+  if (!str) {
+    return str;
+  }
+  const digitsOnly = str.replace(/[^\d]/g, '');
+  if (digitsOnly.length <= 4) {
+    return str;
+  }
+  const suffix = digitsOnly.slice(-4);
+  const hasPlus = str.startsWith('+');
+  return `${hasPlus ? '+' : ''}***${suffix}`;
+}
+
+function maskContext(context = {}) {
+  if (!context || typeof context !== 'object') {
+    return context;
+  }
+  const result = { ...context };
+  if ('to' in result) {
+    result.to = maskPhone(result.to);
+  }
+  if ('from' in result) {
+    result.from = maskPhone(result.from);
+  }
+  if ('originalTo' in result) {
+    result.originalTo = maskPhone(result.originalTo);
+  }
+  return result;
+}
+
 function redactBody(value, max = 320) {
   if (typeof value !== 'string') {
     return value;
@@ -20,12 +54,18 @@ async function sendSMS(to, body, context = {}) {
     payload.from = process.env.TWILIO_NUMBER;
   }
 
+  const safePayload = {
+    ...payload,
+    to: maskPhone(payload.to),
+    from: maskPhone(payload.from),
+  };
+
   const attemptLog = {
     timestamp: new Date().toISOString(),
-    to,
+    to: maskPhone(to),
     usingMessagingService: Boolean(process.env.MESSAGING_SERVICE_SID),
-    from: payload.from || null,
-    context,
+    from: maskPhone(payload.from || null),
+    context: maskContext(context),
     bodyPreview: redactBody(body, 160),
   };
   console.info('[SMS] Attempting to send message', attemptLog);
@@ -36,10 +76,10 @@ async function sendSMS(to, body, context = {}) {
       timestamp: new Date().toISOString(),
       sid: message?.sid,
       status: message?.status,
-      to: message?.to,
-      from: message?.from,
+      to: maskPhone(message?.to),
+      from: maskPhone(message?.from),
       messagingServiceSid: message?.messagingServiceSid || payload.messagingServiceSid || null,
-      context,
+      context: maskContext(context),
     });
     return message;
   } catch (error) {
@@ -51,8 +91,8 @@ async function sendSMS(to, body, context = {}) {
         status: error?.status,
         moreInfo: error?.moreInfo,
       },
-      payload: { ...payload, body: redactBody(payload.body) },
-      context,
+      payload: { ...safePayload, body: redactBody(payload.body) },
+      context: maskContext(context),
     });
     throw error;
   }

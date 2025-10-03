@@ -146,6 +146,19 @@ function normalizePhoneNumber(value) {
   return digits;
 }
 
+function maskPhoneNumberForLog(value) {
+  if (!value) return value;
+  const str = String(value).trim();
+  if (!str) return str;
+  const digitsOnly = str.replace(/[^\d]/g, '');
+  if (digitsOnly.length <= 4) {
+    return str;
+  }
+  const suffix = digitsOnly.slice(-4);
+  const hasPlus = str.startsWith('+');
+  return `${hasPlus ? '+' : ''}***${suffix}`;
+}
+
 function sanitizeLine(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
@@ -438,7 +451,7 @@ async function sendColdCallerLink(toNumber, callSid) {
   } catch (error) {
     console.error('[ColdCaller] Failed to send SMS link', {
       message: error?.message || error,
-      to: normalized,
+      to: maskPhoneNumberForLog(normalized),
     });
     return false;
   }
@@ -941,7 +954,7 @@ app.post('/api/cold-caller/dial', async (req, res) => {
     const appBaseUrl = resolveAppBaseUrl(req);
 
     const logPayload = {
-      to: toNumber,
+      to: maskPhoneNumberForLog(toNumber),
       leadName: leadName ? '[redacted]' : '',
       goal: goal ? goal.slice(0, 120) : '',
       intro: intro ? intro.slice(0, 120) : '',
@@ -1055,7 +1068,7 @@ app.post('/api/cold-caller/dial', async (req, res) => {
       machineDetection: 'DetectMessageEnd',
     });
 
-    console.info('[ColdCaller] Twilio call queued', { sid: call.sid, to: toNumber });
+    console.info('[ColdCaller] Twilio call queued', { sid: call.sid, to: maskPhoneNumberForLog(toNumber) });
 
     return res.json({ sid: call.sid });
   } catch (error) {
