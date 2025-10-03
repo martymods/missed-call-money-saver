@@ -534,39 +534,63 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
       }
       const audioUrl = `/audio/tts?${params.toString()}`;
       stopActiveAudio('interrupt');
-      const audio = new Audio(audioUrl);
-      activeAudio = audio;
-      activeAudioSource = options.source || null;
-      activeAudioCleanup = (reason) => {
-        if(reason === 'error'){
-          options.onError?.();
-        } else {
-          options.onEnd?.();
-        }
-      };
-      audio.addEventListener('ended', () => {
-        if(activeAudio === audio){
-          stopActiveAudio('ended');
-        }
-      });
-      audio.addEventListener('error', () => {
-        if(activeAudio === audio){
-          stopActiveAudio('error');
-        }
-      });
-      options.onStart?.();
+
+      let objectUrl = null;
+      let audio = null;
+
       try {
+        const response = await fetch(audioUrl, { cache: 'no-store' });
+        if(!response.ok){
+          const message = await response.text().catch(() => '') || `HTTP ${response.status}`;
+          const error = new Error(`ElevenLabs preview unavailable: ${message}`);
+          error.status = response.status;
+          throw error;
+        }
+
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+        audio = new Audio(objectUrl);
+        activeAudio = audio;
+        activeAudioSource = options.source || null;
+        activeAudioCleanup = (reason) => {
+          if(objectUrl){
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+          }
+          if(reason === 'error'){
+            options.onError?.();
+          } else {
+            options.onEnd?.();
+          }
+        };
+        audio.addEventListener('ended', () => {
+          if(activeAudio === audio){
+            stopActiveAudio('ended');
+          }
+        });
+        audio.addEventListener('error', () => {
+          if(activeAudio === audio){
+            stopActiveAudio('error');
+          }
+        });
+        options.onStart?.();
         await audio.play();
+        return audio;
       } catch (err) {
-        if(activeAudio === audio){
+        if(audio && activeAudio === audio){
           stopActiveAudio('error');
+        } else {
+          if(objectUrl){
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+          }
+          options.onError?.();
         }
         if(!options.silentError){
           console.error('ElevenLabs preview failed', err);
         }
         throw err;
       }
-      return audio;
     }
 
     function fallbackScript(payload){
