@@ -42,6 +42,22 @@
     .stat strong{font-size:22px;color:#fff}
     .stat span{font-size:13px;color:#9aa4c9;text-transform:uppercase;letter-spacing:.4px}
 
+    .insight-section{margin-top:56px}
+    .insight-grid{display:grid;gap:28px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:center}
+    .insight-copy{background:linear-gradient(180deg,rgba(84,104,255,.22),rgba(84,104,255,.05));border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:26px;position:relative;overflow:hidden;box-shadow:0 34px 80px rgba(8,14,40,.55)}
+    .insight-copy::after{content:"";position:absolute;inset:auto -40% -60% -40%;height:160px;background:radial-gradient(circle at 50% 0,rgba(70,194,255,.45),transparent 70%);pointer-events:none}
+    .insight-copy h2{font-size:30px;margin-bottom:12px}
+    .insight-copy p{color:#cbd7ff;font-size:16px}
+    .insight-points{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-direction:column;gap:12px;color:#d8defc;font-size:15px}
+    .insight-points li{display:flex;gap:10px;align-items:flex-start;line-height:1.5}
+    .insight-points li::before{content:"";flex:none;width:10px;height:10px;margin-top:6px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 12px rgba(70,194,255,.5)}
+    .insight-stack{position:relative;padding:36px 34px;background:radial-gradient(circle at 12% 18%,rgba(70,194,255,.28),transparent 65%);border-radius:28px;border:1px solid rgba(84,104,255,.28);box-shadow:0 40px 90px rgba(4,10,32,.65);display:flex;justify-content:center}
+    .insight-visual{position:relative;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.18);box-shadow:0 28px 60px rgba(9,16,43,.55);background:linear-gradient(180deg,rgba(9,16,43,.9),rgba(9,16,43,.4));max-width:480px}
+    .insight-visual img{display:block;width:100%;height:auto}
+    .insight-visual figcaption{position:absolute;left:18px;bottom:18px;padding:8px 12px;border-radius:999px;background:rgba(4,10,32,.7);border:1px solid rgba(255,255,255,.18);font-size:12px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:#cfe3ff}
+    .insight-visual.map{position:absolute;bottom:-42px;right:-24px;width:62%;min-width:220px;transform:rotate(-3deg);z-index:2}
+    .insight-visual.map figcaption{left:auto;right:18px;background:rgba(9,18,44,.75)}
+
     .section{margin-top:58px}
     .section h2{font-size:28px;margin-bottom:14px}
     .section p.lead{font-size:17px;color:#cdd6ff;margin-bottom:22px}
@@ -153,6 +169,10 @@
       .hero{padding-top:18px}
       .h1{font-size:30px}
       header{position:relative}
+      .insight-copy h2{font-size:26px}
+      .insight-stack{padding:24px}
+      .insight-visual.map{position:relative;bottom:0;right:0;width:100%;min-width:0;transform:none;margin-top:18px}
+      .insight-grid{grid-template-columns:1fr}
       .cta-panel{grid-template-columns:1fr;padding:26px}
       .pricing-grid{grid-template-columns:1fr}
       .table-wrap{overflow:visible}
@@ -210,6 +230,31 @@
           <li>Works with your existing Twilio number & recordings</li>
           <li>Stripe Link & Apple Pay ready for reservation fees</li>
         </ul>
+      </div>
+    </section>
+
+    <section class="section insight-section" aria-labelledby="insightTitle">
+      <div class="insight-grid">
+        <div class="insight-copy">
+          <span class="tag">Market Intel</span>
+          <h2 id="insightTitle">Visual lead scoring at a glance</h2>
+          <p>Pair live buyer demographics with neighborhood heat mapping so your next dial is aimed at the highest-probability conversation.</p>
+          <ul class="insight-points">
+            <li>Household composition and education markers tell you who is ready to tour or invest.</li>
+            <li>Value-per-square-foot bands surface fast-moving micro-markets before competitors see them.</li>
+            <li>Analytics overlays plug straight into the dialer, updating call priorities in real time.</li>
+          </ul>
+        </div>
+        <div class="insight-stack">
+          <figure class="insight-visual">
+            <img src="/image/realesatate_buyerinfo.png" alt="Buyer information dashboards with value estimates and achievement cards">
+            <figcaption>Buyer profile dashboard</figcaption>
+          </figure>
+          <figure class="insight-visual map">
+            <img src="/image/realestate_Map.png" alt="Neighborhood map heat map showing real estate value ranges">
+            <figcaption>Live heat map</figcaption>
+          </figure>
+        </div>
       </div>
     </section>
 
