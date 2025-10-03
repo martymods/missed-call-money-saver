@@ -10,6 +10,11 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' }); // 👈 NEW
 const APP_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://www.delcotechdivision.com';
 
+const fetch = global.fetch || require('node-fetch');
+if (!global.fetch) {
+  global.fetch = fetch;
+}
+
 const { twiml: { VoiceResponse } } = require('twilio');
 const { sendSMS, client: twilioClient } = require('./services/twilioClient');
 const { upsertByPhone, findAll } = require('./services/sheets');
