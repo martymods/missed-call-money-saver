@@ -46,6 +46,21 @@
     .status{margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#dbe4ff;font-size:14px;white-space:pre-wrap}
     .status.success{border-color:rgba(25,209,128,.4);color:#cafff1;background:rgba(25,209,128,.12)}
     .status.error{border-color:rgba(255,107,107,.4);color:#ffd6d6;background:rgba(255,107,107,.12)}
+    .automation-panel{margin-top:12px;padding:16px;border-radius:14px;background:rgba(16,24,52,.72);border:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:12px}
+    .automation-panel[hidden]{display:none}
+    .automation-panel-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .automation-panel-title{font-size:18px;font-weight:700;color:#f0f4ff}
+    .automation-badge{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.35px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#dbe4ff}
+    .automation-badge.live{border-color:rgba(90,124,255,.45);background:rgba(90,124,255,.16);color:#e8edff}
+    .automation-badge.done{border-color:rgba(25,209,128,.45);background:rgba(25,209,128,.16);color:#eafff5}
+    .automation-badge.error{border-color:rgba(255,107,107,.45);background:rgba(255,107,107,.18);color:#ffecec}
+    .automation-badge.offline{border-color:rgba(255,193,59,.45);background:rgba(255,193,59,.18);color:#fff3d4}
+    .automation-log{max-height:220px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding-right:2px}
+    .automation-entry{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:6px;font-size:13px;color:#dfe4ff}
+    .automation-entry.success{border-color:rgba(25,209,128,.35);background:rgba(25,209,128,.12);color:#e9fff6}
+    .automation-entry.error{border-color:rgba(255,107,107,.35);background:rgba(255,107,107,.12);color:#ffe0e0}
+    .automation-entry-meta{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.35px}
+    .automation-empty{font-size:13px;color:var(--muted);text-align:center;padding:30px 0}
     .flex{display:flex;flex-direction:column;gap:16px}
     .two-column{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
     .storyboard{background:var(--panel);border-radius:16px;border:1px solid rgba(255,255,255,.14);padding:16px;min-height:220px;font-family:"SFMono-Regular",Menlo,Consolas,monospace;font-size:13px;line-height:1.4;color:#d0d9ff;white-space:pre-wrap}
@@ -220,6 +235,15 @@ Can I send the booking link to lock your time?"></textarea>
           </div>
           <div class="csv-preview" id="csvPreview">Waiting for selection…</div>
           <div class="status" id="csvActionStatus">Automation idle — select a CSV to unlock call &amp; SMS campaigns.</div>
+          <div class="automation-panel" id="automationPanel" hidden>
+            <div class="automation-panel-header">
+              <span class="automation-panel-title" id="automationPanelTitle">Automation activity</span>
+              <span class="automation-badge" id="automationPanelBadge">Idle</span>
+            </div>
+            <div class="automation-log" id="automationLog">
+              <div class="automation-empty">Automation updates will appear here in real time.</div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -459,6 +483,10 @@ Can I send the booking link to lock your time?"></textarea>
     const csvPitchBullets = document.getElementById('csvPitchBullets');
     const csvPitchFooter = document.getElementById('csvPitchFooter');
     const csvActionStatus = document.getElementById('csvActionStatus');
+    const automationPanel = document.getElementById('automationPanel');
+    const automationPanelTitle = document.getElementById('automationPanelTitle');
+    const automationPanelBadge = document.getElementById('automationPanelBadge');
+    const automationLog = document.getElementById('automationLog');
 
     let currentCsvFile = null;
     let currentCsvData = null;
@@ -466,6 +494,13 @@ Can I send the booking link to lock your time?"></textarea>
     let activeCsvButton = null;
     let previewController = null;
     let pitchController = null;
+    let activeAutomationRunId = null;
+    let automationLogCount = 0;
+    let automationStream = null;
+    let automationStreamRetryTimer = null;
+    let automationStreamOnline = false;
+    let automationLiveUpdates = 0;
+    const supportsEventSource = typeof window !== 'undefined' && typeof window.EventSource === 'function';
 
     function formatBytes(bytes){
       const value = Number(bytes);
@@ -489,6 +524,232 @@ Can I send the booking link to lock your time?"></textarea>
       return date.toLocaleString();
     }
 
+    function setAutomationBadge(state, label){
+      if(!automationPanelBadge) return;
+      const classes = ['automation-badge'];
+      if(state) classes.push(state);
+      automationPanelBadge.className = classes.join(' ');
+      if(label){
+        automationPanelBadge.textContent = label;
+      }else{
+        const fallback = state === 'live'
+          ? 'Live'
+          : state === 'done'
+            ? 'Complete'
+            : state === 'error'
+              ? 'Attention'
+              : state === 'offline'
+                ? 'Reconnecting…'
+                : 'Idle';
+        automationPanelBadge.textContent = fallback;
+      }
+    }
+
+    function resetAutomationLog(){
+      automationLogCount = 0;
+      if(automationLog){
+        automationLog.innerHTML = '<div class="automation-empty">Automation updates will appear here in real time.</div>';
+      }
+    }
+
+    function appendAutomationLogEntry(level, message){
+      if(!automationLog || !message) return;
+      if(automationLogCount === 0){
+        automationLog.innerHTML = '';
+      }
+      const entry = document.createElement('div');
+      entry.className = ['automation-entry', level === 'success' ? 'success' : level === 'error' ? 'error' : '']
+        .filter(Boolean)
+        .join(' ');
+      const body = document.createElement('div');
+      body.className = 'automation-entry-message';
+      body.textContent = message;
+      entry.appendChild(body);
+      const meta = document.createElement('div');
+      meta.className = 'automation-entry-meta';
+      meta.textContent = new Intl.DateTimeFormat(undefined, {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit'
+      }).format(new Date());
+      entry.appendChild(meta);
+      automationLog.appendChild(entry);
+      automationLog.scrollTop = automationLog.scrollHeight;
+      automationLogCount += 1;
+      while(automationLogCount > 200 && automationLog.firstElementChild){
+        automationLog.removeChild(automationLog.firstElementChild);
+        automationLogCount -= 1;
+      }
+    }
+
+    function describeLead(lead){
+      if(!lead) return 'Lead';
+      const name = lead.name ? String(lead.name) : '';
+      const phone = lead.phone ? String(lead.phone) : '';
+      if(name && phone) return `${name} (${phone})`;
+      return name || phone || 'Lead';
+    }
+
+    function beginAutomationRun(kind, label, total){
+      if(!automationPanel) return null;
+      if(!supportsEventSource){
+        activeAutomationRunId = null;
+        automationPanel.hidden = false;
+        if(automationPanelTitle){
+          const prefix = kind === 'sms' ? 'SMS follow-ups' : 'Concierge calls';
+          automationPanelTitle.textContent = label ? `${prefix} — ${label}` : prefix;
+        }
+        setAutomationBadge('offline', 'Log only');
+        resetAutomationLog();
+        appendAutomationLogEntry('error', 'Live updates require an EventSource-capable browser.');
+        automationLiveUpdates = 0;
+        return null;
+      }
+      const runId = `run-${Date.now().toString(36)}-${Math.random().toString(16).slice(2,8)}`;
+      activeAutomationRunId = runId;
+      automationLiveUpdates = 0;
+      automationPanel.hidden = false;
+      if(automationPanelTitle){
+        const prefix = kind === 'sms' ? 'SMS follow-ups' : 'Concierge calls';
+        automationPanelTitle.textContent = label ? `${prefix} — ${label}` : prefix;
+      }
+      resetAutomationLog();
+      const intro = `Launching ${kind === 'sms' ? 'SMS follow-ups' : 'concierge calls'}${total ? ` for ${total} lead${total === 1 ? '' : 's'}` : ''}…`;
+      appendAutomationLogEntry('info', intro);
+      setAutomationBadge(automationStreamOnline ? 'live' : 'offline', automationStreamOnline ? 'Live' : 'Connecting…');
+      ensureAutomationStream();
+      return runId;
+    }
+
+    function completeAutomationRun(details){
+      if(!details) return;
+      if(details.message){
+        appendAutomationLogEntry(details.failed ? 'error' : 'success', details.message);
+      }
+      if(details.failed){
+        setAutomationBadge('error', 'Needs attention');
+      }else{
+        setAutomationBadge('done', 'Complete');
+      }
+      if(details.runId && details.runId === activeAutomationRunId){
+        activeAutomationRunId = null;
+      }
+    }
+
+    function failAutomationRun(details){
+      if(details?.runId && activeAutomationRunId && details.runId !== activeAutomationRunId){
+        return;
+      }
+      const message = details?.message || 'Automation failed.';
+      appendAutomationLogEntry('error', message);
+      setAutomationBadge('error', 'Failed');
+      if(details?.runId && details.runId === activeAutomationRunId){
+        activeAutomationRunId = null;
+      }
+    }
+
+    function handleAutomationEvent(event){
+      if(!event) return;
+      if(event.runId && activeAutomationRunId && event.runId !== activeAutomationRunId){
+        return;
+      }
+      if(event.type === 'automation:start'){
+        if(event.runId && event.runId === activeAutomationRunId){
+          const total = Number(event.total || 0);
+          if(total){
+            appendAutomationLogEntry('info', `Processing ${total} lead${total === 1 ? '' : 's'}…`);
+          }
+          setAutomationBadge('live', 'Live');
+        }
+        return;
+      }
+      if(!event.runId || event.runId !== activeAutomationRunId){
+        return;
+      }
+      switch(event.type){
+        case 'call:attempt':
+          appendAutomationLogEntry('info', `Queueing call for ${describeLead(event.lead)}…`);
+          break;
+        case 'call:queued':
+          appendAutomationLogEntry('success', `Call queued for ${describeLead(event.lead)}.`);
+          automationLiveUpdates += 1;
+          break;
+        case 'call:error':
+          appendAutomationLogEntry('error', `Call failed for ${describeLead(event.lead)} — ${event.error?.message || 'Unknown error'}.`);
+          automationLiveUpdates += 1;
+          break;
+        case 'sms:attempt':
+          appendAutomationLogEntry('info', `Preparing SMS for ${describeLead(event.lead)}…`);
+          break;
+        case 'sms:sent':
+          appendAutomationLogEntry('success', `SMS sent to ${describeLead(event.lead)}.`);
+          automationLiveUpdates += 1;
+          break;
+        case 'sms:error':
+          appendAutomationLogEntry('error', `SMS failed for ${describeLead(event.lead)} — ${event.error?.message || 'Unknown error'}.`);
+          automationLiveUpdates += 1;
+          break;
+        case 'automation:complete':
+          completeAutomationRun({
+            runId: event.runId,
+            failed: Number(event.failed || 0) > 0,
+            message: event.message || ''
+          });
+          break;
+        case 'automation:error':
+          failAutomationRun({
+            runId: event.runId,
+            message: event.message || event.error?.message || 'Automation failed.'
+          });
+          break;
+        default:
+          break;
+      }
+    }
+
+    function ensureAutomationStream(){
+      if(!supportsEventSource || automationStream) return;
+      try{
+        const source = new EventSource('/api/activity-stream');
+        source.onopen = () => {
+          automationStreamOnline = true;
+          if(activeAutomationRunId){
+            setAutomationBadge('live', 'Live');
+          }
+        };
+        source.onmessage = (event) => {
+          if(!event?.data) return;
+          try{
+            const payload = JSON.parse(event.data);
+            handleAutomationEvent(payload);
+          }catch(parseError){
+            console.warn('[Admin] Failed to parse automation event', parseError);
+          }
+        };
+        source.onerror = () => {
+          if(automationStream === source){
+            automationStream = null;
+          }
+          const wasOnline = automationStreamOnline;
+          automationStreamOnline = false;
+          source.close();
+          if(wasOnline && activeAutomationRunId){
+            appendAutomationLogEntry('error', 'Live event stream interrupted. Attempting to reconnect…');
+            setAutomationBadge('offline', 'Reconnecting…');
+          }
+          if(!automationStreamRetryTimer){
+            automationStreamRetryTimer = setTimeout(() => {
+              automationStreamRetryTimer = null;
+              ensureAutomationStream();
+            }, 4000);
+          }
+        };
+        automationStream = source;
+      }catch(streamError){
+        console.error('[Admin] Unable to initialize automation stream', streamError);
+      }
+    }
+
     function setActiveCsvButton(button){
       if(activeCsvButton && activeCsvButton !== button){
         activeCsvButton.classList.remove('is-active');
@@ -502,6 +763,10 @@ Can I send the booking link to lock your time?"></textarea>
     function resetCsvViewer(message){
       currentCsvData = null;
       currentCsvPitch = null;
+      activeAutomationRunId = null;
+      if(automationPanel){
+        automationPanel.hidden = true;
+      }
       if(csvSummary) csvSummary.innerHTML = '';
       if(csvLeadPreview) csvLeadPreview.innerHTML = '';
       csvInsights?.classList.remove('is-visible');
@@ -870,6 +1135,12 @@ Can I send the booking link to lock your time?"></textarea>
 
     async function runCsvCallAutomation(){
       if(!currentCsvFile || !currentCsvData) return;
+      const limitValue = Number(currentCsvData?.automationLimit || currentCsvData?.validLeads || 0);
+      const targetLeads = Number.isFinite(limitValue) && limitValue > 0
+        ? limitValue
+        : Number(currentCsvData?.validLeads || 0) || null;
+      const runLabel = currentCsvFile?.name || currentCsvFile?.path || 'Selected leads';
+      const runId = beginAutomationRun('call', runLabel, targetLeads);
       if(csvActionStatus){
         csvActionStatus.textContent = 'Queuing concierge calls…';
         csvActionStatus.className = 'status';
@@ -892,6 +1163,9 @@ Can I send the booking link to lock your time?"></textarea>
         };
         if(currentCsvPitch){
           payload.pitch = currentCsvPitch;
+        }
+        if(runId){
+          payload.runId = runId;
         }
 
         const response = await fetch('/api/csv-files/launch-call', {
@@ -917,12 +1191,33 @@ Can I send the booking link to lock your time?"></textarea>
         if(Array.isArray(data?.results) && console.table){
           console.table(data.results);
         }
+        if(!supportsEventSource || !runId || automationLiveUpdates === 0){
+          if(Array.isArray(data?.results)){
+            data.results.forEach((item) => {
+              if(item?.ok){
+                appendAutomationLogEntry('success', `Call queued for ${describeLead(item.lead)}.`);
+              }else{
+                appendAutomationLogEntry('error', `Call failed for ${describeLead(item?.lead)} — ${item?.error?.message || 'Unknown error'}.`);
+              }
+            });
+          }
+          completeAutomationRun({
+            runId: runId || null,
+            failed: failed > 0,
+            message: summary,
+          });
+        }
       }catch(error){
         if(csvActionStatus){
           csvActionStatus.textContent = `Call launch failed: ${error.message}`;
           csvActionStatus.className = 'status error';
         }
         console.error('[Admin] CSV call automation failed', error);
+        if(runId){
+          failAutomationRun({ runId, message: `Call launch failed: ${error.message}` });
+        }else if(automationPanel && !automationPanel.hidden){
+          failAutomationRun({ message: `Call launch failed: ${error.message}` });
+        }
       } finally {
         if(csvCallAll) csvCallAll.disabled = !currentCsvData || !currentCsvData.validLeads;
         if(csvSmsAll) csvSmsAll.disabled = !currentCsvData || !currentCsvData.validLeads;
@@ -931,6 +1226,12 @@ Can I send the booking link to lock your time?"></textarea>
 
     async function runCsvSmsAutomation(){
       if(!currentCsvFile || !currentCsvData) return;
+      const limitValue = Number(currentCsvData?.automationLimit || currentCsvData?.validLeads || 0);
+      const targetLeads = Number.isFinite(limitValue) && limitValue > 0
+        ? limitValue
+        : Number(currentCsvData?.validLeads || 0) || null;
+      const runLabel = currentCsvFile?.name || currentCsvFile?.path || 'Selected leads';
+      const runId = beginAutomationRun('sms', runLabel, targetLeads);
       if(csvActionStatus){
         csvActionStatus.textContent = 'Preparing SMS run…';
         csvActionStatus.className = 'status';
@@ -951,6 +1252,9 @@ Can I send the booking link to lock your time?"></textarea>
         };
         if(currentCsvPitch){
           payload.pitch = currentCsvPitch;
+        }
+        if(runId){
+          payload.runId = runId;
         }
 
         const response = await fetch('/api/csv-files/send-sms', {
@@ -976,12 +1280,33 @@ Can I send the booking link to lock your time?"></textarea>
         if(Array.isArray(data?.results) && console.table){
           console.table(data.results);
         }
+        if(!supportsEventSource || !runId || automationLiveUpdates === 0){
+          if(Array.isArray(data?.results)){
+            data.results.forEach((item) => {
+              if(item?.ok){
+                appendAutomationLogEntry('success', `SMS sent to ${describeLead(item.lead)}.`);
+              }else{
+                appendAutomationLogEntry('error', `SMS failed for ${describeLead(item?.lead)} — ${item?.error?.message || 'Unknown error'}.`);
+              }
+            });
+          }
+          completeAutomationRun({
+            runId: runId || null,
+            failed: failed > 0,
+            message: summary,
+          });
+        }
       }catch(error){
         if(csvActionStatus){
           csvActionStatus.textContent = `SMS run failed: ${error.message}`;
           csvActionStatus.className = 'status error';
         }
         console.error('[Admin] CSV SMS automation failed', error);
+        if(runId){
+          failAutomationRun({ runId, message: `SMS run failed: ${error.message}` });
+        }else if(automationPanel && !automationPanel.hidden){
+          failAutomationRun({ message: `SMS run failed: ${error.message}` });
+        }
       } finally {
         if(csvCallAll) csvCallAll.disabled = !currentCsvData || !currentCsvData.validLeads;
         if(csvSmsAll) csvSmsAll.disabled = !currentCsvData || !currentCsvData.validLeads;
@@ -1027,6 +1352,10 @@ Can I send the booking link to lock your time?"></textarea>
     }
     if(csvRefresh){
       csvRefresh.addEventListener('click', () => loadCsvTree());
+    }
+
+    if(supportsEventSource){
+      ensureAutomationStream();
     }
 
     loadCsvTree();
