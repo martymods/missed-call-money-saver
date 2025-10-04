@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Multi-Faith Giving Platform — Product Blueprint</title>
+  <meta name="description" content="Blueprint for a multi-faith, multi-region giving platform with Stripe, MongoDB, and Render deployment."/>
+  <style>
+    :root{
+      --bg:#060b1a;
+      --ink:#f5f7ff;
+      --card:#0d1329;
+      --glass:rgba(255,255,255,.06);
+      --accent:#7c4dff;
+      --accent2:#5740ff;
+      --accent3:#35c79a;
+      --muted:#8c95c7;
+    }
+    *,*:before,*:after{box-sizing:border-box;}
+    html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+    img{max-width:100%;display:block;}
+    a{color:#bcd3ff;}
+    .wrap{max-width:1120px;margin:0 auto;padding:20px 18px 80px;}
+    header{position:sticky;top:0;z-index:80;background:linear-gradient(180deg,rgba(6,11,26,.95),rgba(6,11,26,.7));backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.08);}
+    .nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 18px;max-width:1120px;margin:0 auto;}
+    .logo-tile{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;}
+    .logo-tile span{font-size:13px;color:#d0d8ff;opacity:.8;}
+    .nav .tagline{font-size:13px;color:#9fa8dd;max-width:280px;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;font-weight:700;box-shadow:0 14px 40px rgba(90,72,255,.28);text-decoration:none;}
+    .btn.ghost{background:transparent;border-color:rgba(255,255,255,.16);color:#dce3ff;box-shadow:none;}
+
+    /* hero */
+    .hero{padding:46px 0 30px;display:grid;gap:26px;}
+    .hero h1{margin:0;font-size:42px;line-height:1.1;font-weight:900;letter-spacing:-.5px;}
+    .hero p.sub{color:var(--muted);margin:12px 0 24px;max-width:580px;}
+    .hero .actions{display:flex;flex-wrap:wrap;gap:12px;}
+    .hero-card{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border-radius:20px;padding:20px;border:1px solid rgba(255,255,255,.14);display:grid;gap:16px;box-shadow:0 18px 60px rgba(0,0,0,.35);}
+    .hero-card h2{margin:0;font-size:18px;text-transform:uppercase;color:#c5ccff;letter-spacing:1px;}
+    .pill-row{display:flex;flex-wrap:wrap;gap:8px;}
+    .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(124,77,255,.14);font-size:12px;font-weight:700;color:#ece6ff;}
+    .badge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;}
+    .badge{padding:12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:4px;}
+    .badge .title{font-weight:800;font-size:13px;text-transform:uppercase;color:#c5d1ff;}
+    .badge .value{font-size:20px;font-weight:900;}
+    .muted{color:var(--muted);font-size:12px;}
+
+    /* sections */
+    section{margin-top:50px;}
+    section h2{font-size:30px;line-height:1.2;margin:0 0 16px;font-weight:900;}
+    section p.lead{margin:0 0 20px;color:var(--muted);max-width:700px;}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;}
+    .card{background:var(--card);border-radius:18px;border:1px solid rgba(255,255,255,.1);padding:18px;display:grid;gap:12px;box-shadow:0 18px 40px rgba(0,0,0,.28);}
+    .card h3{margin:0;font-size:18px;font-weight:800;letter-spacing:.2px;color:#dfe4ff;}
+    .card ul{margin:0;padding-left:18px;color:#b4bcf0;font-size:14px;line-height:1.6;}
+    .card ul li{margin:6px 0;}
+    .split{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
+    .panel{background:var(--card);border-radius:18px;border:1px solid rgba(255,255,255,.1);padding:20px;box-shadow:0 18px 44px rgba(0,0,0,.34);}
+    .panel h3{margin:0 0 12px;font-size:19px;font-weight:800;color:#e5eaff;}
+    .panel p{margin:0 0 12px;color:#aab5e6;font-size:15px;}
+    .panel table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;color:#dbe2ff;}
+    .panel table th,.panel table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;}
+    .panel table th{font-weight:700;text-transform:uppercase;font-size:11px;color:#94a1da;letter-spacing:.6px;}
+    .panel table td code{background:rgba(255,255,255,.08);padding:2px 4px;border-radius:6px;font-size:12px;}
+
+    .grid-rows{display:grid;gap:14px;}
+    .row-card{background:linear-gradient(180deg,rgba(54,223,179,.12),rgba(255,255,255,.02));border-radius:16px;padding:16px;border:1px solid rgba(53,199,154,.28);}
+    .row-card h3{margin:0 0 8px;font-size:17px;color:#ebfff7;}
+    .row-card ul{margin:0;padding-left:18px;color:#c1ffe8;font-size:14px;}
+
+    .timeline{position:relative;padding-left:28px;}
+    .timeline:before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent3),transparent);} 
+    .t-step{position:relative;padding:14px 18px;margin-bottom:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:14px;}
+    .t-step:before{content:"";position:absolute;left:-20px;top:18px;width:10px;height:10px;border-radius:50%;background:var(--accent3);box-shadow:0 0 0 6px rgba(53,199,154,.18);} 
+    .t-step h4{margin:0 0 6px;font-size:16px;color:#def9f0;}
+    .t-step p{margin:0;color:#9dd5c3;font-size:14px;}
+
+    footer{margin-top:60px;padding:24px 0;border-top:1px solid rgba(255,255,255,.08);color:#96a0d7;font-size:13px;text-align:center;}
+
+    @media (min-width:960px){
+      .hero{grid-template-columns:1.1fr .9fr;align-items:center;}
+      .hero h1{font-size:54px;}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <nav class="nav">
+    <div class="logo-tile">
+      <strong>Orbital Collective</strong>
+      <span>Multi-faith giving suite</span>
+    </div>
+    <div class="tagline">Render + Stripe + MongoDB blueprint for donations, attendance, and compliance.</div>
+    <div class="actions">
+      <a class="btn ghost" href="https://stripe.com/docs/payments/checkout" target="_blank" rel="noreferrer">Stripe readiness</a>
+      <a class="btn" href="#data-model">Download build sheet</a>
+    </div>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>Launch a global multi-faith giving platform in weeks, not quarters.</h1>
+      <p class="sub">"Tithe.ly, but multi-faith + multi-region" — ready for Render hosting, Stripe payments, and MongoDB Atlas. Tailor donation flows, receipts, and compliance copy for Christianity, Islam, Hinduism, Buddhism, and Judaism across five launch regions.</p>
+      <div class="actions">
+        <a class="btn" href="#faith-flows">See faith modules</a>
+        <a class="btn ghost" href="#architecture">Ship-ready architecture</a>
+      </div>
+    </div>
+    <div class="hero-card">
+      <h2>Go-live checklist</h2>
+      <div class="pill-row">
+        <span class="pill">Render deploy pipeline</span>
+        <span class="pill">Stripe Checkout + Billing</span>
+        <span class="pill">MongoDB Atlas (global)</span>
+        <span class="pill">Org/Role JWT Auth</span>
+      </div>
+      <div class="badge-grid">
+        <div class="badge">
+          <span class="title">Regions day-one</span>
+          <span class="value">NA · EU · MENA · SA · APAC</span>
+          <small class="muted">Auto locale, currency, tax text</small>
+        </div>
+        <div class="badge">
+          <span class="title">Faith bundles</span>
+          <span class="value">5</span>
+          <small class="muted">Religion-aware donation rails</small>
+        </div>
+        <div class="badge">
+          <span class="title">Payment methods</span>
+          <span class="value">ACH · SEPA · BECS · PAD · BACS</span>
+          <small class="muted">Stripe PaymentElement ready</small>
+        </div>
+        <div class="badge">
+          <span class="title">Recurring cadences</span>
+          <span class="value">Weekly · Monthly · Annual</span>
+          <small class="muted">Stripe Subscriptions mirror</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faith-flows">
+    <h2>Faith-specific giving experiences</h2>
+    <p class="lead">Each faith bundle ships with front-end language, donation taxonomies, calculators, and CRM metadata so admins configure once and reuse across campaigns.</p>
+    <div class="cards">
+      <article class="card">
+        <h3>Christianity</h3>
+        <ul>
+          <li>Tithes & Offerings, pledges, and weekly/monthly recurring gifts.</li>
+          <li>Small-group rosters, child check-in, and attendance markers tied to services.</li>
+          <li>Year-end 501(c)(3) statements with household roll-ups and PDF email delivery.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Islam</h3>
+        <ul>
+          <li>Zakat calculator with nisab thresholds per region and Ramadan campaigns.</li>
+          <li>Sadaqah, Jumu’ah attendance, and regional wallets (cards/ACH, SEPA, BECS, PAD, BACS).</li>
+          <li>Wallet reconciliation exports for local charitable regulators.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Hinduism</h3>
+        <ul>
+          <li>Daan/Dakshina, temple sevas scheduling, and festival drives (Navratri, Diwali).</li>
+          <li>Family gotra metadata with lineage search and prasad fulfillment tracking.</li>
+          <li>Auto-receipts with Indian tax text and PAN capture toggles.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Buddhism</h3>
+        <ul>
+          <li>Dana flows for monastic/temple support and retreat registration.</li>
+          <li>Chant group directories and merit-dedication notes appended to receipts.</li>
+          <li>Event roster exports for visa support letters or tax documentation.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Judaism</h3>
+        <ul>
+          <li>Tzedakah/Ma’aser, aliyah honors, and High Holidays seat pledges.</li>
+          <li>Hebrew calendar recurrence with yahrzeit reminders and SMS triggers.</li>
+          <li>Gift Aid-style toggles for UK/EU and CRA-compliant footers for Canada.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section id="regions">
+    <h2>Regional intelligence out-of-the-box</h2>
+    <p class="lead">Configure once per organization and every campaign inherits currencies, legal footers, timezone, and receipt language while keeping donation metadata structured.</p>
+    <div class="split">
+      <div class="panel">
+        <h3>Launch regions</h3>
+        <p>North America, Europe, MENA, South Asia, and APAC pre-populate locale bundles, receipt paragraphs, and compliance toggles. Extend with JSON overrides when opening new markets.</p>
+        <table>
+          <thead>
+            <tr><th>Region</th><th>Currency</th><th>Locale sample</th><th>Compliance copy</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>North America</td><td>USD</td><td><code>en-US</code></td><td>501(c)(3), CRA, GDPR opt-in</td></tr>
+            <tr><td>Europe</td><td>EUR / GBP</td><td><code>en-GB</code>, <code>fr-FR</code></td><td>Gift Aid, SEPA mandates, GDPR consent</td></tr>
+            <tr><td>MENA</td><td>AED</td><td><code>ar-AE</code></td><td>Zakat Authority references, VAT toggle</td></tr>
+            <tr><td>South Asia</td><td>INR</td><td><code>en-IN</code>, <code>hi-IN</code></td><td>80G receipts, Aadhaar optional fields</td></tr>
+            <tr><td>APAC</td><td>AUD</td><td><code>en-AU</code></td><td>Deductible gift recipient (DGR) text</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h3>Auto-detected context</h3>
+        <p>Detect region via IP/locale, but allow manual override during checkout. Sync currency to Stripe Checkout session and set timezone for subscription billing, reporting, and attendance logs.</p>
+        <ul>
+          <li>Locale-driven receipt templates with translation keys for subject lines + body copy.</li>
+          <li>Tax identifiers captured conditionally (e.g., Gift Aid yes/no, PAN, CPF).</li>
+          <li>Region-specific legal footers stored per organization and merged into emails/PDFs.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="modules">
+    <h2>Core modules that leaders expect</h2>
+    <p class="lead">Giving, people, events, reporting, and compliance are designed as API-first services so you can iterate without rewriting the front-end.</p>
+    <div class="cards">
+      <article class="card">
+        <h3>Giving</h3>
+        <ul>
+          <li>One-time and recurring gifts with campaign earmarks and metadata.</li>
+          <li>Faith calculators: Zakat nisab, Ma’aser percentages, Dana pledges.</li>
+          <li>Stripe Checkout sessions with metadata { orgId, campaignId, religion, region, donationType }.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>People & Groups</h3>
+        <ul>
+          <li>Directory with households, tags, and role-based permissions (Admin, Finance, GroupLeader, Member).</li>
+          <li>SMS/email broadcasting via Twilio or MessageBird; GDPR consent logs per contact.</li>
+          <li>Household statements and donor journeys exported as CSV/PDF.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Events & Attendance</h3>
+        <ul>
+          <li>Services, holidays, festivals, retreats with check-in kiosks and QR codes.</li>
+          <li>Attendance counts, child check-in, chant group rosters, and volunteer scheduling.</li>
+          <li>Attendance insights by event type (service/festival/retreat) with week-over-week trends.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Reporting</h3>
+        <ul>
+          <li>Finance dashboards by religion, region, and campaign with advisor/branch splits.</li>
+          <li>Ramadan vs last year, High Holidays seats/pledges, year-end tax statements.</li>
+          <li>Downloadable CSV and embeddable Looker Studio connectors.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Compliance</h3>
+        <ul>
+          <li>Region-aware receipts (501(c)(3), Gift Aid, DGR, Zakat Authority) with toggles.</li>
+          <li>Consent logging (GDPR, CAN-SPAM, CASL) and audit trails for exports.</li>
+          <li>Stripe radar + manual review queue for high-risk donations.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section id="architecture">
+    <h2>Tech stack that deploys cleanly on Render</h2>
+    <p class="lead">Opinionated stack decisions so your team can provision infrastructure and CI/CD with minimal friction.</p>
+    <div class="split">
+      <div class="panel">
+        <h3>Backend services</h3>
+        <ul>
+          <li>Node.js + Express API deployed on Render (Docker or native); background jobs via Render cron.</li>
+          <li>JWT authentication with organization + role scoping; refresh tokens stored in Redis or Mongo TTL collection.</li>
+          <li>Stripe SDK for Checkout, Billing (Subscriptions), PaymentIntents, and webhook signing.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Front-end</h3>
+        <ul>
+          <li>Next.js 14 with app router, React Server Components, and i18n routing by religion/region.</li>
+          <li>Tailwind or CSS-in-JS for theming; dynamic forms for calculators and attendance dashboards.</li>
+          <li>SSR-friendly Stripe Checkout redirect with Thank-You page summarizing receipt metadata.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Payments</h3>
+        <ul>
+          <li>One Product per organization; multiple Prices for recurring cadences and custom campaign amounts.</li>
+          <li>Payment links generated per campaign with metadata that flows to webhooks.</li>
+          <li>Supports ACH, SEPA, BECS, PAD, BACS, cards, wallets; localized receipt emails.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Operations</h3>
+        <ul>
+          <li>Logging via Render + Logtail; alerts for failed webhooks and reconciliation mismatches.</li>
+          <li>Infrastructure as code using Terraform (Render + Mongo Atlas + Stripe webhook secret storage).</li>
+          <li>GitHub Actions pipeline: test → lint → deploy (Render Blueprints + Next.js static export).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="data-model">
+    <h2>Minimal Mongo data model</h2>
+    <p class="lead">Collections mirror the webhook payloads so Stripe checkout sessions and subscriptions flow directly into persistent records.</p>
+    <div class="panel">
+      <table>
+        <thead>
+          <tr><th>Collection</th><th>Shape</th><th>Highlights</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>organizations</td>
+            <td><code>{ _id, name, region, religion, locales[], timezone, stripeAccountId, settings{} }</code></td>
+            <td>Region toggles drive receipts, currency, and tax paragraphs.</td>
+          </tr>
+          <tr>
+            <td>people</td>
+            <td><code>{ _id, orgId, firstName, lastName, email, phone, householdId, tags[], roles[] }</code></td>
+            <td>Roles enforce Admin/Finance/GroupLeader/Member scopes.</td>
+          </tr>
+          <tr>
+            <td>campaigns</td>
+            <td><code>{ _id, orgId, name, code, donationTypes[], active }</code></td>
+            <td>Faith-aware donation types: tithe, zakat, dana, tzedakah, etc.</td>
+          </tr>
+          <tr>
+            <td>subscriptions</td>
+            <td><code>{ _id, orgId, personId, campaignId, stripeSubId, amount, currency, interval, status }</code></td>
+            <td>Mirrors <code>customer.subscription.*</code> events.</td>
+          </tr>
+          <tr>
+            <td>transactions</td>
+            <td><code>{ _id, orgId, personId, campaignId, stripePaymentIntentId, amount, currency, donationType, receiptNo, meta{}, createdAt }</code></td>
+            <td>Webhook upsert from Checkout sessions; includes faith-specific metadata.</td>
+          </tr>
+          <tr>
+            <td>attendance</td>
+            <td><code>{ _id, orgId, eventId, date, counts{}, notes }</code></td>
+            <td>Child check-in + chant group metrics stored together.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="webhooks">
+    <h2>Stripe webhook choreography</h2>
+    <p class="lead">A single Express route handles checkout completion and subscription lifecycle events, mapping Stripe metadata to Mongo collections.</p>
+    <div class="grid-rows">
+      <div class="row-card">
+        <h3>Checkout completion</h3>
+        <ul>
+          <li>Webhook <code>checkout.session.completed</code> pulls <code>metadata</code> (orgId, campaignId, religion, region, donationType, personId?).</li>
+          <li>Fetch PaymentIntent → Charge for amount, currency, and payment method.</li>
+          <li>Upsert person, write transaction, increment campaign totals, generate sequential <code>receiptNo</code>.</li>
+        </ul>
+      </div>
+      <div class="row-card">
+        <h3>Subscriptions sync</h3>
+        <ul>
+          <li>Handle <code>customer.subscription.created|updated|deleted</code> to mirror recurring gifts.</li>
+          <li>Store billing cycle, payment method type, and faith-specific metadata for statements.</li>
+          <li>Invoice webhooks feed into finance reports and dunning notifications.</li>
+        </ul>
+      </div>
+      <div class="row-card">
+        <h3>Compliance + exports</h3>
+        <ul>
+          <li>GDPR consent log updates on every communication opt-in/out.</li>
+          <li>Region-specific ledger exports (e.g., HMRC Gift Aid CSV, CRA batch filing).</li>
+          <li>Render cron job reconciles Stripe balance transactions nightly.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="roadmap">
+    <h2>90-day delivery timeline</h2>
+    <p class="lead">Move from prototype to launch with iterative releases aligned to donor cycles.</p>
+    <div class="timeline">
+      <div class="t-step">
+        <h4>Weeks 1–3 • Foundation</h4>
+        <p>Set up Render environments, Mongo Atlas cluster, JWT auth, and base giving flows with Stripe Checkout sandbox.</p>
+      </div>
+      <div class="t-step">
+        <h4>Weeks 4–6 • Faith modules</h4>
+        <p>Implement calculators (Zakat, Ma’aser), build religion-specific content blocks, connect attendance and households.</p>
+      </div>
+      <div class="t-step">
+        <h4>Weeks 7–9 • Reporting & receipts</h4>
+        <p>Ship finance dashboards, automated statements, compliance exports, and webhook-driven reconciliations.</p>
+      </div>
+      <div class="t-step">
+        <h4>Weeks 10–12 • Launch & scale</h4>
+        <p>Load production Stripe keys, enable multi-region payment methods, train admins, and schedule marketing automations.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Built for founders shipping faith-tech products fast. Duplicate this blueprint, connect Render, Stripe, and MongoDB, and you are production-ready.
+</footer>
+</body>
+</html>
