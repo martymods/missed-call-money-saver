@@ -1350,6 +1350,8 @@ async function queueColdCallerCall({
     connectLine,
     handoffNumber: handoff,
     prefillIntent: '',
+    introNoSpeechCount: 0,
+    qualifyNoSpeechCount: 0,
   };
   const encodedState = encodeCallState(callState);
   const introAction = absoluteUrl(`/voice/cold-caller/intro?state=${encodedState}`, appBaseUrl);
@@ -1514,6 +1516,49 @@ app.post('/voice/cold-caller/intro', async (req, res) => {
       return res.type('text/xml').send(response.toString());
     }
 
+    const introLines = Array.isArray(state.introLines) ? state.introLines : [];
+    const introNoSpeechCount = Number(state.introNoSpeechCount) || 0;
+
+    if (!speech) {
+      if (introNoSpeechCount >= 1) {
+        if (leadNumber) {
+          await sendColdCallerLink(leadNumber, callSid);
+        }
+        const response = new VoiceResponse();
+        await appendSpeech(response, state.smsOfferLine || 'I just texted you a quick link so you can see the options.', {
+          variantKey: variant,
+          preset,
+          baseUrl: appBaseUrl,
+        });
+        response.hangup();
+        return res.type('text/xml').send(response.toString());
+      }
+
+      const nextState = { ...state, introNoSpeechCount: introNoSpeechCount + 1 };
+      const response = new VoiceResponse();
+      const introState = encodeCallState(nextState);
+      const introAction = absoluteUrl(`/voice/cold-caller/intro?state=${introState}`, appBaseUrl);
+      const gather = response.gather({
+        input: 'speech',
+        method: 'POST',
+        action: introAction,
+        speechTimeout: 'auto',
+        timeout: 5,
+        bargeIn: 'true',
+        actionOnEmptyResult: true,
+      });
+
+      for (let i = 0; i < introLines.length; i += 1) {
+        await appendSpeech(gather, introLines[i], { variantKey: variant, preset, baseUrl: appBaseUrl });
+        if (i < introLines.length - 1) {
+          gather.pause({ length: 1 });
+        }
+      }
+
+      response.redirect(introAction);
+      return res.type('text/xml').send(response.toString());
+    }
+
     const response = new VoiceResponse();
     const introState = encodeCallState(state);
     const introAction = absoluteUrl(`/voice/cold-caller/intro?state=${introState}`, appBaseUrl);
@@ -1527,7 +1572,6 @@ app.post('/voice/cold-caller/intro', async (req, res) => {
       actionOnEmptyResult: true,
     });
 
-    const introLines = Array.isArray(state.introLines) ? state.introLines : [];
     for (let i = 0; i < introLines.length; i += 1) {
       await appendSpeech(gather, introLines[i], { variantKey: variant, preset, baseUrl: appBaseUrl });
       if (i < introLines.length - 1) {
@@ -1570,9 +1614,26 @@ app.post('/voice/cold-caller/qualify', async (req, res) => {
     const leadNumber = extractLeadNumber(req.body);
     const wantsLinkNow = requestsLink(speech);
 
+    const qualifyNoSpeechCount = Number(state.qualifyNoSpeechCount) || 0;
+
     if (!speech) {
+      if (qualifyNoSpeechCount >= 1) {
+        if (leadNumber) {
+          await sendColdCallerLink(leadNumber, callSid);
+        }
+        const response = new VoiceResponse();
+        await appendSpeech(response, state.smsOfferLine || 'I just texted you a quick link so you can see the options.', {
+          variantKey: variant,
+          preset,
+          baseUrl: appBaseUrl,
+        });
+        response.hangup();
+        return res.type('text/xml').send(response.toString());
+      }
+
+      const nextState = { ...state, qualifyNoSpeechCount: qualifyNoSpeechCount + 1 };
       const response = new VoiceResponse();
-      const qualifyState = encodeCallState(state);
+      const qualifyState = encodeCallState(nextState);
       const qualifyAction = absoluteUrl(`/voice/cold-caller/qualify?state=${qualifyState}`, appBaseUrl);
       const gather = response.gather({
         input: 'speech',
