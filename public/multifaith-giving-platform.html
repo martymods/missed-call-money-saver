@@ -453,35 +453,13 @@
       line-height: 1.4;
     }
 
-    .currency-list {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .currency-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      font-size: 13px;
+    .currency-inline-list {
+      display: inline;
+      font-size: 14px;
       letter-spacing: 0.3px;
-      text-transform: uppercase;
+      text-transform: none;
       color: #e5edff;
-    }
-
-    .currency-item img {
-      width: 32px;
-      height: 20px;
-      object-fit: cover;
-      border-radius: 6px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+      line-height: 1.6;
     }
 
     .region-meta ul {
@@ -1895,17 +1873,24 @@
         ? `<div class="faith-identity" data-religion="${slide.religion}"><div class="faith-symbol" aria-hidden="true" style="--symbol-image: url('${symbol.src}')"></div><span class="faith-label">${escapeHtml(symbol.label)}</span></div>`
         : '';
       const currencyMarkup = Array.isArray(slide.currencies) && slide.currencies.length
-        ? `<div class="currency-row"><strong>Currencies:</strong><ul class="currency-list" aria-label="Supported currencies">${slide.currencies
-            .map(code => {
-              const normalized = typeof code === 'string' ? code.trim().toUpperCase() : '';
-              if (!normalized) return '';
-              const currency = CURRENCIES.get(normalized);
-              if (currency) {
-                return `<li class="currency-item" data-code="${escapeHtml(currency.code)}"><img src="${currency.src}" alt="${escapeHtml(currency.name)}" loading="lazy" decoding="async"/><span>${escapeHtml(currency.code)}</span></li>`;
-              }
-              return `<li class="currency-item" data-code="${escapeHtml(normalized)}"><span>${escapeHtml(normalized)}</span></li>`;
-            })
-            .join('')}</ul></div>`
+        ? (() => {
+            const labels = slide.currencies
+              .map(code => {
+                const normalized = typeof code === 'string' ? code.trim().toUpperCase() : '';
+                if (!normalized) return '';
+                const currency = CURRENCIES.get(normalized);
+                if (currency) {
+                  return `${currency.name} ${currency.code}`;
+                }
+                return normalized;
+              })
+              .filter(Boolean)
+              .map(label => escapeHtml(label));
+            if (!labels.length) {
+              return '';
+            }
+            return `<div class="currency-row"><strong>Currencies:</strong><span class="currency-inline-list" aria-label="Supported currencies">${labels.join(' * ')}</span></div>`;
+          })()
         : '';
       slideEl.innerHTML = `
         <div class="region-media">
