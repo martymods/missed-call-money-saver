@@ -11,6 +11,7 @@ const Stripe = require('stripe');
 const OpenAI = require('openai');                           // 👈 NEW
 const { Readable } = require('stream');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
+const hasStripeSecret = Boolean(process.env.STRIPE_SECRET_KEY);
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' }); // 👈 NEW
 const STATIC_APP_BASE_URL = process.env.PUBLIC_BASE_URL || process.env.APP_BASE_URL || '';
 const DEFAULT_APP_BASE_URL = (STATIC_APP_BASE_URL || 'https://www.delcotechdivision.com').replace(/\/$/, '');
@@ -34,6 +35,7 @@ const createAuditRouter = require('./routes/audit');
 const createDesignRouter = require('./routes/design');
 const createTeamRouter = require('./routes/teams');
 const createWarehouseRouter = require('./routes/warehouse');
+const createGivingRouter = require('./routes/giving');
 const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
 
 const jwt = require('jsonwebtoken');
@@ -822,6 +824,11 @@ app.get('/api/food/menu', (_req,res)=> res.json({ items: MENU, taxRate: TAX_RATE
 app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT })); // Twilio posts form-url-encoded
 app.use(express.json({ limit: BODY_LIMIT }));
 
+app.use('/api/giving', createGivingRouter({
+  stripe,
+  hasStripe: hasStripeSecret,
+  getAppBaseUrl: resolveAppBaseUrl,
+}));
 app.use('/api/users', createUserRouter());
 app.use('/api/integrations', createIntegrationsRouter());
 app.use('/api/support', createSupportRouter(openai));

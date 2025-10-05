@@ -415,6 +415,151 @@
       flex: none;
     }
 
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .section-head .lead {
+      margin-bottom: 0;
+    }
+
+    .community-grid {
+      margin-top: 32px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .community-card {
+      background: var(--card);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      box-shadow: 0 24px 50px rgba(2, 8, 25, 0.45);
+    }
+
+    .community-media {
+      position: relative;
+      width: 100%;
+      padding-top: 60%;
+      background: linear-gradient(135deg, rgba(124, 77, 255, 0.45), rgba(55, 199, 154, 0.3));
+    }
+
+    .community-media img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .community-initial {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 0.85);
+      text-transform: uppercase;
+    }
+
+    .community-body {
+      padding: 22px 22px 24px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .community-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .community-meta span {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .community-body h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .community-body p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .community-progress {
+      display: grid;
+      gap: 10px;
+    }
+
+    .progress-bar {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .progress-bar div {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .community-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .community-actions .btn {
+      flex: none;
+    }
+
+    .community-profile {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .community-status {
+      font-size: 12px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .community-status.goal-met {
+      color: var(--accent-2);
+    }
+
     footer {
       margin-top: 60px;
       padding: 40px 0 60px;
@@ -473,6 +618,7 @@
     <div class="inline-actions">
       <a class="btn ghost" href="#regions">Explore regions</a>
       <a class="btn" href="#give">Start giving</a>
+      <a class="btn ghost" href="multifaith-campaign-create.html">Start receiving</a>
     </div>
   </nav>
 </header>
@@ -485,6 +631,7 @@
       <div class="inline-actions">
         <a class="btn" href="#give">Create a donation</a>
         <a class="btn ghost" href="#manage">Manage organizations</a>
+        <a class="btn ghost" href="multifaith-campaign-create.html">Share my story</a>
       </div>
     </div>
     <div class="hero-media">
@@ -513,6 +660,18 @@
     <h2>Sectors we fund together</h2>
     <p class="lead">Pair every gift with a sector so donors understand the impact: community relief, education, food security, and more. Sectors appear on receipts and in compliance exports automatically.</p>
     <div class="sector-grid" id="sector-grid"></div>
+  </section>
+
+  <section id="community">
+    <div class="section-head">
+      <div>
+        <h2>Community campaigns in motion</h2>
+        <p class="lead">Browse stories submitted by individuals and small groups who are actively raising support right now.</p>
+      </div>
+      <a class="btn ghost" href="multifaith-campaign-create.html">Start receiving donations</a>
+    </div>
+    <div class="community-grid" id="community-campaigns"></div>
+    <p class="empty-note" id="community-empty" hidden>No community campaigns have launched yet. Share yours to be featured here.</p>
   </section>
 
   <section id="give">
@@ -706,6 +865,14 @@
     { value: 'capital', title: 'Facilities & Capital', desc: 'Building restoration, accessibility upgrades, and mortgages.' }
   ];
 
+  const REGION_CURRENCY_LOOKUP = new Map([
+    ['NA', 'usd'],
+    ['EU', 'eur'],
+    ['MENA', 'aed'],
+    ['SA', 'inr'],
+    ['APAC', 'sgd']
+  ]);
+
   const DEFAULT_ORGS = [
     {
       _id: 'org_dreamworld',
@@ -714,6 +881,14 @@
       religion: 'buddhist',
       locales: ['en-SG', 'zh-SG'],
       timezone: 'Asia/Singapore'
+    },
+    {
+      _id: 'org_dreamworld_point_bank',
+      name: 'Dreamworld Point Bank',
+      region: 'NA',
+      religion: 'jewish',
+      locales: ['en-US', 'he-IL'],
+      timezone: 'America/New_York'
     },
     {
       _id: 'org_one_brain_world',
@@ -730,6 +905,14 @@
       religion: 'islam',
       locales: ['en-AE', 'ar-AE'],
       timezone: 'Asia/Dubai'
+    },
+    {
+      _id: 'org_paperwork',
+      name: 'Paperwork',
+      region: 'SA',
+      religion: 'hindu',
+      locales: ['en-IN', 'hi-IN'],
+      timezone: 'Asia/Kolkata'
     }
   ];
 
@@ -740,6 +923,7 @@
         orgId: 'org_dreamworld',
         name: 'Retreat Scholarships · Education Fund',
         sectorFocus: 'education',
+        currency: 'sgd',
         donationTypes: ['dana', 'retreat']
       },
       {
@@ -747,6 +931,7 @@
         orgId: 'org_dreamworld',
         name: 'Environmental Care · Health & Wellness',
         sectorFocus: 'health',
+        currency: 'sgd',
         donationTypes: ['dana']
       },
       {
@@ -754,6 +939,7 @@
         orgId: 'org_dreamworld',
         name: 'Community Kitchens · Food Security',
         sectorFocus: 'food',
+        currency: 'sgd',
         donationTypes: ['dana']
       }
     ]],
@@ -763,6 +949,7 @@
         orgId: 'org_one_brain_world',
         name: 'Community Relief · Neighbor Support',
         sectorFocus: 'relief',
+        currency: 'usd',
         donationTypes: ['tithe', 'offering']
       },
       {
@@ -770,6 +957,7 @@
         orgId: 'org_one_brain_world',
         name: 'Youth & Families · Mentorship Fund',
         sectorFocus: 'youth',
+        currency: 'usd',
         donationTypes: ['pledge', 'offering']
       },
       {
@@ -777,6 +965,7 @@
         orgId: 'org_one_brain_world',
         name: 'Facilities & Capital · Renewal Campaign',
         sectorFocus: 'capital',
+        currency: 'usd',
         donationTypes: ['pledge']
       }
     ]],
@@ -786,6 +975,7 @@
         orgId: 'org_new_bright_water',
         name: 'Ramadan Food Parcels · Food Security',
         sectorFocus: 'food',
+        currency: 'aed',
         donationTypes: ['zakat', 'sadaqah']
       },
       {
@@ -793,6 +983,7 @@
         orgId: 'org_new_bright_water',
         name: 'Scholarships for Girls · Education Access',
         sectorFocus: 'education',
+        currency: 'aed',
         donationTypes: ['zakat']
       },
       {
@@ -800,7 +991,60 @@
         orgId: 'org_new_bright_water',
         name: 'Mosque Restoration · Facilities & Capital',
         sectorFocus: 'capital',
+        currency: 'aed',
         donationTypes: ['zakat', 'sadaqah']
+      }
+    ]],
+    ['org_dreamworld_point_bank', [
+      {
+        _id: 'camp_dreamworld_point_bank_emergency',
+        orgId: 'org_dreamworld_point_bank',
+        name: 'Emergency Relief · Tzedakah Collective',
+        sectorFocus: 'relief',
+        currency: 'usd',
+        donationTypes: ['tzedakah']
+      },
+      {
+        _id: 'camp_dreamworld_point_bank_learning',
+        orgId: 'org_dreamworld_point_bank',
+        name: 'Learning Circles · Scholarship Fund',
+        sectorFocus: 'education',
+        currency: 'usd',
+        donationTypes: ['tzedakah', 'maaser']
+      },
+      {
+        _id: 'camp_dreamworld_point_bank_families',
+        orgId: 'org_dreamworld_point_bank',
+        name: 'Family Support · Community Chest',
+        sectorFocus: 'youth',
+        currency: 'usd',
+        donationTypes: ['maaser']
+      }
+    ]],
+    ['org_paperwork', [
+      {
+        _id: 'camp_paperwork_prasadam',
+        orgId: 'org_paperwork',
+        name: 'Temple Meals · Prasadam Kitchen',
+        sectorFocus: 'food',
+        currency: 'inr',
+        donationTypes: ['daan', 'seva']
+      },
+      {
+        _id: 'camp_paperwork_education',
+        orgId: 'org_paperwork',
+        name: 'Youth Education · Gurukul Program',
+        sectorFocus: 'education',
+        currency: 'inr',
+        donationTypes: ['daan', 'dakshina']
+      },
+      {
+        _id: 'camp_paperwork_health',
+        orgId: 'org_paperwork',
+        name: 'Health Outreach · Seva Clinics',
+        sectorFocus: 'health',
+        currency: 'inr',
+        donationTypes: ['seva']
       }
     ]]
   ]);
@@ -825,6 +1069,7 @@
     orgs: [],
     campaignsByOrg: new Map(),
     campaignFetchAttempts: new Set(),
+    communityCampaigns: [],
     slideIndex: 0,
     autoTimer: null
   };
@@ -868,8 +1113,59 @@
     setupCampaignOrg: document.getElementById('setup-campaign-org'),
     setupCampaignName: document.getElementById('setup-campaign-name'),
     setupCampaignCode: document.getElementById('setup-campaign-code'),
-    setupCampaignTypes: document.getElementById('setup-campaign-types')
+    setupCampaignTypes: document.getElementById('setup-campaign-types'),
+    communityGrid: document.getElementById('community-campaigns'),
+    communityEmpty: document.getElementById('community-empty')
   };
+
+  const HTML_ESCAPE_LOOKUP = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => HTML_ESCAPE_LOOKUP[ch] || ch);
+  }
+
+  function titleize(value) {
+    const str = String(value ?? '').replace(/[_-]+/g, ' ').trim();
+    if (!str) return '';
+    return str.replace(/\b\w/g, ch => ch.toUpperCase());
+  }
+
+  function initialsFromName(value) {
+    const parts = String(value ?? '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(part => part[0]);
+    if (!parts.length) return '∎';
+    return parts.slice(0, 2).join('').toUpperCase();
+  }
+
+  function truncate(value, max = 160) {
+    const str = String(value ?? '').trim();
+    if (str.length <= max) return str;
+    return `${str.slice(0, Math.max(0, max - 1))}…`;
+  }
+
+  function formatCurrency(amount, currency = 'usd') {
+    const numeric = Number(amount || 0);
+    const code = String(currency || 'usd').toUpperCase();
+    if (!Number.isFinite(numeric)) return '';
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: code }).format(numeric);
+    } catch (err) {
+      return `${code} ${numeric.toFixed(2)}`;
+    }
+  }
+
+  function getCurrencyForRegion(region) {
+    return REGION_CURRENCY_LOOKUP.get(region) || 'usd';
+  }
 
   function setStatus(el, message, type = 'info') {
     if (!el) return;
@@ -958,6 +1254,90 @@
       card.innerHTML = `<h3>${sector.title}</h3><p>${sector.desc}</p>`;
       els.sectorGrid.appendChild(card);
     });
+  }
+
+  function renderCommunityCampaigns(campaigns) {
+    if (!els.communityGrid) return;
+    els.communityGrid.innerHTML = '';
+    const list = Array.isArray(campaigns) ? campaigns : [];
+    if (!list.length) {
+      if (els.communityEmpty) {
+        els.communityEmpty.hidden = false;
+        els.communityEmpty.textContent = 'No community campaigns have launched yet. Share yours to be featured here.';
+      }
+      return;
+    }
+
+    if (els.communityEmpty) {
+      els.communityEmpty.hidden = true;
+    }
+
+    list.forEach(campaign => {
+      const card = document.createElement('article');
+      card.className = 'community-card';
+      const goal = Number(campaign.goalAmount || 0);
+      const raised = Number(campaign.amountRaised || 0);
+      const currency = campaign.currency || getCurrencyForRegion(campaign.region);
+      const progressPercent = goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
+      const goalReached = goal > 0 && raised >= goal;
+      const statusMessage = goal > 0
+        ? goalReached
+          ? 'Goal reached'
+          : `${Math.max(0, 100 - progressPercent)}% to goal`
+        : 'Open goal';
+      const religionLabel = titleize(campaign.religion || '');
+      const regionLabel = String(campaign.region || '').toUpperCase();
+      const withdrawalLabel = campaign.allowEarlyWithdrawal ? 'Flexible withdrawals' : 'Goal release';
+      const metaParts = [religionLabel, regionLabel, withdrawalLabel].filter(Boolean);
+      const metaHtml = (metaParts.length ? metaParts : ['Community']).map(part => `<span>${escapeHtml(part)}</span>`).join('');
+      const description = truncate(campaign.description || '', 190);
+      const paymentLink = campaign?.paymentLink?.url
+        ? `<a class="btn" href="${escapeHtml(campaign.paymentLink.url)}" target="_blank" rel="noreferrer">Give now</a>`
+        : '';
+      const profileDisplay = campaign.profileName ? escapeHtml(campaign.profileName) : 'Anonymous';
+      const imageContent = campaign.imageUrl
+        ? `<img src="${escapeHtml(campaign.imageUrl)}" alt="${escapeHtml(campaign.profileName || campaign.campaignName || 'Community campaign')}" loading="lazy"/>`
+        : `<div class="community-initial">${escapeHtml(initialsFromName(campaign.profileName || campaign.campaignName))}</div>`;
+      const raisedLabel = escapeHtml(formatCurrency(raised, currency));
+      const goalLabel = escapeHtml(goal > 0 ? `of ${formatCurrency(goal, currency)}` : 'No goal set');
+      card.innerHTML = `
+        <div class="community-media">${imageContent}</div>
+        <div class="community-body">
+          <div class="community-meta">${metaHtml}</div>
+          <h3>${escapeHtml(campaign.campaignName || '')}</h3>
+          <p>${escapeHtml(description)}</p>
+          <div class="community-progress">
+            <div class="progress-bar"><div style="width:${progressPercent}%"></div></div>
+            <div class="progress-meta">
+              <span>${raisedLabel}</span>
+              <span>${goalLabel}</span>
+            </div>
+            <span class="community-status${goalReached ? ' goal-met' : ''}">${escapeHtml(statusMessage)}</span>
+          </div>
+          <div class="community-actions">
+            ${paymentLink}
+            <span class="community-profile">by ${profileDisplay}</span>
+          </div>
+        </div>`;
+      card.dataset.campaignId = campaign.id || campaign._id || '';
+      els.communityGrid.appendChild(card);
+    });
+  }
+
+  async function loadCommunityCampaigns() {
+    if (!els.communityGrid) return;
+    try {
+      const data = await fetchJSON('/api/giving/community-campaigns');
+      const campaigns = Array.isArray(data) ? data : data.campaigns ?? data.data ?? [];
+      state.communityCampaigns = campaigns;
+      renderCommunityCampaigns(campaigns);
+    } catch (err) {
+      console.warn('Unable to load community campaigns', err);
+      if (els.communityEmpty) {
+        els.communityEmpty.hidden = false;
+        els.communityEmpty.textContent = 'Unable to load community campaigns right now. Please try again soon.';
+      }
+    }
   }
 
   function populateSelect(select, values, placeholder) {
@@ -1177,6 +1557,9 @@
     if (!amount || Number.isNaN(amount)) {
       throw new Error('Enter a donation amount.');
     }
+    const org = state.orgs.find(item => item?._id === orgId);
+    const campaign = extractCampaignFromSelect();
+    const currency = (campaign?.currency || org?.currency || getCurrencyForRegion(els.donationRegion.value));
     const payload = {
       orgId,
       campaignId,
@@ -1186,6 +1569,10 @@
       sector: els.donationSector.value,
       amount,
       interval,
+      currency,
+      campaignName: campaign?.name,
+      orgName: org?.name,
+      description: campaign?.description,
       allowPromo: els.donationPromo.value === 'true',
       donor: {
         name: els.donationName.value,
@@ -1317,6 +1704,7 @@
     ensureDefaultOrganizations();
     updateOrgOptions();
     loadOrganizations();
+    loadCommunityCampaigns();
     document.getElementById('year').textContent = new Date().getFullYear();
   }
 
