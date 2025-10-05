@@ -441,8 +441,8 @@
     .currency-row {
       display: flex;
       flex-wrap: wrap;
-      align-items: flex-start;
-      gap: 12px;
+      align-items: stretch;
+      gap: 22px;
       margin: 18px 0 0;
       font-size: 15px;
       color: #d9e3ff;
@@ -450,10 +450,11 @@
 
     .currency-row strong {
       font-size: 15px;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.35px;
       color: #f0f4ff;
       flex-shrink: 0;
       line-height: 1.4;
+      padding-top: 6px;
     }
 
     .currency-list {
@@ -462,29 +463,44 @@
       list-style: none;
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 18px;
     }
 
     .currency-item {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      font-size: 13px;
-      letter-spacing: 0.3px;
+      gap: 18px;
+      padding: 14px 18px;
+      border-radius: 18px;
+      background: linear-gradient(140deg, rgba(31, 52, 130, 0.68), rgba(17, 29, 82, 0.78));
+      border: 1px solid rgba(124, 163, 255, 0.28);
+      box-shadow: 0 18px 32px rgba(5, 10, 35, 0.45);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
       text-transform: uppercase;
-      color: #e5edff;
+      color: #f4f7ff;
+      min-width: 170px;
     }
 
     .currency-item img {
-      width: 32px;
-      height: 20px;
-      object-fit: cover;
-      border-radius: 6px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+      flex: 0 0 auto;
+      height: 72px;
+      width: auto;
+      max-width: 160px;
+      object-fit: contain;
+      border-radius: 12px;
+      background: rgba(3, 12, 41, 0.6);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.42);
+    }
+
+    .currency-item span {
+      flex: 1;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-align: right;
+      color: #f9fbff;
     }
 
     .region-meta ul {
@@ -1011,6 +1027,25 @@
       .currency-row {
         flex-direction: column;
         align-items: stretch;
+      }
+
+      .currency-list {
+        width: 100%;
+        gap: 16px;
+      }
+
+      .currency-item {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .currency-item img {
+        height: 64px;
+        max-width: 140px;
+      }
+
+      .currency-item span {
+        text-align: left;
       }
 
       .sector-grid {
