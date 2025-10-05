@@ -277,6 +277,49 @@
       display: flex;
       transition: transform 0.6s ease;
       width: 100%;
+      position: relative;
+      z-index: 0;
+    }
+
+    .region-transition {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 1;
+      transition: opacity 0.28s ease;
+    }
+
+    .region-transition.is-active {
+      opacity: 1;
+    }
+
+    .transition-scene {
+      position: absolute;
+      inset: 0;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+    }
+
+    .region-transition.is-active .transition-scene[data-scene="current"] {
+      animation: regionSceneDim var(--transition-duration, 1400ms) cubic-bezier(1, 0, 1, 1) forwards;
+    }
+
+    .transition-scene[data-scene="next"] {
+      filter: brightness(0%);
+      -webkit-mask-image: var(--transition-mask-image, none);
+      mask-image: var(--transition-mask-image, none);
+      -webkit-mask-size: 12%;
+      mask-size: 12%;
+      -webkit-mask-position: center;
+      mask-position: center;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+    }
+
+    .region-transition.is-active .transition-scene[data-scene="next"] {
+      animation: regionSceneReveal var(--transition-duration, 1400ms) cubic-bezier(1, 0, 1, 1) forwards;
     }
 
     .region-slide {
@@ -348,6 +391,31 @@
       }
       100% {
         transform: scale(1.05) translateY(12%);
+      }
+    }
+
+    @keyframes regionSceneReveal {
+      0% {
+        filter: brightness(0%);
+        -webkit-mask-size: 12%;
+        mask-size: 12%;
+      }
+      20% {
+        filter: brightness(100%);
+      }
+      100% {
+        filter: brightness(100%);
+        -webkit-mask-size: 1600%;
+        mask-size: 1600%;
+      }
+    }
+
+    @keyframes regionSceneDim {
+      0% {
+        filter: brightness(100%);
+      }
+      100% {
+        filter: brightness(40%);
       }
     }
 
@@ -433,6 +501,7 @@
       justify-content: space-between;
       padding: 0 22px;
       pointer-events: none;
+      z-index: 2;
     }
 
     .slider-btn {
@@ -457,6 +526,7 @@
       transform: translateX(-50%);
       display: inline-flex;
       gap: 10px;
+      z-index: 2;
     }
 
     .slider-dot {
@@ -994,6 +1064,10 @@
     <p class="lead">Preview the localized experience for every launch territory. Each slide shows live copy, receipt preferences, and sector highlights donors will see.</p>
     <div class="region-slider">
       <div class="region-track" id="region-track"></div>
+      <div class="region-transition" id="region-transition" aria-hidden="true">
+        <div class="transition-scene" data-scene="current" id="transition-current"></div>
+        <div class="transition-scene" data-scene="next" id="transition-next"></div>
+      </div>
       <div class="slider-controls">
         <button class="slider-btn" id="prev-slide" type="button" aria-label="Previous region">‹</button>
         <button class="slider-btn" id="next-slide" type="button" aria-label="Next region">›</button>
@@ -1509,13 +1583,20 @@
     slideIndex: 0,
     autoTimer: null,
     slideImages: new Map(),
-    lastSlideImage: new Map()
+    lastSlideImage: new Map(),
+    hasRenderedInitialSlide: false,
+    isTransitioning: false,
+    preloadedSlideId: null
   };
 
   const SECTOR_TITLE_LOOKUP = new Map(SECTORS.map(sector => [sector.value, sector.title]));
 
   const els = {
+    regionSlider: document.querySelector('.region-slider'),
     regionTrack: document.getElementById('region-track'),
+    regionTransition: document.getElementById('region-transition'),
+    transitionCurrent: document.getElementById('transition-current'),
+    transitionNext: document.getElementById('transition-next'),
     sliderDots: document.getElementById('slider-dots'),
     prevSlide: document.getElementById('prev-slide'),
     nextSlide: document.getElementById('next-slide'),
@@ -1688,6 +1769,13 @@
     els.sliderDots.innerHTML = '';
     state.slideImages.clear();
     state.lastSlideImage.clear();
+    state.slideIndex = 0;
+    state.hasRenderedInitialSlide = false;
+    state.isTransitioning = false;
+    state.preloadedSlideId = null;
+    if (els.regionTransition) {
+      els.regionTransition.classList.remove('is-active');
+    }
     SLIDES.forEach((slide, index) => {
       const slideEl = document.createElement('article');
       slideEl.className = 'region-slide';
@@ -1724,12 +1812,90 @@
       dot.addEventListener('click', () => showSlide(index, true));
       els.sliderDots.appendChild(dot);
     });
-    showSlide(0, true);
+    if (els.transitionCurrent) {
+      els.transitionCurrent.style.backgroundImage = 'none';
+    }
+    if (els.transitionNext) {
+      els.transitionNext.style.backgroundImage = 'none';
+      els.transitionNext.style.setProperty('--transition-mask-image', 'none');
+    }
+    showSlide(0, false, true);
     attachFaithSymbolTilt();
   }
 
-  function showSlide(index, manual = false) {
-    state.slideIndex = (index + SLIDES.length) % SLIDES.length;
+  function showSlide(index, manual = false, skipTransition = false) {
+    if (state.isTransitioning) return;
+    const nextIndex = (index + SLIDES.length) % SLIDES.length;
+    const currentIndex = state.slideIndex;
+    const shouldAnimate = !skipTransition && state.hasRenderedInitialSlide && nextIndex !== currentIndex;
+    if (shouldAnimate && els.regionTransition && els.transitionCurrent && els.transitionNext) {
+      startSlideTransition(currentIndex, nextIndex, manual);
+      return;
+    }
+    finalizeSlideChange(nextIndex, manual);
+  }
+
+  function startSlideTransition(currentIndex, nextIndex, manual) {
+    const overlay = els.regionTransition;
+    const currentScene = els.transitionCurrent;
+    const nextScene = els.transitionNext;
+    const currentSlide = SLIDES[currentIndex];
+    const nextSlideData = SLIDES[nextIndex];
+    if (!overlay || !currentScene || !nextScene || !currentSlide || !nextSlideData) {
+      finalizeSlideChange(nextIndex, manual);
+      return;
+    }
+
+    state.isTransitioning = true;
+    setRandomSlideImage(nextSlideData.id, nextSlideData.religion);
+    const currentImg = state.slideImages.get(currentSlide.id);
+    const nextImg = state.slideImages.get(nextSlideData.id);
+    const currentSrc = currentImg?.src || '';
+    const nextSrc = nextImg?.src || '';
+    currentScene.style.backgroundImage = currentSrc ? `url("${currentSrc}")` : 'none';
+    nextScene.style.backgroundImage = nextSrc ? `url("${nextSrc}")` : 'none';
+    const symbol = RELIGION_SYMBOLS.get(nextSlideData.religion);
+    if (symbol?.src) {
+      nextScene.style.setProperty('--transition-mask-image', `url("${symbol.src}")`);
+    } else {
+      nextScene.style.setProperty('--transition-mask-image', 'none');
+    }
+    const duration = 1400;
+    overlay.style.setProperty('--transition-duration', `${duration}ms`);
+    state.preloadedSlideId = nextSlideData.id;
+
+    // Reset animation state to allow retriggering
+    currentScene.style.animation = 'none';
+    nextScene.style.animation = 'none';
+    void overlay.offsetWidth;
+    currentScene.style.animation = '';
+    nextScene.style.animation = '';
+
+    overlay.classList.add('is-active');
+
+    let finished = false;
+    let fallbackTimer = null;
+    const timerHost = typeof window !== 'undefined' ? window : globalThis;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (fallbackTimer) {
+        timerHost.clearTimeout(fallbackTimer);
+      }
+      finalizeSlideChange(nextIndex, manual);
+      overlay.classList.remove('is-active');
+      currentScene.style.backgroundImage = 'none';
+      nextScene.style.backgroundImage = 'none';
+      nextScene.style.setProperty('--transition-mask-image', 'none');
+      state.isTransitioning = false;
+    };
+
+    fallbackTimer = timerHost.setTimeout(finish, duration + 250);
+    nextScene.addEventListener('animationend', finish, { once: true });
+  }
+
+  function finalizeSlideChange(newIndex, manual) {
+    state.slideIndex = newIndex;
     const offset = -state.slideIndex * 100;
     els.regionTrack.style.transform = `translateX(${offset}%)`;
     const slides = Array.from(els.regionTrack.children);
@@ -1740,7 +1906,6 @@
         const img = slideEl.querySelector('.region-image');
         if (img) {
           img.style.animation = 'none';
-          // Force reflow so the animation restarts when play state resumes
           void img.offsetHeight;
           img.style.animation = '';
         }
@@ -1751,18 +1916,27 @@
     });
     const slide = SLIDES[state.slideIndex];
     if (slide) {
-      setRandomSlideImage(slide.id, slide.religion);
+      if (state.preloadedSlideId === slide.id) {
+        state.preloadedSlideId = null;
+      } else {
+        setRandomSlideImage(slide.id, slide.religion);
+      }
     }
     if (manual) {
       resetAutoSlide();
     }
+    if (!state.hasRenderedInitialSlide) {
+      state.hasRenderedInitialSlide = true;
+    }
   }
 
-  function nextSlide() {
-    showSlide(state.slideIndex + 1);
+  function nextSlide(manual = false) {
+    if (state.isTransitioning) return;
+    showSlide(state.slideIndex + 1, manual);
   }
 
   function prevSlide() {
+    if (state.isTransitioning) return;
     showSlide(state.slideIndex - 1, true);
   }
 
@@ -2112,7 +2286,7 @@
 
   function attachEvents() {
     els.prevSlide.addEventListener('click', () => prevSlide());
-    els.nextSlide.addEventListener('click', () => { showSlide(state.slideIndex + 1, true); });
+    els.nextSlide.addEventListener('click', () => { nextSlide(true); });
     resetAutoSlide();
 
     els.donationFaith.addEventListener('change', () => {
