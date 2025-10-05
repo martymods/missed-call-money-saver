@@ -352,6 +352,30 @@
       align-items: stretch;
     }
 
+    .region-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+      align-items: start;
+    }
+
+    .region-heading {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 12px;
+    }
+
+    .region-details {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+      align-items: start;
+    }
+
+    .region-details > :only-child {
+      grid-column: 1 / -1;
+    }
+
     .region-media {
       position: relative;
       width: 100%;
@@ -455,9 +479,9 @@
     .currency-row {
       display: flex;
       flex-wrap: wrap;
-      align-items: stretch;
-      gap: 22px;
-      margin: 18px 0 0;
+      align-items: flex-start;
+      gap: 16px;
+      margin: 0;
       font-size: 15px;
       color: var(--muted);
     }
@@ -477,14 +501,14 @@
       list-style: none;
       display: flex;
       flex-wrap: wrap;
-      gap: 18px;
+      gap: 12px;
     }
 
     .currency-item {
       display: flex;
       align-items: center;
-      gap: 18px;
-      padding: 14px 18px;
+      gap: 14px;
+      padding: 12px 16px;
       border-radius: 18px;
       background: #ffffff;
       border: 1px solid rgba(31, 41, 55, 0.1);
@@ -494,7 +518,7 @@
       letter-spacing: 0.4px;
       text-transform: uppercase;
       color: var(--ink);
-      min-width: 170px;
+      min-width: 150px;
     }
 
     .currency-item img {
@@ -517,15 +541,15 @@
       color: var(--accent);
     }
 
-    .region-meta ul {
-      margin: 16px 0 0;
+    .region-details ul {
+      margin: 0;
       padding: 0;
       list-style: none;
       display: grid;
       gap: 10px;
     }
 
-    .region-meta ul li {
+    .region-details ul li {
       padding: 10px 14px;
       border-radius: 14px;
       background: rgba(31, 41, 55, 0.05);
@@ -1039,6 +1063,20 @@
       .region-slide {
         padding: 20px;
         grid-template-columns: 1fr;
+      }
+
+      .region-meta {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+
+      .region-heading {
+        grid-column: 1;
+      }
+
+      .region-details {
+        grid-template-columns: 1fr;
+        gap: 18px;
       }
 
       .region-meta h3 {
@@ -2115,13 +2153,17 @@
           <img class="region-image" alt="${slide.name} faith communities" loading="lazy"/>
         </div>
         <div class="region-meta">
-          ${identity}
-          <h3>${slide.name}</h3>
-          <p>${slide.copy}</p>
-          ${currencyMarkup}
-          <ul>
-            ${slide.sectors.map(item => `<li>${item}</li>`).join('')}
-          </ul>
+          <div class="region-heading">
+            ${identity}
+            <h3>${slide.name}</h3>
+            <p>${slide.copy}</p>
+          </div>
+          <div class="region-details">
+            ${currencyMarkup}
+            <ul>
+              ${slide.sectors.map(item => `<li>${item}</li>`).join('')}
+            </ul>
+          </div>
         </div>
       `;
       slideEl.classList.add(index % 2 === 0 ? 'pan-up' : 'pan-down');
