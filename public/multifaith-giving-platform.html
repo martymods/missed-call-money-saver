@@ -706,6 +706,105 @@
     { value: 'capital', title: 'Facilities & Capital', desc: 'Building restoration, accessibility upgrades, and mortgages.' }
   ];
 
+  const DEFAULT_ORGS = [
+    {
+      _id: 'org_dreamworld',
+      name: 'Dreamworld',
+      region: 'APAC',
+      religion: 'buddhist',
+      locales: ['en-SG', 'zh-SG'],
+      timezone: 'Asia/Singapore'
+    },
+    {
+      _id: 'org_one_brain_world',
+      name: 'One Brain World',
+      region: 'NA',
+      religion: 'christian',
+      locales: ['en-US', 'es-US'],
+      timezone: 'America/Los_Angeles'
+    },
+    {
+      _id: 'org_new_bright_water',
+      name: 'New Bright Water',
+      region: 'MENA',
+      religion: 'islam',
+      locales: ['en-AE', 'ar-AE'],
+      timezone: 'Asia/Dubai'
+    }
+  ];
+
+  const DEFAULT_CAMPAIGNS = new Map([
+    ['org_dreamworld', [
+      {
+        _id: 'camp_dreamworld_retreat',
+        orgId: 'org_dreamworld',
+        name: 'Retreat Scholarships · Education Fund',
+        sectorFocus: 'education',
+        donationTypes: ['dana', 'retreat']
+      },
+      {
+        _id: 'camp_dreamworld_environment',
+        orgId: 'org_dreamworld',
+        name: 'Environmental Care · Health & Wellness',
+        sectorFocus: 'health',
+        donationTypes: ['dana']
+      },
+      {
+        _id: 'camp_dreamworld_kitchens',
+        orgId: 'org_dreamworld',
+        name: 'Community Kitchens · Food Security',
+        sectorFocus: 'food',
+        donationTypes: ['dana']
+      }
+    ]],
+    ['org_one_brain_world', [
+      {
+        _id: 'camp_one_brain_relief',
+        orgId: 'org_one_brain_world',
+        name: 'Community Relief · Neighbor Support',
+        sectorFocus: 'relief',
+        donationTypes: ['tithe', 'offering']
+      },
+      {
+        _id: 'camp_one_brain_youth',
+        orgId: 'org_one_brain_world',
+        name: 'Youth & Families · Mentorship Fund',
+        sectorFocus: 'youth',
+        donationTypes: ['pledge', 'offering']
+      },
+      {
+        _id: 'camp_one_brain_capital',
+        orgId: 'org_one_brain_world',
+        name: 'Facilities & Capital · Renewal Campaign',
+        sectorFocus: 'capital',
+        donationTypes: ['pledge']
+      }
+    ]],
+    ['org_new_bright_water', [
+      {
+        _id: 'camp_new_bright_relief',
+        orgId: 'org_new_bright_water',
+        name: 'Ramadan Food Parcels · Food Security',
+        sectorFocus: 'food',
+        donationTypes: ['zakat', 'sadaqah']
+      },
+      {
+        _id: 'camp_new_bright_scholarship',
+        orgId: 'org_new_bright_water',
+        name: 'Scholarships for Girls · Education Access',
+        sectorFocus: 'education',
+        donationTypes: ['zakat']
+      },
+      {
+        _id: 'camp_new_bright_restoration',
+        orgId: 'org_new_bright_water',
+        name: 'Mosque Restoration · Facilities & Capital',
+        sectorFocus: 'capital',
+        donationTypes: ['zakat', 'sadaqah']
+      }
+    ]]
+  ]);
+
   const FAITH_TYPES = {
     christian: ['tithe', 'offering', 'pledge', 'mission'],
     islam: ['zakat', 'sadaqah', 'fidya', 'zakat-al-fitr'],
@@ -725,9 +824,12 @@
   const state = {
     orgs: [],
     campaignsByOrg: new Map(),
+    campaignFetchAttempts: new Set(),
     slideIndex: 0,
     autoTimer: null
   };
+
+  const SECTOR_TITLE_LOOKUP = new Map(SECTORS.map(sector => [sector.value, sector.title]));
 
   const els = {
     regionTrack: document.getElementById('region-track'),
@@ -884,6 +986,30 @@
     }
   }
 
+  function cloneDefaultCampaigns(list) {
+    return list.map(campaign => ({
+      ...campaign,
+      donationTypes: Array.isArray(campaign.donationTypes) ? [...campaign.donationTypes] : undefined
+    }));
+  }
+
+  function ensureDefaultOrganizations() {
+    const seen = new Set(state.orgs.map(org => (org && (org._id ? `id:${org._id}` : `name:${(org.name || '').toLowerCase()}:${org.region || ''}`))));
+    DEFAULT_ORGS.forEach(org => {
+      const key = org._id ? `id:${org._id}` : `name:${(org.name || '').toLowerCase()}:${org.region || ''}`;
+      if (!seen.has(key)) {
+        state.orgs.push({
+          ...org,
+          locales: Array.isArray(org.locales) ? [...org.locales] : []
+        });
+        seen.add(key);
+      }
+      if (org._id && DEFAULT_CAMPAIGNS.has(org._id) && !state.campaignsByOrg.has(org._id)) {
+        state.campaignsByOrg.set(org._id, cloneDefaultCampaigns(DEFAULT_CAMPAIGNS.get(org._id)));
+      }
+    });
+  }
+
   function populateFaithSelects() {
     populateSelect(els.donationFaith, FAITH_OPTIONS.map(f => ({ label: f.label, value: f.value })), 'Choose a faith');
     populateSelect(els.setupOrgFaith, FAITH_OPTIONS.map(f => ({ label: f.label, value: f.value })), 'Choose a faith');
@@ -920,7 +1046,17 @@
 
   function updateCampaignOptions(orgId) {
     const campaigns = state.campaignsByOrg.get(orgId) ?? [];
-    populateSelect(els.donationCampaign, campaigns.map(c => ({ ...c, label: c.name, value: c._id })), 'Choose a campaign');
+    populateSelect(
+      els.donationCampaign,
+      campaigns.map(campaign => ({
+        ...campaign,
+        label: campaign.sectorFocus
+          ? `${campaign.name} (${SECTOR_TITLE_LOOKUP.get(campaign.sectorFocus) || campaign.sectorFocus})`
+          : campaign.name,
+        value: campaign._id
+      })),
+      'Choose a campaign'
+    );
   }
 
   function hydrateDonationTypesFromCampaign(campaign) {
@@ -928,6 +1064,12 @@
     const donationTypes = Array.isArray(campaign.donationTypes) && campaign.donationTypes.length ? campaign.donationTypes : undefined;
     if (donationTypes) {
       populateSelect(els.donationType, donationTypes.map(v => ({ label: v.replace(/_/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase()), value: v })), 'Select donation type');
+    }
+    if (campaign.sectorFocus) {
+      const hasSectorOption = Array.from(els.donationSector.options).some(opt => opt.value === campaign.sectorFocus);
+      if (hasSectorOption) {
+        els.donationSector.value = campaign.sectorFocus;
+      }
     }
   }
 
@@ -960,18 +1102,23 @@
       const data = await fetchJSON('/api/giving/organizations');
       const orgs = Array.isArray(data) ? data : data.organizations ?? data.data ?? [];
       if (Array.isArray(orgs)) {
-        state.orgs = orgs;
-        updateOrgOptions();
+        state.orgs = orgs.slice();
       }
     } catch (err) {
       console.warn('Unable to load organizations', err);
       state.orgs = [];
-      updateOrgOptions();
     }
+    ensureDefaultOrganizations();
+    updateOrgOptions();
   }
 
   async function loadCampaigns(orgId) {
-    if (!orgId || state.campaignsByOrg.has(orgId)) return;
+    if (!orgId) return;
+    if (!state.campaignsByOrg.has(orgId) && DEFAULT_CAMPAIGNS.has(orgId)) {
+      state.campaignsByOrg.set(orgId, cloneDefaultCampaigns(DEFAULT_CAMPAIGNS.get(orgId)));
+    }
+    if (state.campaignFetchAttempts.has(orgId)) return;
+    state.campaignFetchAttempts.add(orgId);
     try {
       const data = await fetchJSON(`/api/giving/campaigns?orgId=${encodeURIComponent(orgId)}`);
       const campaigns = Array.isArray(data) ? data : data.campaigns ?? data.data ?? [];
@@ -980,7 +1127,9 @@
       }
     } catch (err) {
       console.warn('Unable to load campaigns', err);
-      state.campaignsByOrg.set(orgId, []);
+      if (!state.campaignsByOrg.has(orgId) || !state.campaignsByOrg.get(orgId)?.length) {
+        state.campaignsByOrg.set(orgId, cloneDefaultCampaigns(DEFAULT_CAMPAIGNS.get(orgId) ?? []));
+      }
     }
   }
 
@@ -1165,6 +1314,8 @@
     populateSectorSelects();
     setDonationTypeOptions(els.donationFaith.value);
     attachEvents();
+    ensureDefaultOrganizations();
+    updateOrgOptions();
     loadOrganizations();
     document.getElementById('year').textContent = new Date().getFullYear();
   }
