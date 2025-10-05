@@ -817,7 +817,7 @@
     {
       id: 'NA',
       name: 'North America',
-      image: 'religion/christianity5.jpg',
+      religion: 'christian',
       copy: 'US and Canada support ACH, cards, Apple Pay, and bilingual receipts with IRS and CRA-compliant summaries.',
       sectors: ['Community relief & shelters', 'Food security networks', 'Youth programming', 'Capital campaigns'],
       currencies: 'USD · CAD'
@@ -825,7 +825,7 @@
     {
       id: 'EU',
       name: 'Europe',
-      image: 'religion/judaism2.jpg',
+      religion: 'jewish',
       copy: 'Localized SEPA payments with automatic Gift Aid statements and multilingual GDPR consent flows.',
       sectors: ['Refugee welcome centers', 'Cultural preservation', 'Winter energy assistance', 'Education bursaries'],
       currencies: 'EUR · GBP · SEK'
@@ -833,7 +833,7 @@
     {
       id: 'MENA',
       name: 'Middle East & North Africa',
-      image: 'religion/islam5.jpg',
+      religion: 'islam',
       copy: 'Arabic-first experiences with Ramadan scheduling, zakat calculators, and regional banking partners.',
       sectors: ['Ramadan food parcels', 'Water & sanitation', 'Scholarships for girls', 'Mosque restoration'],
       currencies: 'AED · SAR · EGP'
@@ -841,7 +841,7 @@
     {
       id: 'SA',
       name: 'South Asia',
-      image: 'religion/hinduism4.jpg',
+      religion: 'hindu',
       copy: 'Handle INR, LKR, and NPR gifts with PAN capture, festival campaign presets, and WhatsApp confirmations.',
       sectors: ['Disaster recovery', 'Temple seva programs', 'Health outreach', 'Education for children'],
       currencies: 'INR · LKR · NPR'
@@ -849,7 +849,7 @@
     {
       id: 'APAC',
       name: 'Asia Pacific',
-      image: 'religion/buddhism3.jpg',
+      religion: 'buddhist',
       copy: 'From Singapore to Sydney: cards, BECS, and PayNow support with retreat management baked in.',
       sectors: ['Retreat scholarships', 'Environmental care', 'Elder support services', 'Community kitchens'],
       currencies: 'AUD · SGD · NZD'
@@ -1065,13 +1065,72 @@
     { value: 'jewish', label: 'Judaism' }
   ];
 
+  const RELIGION_IMAGE_POOLS = new Map([
+    ['christian', [
+      'religion/christianity1.jpg',
+      'religion/christianity2.jpg',
+      'religion/christianity3.jpg',
+      'religion/christianity4.jpg',
+      'religion/christianity5.jpg',
+      'religion/christianity6.jpg',
+      'religion/christianity7.png',
+      'religion/christianity8.png',
+      'religion/christianity9.png'
+    ]],
+    ['jewish', [
+      'religion/judaism1.jpg',
+      'religion/judaism2.jpg',
+      'religion/judaism3.png',
+      'religion/judaism4.png',
+      'religion/judaism5.png',
+      'religion/judaism6.png',
+      'religion/judaism7.png',
+      'religion/judaism8.png'
+    ]],
+    ['islam', [
+      'religion/islam1.jpg',
+      'religion/islam2.jpg',
+      'religion/islam3.png',
+      'religion/islam4.jpg',
+      'religion/islam5.jpg',
+      'religion/islam6.jpg',
+      'religion/islam7.jpg',
+      'religion/islam8.jpg',
+      'religion/islam9.png',
+      'religion/islam10.jpg',
+      'religion/islam11.png'
+    ]],
+    ['hindu', [
+      'religion/hinduism1.jpg',
+      'religion/hinduism2.jpg',
+      'religion/hinduism3.jpg',
+      'religion/hinduism4.jpg',
+      'religion/hinduism5.jpg',
+      'religion/hinduism6.jpg',
+      'religion/hinduism7.jpg'
+    ]],
+    ['buddhist', [
+      'religion/buddhism1.jpg',
+      'religion/buddhism2.jpg',
+      'religion/buddhism3.jpg',
+      'religion/buddhism4.jpg',
+      'religion/buddhism5.jpg',
+      'religion/buddhism6.jpg',
+      'religion/buddhism7.jpg',
+      'religion/buddhism8.jpg',
+      'religion/buddhism9.jpg'
+    ]]
+  ]);
+
   const state = {
     orgs: [],
     campaignsByOrg: new Map(),
     campaignFetchAttempts: new Set(),
     communityCampaigns: [],
     slideIndex: 0,
-    autoTimer: null
+    autoTimer: null,
+    slideImages: new Map(),
+    lastSlideImage: new Map()
   };
 
   const SECTOR_TITLE_LOOKUP = new Map(SECTORS.map(sector => [sector.value, sector.title]));
@@ -1190,15 +1249,44 @@
     return opt;
   }
 
+  function getImagePoolForReligion(religion) {
+    return RELIGION_IMAGE_POOLS.get(religion) || [];
+  }
+
+  function pickRandomImage(pool, exclude, forceDifferent = true) {
+    if (!pool.length) return null;
+    const unique = forceDifferent ? pool.filter(src => src !== exclude) : pool.slice();
+    const options = unique.length ? unique : pool;
+    const index = Math.floor(Math.random() * options.length);
+    return options[index];
+  }
+
+  function setRandomSlideImage(slideId, religion, forceDifferent = true) {
+    const imgEl = state.slideImages.get(slideId);
+    if (!imgEl) return;
+    const pool = getImagePoolForReligion(religion);
+    const previous = state.lastSlideImage.get(slideId);
+    const next = pickRandomImage(pool, previous, forceDifferent);
+    if (next && next !== previous) {
+      imgEl.src = next;
+      state.lastSlideImage.set(slideId, next);
+    } else if (!imgEl.src && next) {
+      imgEl.src = next;
+      state.lastSlideImage.set(slideId, next);
+    }
+  }
+
   function renderSlides() {
     els.regionTrack.innerHTML = '';
     els.sliderDots.innerHTML = '';
+    state.slideImages.clear();
+    state.lastSlideImage.clear();
     SLIDES.forEach((slide, index) => {
       const slideEl = document.createElement('article');
       slideEl.className = 'region-slide';
       slideEl.dataset.index = index;
       slideEl.innerHTML = `
-        <img src="${slide.image}" alt="${slide.name} faith communities" loading="lazy"/>
+        <img alt="${slide.name} faith communities" loading="lazy"/>
         <div class="region-meta">
           <h3>${slide.name}</h3>
           <p>${slide.copy}</p>
@@ -1208,6 +1296,11 @@
           </ul>
         </div>
       `;
+      const imgEl = slideEl.querySelector('img');
+      if (imgEl) {
+        state.slideImages.set(slide.id, imgEl);
+        setRandomSlideImage(slide.id, slide.religion, false);
+      }
       els.regionTrack.appendChild(slideEl);
 
       const dot = document.createElement('div');
@@ -1226,6 +1319,10 @@
     Array.from(els.sliderDots.children).forEach((dot, idx) => {
       dot.classList.toggle('active', idx === state.slideIndex);
     });
+    const slide = SLIDES[state.slideIndex];
+    if (slide) {
+      setRandomSlideImage(slide.id, slide.religion);
+    }
     if (manual) {
       resetAutoSlide();
     }
