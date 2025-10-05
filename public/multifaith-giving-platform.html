@@ -209,89 +209,26 @@
     }
 
     .region-slide {
-      position: relative;
-      z-index: 0;
       min-width: 100%;
-      padding: 32px;
+      padding: 26px;
       display: grid;
-      gap: 28px;
+      gap: 22px;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       align-items: center;
-      background: linear-gradient(135deg, rgba(124, 77, 255, 0.12), rgba(9, 18, 40, 0.3));
-    }
-
-    .region-slide::after {
-      content: '';
-      position: absolute;
-      inset: 18px;
-      border-radius: 22px;
-      pointer-events: none;
-      background: linear-gradient(120deg, rgba(233, 237, 255, 0.08), transparent 55%);
-      mix-blend-mode: screen;
-      opacity: 0.35;
     }
 
     .region-slide img {
       width: 100%;
-      height: 300px;
+      height: 260px;
       object-fit: cover;
-      border-radius: 20px;
-      box-shadow: 0 22px 46px rgba(0, 0, 0, 0.42);
-      animation: region-pan 18s ease-in-out infinite;
-      transform-origin: center;
-      will-change: transform;
-    }
-
-    .region-slide > * {
-      position: relative;
-      z-index: 1;
-    }
-
-    .region-slide:nth-child(even) img {
-      animation-name: region-pan-alt;
-    }
-
-    @keyframes region-pan {
-      0% {
-        transform: scale(1.12) translateY(10%);
-      }
-      50% {
-        transform: scale(1.15) translateY(-12%);
-      }
-      100% {
-        transform: scale(1.12) translateY(10%);
-      }
-    }
-
-    @keyframes region-pan-alt {
-      0% {
-        transform: scale(1.12) translateY(-10%);
-      }
-      50% {
-        transform: scale(1.15) translateY(12%);
-      }
-      100% {
-        transform: scale(1.12) translateY(-10%);
-      }
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38);
     }
 
     .region-meta h3 {
       margin: 0;
       font-size: 26px;
       font-weight: 800;
-    }
-
-    .region-meta {
-      padding: 22px;
-      border-radius: 22px;
-      background: rgba(9, 18, 40, 0.68);
-      border: 1px solid rgba(233, 237, 255, 0.12);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-      backdrop-filter: blur(18px);
-    }
-
-    .region-meta p {
-      color: rgba(233, 237, 255, 0.72);
     }
 
     .region-meta ul {
@@ -303,13 +240,12 @@
     }
 
     .region-meta ul li {
-      padding: 12px 16px;
-      border-radius: 16px;
-      background: rgba(124, 77, 255, 0.14);
-      border: 1px solid rgba(233, 237, 255, 0.18);
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       font-size: 14px;
-      color: #f3f5ff;
-      box-shadow: 0 6px 16px rgba(9, 18, 40, 0.25);
+      color: #d9e3ff;
     }
 
     .slider-controls {
@@ -663,15 +599,7 @@
       }
 
       .region-slide {
-        padding: 22px;
-      }
-
-      .region-slide::after {
-        inset: 12px;
-      }
-
-      .region-slide img {
-        height: 240px;
+        padding: 20px;
       }
 
       .slider-controls {
