@@ -3,688 +3,777 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Multi-Faith Giving Platform — Product Blueprint</title>
-  <meta name="description" content="Blueprint for a multi-faith, multi-region giving platform with Stripe, MongoDB, and Render deployment."/>
+  <title>Multi-Faith Giving Platform</title>
+  <meta name="description" content="Give and manage faith-specific donations across every region with a single secure platform."/>
   <style>
-    :root{
-      --bg:#060b1a;
-      --ink:#f5f7ff;
-      --card:#0d1329;
-      --glass:rgba(255,255,255,.06);
-      --accent:#7c4dff;
-      --accent2:#5740ff;
-      --accent3:#35c79a;
-      --muted:#8c95c7;
+    :root {
+      --bg: #050918;
+      --bg-soft: #0a1124;
+      --bg-glass: rgba(255, 255, 255, 0.05);
+      --card: rgba(9, 18, 40, 0.82);
+      --ink: #f5f7ff;
+      --muted: #9ea8d6;
+      --accent: #7c4dff;
+      --accent-2: #37c79a;
+      --accent-3: #4a8bff;
+      --danger: #ff5684;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
     }
-    *,*:before,*:after{box-sizing:border-box;}
-    html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
-    img{max-width:100%;display:block;}
-    a{color:#bcd3ff;}
-    .wrap{max-width:1120px;margin:0 auto;padding:20px 18px 80px;}
-    header{position:sticky;top:0;z-index:80;background:linear-gradient(180deg,rgba(6,11,26,.95),rgba(6,11,26,.7));backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.08);}
-    .nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 18px;max-width:1120px;margin:0 auto;}
-    .logo-tile{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;}
-    .logo-tile span{font-size:13px;color:#d0d8ff;opacity:.8;}
-    .nav .tagline{font-size:13px;color:#9fa8dd;max-width:280px;}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;font-weight:700;box-shadow:0 14px 40px rgba(90,72,255,.28);text-decoration:none;}
-    .btn.ghost{background:transparent;border-color:rgba(255,255,255,.16);color:#dce3ff;box-shadow:none;}
 
-    /* hero */
-    .hero{padding:46px 0 30px;display:grid;gap:26px;}
-    .hero h1{margin:0;font-size:42px;line-height:1.1;font-weight:900;letter-spacing:-.5px;}
-    .hero p.sub{color:var(--muted);margin:12px 0 24px;max-width:580px;}
-    .hero .actions{display:flex;flex-wrap:wrap;gap:12px;}
-    .hero-card{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border-radius:20px;padding:20px;border:1px solid rgba(255,255,255,.14);display:grid;gap:16px;box-shadow:0 18px 60px rgba(0,0,0,.35);}
-    .hero-card h2{margin:0;font-size:18px;text-transform:uppercase;color:#c5ccff;letter-spacing:1px;}
-    .pill-row{display:flex;flex-wrap:wrap;gap:8px;}
-    .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(124,77,255,.14);font-size:12px;font-weight:700;color:#ece6ff;}
-    .badge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;}
-    .badge{padding:12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:4px;}
-    .badge .title{font-weight:800;font-size:13px;text-transform:uppercase;color:#c5d1ff;}
-    .badge .value{font-size:20px;font-weight:900;}
-    .muted{color:var(--muted);font-size:12px;}
+    * {
+      box-sizing: border-box;
+    }
 
-    /* sections */
-    section{margin-top:50px;}
-    section h2{font-size:30px;line-height:1.2;margin:0 0 16px;font-weight:900;}
-    section p.lead{margin:0 0 20px;color:var(--muted);max-width:700px;}
-    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;}
-    .card{background:var(--card);border-radius:18px;border:1px solid rgba(255,255,255,.1);padding:18px;display:grid;gap:12px;box-shadow:0 18px 40px rgba(0,0,0,.28);}
-    .card img.faith-img{width:100%;height:140px;object-fit:cover;border-radius:14px;box-shadow:0 12px 24px rgba(0,0,0,.35);}    
-    .card h3{margin:0;font-size:18px;font-weight:800;letter-spacing:.2px;color:#dfe4ff;}
-    .card ul{margin:0;padding-left:18px;color:#b4bcf0;font-size:14px;line-height:1.6;}
-    .card ul li{margin:6px 0;}
-    .split{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
-    .panel{background:var(--card);border-radius:18px;border:1px solid rgba(255,255,255,.1);padding:20px;box-shadow:0 18px 44px rgba(0,0,0,.34);}
-    .panel h3{margin:0 0 12px;font-size:19px;font-weight:800;color:#e5eaff;}
-    .panel p{margin:0 0 12px;color:#aab5e6;font-size:15px;}
-    .panel table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;color:#dbe2ff;}
-    .panel table th,.panel table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;}
-    .panel table th{font-weight:700;text-transform:uppercase;font-size:11px;color:#94a1da;letter-spacing:.6px;}
-    .panel table td code{background:rgba(255,255,255,.08);padding:2px 4px;border-radius:6px;font-size:12px;}
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, rgba(76, 71, 143, 0.45), transparent 60%), var(--bg);
+      color: var(--ink);
+      font: 16px/1.6 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
 
-    .control-panel{margin-top:40px;display:grid;gap:20px;}
-    .form-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
-    .form-card{background:linear-gradient(180deg,rgba(124,77,255,.14),rgba(11,20,42,.92));border-radius:20px;border:1px solid rgba(124,77,255,.26);padding:20px;box-shadow:0 22px 44px rgba(0,0,0,.4);display:grid;gap:16px;}
-    .form-card h3{margin:0;font-size:20px;font-weight:800;letter-spacing:.4px;color:#f0e7ff;}
-    form{display:grid;gap:12px;}
-    .input-group{display:grid;gap:6px;}
-    label{font-size:13px;font-weight:600;color:#d7dfff;letter-spacing:.3px;}
-    input,select,textarea{border-radius:12px;border:1px solid rgba(255,255,255,.18);padding:10px 12px;background:rgba(7,12,27,.85);color:#f5f7ff;font-size:14px;font-family:inherit;}
-    textarea{min-height:72px;resize:vertical;}
-    .form-card button{margin-top:4px;border:0;border-radius:12px;padding:11px 16px;font-weight:700;background:linear-gradient(180deg,var(--accent),var(--accent2));color:#fff;cursor:pointer;box-shadow:0 12px 32px rgba(90,72,255,.35);}
-    .status{border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.5;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#d6dcff;}
-    .status.success{background:rgba(53,199,154,.18);border-color:rgba(53,199,154,.6);color:#dfffea;}
-    .status.error{background:rgba(255,85,124,.18);border-color:rgba(255,85,124,.55);color:#ffe6ef;}
-    .status code{background:rgba(0,0,0,.35);padding:2px 4px;border-radius:6px;}
-    .inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
-    .inline select{flex:1;min-width:160px;}
-    .result-block{background:rgba(255,255,255,.05);border-radius:16px;padding:16px;border:1px solid rgba(255,255,255,.12);display:grid;gap:12px;}
-    .result-block pre{margin:0;font-family:"JetBrains Mono",Consolas,monospace;font-size:12px;white-space:pre-wrap;word-break:break-word;color:#c7d4ff;}
-    .report-table{width:100%;border-collapse:collapse;font-size:13px;}
-    .report-table th,.report-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left;}
-    .report-table th{color:#9fa8dd;text-transform:uppercase;font-size:11px;letter-spacing:.5px;}
-    .empty{font-size:13px;color:#9ca6d6;}
+    img {
+      max-width: 100%;
+      display: block;
+    }
 
-    .grid-rows{display:grid;gap:14px;}
-    .row-card{background:linear-gradient(180deg,rgba(54,223,179,.12),rgba(255,255,255,.02));border-radius:16px;padding:16px;border:1px solid rgba(53,199,154,.28);}
-    .row-card h3{margin:0 0 8px;font-size:17px;color:#ebfff7;}
-    .row-card ul{margin:0;padding-left:18px;color:#c1ffe8;font-size:14px;}
+    a {
+      color: #cde0ff;
+    }
 
-    .timeline{position:relative;padding-left:28px;}
-    .timeline:before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent3),transparent);} 
-    .t-step{position:relative;padding:14px 18px;margin-bottom:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:14px;}
-    .t-step:before{content:"";position:absolute;left:-20px;top:18px;width:10px;height:10px;border-radius:50%;background:var(--accent3);box-shadow:0 0 0 6px rgba(53,199,154,.18);} 
-    .t-step h4{margin:0 0 6px;font-size:16px;color:#def9f0;}
-    .t-step p{margin:0;color:#9dd5c3;font-size:14px;}
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: linear-gradient(180deg, rgba(5, 9, 24, 0.92), rgba(5, 9, 24, 0.6));
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-    footer{margin-top:60px;padding:24px 0;border-top:1px solid rgba(255,255,255,.08);color:#96a0d7;font-size:13px;text-align:center;}
+    .nav {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
 
-    @media (min-width:960px){
-      .hero{grid-template-columns:1.1fr .9fr;align-items:center;}
-      .hero h1{font-size:54px;}
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .brand span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .nav a.btn {
+      text-decoration: none;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-3));
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 16px 40px rgba(76, 71, 143, 0.4);
+      cursor: pointer;
+    }
+
+    .btn.ghost {
+      background: transparent;
+      color: #dbe2ff;
+      border-color: rgba(255, 255, 255, 0.16);
+      box-shadow: none;
+    }
+
+    main {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 28px 20px 100px;
+      display: grid;
+      gap: 70px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 24px;
+      align-items: center;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(36px, 6vw, 58px);
+      line-height: 1.1;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+
+    .hero p {
+      margin: 14px 0 26px;
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 580px;
+    }
+
+    .hero-media {
+      position: relative;
+      border-radius: 30px;
+      overflow: hidden;
+      background: var(--card);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      min-height: 260px;
+    }
+
+    .hero-media:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(124, 77, 255, 0.32), transparent 50%);
+      pointer-events: none;
+    }
+
+    .hero-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-weight: 600;
+      color: #e9edff;
+    }
+
+    .hero-list li span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: rgba(124, 77, 255, 0.2);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    section h2 {
+      margin: 0 0 18px;
+      font-size: clamp(28px, 4vw, 36px);
+      font-weight: 900;
+      letter-spacing: -0.3px;
+    }
+
+    section p.lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      max-width: 720px;
+      font-size: 17px;
+    }
+
+    .region-slider {
+      position: relative;
+      background: var(--bg-soft);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.45);
+    }
+
+    .region-track {
+      display: flex;
+      transition: transform 0.6s ease;
+      width: 100%;
+    }
+
+    .region-slide {
+      min-width: 100%;
+      padding: 26px;
+      display: grid;
+      gap: 22px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      align-items: center;
+    }
+
+    .region-slide img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38);
+    }
+
+    .region-meta h3 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .region-meta ul {
+      margin: 16px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .region-meta ul li {
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 14px;
+      color: #d9e3ff;
+    }
+
+    .slider-controls {
+      position: absolute;
+      inset: auto 0 14px 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 22px;
+      pointer-events: none;
+    }
+
+    .slider-btn {
+      pointer-events: all;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(9, 18, 40, 0.78);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .slider-dots {
+      position: absolute;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      display: inline-flex;
+      gap: 10px;
+    }
+
+    .slider-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.22);
+      cursor: pointer;
+    }
+
+    .slider-dot.active {
+      background: var(--accent-2);
+    }
+
+    .sector-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .sector-card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: grid;
+      gap: 10px;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
+    }
+
+    .sector-card h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: #f1f4ff;
+    }
+
+    .sector-card p {
+      margin: 0;
+      color: #bac3ec;
+      font-size: 14px;
+    }
+
+    form {
+      display: grid;
+      gap: 18px;
+    }
+
+    .form-card {
+      background: linear-gradient(180deg, rgba(124, 77, 255, 0.18), rgba(9, 18, 40, 0.94));
+      border-radius: 24px;
+      border: 1px solid rgba(124, 77, 255, 0.32);
+      padding: 26px;
+      box-shadow: 0 24px 58px rgba(0, 0, 0, 0.42);
+    }
+
+    .form-card h3 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .form-row {
+      display: grid;
+      gap: 16px;
+    }
+
+    @media (min-width: 720px) {
+      .form-row.double {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .form-row.triple {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      color: #dce3ff;
+    }
+
+    input, select, textarea {
+      margin-top: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(5, 10, 25, 0.86);
+      color: #f6f9ff;
+      padding: 12px;
+      font-size: 15px;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid rgba(124, 77, 255, 0.6);
+      outline-offset: 1px;
+    }
+
+    .status {
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #dde5ff;
+    }
+
+    .status.success {
+      background: rgba(55, 199, 154, 0.22);
+      border-color: rgba(55, 199, 154, 0.6);
+      color: #ecfff7;
+    }
+
+    .status.error {
+      background: rgba(255, 86, 132, 0.22);
+      border-color: rgba(255, 86, 132, 0.55);
+      color: #ffe9f0;
+    }
+
+    .status a {
+      color: #fff;
+      word-break: break-all;
+    }
+
+    .inline-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .inline-actions .btn {
+      flex: none;
+    }
+
+    footer {
+      margin-top: 60px;
+      padding: 40px 0 60px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .result-block {
+      margin-top: 12px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: grid;
+      gap: 8px;
+    }
+
+    .result-block pre {
+      margin: 0;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 12px;
+      color: #d2dbff;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .empty-note {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 640px) {
+      .hero-media {
+        min-height: 200px;
+      }
+
+      .region-slide {
+        padding: 20px;
+      }
+
+      .slider-controls {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
 <header>
   <nav class="nav">
-    <div class="logo-tile">
+    <div class="brand">
       <strong>Orbital Collective</strong>
-      <span>Multi-faith giving suite</span>
+      <span>Multi-faith giving platform</span>
     </div>
-    <div class="tagline">Render + Stripe + MongoDB blueprint for donations, attendance, and compliance.</div>
-    <div class="actions">
-      <a class="btn ghost" href="https://stripe.com/docs/payments/checkout" target="_blank" rel="noreferrer">Stripe readiness</a>
-      <a class="btn" href="#data-model">Download build sheet</a>
+    <div class="inline-actions">
+      <a class="btn ghost" href="#regions">Explore regions</a>
+      <a class="btn" href="#give">Start giving</a>
     </div>
   </nav>
 </header>
 
-<main class="wrap">
+<main>
   <section class="hero">
     <div>
-      <h1>Launch a global multi-faith giving platform in weeks, not quarters.</h1>
-      <p class="sub">"Tithe.ly, but multi-faith + multi-region" — ready for Render hosting, Stripe payments, and MongoDB Atlas. Tailor donation flows, receipts, and compliance copy for Christianity, Islam, Hinduism, Buddhism, and Judaism across five launch regions.</p>
-      <div class="actions">
-        <a class="btn" href="#faith-flows">See faith modules</a>
-        <a class="btn ghost" href="#architecture">Ship-ready architecture</a>
+      <h1>One place to give, across every faith community.</h1>
+      <p>Launch fully-configured donation flows for churches, mosques, synagogues, temples, and sanghas in minutes. No waiting for a build plan—connect your organizations, publish campaigns, and accept gifts right now.</p>
+      <div class="inline-actions">
+        <a class="btn" href="#give">Create a donation</a>
+        <a class="btn ghost" href="#manage">Manage organizations</a>
       </div>
     </div>
-    <div class="hero-card">
-      <h2>Go-live checklist</h2>
-      <div class="pill-row">
-        <span class="pill">Render deploy pipeline</span>
-        <span class="pill">Stripe Checkout + Billing</span>
-        <span class="pill">MongoDB Atlas (global)</span>
-        <span class="pill">Org/Role JWT Auth</span>
-      </div>
-      <div class="badge-grid">
-        <div class="badge">
-          <span class="title">Regions day-one</span>
-          <span class="value">NA · EU · MENA · SA · APAC</span>
-          <small class="muted">Auto locale, currency, tax text</small>
-        </div>
-        <div class="badge">
-          <span class="title">Faith bundles</span>
-          <span class="value">5</span>
-          <small class="muted">Religion-aware donation rails</small>
-        </div>
-        <div class="badge">
-          <span class="title">Payment methods</span>
-          <span class="value">ACH · SEPA · BECS · PAD · BACS</span>
-          <small class="muted">Stripe PaymentElement ready</small>
-        </div>
-        <div class="badge">
-          <span class="title">Recurring cadences</span>
-          <span class="value">Weekly · Monthly · Annual</span>
-          <small class="muted">Stripe Subscriptions mirror</small>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="control-center">
-    <h2>Launch control — live API wiring</h2>
-    <p class="lead">Your backend already exposes <code>/api/giving/*</code> endpoints and a Stripe webhook that mirrors metadata to customers, subscriptions, and transactions. Use the control center below with your live env vars loaded to create organizations, wire campaigns, mint advisor-specific Payment Links, and read back reports in seconds.</p>
-    <div class="control-panel">
-      <div class="form-grid">
-        <div class="form-card">
-          <h3>1. Create an organization</h3>
-          <p class="muted">Stores region + religion defaults that flow into every campaign and checkout link.</p>
-          <form id="org-form">
-            <div class="input-group">
-              <label for="org-name">Organization name</label>
-              <input id="org-name" name="name" placeholder="Bethany Center" required/>
-            </div>
-            <div class="input-group inline">
-              <div class="input-group" style="flex:1;">
-                <label for="org-region">Region</label>
-                <select id="org-region" name="region">
-                  <option value="NA">North America</option>
-                  <option value="EU">Europe</option>
-                  <option value="MENA">MENA</option>
-                  <option value="SA">South Asia</option>
-                  <option value="APAC">APAC</option>
-                </select>
-              </div>
-              <div class="input-group" style="flex:1;">
-                <label for="org-religion">Religion</label>
-                <select id="org-religion" name="religion">
-                  <option value="christian">Christianity</option>
-                  <option value="islam">Islam</option>
-                  <option value="hindu">Hinduism</option>
-                  <option value="buddhist">Buddhism</option>
-                  <option value="jewish">Judaism</option>
-                </select>
-              </div>
-            </div>
-            <div class="input-group">
-              <label for="org-locales">Locales (comma separated)</label>
-              <input id="org-locales" name="locales" placeholder="en-US, es-US"/>
-            </div>
-            <div class="input-group">
-              <label for="org-timezone">Timezone</label>
-              <input id="org-timezone" name="timezone" placeholder="America/New_York"/>
-            </div>
-            <button type="submit">Create organization</button>
-          </form>
-          <div class="status" id="org-status" hidden></div>
-        </div>
-
-        <div class="form-card">
-          <h3>2. Add a campaign</h3>
-          <p class="muted">Campaigns inherit the organization defaults and determine donation type presets.</p>
-          <form id="campaign-form">
-            <div class="input-group">
-              <label for="campaign-org">Organization</label>
-              <select id="campaign-org" required>
-                <option value="" disabled selected>Select organization</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label for="campaign-name">Campaign name</label>
-              <input id="campaign-name" placeholder="Building Fund" required/>
-            </div>
-            <div class="input-group">
-              <label for="campaign-code">Campaign code (optional)</label>
-              <input id="campaign-code" placeholder="building_fund"/>
-            </div>
-            <div class="input-group">
-              <label for="campaign-types">Donation types (comma separated)</label>
-              <input id="campaign-types" placeholder="tithe, offering"/>
-            </div>
-            <button type="submit">Create campaign</button>
-          </form>
-          <div class="status" id="campaign-status" hidden></div>
-        </div>
-
-        <div class="form-card">
-          <h3>3. Mint a Payment Link</h3>
-          <p class="muted">Advisor- and faith-aware Stripe Payment Link with metadata for PI, Subscription, and Customer.</p>
-          <form id="payment-form">
-            <div class="input-group">
-              <label for="payment-org">Organization</label>
-              <select id="payment-org" required>
-                <option value="" disabled selected>Select organization</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label for="payment-campaign">Campaign</label>
-              <select id="payment-campaign" required>
-                <option value="" disabled selected>Select campaign</option>
-              </select>
-            </div>
-            <div class="input-group inline">
-              <div class="input-group" style="flex:1;">
-                <label for="payment-religion">Religion</label>
-                <select id="payment-religion" required>
-                  <option value="christian">Christianity</option>
-                  <option value="islam">Islam</option>
-                  <option value="hindu">Hinduism</option>
-                  <option value="buddhist">Buddhism</option>
-                  <option value="jewish">Judaism</option>
-                </select>
-              </div>
-              <div class="input-group" style="flex:1;">
-                <label for="payment-region">Region</label>
-                <select id="payment-region" required>
-                  <option value="NA">North America</option>
-                  <option value="EU">Europe</option>
-                  <option value="MENA">MENA</option>
-                  <option value="SA">South Asia</option>
-                  <option value="APAC">APAC</option>
-                </select>
-              </div>
-            </div>
-            <div class="input-group">
-              <label for="payment-donation">Donation type</label>
-              <select id="payment-donation" required></select>
-            </div>
-            <div class="input-group">
-              <label for="payment-price">Stripe Price ID (optional)</label>
-              <input id="payment-price" placeholder="price_123"/>
-            </div>
-            <div class="input-group inline">
-              <div class="input-group" style="flex:1;">
-                <label for="payment-amount">Amount (if no price)</label>
-                <input id="payment-amount" type="number" min="1" placeholder="50"/>
-              </div>
-              <div class="input-group" style="flex:1;">
-                <label for="payment-interval">Interval</label>
-                <select id="payment-interval">
-                  <option value="month">Monthly</option>
-                  <option value="week">Weekly</option>
-                  <option value="year">Annual</option>
-                </select>
-              </div>
-            </div>
-            <div class="input-group">
-              <label for="payment-product">Product name (optional)</label>
-              <input id="payment-product" placeholder="Recurring Gift"/>
-            </div>
-            <div class="input-group inline">
-              <div class="input-group" style="flex:1;">
-                <label for="payment-advisor">Advisor name</label>
-                <input id="payment-advisor" placeholder="A. Rivera"/>
-              </div>
-              <div class="input-group" style="flex:1;">
-                <label for="payment-office">Office / campus</label>
-                <input id="payment-office" placeholder="Northeast"/>
-              </div>
-            </div>
-            <div class="input-group inline">
-              <div class="input-group" style="flex:1;">
-                <label for="payment-country">Country</label>
-                <input id="payment-country" placeholder="US" maxlength="2"/>
-              </div>
-              <div class="input-group" style="flex:1;">
-                <label for="payment-allow-promo">Allow promo codes</label>
-                <select id="payment-allow-promo">
-                  <option value="true" selected>Yes</option>
-                  <option value="false">No</option>
-                </select>
-              </div>
-            </div>
-            <button type="submit">Generate Payment Link</button>
-          </form>
-          <div class="status" id="payment-status" hidden></div>
-          <div class="result-block" id="payment-link-result" hidden>
-            <strong>Payment Link</strong>
-            <a id="payment-link-url" href="#" target="_blank" rel="noreferrer">Open in new tab</a>
-            <pre id="payment-link-meta"></pre>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-card" style="grid-column:1/-1;">
-        <h3>4. Run a giving report</h3>
-        <p class="muted">Leverages <code>/api/giving/report</code> to group by region, religion, or campaign with live totals.</p>
-        <form id="report-form" class="inline" style="align-items:flex-end;">
-          <div class="input-group" style="flex:1;min-width:200px;">
-            <label for="report-group">Group by</label>
-            <select id="report-group">
-              <option value="region">Region</option>
-              <option value="religion">Religion</option>
-              <option value="campaign">Campaign</option>
-            </select>
-          </div>
-          <div class="input-group" style="flex:1;min-width:200px;">
-            <label for="report-range">Range</label>
-            <select id="report-range">
-              <option value="month">Current month</option>
-              <option value="quarter">Quarter-to-date</option>
-              <option value="ytd">Year-to-date</option>
-            </select>
-          </div>
-          <button type="submit">Fetch report</button>
-        </form>
-        <div class="status" id="report-status" hidden></div>
-        <div class="result-block" id="report-results" hidden>
-          <table class="report-table">
-            <thead>
-              <tr><th>Key</th><th>Total</th><th>Currency</th><th>Count</th></tr>
-            </thead>
-            <tbody id="report-body"></tbody>
-          </table>
-          <div class="empty" id="report-empty" hidden>No transactions yet for the selected window.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="faith-flows">
-    <h2>Faith-specific giving experiences</h2>
-    <p class="lead">Each faith bundle ships with front-end language, donation taxonomies, calculators, and CRM metadata so admins configure once and reuse across campaigns.</p>
-    <div class="cards">
-      <article class="card">
-        <img class="faith-img" src="religion/christianity5.jpg" alt="Congregation worship service representing Christian giving" loading="lazy"/>
-        <h3>Christianity</h3>
-        <ul>
-          <li>Tithes & Offerings, pledges, and weekly/monthly recurring gifts.</li>
-          <li>Small-group rosters, child check-in, and attendance markers tied to services.</li>
-          <li>Year-end 501(c)(3) statements with household roll-ups and PDF email delivery.</li>
-        </ul>
-      </article>
-      <article class="card">
-        <img class="faith-img" src="religion/islam5.jpg" alt="Muslim community gathered at a mosque" loading="lazy"/>
-        <h3>Islam</h3>
-        <ul>
-          <li>Zakat calculator with nisab thresholds per region and Ramadan campaigns.</li>
-          <li>Sadaqah, Jumu’ah attendance, and regional wallets (cards/ACH, SEPA, BECS, PAD, BACS).</li>
-          <li>Wallet reconciliation exports for local charitable regulators.</li>
-        </ul>
-      </article>
-      <article class="card">
-        <img class="faith-img" src="religion/hinduism4.jpg" alt="Hindu temple with devotees participating in seva" loading="lazy"/>
-        <h3>Hinduism</h3>
-        <ul>
-          <li>Daan/Dakshina, temple sevas scheduling, and festival drives (Navratri, Diwali).</li>
-          <li>Family gotra metadata with lineage search and prasad fulfillment tracking.</li>
-          <li>Auto-receipts with Indian tax text and PAN capture toggles.</li>
-        </ul>
-      </article>
-      <article class="card">
-        <img class="faith-img" src="religion/buddhism3.jpg" alt="Buddhist monks receiving dana offerings" loading="lazy"/>
-        <h3>Buddhism</h3>
-        <ul>
-          <li>Dana flows for monastic/temple support and retreat registration.</li>
-          <li>Chant group directories and merit-dedication notes appended to receipts.</li>
-          <li>Event roster exports for visa support letters or tax documentation.</li>
-        </ul>
-      </article>
-      <article class="card">
-        <img class="faith-img" src="religion/judaism2.jpg" alt="Jewish community celebrating with Torah" loading="lazy"/>
-        <h3>Judaism</h3>
-        <ul>
-          <li>Tzedakah/Ma’aser, aliyah honors, and High Holidays seat pledges.</li>
-          <li>Hebrew calendar recurrence with yahrzeit reminders and SMS triggers.</li>
-          <li>Gift Aid-style toggles for UK/EU and CRA-compliant footers for Canada.</li>
-        </ul>
-      </article>
+    <div class="hero-media">
+      <ul class="hero-list">
+        <li><span>1</span> Multi-region currency, tax, and receipt language out of the box.</li>
+        <li><span>2</span> Faith-specific donation types with calculators and metadata.</li>
+        <li><span>3</span> Instant Stripe Payment Links you can share the moment you hit submit.</li>
+      </ul>
     </div>
   </section>
 
   <section id="regions">
-    <h2>Regional intelligence out-of-the-box</h2>
-    <p class="lead">Configure once per organization and every campaign inherits currencies, legal footers, timezone, and receipt language while keeping donation metadata structured.</p>
-    <div class="split">
-      <div class="panel">
-        <h3>Launch regions</h3>
-        <p>North America, Europe, MENA, South Asia, and APAC pre-populate locale bundles, receipt paragraphs, and compliance toggles. Extend with JSON overrides when opening new markets.</p>
-        <table>
-          <thead>
-            <tr><th>Region</th><th>Currency</th><th>Locale sample</th><th>Compliance copy</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>North America</td><td>USD</td><td><code>en-US</code></td><td>501(c)(3), CRA, GDPR opt-in</td></tr>
-            <tr><td>Europe</td><td>EUR / GBP</td><td><code>en-GB</code>, <code>fr-FR</code></td><td>Gift Aid, SEPA mandates, GDPR consent</td></tr>
-            <tr><td>MENA</td><td>AED</td><td><code>ar-AE</code></td><td>Zakat Authority references, VAT toggle</td></tr>
-            <tr><td>South Asia</td><td>INR</td><td><code>en-IN</code>, <code>hi-IN</code></td><td>80G receipts, Aadhaar optional fields</td></tr>
-            <tr><td>APAC</td><td>AUD</td><td><code>en-AU</code></td><td>Deductible gift recipient (DGR) text</td></tr>
-          </tbody>
-        </table>
+    <h2>Regional gallery</h2>
+    <p class="lead">Preview the localized experience for every launch territory. Each slide shows live copy, receipt preferences, and sector highlights donors will see.</p>
+    <div class="region-slider">
+      <div class="region-track" id="region-track"></div>
+      <div class="slider-controls">
+        <button class="slider-btn" id="prev-slide" type="button" aria-label="Previous region">‹</button>
+        <button class="slider-btn" id="next-slide" type="button" aria-label="Next region">›</button>
       </div>
-      <div class="panel">
-        <h3>Auto-detected context</h3>
-        <p>Detect region via IP/locale, but allow manual override during checkout. Sync currency to Stripe Checkout session and set timezone for subscription billing, reporting, and attendance logs.</p>
-        <ul>
-          <li>Locale-driven receipt templates with translation keys for subject lines + body copy.</li>
-          <li>Tax identifiers captured conditionally (e.g., Gift Aid yes/no, PAN, CPF).</li>
-          <li>Region-specific legal footers stored per organization and merged into emails/PDFs.</li>
-        </ul>
-      </div>
+      <div class="slider-dots" id="slider-dots"></div>
     </div>
   </section>
 
-  <section id="modules">
-    <h2>Core modules that leaders expect</h2>
-    <p class="lead">Giving, people, events, reporting, and compliance are designed as API-first services so you can iterate without rewriting the front-end.</p>
-    <div class="cards">
-      <article class="card">
-        <h3>Giving</h3>
-        <ul>
-          <li>One-time and recurring gifts with campaign earmarks and metadata.</li>
-          <li>Faith calculators: Zakat nisab, Ma’aser percentages, Dana pledges.</li>
-          <li>Stripe Checkout sessions with metadata { orgId, campaignId, religion, region, donationType }.</li>
-        </ul>
-      </article>
-      <article class="card">
-        <h3>People & Groups</h3>
-        <ul>
-          <li>Directory with households, tags, and role-based permissions (Admin, Finance, GroupLeader, Member).</li>
-          <li>SMS/email broadcasting via Twilio or MessageBird; GDPR consent logs per contact.</li>
-          <li>Household statements and donor journeys exported as CSV/PDF.</li>
-        </ul>
-      </article>
-      <article class="card">
-        <h3>Events & Attendance</h3>
-        <ul>
-          <li>Services, holidays, festivals, retreats with check-in kiosks and QR codes.</li>
-          <li>Attendance counts, child check-in, chant group rosters, and volunteer scheduling.</li>
-          <li>Attendance insights by event type (service/festival/retreat) with week-over-week trends.</li>
-        </ul>
-      </article>
-      <article class="card">
-        <h3>Reporting</h3>
-        <ul>
-          <li>Finance dashboards by religion, region, and campaign with advisor/branch splits.</li>
-          <li>Ramadan vs last year, High Holidays seats/pledges, year-end tax statements.</li>
-          <li>Downloadable CSV and embeddable Looker Studio connectors.</li>
-        </ul>
-      </article>
-      <article class="card">
-        <h3>Compliance</h3>
-        <ul>
-          <li>Region-aware receipts (501(c)(3), Gift Aid, DGR, Zakat Authority) with toggles.</li>
-          <li>Consent logging (GDPR, CAN-SPAM, CASL) and audit trails for exports.</li>
-          <li>Stripe radar + manual review queue for high-risk donations.</li>
-        </ul>
-      </article>
+  <section id="sectors">
+    <h2>Sectors we fund together</h2>
+    <p class="lead">Pair every gift with a sector so donors understand the impact: community relief, education, food security, and more. Sectors appear on receipts and in compliance exports automatically.</p>
+    <div class="sector-grid" id="sector-grid"></div>
+  </section>
+
+  <section id="give">
+    <h2>Give right now</h2>
+    <p class="lead">Use the form below to choose a faith tradition, region, campaign, and sector. Submit to mint a secure Stripe checkout link instantly.</p>
+    <div class="form-card">
+      <h3>Donation builder</h3>
+      <form id="donation-form">
+        <div class="form-row double">
+          <label>Region
+            <select id="donation-region" required></select>
+          </label>
+          <label>Faith tradition
+            <select id="donation-faith" required></select>
+          </label>
+        </div>
+        <div class="form-row double">
+          <label>Organization
+            <select id="donation-org" required></select>
+          </label>
+          <label>Campaign
+            <select id="donation-campaign" required></select>
+          </label>
+        </div>
+        <div class="form-row double">
+          <label>Sector / Fund focus
+            <select id="donation-sector" required></select>
+          </label>
+          <label>Donation type
+            <select id="donation-type" required></select>
+          </label>
+        </div>
+        <div class="form-row triple">
+          <label>Amount (local currency)
+            <input id="donation-amount" type="number" min="1" step="1" placeholder="50" required/>
+          </label>
+          <label>Frequency
+            <select id="donation-frequency" required>
+              <option value="one_time">One-time</option>
+              <option value="week">Weekly</option>
+              <option value="month" selected>Monthly</option>
+              <option value="year">Annual</option>
+            </select>
+          </label>
+          <label>Promo codes allowed?
+            <select id="donation-promo" required>
+              <option value="true" selected>Yes</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-row double">
+          <label>Donor name
+            <input id="donation-name" type="text" placeholder="Jordan Malik" required/>
+          </label>
+          <label>Email for receipt
+            <input id="donation-email" type="email" placeholder="jordan@example.org" required/>
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Notes for receipt (optional)
+            <textarea id="donation-notes" placeholder="Dedicate this gift to..."></textarea>
+          </label>
+        </div>
+        <button class="btn" type="submit">Generate secure checkout</button>
+      </form>
+      <div class="status" id="donation-status" hidden></div>
+      <div class="result-block" id="donation-result" hidden>
+        <strong>Payment link</strong>
+        <a id="donation-link" href="#" target="_blank" rel="noreferrer"></a>
+        <pre id="donation-meta"></pre>
+      </div>
+      <div class="empty-note" id="org-empty" hidden>No organizations found yet. Add one below to start collecting gifts.</div>
     </div>
   </section>
 
-  <section id="architecture">
-    <h2>Tech stack that deploys cleanly on Render</h2>
-    <p class="lead">Opinionated stack decisions so your team can provision infrastructure and CI/CD with minimal friction.</p>
-    <div class="split">
-      <div class="panel">
-        <h3>Backend services</h3>
-        <ul>
-          <li>Node.js + Express API deployed on Render (Docker or native); background jobs via Render cron.</li>
-          <li>JWT authentication with organization + role scoping; refresh tokens stored in Redis or Mongo TTL collection.</li>
-          <li>Stripe SDK for Checkout, Billing (Subscriptions), PaymentIntents, and webhook signing.</li>
-        </ul>
-      </div>
-      <div class="panel">
-        <h3>Front-end</h3>
-        <ul>
-          <li>Next.js 14 with app router, React Server Components, and i18n routing by religion/region.</li>
-          <li>Tailwind or CSS-in-JS for theming; dynamic forms for calculators and attendance dashboards.</li>
-          <li>SSR-friendly Stripe Checkout redirect with Thank-You page summarizing receipt metadata.</li>
-        </ul>
-      </div>
-      <div class="panel">
-        <h3>Payments</h3>
-        <ul>
-          <li>One Product per organization; multiple Prices for recurring cadences and custom campaign amounts.</li>
-          <li>Payment links generated per campaign with metadata that flows to webhooks.</li>
-          <li>Supports ACH, SEPA, BECS, PAD, BACS, cards, wallets; localized receipt emails.</li>
-        </ul>
-      </div>
-      <div class="panel">
-        <h3>Operations</h3>
-        <ul>
-          <li>Logging via Render + Logtail; alerts for failed webhooks and reconciliation mismatches.</li>
-          <li>Infrastructure as code using Terraform (Render + Mongo Atlas + Stripe webhook secret storage).</li>
-          <li>GitHub Actions pipeline: test → lint → deploy (Render Blueprints + Next.js static export).</li>
-        </ul>
-      </div>
+  <section id="manage">
+    <h2>Organization &amp; campaign management</h2>
+    <p class="lead">Connect as many communities as you need. As soon as you save an organization and campaign, they are available in the donation builder.</p>
+    <div class="form-card">
+      <h3>Add an organization</h3>
+      <form id="setup-org-form">
+        <div class="form-row double">
+          <label>Organization name
+            <input id="setup-org-name" type="text" placeholder="Bethany Center" required/>
+          </label>
+          <label>Region
+            <select id="setup-org-region" required></select>
+          </label>
+        </div>
+        <div class="form-row double">
+          <label>Faith tradition
+            <select id="setup-org-faith" required></select>
+          </label>
+          <label>Locales (comma separated)
+            <input id="setup-org-locales" type="text" placeholder="en-US, es-US"/>
+          </label>
+        </div>
+        <div class="form-row double">
+          <label>Timezone
+            <input id="setup-org-timezone" type="text" placeholder="America/New_York"/>
+          </label>
+          <label>Stripe Account ID (optional)
+            <input id="setup-org-stripe" type="text" placeholder="acct_123"/>
+          </label>
+        </div>
+        <button class="btn" type="submit">Save organization</button>
+      </form>
+      <div class="status" id="setup-org-status" hidden></div>
     </div>
-  </section>
-
-  <section id="data-model">
-    <h2>Minimal Mongo data model</h2>
-    <p class="lead">Collections mirror the webhook payloads so Stripe checkout sessions and subscriptions flow directly into persistent records.</p>
-    <div class="panel">
-      <table>
-        <thead>
-          <tr><th>Collection</th><th>Shape</th><th>Highlights</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>organizations</td>
-            <td><code>{ _id, name, region, religion, locales[], timezone, stripeAccountId, settings{} }</code></td>
-            <td>Region toggles drive receipts, currency, and tax paragraphs.</td>
-          </tr>
-          <tr>
-            <td>people</td>
-            <td><code>{ _id, orgId, firstName, lastName, email, phone, householdId, tags[], roles[] }</code></td>
-            <td>Roles enforce Admin/Finance/GroupLeader/Member scopes.</td>
-          </tr>
-          <tr>
-            <td>campaigns</td>
-            <td><code>{ _id, orgId, name, code, donationTypes[], active }</code></td>
-            <td>Faith-aware donation types: tithe, zakat, dana, tzedakah, etc.</td>
-          </tr>
-          <tr>
-            <td>subscriptions</td>
-            <td><code>{ _id, orgId, personId, campaignId, stripeSubId, amount, currency, interval, status }</code></td>
-            <td>Mirrors <code>customer.subscription.*</code> events.</td>
-          </tr>
-          <tr>
-            <td>transactions</td>
-            <td><code>{ _id, orgId, personId, campaignId, stripePaymentIntentId, amount, currency, donationType, receiptNo, meta{}, createdAt }</code></td>
-            <td>Webhook upsert from Checkout sessions; includes faith-specific metadata.</td>
-          </tr>
-          <tr>
-            <td>attendance</td>
-            <td><code>{ _id, orgId, eventId, date, counts{}, notes }</code></td>
-            <td>Child check-in + chant group metrics stored together.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section id="webhooks">
-    <h2>Stripe webhook choreography</h2>
-    <p class="lead">A single Express route handles checkout completion and subscription lifecycle events, mapping Stripe metadata to Mongo collections.</p>
-    <div class="grid-rows">
-      <div class="row-card">
-        <h3>Checkout completion</h3>
-        <ul>
-          <li>Webhook <code>checkout.session.completed</code> pulls <code>metadata</code> (orgId, campaignId, religion, region, donationType, personId?).</li>
-          <li>Fetch PaymentIntent → Charge for amount, currency, and payment method.</li>
-          <li>Upsert person, write transaction, increment campaign totals, generate sequential <code>receiptNo</code>.</li>
-        </ul>
-      </div>
-      <div class="row-card">
-        <h3>Subscriptions sync</h3>
-        <ul>
-          <li>Handle <code>customer.subscription.created|updated|deleted</code> to mirror recurring gifts.</li>
-          <li>Store billing cycle, payment method type, and faith-specific metadata for statements.</li>
-          <li>Invoice webhooks feed into finance reports and dunning notifications.</li>
-        </ul>
-      </div>
-      <div class="row-card">
-        <h3>Compliance + exports</h3>
-        <ul>
-          <li>GDPR consent log updates on every communication opt-in/out.</li>
-          <li>Region-specific ledger exports (e.g., HMRC Gift Aid CSV, CRA batch filing).</li>
-          <li>Render cron job reconciles Stripe balance transactions nightly.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <section id="roadmap">
-    <h2>90-day delivery timeline</h2>
-    <p class="lead">Move from prototype to launch with iterative releases aligned to donor cycles.</p>
-    <div class="timeline">
-      <div class="t-step">
-        <h4>Weeks 1–3 • Foundation</h4>
-        <p>Set up Render environments, Mongo Atlas cluster, JWT auth, and base giving flows with Stripe Checkout sandbox.</p>
-      </div>
-      <div class="t-step">
-        <h4>Weeks 4–6 • Faith modules</h4>
-        <p>Implement calculators (Zakat, Ma’aser), build religion-specific content blocks, connect attendance and households.</p>
-      </div>
-      <div class="t-step">
-        <h4>Weeks 7–9 • Reporting & receipts</h4>
-        <p>Ship finance dashboards, automated statements, compliance exports, and webhook-driven reconciliations.</p>
-      </div>
-      <div class="t-step">
-        <h4>Weeks 10–12 • Launch & scale</h4>
-        <p>Load production Stripe keys, enable multi-region payment methods, train admins, and schedule marketing automations.</p>
-      </div>
+    <div class="form-card">
+      <h3>Add a campaign</h3>
+      <form id="setup-campaign-form">
+        <div class="form-row double">
+          <label>Organization
+            <select id="setup-campaign-org" required></select>
+          </label>
+          <label>Campaign name
+            <input id="setup-campaign-name" type="text" placeholder="Community Relief" required/>
+          </label>
+        </div>
+        <div class="form-row double">
+          <label>Campaign code (optional)
+            <input id="setup-campaign-code" type="text" placeholder="community_relief"/>
+          </label>
+          <label>Donation types (comma separated)
+            <input id="setup-campaign-types" type="text" placeholder="tithe, zakat, dana"/>
+          </label>
+        </div>
+        <button class="btn" type="submit">Save campaign</button>
+      </form>
+      <div class="status" id="setup-campaign-status" hidden></div>
     </div>
   </section>
 </main>
 
 <footer>
-  Built for founders shipping faith-tech products fast. Duplicate this blueprint, connect Render, Stripe, and MongoDB, and you are production-ready.
+  © <span id="year"></span> Orbital Collective. Multi-faith donations, ready the moment you sign in.
 </footer>
+
 <script>
-  const state = { orgs: [], campaigns: [] };
+  const SLIDES = [
+    {
+      id: 'NA',
+      name: 'North America',
+      image: 'religion/christianity5.jpg',
+      copy: 'US and Canada support ACH, cards, Apple Pay, and bilingual receipts with IRS and CRA-compliant summaries.',
+      sectors: ['Community relief & shelters', 'Food security networks', 'Youth programming', 'Capital campaigns'],
+      currencies: 'USD · CAD'
+    },
+    {
+      id: 'EU',
+      name: 'Europe',
+      image: 'religion/judaism2.jpg',
+      copy: 'Localized SEPA payments with automatic Gift Aid statements and multilingual GDPR consent flows.',
+      sectors: ['Refugee welcome centers', 'Cultural preservation', 'Winter energy assistance', 'Education bursaries'],
+      currencies: 'EUR · GBP · SEK'
+    },
+    {
+      id: 'MENA',
+      name: 'Middle East & North Africa',
+      image: 'religion/islam5.jpg',
+      copy: 'Arabic-first experiences with Ramadan scheduling, zakat calculators, and regional banking partners.',
+      sectors: ['Ramadan food parcels', 'Water & sanitation', 'Scholarships for girls', 'Mosque restoration'],
+      currencies: 'AED · SAR · EGP'
+    },
+    {
+      id: 'SA',
+      name: 'South Asia',
+      image: 'religion/hinduism4.jpg',
+      copy: 'Handle INR, LKR, and NPR gifts with PAN capture, festival campaign presets, and WhatsApp confirmations.',
+      sectors: ['Disaster recovery', 'Temple seva programs', 'Health outreach', 'Education for children'],
+      currencies: 'INR · LKR · NPR'
+    },
+    {
+      id: 'APAC',
+      name: 'Asia Pacific',
+      image: 'religion/buddhism3.jpg',
+      copy: 'From Singapore to Sydney: cards, BECS, and PayNow support with retreat management baked in.',
+      sectors: ['Retreat scholarships', 'Environmental care', 'Elder support services', 'Community kitchens'],
+      currencies: 'AUD · SGD · NZD'
+    }
+  ];
+
+  const SECTORS = [
+    { value: 'relief', title: 'Community Relief', desc: 'Rapid response funds for housing, energy, and crisis needs.' },
+    { value: 'education', title: 'Education', desc: 'Scholarships, after-school programs, and language classes.' },
+    { value: 'health', title: 'Health & Wellness', desc: 'Clinics, counseling, and elder care tailored to each faith.' },
+    { value: 'food', title: 'Food Security', desc: 'Food banks, Ramadan baskets, langar kitchens, and pantry drives.' },
+    { value: 'youth', title: 'Youth & Families', desc: 'Child check-in, camps, and youth mentorship funding.' },
+    { value: 'capital', title: 'Facilities & Capital', desc: 'Building restoration, accessibility upgrades, and mortgages.' }
+  ];
+
   const FAITH_TYPES = {
-    christian: ['tithe','offering','pledge'],
-    islam: ['zakat','sadaqah','fidya','zakat-al-fitr'],
-    hindu: ['daan','dakshina','seva'],
-    buddhist: ['dana','retreat'],
-    jewish: ['tzedakah','maaser','aliyah','yahrzeit'],
+    christian: ['tithe', 'offering', 'pledge', 'mission'],
+    islam: ['zakat', 'sadaqah', 'fidya', 'zakat-al-fitr'],
+    hindu: ['daan', 'dakshina', 'seva'],
+    buddhist: ['dana', 'retreat', 'merit'],
+    jewish: ['tzedakah', 'maaser', 'aliyah', 'yahrzeit']
+  };
+
+  const FAITH_OPTIONS = [
+    { value: 'christian', label: 'Christianity' },
+    { value: 'islam', label: 'Islam' },
+    { value: 'hindu', label: 'Hinduism' },
+    { value: 'buddhist', label: 'Buddhism' },
+    { value: 'jewish', label: 'Judaism' }
+  ];
+
+  const state = {
+    orgs: [],
+    campaignsByOrg: new Map(),
+    slideIndex: 0,
+    autoTimer: null
   };
 
   const els = {
-    orgForm: document.getElementById('org-form'),
-    orgStatus: document.getElementById('org-status'),
-    campaignForm: document.getElementById('campaign-form'),
-    campaignStatus: document.getElementById('campaign-status'),
-    paymentForm: document.getElementById('payment-form'),
-    paymentStatus: document.getElementById('payment-status'),
-    paymentLinkResult: document.getElementById('payment-link-result'),
-    paymentLinkUrl: document.getElementById('payment-link-url'),
-    paymentLinkMeta: document.getElementById('payment-link-meta'),
-    reportForm: document.getElementById('report-form'),
-    reportStatus: document.getElementById('report-status'),
-    reportResults: document.getElementById('report-results'),
-    reportBody: document.getElementById('report-body'),
-    reportEmpty: document.getElementById('report-empty'),
-    campaignOrg: document.getElementById('campaign-org'),
-    campaignTypes: document.getElementById('campaign-types'),
-    paymentOrg: document.getElementById('payment-org'),
-    paymentCampaign: document.getElementById('payment-campaign'),
-    paymentReligion: document.getElementById('payment-religion'),
-    paymentRegion: document.getElementById('payment-region'),
-    paymentDonation: document.getElementById('payment-donation'),
-    paymentAllowPromo: document.getElementById('payment-allow-promo'),
+    regionTrack: document.getElementById('region-track'),
+    sliderDots: document.getElementById('slider-dots'),
+    prevSlide: document.getElementById('prev-slide'),
+    nextSlide: document.getElementById('next-slide'),
+    sectorGrid: document.getElementById('sector-grid'),
+    donationForm: document.getElementById('donation-form'),
+    donationRegion: document.getElementById('donation-region'),
+    donationFaith: document.getElementById('donation-faith'),
+    donationOrg: document.getElementById('donation-org'),
+    donationCampaign: document.getElementById('donation-campaign'),
+    donationSector: document.getElementById('donation-sector'),
+    donationType: document.getElementById('donation-type'),
+    donationAmount: document.getElementById('donation-amount'),
+    donationFrequency: document.getElementById('donation-frequency'),
+    donationPromo: document.getElementById('donation-promo'),
+    donationName: document.getElementById('donation-name'),
+    donationEmail: document.getElementById('donation-email'),
+    donationNotes: document.getElementById('donation-notes'),
+    donationStatus: document.getElementById('donation-status'),
+    donationResult: document.getElementById('donation-result'),
+    donationLink: document.getElementById('donation-link'),
+    donationMeta: document.getElementById('donation-meta'),
+    orgEmpty: document.getElementById('org-empty'),
+    setupOrgForm: document.getElementById('setup-org-form'),
+    setupOrgStatus: document.getElementById('setup-org-status'),
+    setupOrgName: document.getElementById('setup-org-name'),
+    setupOrgRegion: document.getElementById('setup-org-region'),
+    setupOrgFaith: document.getElementById('setup-org-faith'),
+    setupOrgLocales: document.getElementById('setup-org-locales'),
+    setupOrgTimezone: document.getElementById('setup-org-timezone'),
+    setupOrgStripe: document.getElementById('setup-org-stripe'),
+    setupCampaignForm: document.getElementById('setup-campaign-form'),
+    setupCampaignStatus: document.getElementById('setup-campaign-status'),
+    setupCampaignOrg: document.getElementById('setup-campaign-org'),
+    setupCampaignName: document.getElementById('setup-campaign-name'),
+    setupCampaignCode: document.getElementById('setup-campaign-code'),
+    setupCampaignTypes: document.getElementById('setup-campaign-types')
   };
 
   function setStatus(el, message, type = 'info') {
     if (!el) return;
     el.hidden = false;
     el.textContent = message;
-    el.classList.remove('success','error');
+    el.classList.remove('success', 'error');
     if (type === 'success') el.classList.add('success');
     if (type === 'error') el.classList.add('error');
   }
@@ -693,7 +782,7 @@
     if (!el) return;
     el.hidden = true;
     el.textContent = '';
-    el.classList.remove('success','error');
+    el.classList.remove('success', 'error');
   }
 
   function option(label, value) {
@@ -703,263 +792,384 @@
     return opt;
   }
 
-  function refreshOrgSelects() {
-    const selects = [els.campaignOrg, els.paymentOrg];
-    selects.forEach(select => {
-      if (!select) return;
-      const current = select.value;
-      select.innerHTML = '';
-      const placeholder = option('Select organization', '');
-      placeholder.disabled = true;
-      placeholder.selected = true;
-      select.appendChild(placeholder);
-      state.orgs.forEach(org => {
-        const opt = option(`${org.name} · ${org.region}/${org.religion}`, org._id);
-        opt.dataset.region = org.region;
-        opt.dataset.religion = org.religion;
-        select.appendChild(opt);
-      });
-      if (current) {
-        const exists = Array.from(select.options).find(o => o.value === current);
-        if (exists) {
-          select.value = current;
-          exists.selected = true;
+  function renderSlides() {
+    els.regionTrack.innerHTML = '';
+    els.sliderDots.innerHTML = '';
+    SLIDES.forEach((slide, index) => {
+      const slideEl = document.createElement('article');
+      slideEl.className = 'region-slide';
+      slideEl.dataset.index = index;
+      slideEl.innerHTML = `
+        <img src="${slide.image}" alt="${slide.name} faith communities" loading="lazy"/>
+        <div class="region-meta">
+          <h3>${slide.name}</h3>
+          <p>${slide.copy}</p>
+          <p><strong>Currencies:</strong> ${slide.currencies}</p>
+          <ul>
+            ${slide.sectors.map(item => `<li>${item}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+      els.regionTrack.appendChild(slideEl);
+
+      const dot = document.createElement('div');
+      dot.className = 'slider-dot';
+      dot.dataset.index = index;
+      dot.addEventListener('click', () => showSlide(index, true));
+      els.sliderDots.appendChild(dot);
+    });
+    showSlide(0, true);
+  }
+
+  function showSlide(index, manual = false) {
+    state.slideIndex = (index + SLIDES.length) % SLIDES.length;
+    const offset = -state.slideIndex * 100;
+    els.regionTrack.style.transform = `translateX(${offset}%)`;
+    Array.from(els.sliderDots.children).forEach((dot, idx) => {
+      dot.classList.toggle('active', idx === state.slideIndex);
+    });
+    if (manual) {
+      resetAutoSlide();
+    }
+  }
+
+  function nextSlide() {
+    showSlide(state.slideIndex + 1);
+  }
+
+  function prevSlide() {
+    showSlide(state.slideIndex - 1, true);
+  }
+
+  function resetAutoSlide() {
+    if (state.autoTimer) {
+      clearInterval(state.autoTimer);
+    }
+    state.autoTimer = setInterval(nextSlide, 8000);
+  }
+
+  function renderSectors() {
+    els.sectorGrid.innerHTML = '';
+    SECTORS.forEach(sector => {
+      const card = document.createElement('article');
+      card.className = 'sector-card';
+      card.innerHTML = `<h3>${sector.title}</h3><p>${sector.desc}</p>`;
+      els.sectorGrid.appendChild(card);
+    });
+  }
+
+  function populateSelect(select, values, placeholder) {
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = '';
+    if (placeholder) {
+      const opt = option(placeholder, '');
+      opt.disabled = true;
+      opt.selected = true;
+      select.appendChild(opt);
+    }
+    values.forEach(item => {
+      if (typeof item === 'string') {
+        select.appendChild(option(item, item));
+      } else if (item && typeof item === 'object') {
+        const opt = option(item.label ?? item.name ?? item.value, item.value ?? item._id);
+        if (item._id) {
+          opt.dataset.json = JSON.stringify(item);
         }
+        select.appendChild(opt);
       }
     });
+    if (current && Array.from(select.options).some(o => o.value === current)) {
+      select.value = current;
+    }
   }
 
-  function refreshCampaignSelect(orgId) {
-    const current = els.paymentCampaign.value;
-    els.paymentCampaign.innerHTML = '';
-    const placeholder = option('Select campaign', '');
-    placeholder.disabled = true;
-    placeholder.selected = true;
-    els.paymentCampaign.appendChild(placeholder);
-    state.campaigns.filter(c => !orgId || c.orgId === orgId).forEach(campaign => {
-      const opt = option(`${campaign.name}`, campaign._id);
-      opt.dataset.orgId = campaign.orgId;
-      els.paymentCampaign.appendChild(opt);
+  function populateFaithSelects() {
+    populateSelect(els.donationFaith, FAITH_OPTIONS.map(f => ({ label: f.label, value: f.value })), 'Choose a faith');
+    populateSelect(els.setupOrgFaith, FAITH_OPTIONS.map(f => ({ label: f.label, value: f.value })), 'Choose a faith');
+  }
+
+  function populateRegionSelects() {
+    const regions = SLIDES.map(slide => ({ label: `${slide.name}`, value: slide.id }));
+    populateSelect(els.donationRegion, regions, 'Choose a region');
+    populateSelect(els.setupOrgRegion, regions, 'Choose a region');
+  }
+
+  function populateSectorSelects() {
+    populateSelect(els.donationSector, SECTORS.map(s => ({ label: s.title, value: s.value })), 'Select a sector');
+  }
+
+  function setDonationTypeOptions(religion) {
+    const values = FAITH_TYPES[religion] ?? [];
+    const items = values.length ? values : ['general'];
+    populateSelect(els.donationType, items.map(v => ({ label: v.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v })), 'Select donation type');
+  }
+
+  function updateOrgOptions() {
+    const region = els.donationRegion.value;
+    const faith = els.donationFaith.value;
+    const list = state.orgs.filter(org => {
+      const regionMatch = !region || org.region === region;
+      const faithMatch = !faith || org.religion === faith;
+      return regionMatch && faithMatch;
     });
-    if (current) {
-      const exists = Array.from(els.paymentCampaign.options).find(o => o.value === current);
-      if (exists && (!orgId || exists.dataset.orgId === orgId)) {
-        els.paymentCampaign.value = current;
-        exists.selected = true;
-      }
+    populateSelect(els.donationOrg, list.map(org => ({ ...org, label: `${org.name} · ${org.region}/${org.religion}`, value: org._id })), 'Choose an organization');
+    populateSelect(els.setupCampaignOrg, state.orgs.map(org => ({ ...org, label: `${org.name} (${org.region})`, value: org._id })), 'Choose an organization');
+    els.orgEmpty.hidden = list.length > 0 || state.orgs.length === 0;
+  }
+
+  function updateCampaignOptions(orgId) {
+    const campaigns = state.campaignsByOrg.get(orgId) ?? [];
+    populateSelect(els.donationCampaign, campaigns.map(c => ({ ...c, label: c.name, value: c._id })), 'Choose a campaign');
+  }
+
+  function hydrateDonationTypesFromCampaign(campaign) {
+    if (!campaign) return;
+    const donationTypes = Array.isArray(campaign.donationTypes) && campaign.donationTypes.length ? campaign.donationTypes : undefined;
+    if (donationTypes) {
+      populateSelect(els.donationType, donationTypes.map(v => ({ label: v.replace(/_/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase()), value: v })), 'Select donation type');
     }
   }
 
-  function setDonationOptions(religion) {
-    const values = FAITH_TYPES[religion] || [];
-    els.paymentDonation.innerHTML = '';
-    values.forEach(value => {
-      els.paymentDonation.appendChild(option(value, value));
-    });
-    if (!values.length) {
-      els.paymentDonation.appendChild(option('gift', 'gift'));
+  async function fetchJSON(url) {
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) {
+      throw new Error(res.statusText || 'Request failed');
     }
-  }
-
-  function suggestDonationTypes(orgId) {
-    const org = state.orgs.find(o => o._id === orgId);
-    if (!org) return;
-    const defaults = FAITH_TYPES[org.religion] || [];
-    if (defaults.length && !els.campaignTypes.value) {
-      els.campaignTypes.value = defaults.join(', ');
-    }
+    return res.json();
   }
 
   async function postJSON(url, payload) {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
     });
     if (!res.ok) {
-      let err = 'Request failed';
-      try {
-        const body = await res.json();
-        err = body.error || JSON.stringify(body);
-      } catch (_) {
-        err = res.statusText || err;
-      }
-      throw new Error(err);
+      const text = await res.text();
+      throw new Error(text || res.statusText || 'Request failed');
     }
     return res.json();
   }
 
-  els.orgForm?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    clearStatus(els.orgStatus);
-    const formData = new FormData(els.orgForm);
-    const payload = {
-      name: formData.get('name'),
-      region: formData.get('region'),
-      religion: formData.get('religion'),
-    };
-    const locales = formData.get('locales');
-    const timezone = formData.get('timezone');
-    if (locales) payload.locales = locales.split(',').map(x => x.trim()).filter(Boolean);
-    if (timezone) payload.timezone = timezone.trim();
-
+  async function loadOrganizations() {
     try {
-      setStatus(els.orgStatus, 'Creating organization…');
-      const data = await postJSON('/api/giving/orgs', payload);
-      if (!data?.org) throw new Error('No organization returned');
-      state.orgs.push(data.org);
-      refreshOrgSelects();
-      els.campaignOrg.value = data.org._id;
-      els.paymentOrg.value = data.org._id;
-      els.paymentOrg.dispatchEvent(new Event('change'));
-      suggestDonationTypes(data.org._id);
-      setStatus(els.orgStatus, `Organization created (${data.org.name})`, 'success');
-      els.orgForm.reset();
+      const data = await fetchJSON('/api/giving/organizations');
+      const orgs = Array.isArray(data) ? data : data.organizations ?? data.data ?? [];
+      if (Array.isArray(orgs)) {
+        state.orgs = orgs;
+        updateOrgOptions();
+      }
     } catch (err) {
-      setStatus(els.orgStatus, `Failed: ${err.message}`, 'error');
+      console.warn('Unable to load organizations', err);
+      state.orgs = [];
+      updateOrgOptions();
     }
-  });
+  }
 
-  els.campaignOrg?.addEventListener('change', (event) => {
-    const orgId = event.target.value;
-    suggestDonationTypes(orgId);
-  });
-
-  els.paymentOrg?.addEventListener('change', (event) => {
-    const orgId = event.target.value;
-    const org = state.orgs.find(o => o._id === orgId);
-    if (org) {
-      els.paymentRegion.value = org.region;
-      els.paymentReligion.value = org.religion;
-      setDonationOptions(org.religion);
-    }
-    refreshCampaignSelect(orgId);
-  });
-
-  els.paymentReligion?.addEventListener('change', (event) => {
-    setDonationOptions(event.target.value);
-  });
-
-  els.campaignForm?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    clearStatus(els.campaignStatus);
-    const orgId = els.campaignOrg.value;
-    if (!orgId) {
-      setStatus(els.campaignStatus, 'Select an organization first.', 'error');
-      return;
-    }
-
-    const payload = {
-      orgId,
-      name: document.getElementById('campaign-name').value,
-    };
-    const code = document.getElementById('campaign-code').value.trim();
-    const donationTypes = document.getElementById('campaign-types').value.split(',').map(x => x.trim()).filter(Boolean);
-    if (code) payload.code = code;
-    if (donationTypes.length) payload.donationTypes = donationTypes;
-
+  async function loadCampaigns(orgId) {
+    if (!orgId || state.campaignsByOrg.has(orgId)) return;
     try {
-      setStatus(els.campaignStatus, 'Creating campaign…');
-      const data = await postJSON('/api/giving/campaigns', payload);
-      if (!data?.campaign) throw new Error('No campaign returned');
-      state.campaigns.push(data.campaign);
-      refreshCampaignSelect(orgId);
-      els.paymentCampaign.value = data.campaign._id;
-      setStatus(els.campaignStatus, `Campaign ready (${data.campaign.name})`, 'success');
-      els.campaignForm.reset();
-      els.campaignOrg.value = orgId;
-      suggestDonationTypes(orgId);
+      const data = await fetchJSON(`/api/giving/campaigns?orgId=${encodeURIComponent(orgId)}`);
+      const campaigns = Array.isArray(data) ? data : data.campaigns ?? data.data ?? [];
+      if (Array.isArray(campaigns)) {
+        state.campaignsByOrg.set(orgId, campaigns);
+      }
     } catch (err) {
-      setStatus(els.campaignStatus, `Failed: ${err.message}`, 'error');
+      console.warn('Unable to load campaigns', err);
+      state.campaignsByOrg.set(orgId, []);
     }
-  });
+  }
 
-  els.paymentForm?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    clearStatus(els.paymentStatus);
-    els.paymentLinkResult.hidden = true;
-    const orgId = els.paymentOrg.value;
-    const campaignId = els.paymentCampaign.value;
+  function handleOrgSelection() {
+    const select = els.donationOrg;
+    const option = select.options[select.selectedIndex];
+    if (option?.dataset?.json) {
+      try {
+        const org = JSON.parse(option.dataset.json);
+        if (org.region) {
+          els.donationRegion.value = org.region;
+        }
+        if (org.religion) {
+          els.donationFaith.value = org.religion;
+          setDonationTypeOptions(org.religion);
+        }
+      } catch (err) {
+        console.warn('Unable to parse organization option', err);
+      }
+    }
+  }
+
+  function extractCampaignFromSelect() {
+    const select = els.donationCampaign;
+    const option = select.options[select.selectedIndex];
+    if (option?.dataset?.json) {
+      try {
+        return JSON.parse(option.dataset.json);
+      } catch (err) {
+        console.warn('Unable to parse campaign option', err);
+      }
+    }
+    return null;
+  }
+
+  function prepareDonationPayload() {
+    const orgId = els.donationOrg.value;
+    const campaignId = els.donationCampaign.value;
     if (!orgId || !campaignId) {
-      setStatus(els.paymentStatus, 'Select organization and campaign.', 'error');
-      return;
+      throw new Error('Select an organization and campaign.');
     }
-
+    const frequency = els.donationFrequency.value;
+    const interval = frequency === 'one_time' ? undefined : frequency;
+    const amount = Number(els.donationAmount.value);
+    if (!amount || Number.isNaN(amount)) {
+      throw new Error('Enter a donation amount.');
+    }
     const payload = {
       orgId,
       campaignId,
-      religion: els.paymentReligion.value,
-      region: els.paymentRegion.value,
-      donationType: els.paymentDonation.value,
-      priceId: document.getElementById('payment-price').value.trim() || undefined,
-      amount: document.getElementById('payment-amount').value,
-      interval: document.getElementById('payment-interval').value,
-      productName: document.getElementById('payment-product').value.trim() || undefined,
-      advisor_name: document.getElementById('payment-advisor').value.trim(),
-      office: document.getElementById('payment-office').value.trim(),
-      country: document.getElementById('payment-country').value.trim(),
-      allowPromo: els.paymentAllowPromo.value === 'true',
+      region: els.donationRegion.value,
+      religion: els.donationFaith.value,
+      donationType: els.donationType.value,
+      sector: els.donationSector.value,
+      amount,
+      interval,
+      allowPromo: els.donationPromo.value === 'true',
+      donor: {
+        name: els.donationName.value,
+        email: els.donationEmail.value,
+        notes: els.donationNotes.value.trim() || undefined
+      }
     };
+    return payload;
+  }
 
-    if (payload.amount === '') delete payload.amount;
-    if (!payload.priceId && !payload.amount) {
-      payload.amount = 50; // default fallback
-    }
+  function attachEvents() {
+    els.prevSlide.addEventListener('click', () => prevSlide());
+    els.nextSlide.addEventListener('click', () => { showSlide(state.slideIndex + 1, true); });
+    resetAutoSlide();
 
-    try {
-      setStatus(els.paymentStatus, 'Creating Stripe Payment Link…');
-      const data = await postJSON('/api/giving/payment-link', payload);
-      if (!data?.url) throw new Error('No Payment Link returned');
-      setStatus(els.paymentStatus, 'Payment Link ready!', 'success');
-      els.paymentLinkUrl.href = data.url;
-      els.paymentLinkUrl.textContent = data.url;
-      els.paymentLinkMeta.textContent = JSON.stringify(data.meta || {}, null, 2);
-      els.paymentLinkResult.hidden = false;
-    } catch (err) {
-      setStatus(els.paymentStatus, `Failed: ${err.message}`, 'error');
-    }
-  });
-
-  els.reportForm?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    clearStatus(els.reportStatus);
-    els.reportResults.hidden = true;
-    const params = new URLSearchParams({
-      groupBy: document.getElementById('report-group').value,
-      range: document.getElementById('report-range').value,
+    els.donationFaith.addEventListener('change', () => {
+      setDonationTypeOptions(els.donationFaith.value);
+      updateOrgOptions();
+    });
+    els.donationRegion.addEventListener('change', () => {
+      updateOrgOptions();
+    });
+    els.donationOrg.addEventListener('change', async () => {
+      handleOrgSelection();
+      const orgId = els.donationOrg.value;
+      await loadCampaigns(orgId);
+      updateCampaignOptions(orgId);
+    });
+    els.donationCampaign.addEventListener('change', () => {
+      const campaign = extractCampaignFromSelect();
+      hydrateDonationTypesFromCampaign(campaign);
     });
 
-    try {
-      setStatus(els.reportStatus, 'Fetching report…');
-      const res = await fetch(`/api/giving/report?${params.toString()}`);
-      if (!res.ok) throw new Error(res.statusText || 'Request failed');
-      const data = await res.json();
-      els.reportBody.innerHTML = '';
-      const entries = Object.entries(data?.buckets || {});
-      if (!entries.length) {
-        els.reportEmpty.hidden = false;
-      } else {
-        els.reportEmpty.hidden = true;
-        entries.forEach(([key, bucket]) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${key}</td><td>${Number(bucket.total || 0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td><td>${bucket.currency || ''}</td><td>${bucket.count || 0}</td>`;
-          els.reportBody.appendChild(tr);
-        });
+    els.donationForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      clearStatus(els.donationStatus);
+      els.donationResult.hidden = true;
+      try {
+        const payload = prepareDonationPayload();
+        setStatus(els.donationStatus, 'Generating Stripe checkout…');
+        const data = await postJSON('/api/giving/payment-link', payload);
+        const url = data?.url;
+        if (!url) {
+          throw new Error('Payment link not returned.');
+        }
+        setStatus(els.donationStatus, 'Payment link ready!', 'success');
+        els.donationLink.href = url;
+        els.donationLink.textContent = url;
+        els.donationMeta.textContent = JSON.stringify(data.meta ?? payload, null, 2);
+        els.donationResult.hidden = false;
+        try {
+          window.open(url, '_blank', 'noopener');
+        } catch (err) {
+          console.warn('Popup blocked', err);
+        }
+      } catch (err) {
+        setStatus(els.donationStatus, err.message || 'Unable to generate payment link', 'error');
       }
-      els.reportResults.hidden = false;
-      setStatus(els.reportStatus, 'Report updated', 'success');
-    } catch (err) {
-      setStatus(els.reportStatus, `Failed: ${err.message}`, 'error');
-    }
-  });
+    });
 
-  // Pre-populate donation select
-  setDonationOptions(els.paymentReligion.value);
+    els.setupOrgForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      clearStatus(els.setupOrgStatus);
+      try {
+        const payload = {
+          name: els.setupOrgName.value,
+          region: els.setupOrgRegion.value,
+          religion: els.setupOrgFaith.value,
+          locales: els.setupOrgLocales.value.split(',').map(x => x.trim()).filter(Boolean),
+          timezone: els.setupOrgTimezone.value || undefined,
+          stripeAccountId: els.setupOrgStripe.value || undefined
+        };
+        setStatus(els.setupOrgStatus, 'Saving organization…');
+        const data = await postJSON('/api/giving/organizations', payload);
+        const org = data?.organization ?? data;
+        if (!org?._id) {
+          throw new Error('Organization was not returned.');
+        }
+        state.orgs.push(org);
+        updateOrgOptions();
+        setStatus(els.setupOrgStatus, `${org.name} is ready for donations.`, 'success');
+        els.setupOrgForm.reset();
+      } catch (err) {
+        setStatus(els.setupOrgStatus, err.message || 'Unable to save organization', 'error');
+      }
+    });
 
-  // Focus the control center when query param present (optional deep link)
-  if (window.location.hash === '#control-center') {
-    document.getElementById('control-center')?.scrollIntoView({ behavior: 'smooth' });
+    els.setupCampaignForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      clearStatus(els.setupCampaignStatus);
+      try {
+        const orgId = els.setupCampaignOrg.value;
+        if (!orgId) {
+          throw new Error('Select an organization first.');
+        }
+        const donationTypes = els.setupCampaignTypes.value.split(',').map(x => x.trim()).filter(Boolean);
+        const payload = {
+          orgId,
+          name: els.setupCampaignName.value,
+          code: els.setupCampaignCode.value || undefined,
+          donationTypes: donationTypes.length ? donationTypes : undefined
+        };
+        setStatus(els.setupCampaignStatus, 'Saving campaign…');
+        const data = await postJSON('/api/giving/campaigns', payload);
+        const campaign = data?.campaign ?? data;
+        if (!campaign?._id) {
+          throw new Error('Campaign was not returned.');
+        }
+        const list = state.campaignsByOrg.get(orgId) ?? [];
+        list.push(campaign);
+        state.campaignsByOrg.set(orgId, list);
+        updateCampaignOptions(orgId);
+        setStatus(els.setupCampaignStatus, `${campaign.name} is ready for donors.`, 'success');
+        els.setupCampaignForm.reset();
+      } catch (err) {
+        setStatus(els.setupCampaignStatus, err.message || 'Unable to save campaign', 'error');
+      }
+    });
   }
+
+  function init() {
+    renderSlides();
+    renderSectors();
+    populateRegionSelects();
+    populateFaithSelects();
+    populateSectorSelects();
+    setDonationTypeOptions(els.donationFaith.value);
+    attachEvents();
+    loadOrganizations();
+    document.getElementById('year').textContent = new Date().getFullYear();
+  }
+
+  init();
 </script>
 </body>
 </html>
