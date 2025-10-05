@@ -435,6 +435,55 @@
       font-weight: 800;
     }
 
+    .currency-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 12px;
+      margin: 18px 0 0;
+      font-size: 15px;
+      color: #d9e3ff;
+    }
+
+    .currency-row strong {
+      font-size: 15px;
+      letter-spacing: 0.3px;
+      color: #f0f4ff;
+      flex-shrink: 0;
+      line-height: 1.4;
+    }
+
+    .currency-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .currency-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      color: #e5edff;
+    }
+
+    .currency-item img {
+      width: 32px;
+      height: 20px;
+      object-fit: cover;
+      border-radius: 6px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    }
+
     .region-meta ul {
       margin: 16px 0 0;
       padding: 0;
@@ -1273,7 +1322,7 @@
       religion: 'christian',
       copy: 'US and Canada support ACH, cards, Apple Pay, and bilingual receipts with IRS and CRA-compliant summaries.',
       sectors: ['Community relief & shelters', 'Food security networks', 'Youth programming', 'Capital campaigns'],
-      currencies: 'USD · CAD'
+      currencies: ['USD', 'CAD']
     },
     {
       id: 'EU',
@@ -1281,7 +1330,7 @@
       religion: 'jewish',
       copy: 'Localized SEPA payments with automatic Gift Aid statements and multilingual GDPR consent flows.',
       sectors: ['Refugee welcome centers', 'Cultural preservation', 'Winter energy assistance', 'Education bursaries'],
-      currencies: 'EUR · GBP · SEK'
+      currencies: ['EUR', 'GBP', 'SEK']
     },
     {
       id: 'MENA',
@@ -1289,7 +1338,7 @@
       religion: 'islam',
       copy: 'Arabic-first experiences with Ramadan scheduling, zakat calculators, and regional banking partners.',
       sectors: ['Ramadan food parcels', 'Water & sanitation', 'Scholarships for girls', 'Mosque restoration'],
-      currencies: 'AED · SAR · EGP'
+      currencies: ['AED', 'SAR', 'EGP']
     },
     {
       id: 'SA',
@@ -1297,7 +1346,7 @@
       religion: 'hindu',
       copy: 'Handle INR, LKR, and NPR gifts with PAN capture, festival campaign presets, and WhatsApp confirmations.',
       sectors: ['Disaster recovery', 'Temple seva programs', 'Health outreach', 'Education for children'],
-      currencies: 'INR · LKR · NPR'
+      currencies: ['INR', 'LKR', 'NPR']
     },
     {
       id: 'APAC',
@@ -1305,9 +1354,26 @@
       religion: 'buddhist',
       copy: 'From Singapore to Sydney: cards, BECS, and PayNow support with retreat management baked in.',
       sectors: ['Retreat scholarships', 'Environmental care', 'Elder support services', 'Community kitchens'],
-      currencies: 'AUD · SGD · NZD'
+      currencies: ['AUD', 'SGD', 'NZD']
     }
   ];
+
+  const CURRENCIES = new Map([
+    ['USD', { code: 'USD', name: 'United States dollar', src: 'image/money/money_usd.jpg' }],
+    ['CAD', { code: 'CAD', name: 'Canadian dollar', src: 'image/money/money_cad.jpg' }],
+    ['EUR', { code: 'EUR', name: 'Euro', src: 'image/money/money_eur.jpg' }],
+    ['GBP', { code: 'GBP', name: 'Pound sterling', src: 'image/money/money_gbp.jpg' }],
+    ['SEK', { code: 'SEK', name: 'Swedish krona', src: 'image/money/money_sek.jpg' }],
+    ['AED', { code: 'AED', name: 'United Arab Emirates dirham', src: 'image/money/money_aed_2.jpg' }],
+    ['SAR', { code: 'SAR', name: 'Saudi riyal', src: 'image/money/money_sar.jpg' }],
+    ['EGP', { code: 'EGP', name: 'Egyptian pound', src: 'image/money/money_egp.jpg' }],
+    ['INR', { code: 'INR', name: 'Indian rupee', src: 'image/money/money_inr.jpg' }],
+    ['LKR', { code: 'LKR', name: 'Sri Lankan rupee', src: 'image/money/money_lkr.jpg' }],
+    ['NPR', { code: 'NPR', name: 'Nepalese rupee', src: 'image/money/money_npr.jpg' }],
+    ['AUD', { code: 'AUD', name: 'Australian dollar', src: 'image/money/money_aud.jpg' }],
+    ['SGD', { code: 'SGD', name: 'Singapore dollar', src: 'image/money/money_sgd.jpg' }],
+    ['NZD', { code: 'NZD', name: 'New Zealand dollar', src: 'image/money/money_nzd.jpg' }]
+  ]);
 
   const SECTORS = [
     { value: 'relief', title: 'Community Relief', desc: 'Rapid response funds for housing, energy, and crisis needs.' },
@@ -1828,6 +1894,19 @@
       const identity = symbol
         ? `<div class="faith-identity" data-religion="${slide.religion}"><div class="faith-symbol" aria-hidden="true" style="--symbol-image: url('${symbol.src}')"></div><span class="faith-label">${escapeHtml(symbol.label)}</span></div>`
         : '';
+      const currencyMarkup = Array.isArray(slide.currencies) && slide.currencies.length
+        ? `<div class="currency-row"><strong>Currencies:</strong><ul class="currency-list" aria-label="Supported currencies">${slide.currencies
+            .map(code => {
+              const normalized = typeof code === 'string' ? code.trim().toUpperCase() : '';
+              if (!normalized) return '';
+              const currency = CURRENCIES.get(normalized);
+              if (currency) {
+                return `<li class="currency-item" data-code="${escapeHtml(currency.code)}"><img src="${currency.src}" alt="${escapeHtml(currency.name)}" loading="lazy" decoding="async"/><span>${escapeHtml(currency.code)}</span></li>`;
+              }
+              return `<li class="currency-item" data-code="${escapeHtml(normalized)}"><span>${escapeHtml(normalized)}</span></li>`;
+            })
+            .join('')}</ul></div>`
+        : '';
       slideEl.innerHTML = `
         <div class="region-media">
           <img class="region-image" alt="${slide.name} faith communities" loading="lazy"/>
@@ -1836,7 +1915,7 @@
           ${identity}
           <h3>${slide.name}</h3>
           <p>${slide.copy}</p>
-          <p><strong>Currencies:</strong> ${slide.currencies}</p>
+          ${currencyMarkup}
           <ul>
             ${slide.sectors.map(item => `<li>${item}</li>`).join('')}
           </ul>
