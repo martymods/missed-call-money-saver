@@ -217,12 +217,67 @@
       align-items: center;
     }
 
-    .region-slide img {
+    .region-media {
+      position: relative;
       width: 100%;
       height: 260px;
-      object-fit: cover;
       border-radius: 18px;
+      overflow: hidden;
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38);
+    }
+
+    .region-media::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      pointer-events: none;
+    }
+
+    .region-slide .region-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      will-change: transform;
+      transform: scale(1.04);
+      animation-duration: 14s;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+      animation-play-state: paused;
+    }
+
+    .region-slide.pan-up .region-image {
+      animation-name: regionPanUp;
+      transform-origin: center bottom;
+    }
+
+    .region-slide.pan-down .region-image {
+      animation-name: regionPanDown;
+      transform-origin: center top;
+    }
+
+    .region-slide.active .region-image {
+      animation-play-state: running;
+    }
+
+    @keyframes regionPanUp {
+      0% {
+        transform: scale(1.05) translateY(12%);
+      }
+      100% {
+        transform: scale(1.05) translateY(-12%);
+      }
+    }
+
+    @keyframes regionPanDown {
+      0% {
+        transform: scale(1.05) translateY(-12%);
+      }
+      100% {
+        transform: scale(1.05) translateY(12%);
+      }
     }
 
     .region-meta h3 {
@@ -1286,7 +1341,9 @@
       slideEl.className = 'region-slide';
       slideEl.dataset.index = index;
       slideEl.innerHTML = `
-        <img alt="${slide.name} faith communities" loading="lazy"/>
+        <div class="region-media">
+          <img class="region-image" alt="${slide.name} faith communities" loading="lazy"/>
+        </div>
         <div class="region-meta">
           <h3>${slide.name}</h3>
           <p>${slide.copy}</p>
@@ -1296,7 +1353,8 @@
           </ul>
         </div>
       `;
-      const imgEl = slideEl.querySelector('img');
+      slideEl.classList.add(index % 2 === 0 ? 'pan-up' : 'pan-down');
+      const imgEl = slideEl.querySelector('.region-image');
       if (imgEl) {
         state.slideImages.set(slide.id, imgEl);
         setRandomSlideImage(slide.id, slide.religion, false);
@@ -1316,6 +1374,20 @@
     state.slideIndex = (index + SLIDES.length) % SLIDES.length;
     const offset = -state.slideIndex * 100;
     els.regionTrack.style.transform = `translateX(${offset}%)`;
+    const slides = Array.from(els.regionTrack.children);
+    slides.forEach((slideEl, idx) => {
+      const isActive = idx === state.slideIndex;
+      slideEl.classList.toggle('active', isActive);
+      if (isActive) {
+        const img = slideEl.querySelector('.region-image');
+        if (img) {
+          img.style.animation = 'none';
+          // Force reflow so the animation restarts when play state resumes
+          void img.offsetHeight;
+          img.style.animation = '';
+        }
+      }
+    });
     Array.from(els.sliderDots.children).forEach((dot, idx) => {
       dot.classList.toggle('active', idx === state.slideIndex);
     });
