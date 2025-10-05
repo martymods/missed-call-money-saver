@@ -29,6 +29,9 @@
       background: radial-gradient(circle at top, rgba(76, 71, 143, 0.45), transparent 60%), var(--bg);
       color: var(--ink);
       font: 16px/1.6 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     img {
@@ -50,9 +53,9 @@
     }
 
     .nav {
-      max-width: 1160px;
+      width: min(100%, 1200px);
       margin: 0 auto;
-      padding: 12px 20px;
+      padding: 16px 20px;
       display: flex;
       align-items: center;
       gap: 18px;
@@ -168,18 +171,19 @@
     }
 
     main {
-      max-width: 1160px;
+      width: min(100%, 1200px);
       margin: 0 auto;
-      padding: 28px 20px 100px;
+      padding: 24px 18px 90px;
       display: grid;
-      gap: 70px;
+      gap: 56px;
+      flex: 1 0 auto;
     }
 
     .hero {
       display: grid;
       gap: 24px;
       align-items: center;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .hero h1 {
@@ -505,7 +509,7 @@
       background: linear-gradient(180deg, rgba(124, 77, 255, 0.18), rgba(9, 18, 40, 0.94));
       border-radius: 24px;
       border: 1px solid rgba(124, 77, 255, 0.32);
-      padding: 26px;
+      padding: 24px;
       box-shadow: 0 24px 58px rgba(0, 0, 0, 0.42);
     }
 
@@ -518,6 +522,16 @@
     .form-row {
       display: grid;
       gap: 16px;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .form-actions .btn {
+      min-width: 220px;
     }
 
     @media (min-width: 720px) {
@@ -585,6 +599,10 @@
       flex-wrap: wrap;
     }
 
+    .nav .inline-actions {
+      margin-left: auto;
+    }
+
     .inline-actions .btn {
       flex: none;
     }
@@ -617,6 +635,65 @@
       flex-direction: column;
       min-height: 100%;
       box-shadow: 0 24px 50px rgba(2, 8, 25, 0.45);
+    }
+
+    .manage-card {
+      display: grid;
+      gap: 24px;
+    }
+
+    .manage-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 18px;
+      background: rgba(10, 17, 36, 0.6);
+      border: 1px solid rgba(124, 77, 255, 0.28);
+    }
+
+    .manage-tab {
+      flex: 1 1 160px;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      background: transparent;
+      color: rgba(223, 228, 255, 0.72);
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .manage-tab:focus-visible {
+      outline: 2px solid rgba(124, 77, 255, 0.6);
+      outline-offset: 2px;
+    }
+
+    .manage-tab.is-active {
+      background: linear-gradient(135deg, rgba(124, 77, 255, 0.75), rgba(55, 199, 154, 0.6));
+      color: #fff;
+      box-shadow: 0 14px 28px rgba(76, 71, 143, 0.35);
+    }
+
+    .tab-panels {
+      position: relative;
+    }
+
+    .tab-panel {
+      display: grid;
+      gap: 18px;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .tab-panel[hidden] {
+      display: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .community-media {
@@ -788,6 +865,74 @@
       }
     }
 
+    @media (max-width: 720px) {
+      .nav {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+      }
+
+      .nav .inline-actions {
+        width: 100%;
+        justify-content: center;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      }
+
+      .hero {
+        text-align: center;
+      }
+
+      .hero .inline-actions {
+        justify-content: center;
+      }
+
+      .form-card {
+        padding: 22px;
+      }
+
+      .form-actions {
+        justify-content: center;
+      }
+
+      .form-actions .btn {
+        width: min(100%, 320px);
+      }
+    }
+
+    @media (max-width: 540px) {
+      .manage-tabs {
+        gap: 10px;
+      }
+
+      .manage-tab {
+        flex: 1 1 100%;
+        text-align: center;
+      }
+    }
+
+    @media (min-width: 960px) {
+      main {
+        gap: 72px;
+      }
+
+      .hero {
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        gap: 36px;
+      }
+    }
+
+    @media (min-width: 1280px) {
+      main {
+        padding: 60px 32px 140px;
+        gap: 96px;
+      }
+
+      .hero {
+        grid-template-columns: 1.1fr 0.9fr;
+      }
+    }
+
     @media (max-width: 640px) {
       .hero-media {
         min-height: 200px;
@@ -937,10 +1082,12 @@
             <textarea id="donation-notes" placeholder="Dedicate this gift to..."></textarea>
           </label>
         </div>
-        <button class="btn liquid" type="submit">
-          <span>Generate secure checkout</span>
-          <div class="liquid"></div>
-        </button>
+        <div class="form-actions">
+          <button class="btn liquid" type="submit">
+            <span>Generate secure checkout</span>
+            <div class="liquid"></div>
+          </button>
+        </div>
       </form>
       <div class="status" id="donation-status" hidden></div>
       <div class="result-block" id="donation-result" hidden>
@@ -955,65 +1102,77 @@
   <section id="manage">
     <h2>Organization &amp; campaign management</h2>
     <p class="lead">Connect as many communities as you need. As soon as you save an organization and campaign, they are available in the donation builder.</p>
-    <div class="form-card">
-      <h3>Add an organization</h3>
-      <form id="setup-org-form">
-        <div class="form-row double">
-          <label>Organization name
-            <input id="setup-org-name" type="text" placeholder="Bethany Center" required/>
-          </label>
-          <label>Region
-            <select id="setup-org-region" required></select>
-          </label>
+    <div class="form-card manage-card">
+      <div class="manage-tabs" role="tablist" aria-label="Manage organizations and campaigns">
+        <button class="manage-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="panel-organization" id="tab-organization" data-tab-target="panel-organization">Organizations</button>
+        <button class="manage-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-campaign" id="tab-campaign" data-tab-target="panel-campaign">Campaigns</button>
+      </div>
+      <div class="tab-panels">
+        <div class="tab-panel is-active" id="panel-organization" role="tabpanel" aria-labelledby="tab-organization">
+          <h3>Add an organization</h3>
+          <form id="setup-org-form">
+            <div class="form-row double">
+              <label>Organization name
+                <input id="setup-org-name" type="text" placeholder="Bethany Center" required/>
+              </label>
+              <label>Region
+                <select id="setup-org-region" required></select>
+              </label>
+            </div>
+            <div class="form-row double">
+              <label>Faith tradition
+                <select id="setup-org-faith" required></select>
+              </label>
+              <label>Locales (comma separated)
+                <input id="setup-org-locales" type="text" placeholder="en-US, es-US"/>
+              </label>
+            </div>
+            <div class="form-row double">
+              <label>Timezone
+                <input id="setup-org-timezone" type="text" placeholder="America/New_York"/>
+              </label>
+              <label>Stripe Account ID (optional)
+                <input id="setup-org-stripe" type="text" placeholder="acct_123"/>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="btn liquid" type="submit">
+                <span>Save organization</span>
+                <div class="liquid"></div>
+              </button>
+            </div>
+          </form>
+          <div class="status" id="setup-org-status" hidden></div>
         </div>
-        <div class="form-row double">
-          <label>Faith tradition
-            <select id="setup-org-faith" required></select>
-          </label>
-          <label>Locales (comma separated)
-            <input id="setup-org-locales" type="text" placeholder="en-US, es-US"/>
-          </label>
+        <div class="tab-panel" id="panel-campaign" role="tabpanel" aria-labelledby="tab-campaign" hidden>
+          <h3>Add a campaign</h3>
+          <form id="setup-campaign-form">
+            <div class="form-row double">
+              <label>Organization
+                <select id="setup-campaign-org" required></select>
+              </label>
+              <label>Campaign name
+                <input id="setup-campaign-name" type="text" placeholder="Community Relief" required/>
+              </label>
+            </div>
+            <div class="form-row double">
+              <label>Campaign code (optional)
+                <input id="setup-campaign-code" type="text" placeholder="community_relief"/>
+              </label>
+              <label>Donation types (comma separated)
+                <input id="setup-campaign-types" type="text" placeholder="tithe, zakat, dana"/>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="btn liquid" type="submit">
+                <span>Save campaign</span>
+                <div class="liquid"></div>
+              </button>
+            </div>
+          </form>
+          <div class="status" id="setup-campaign-status" hidden></div>
         </div>
-        <div class="form-row double">
-          <label>Timezone
-            <input id="setup-org-timezone" type="text" placeholder="America/New_York"/>
-          </label>
-          <label>Stripe Account ID (optional)
-            <input id="setup-org-stripe" type="text" placeholder="acct_123"/>
-          </label>
-        </div>
-        <button class="btn liquid" type="submit">
-          <span>Save organization</span>
-          <div class="liquid"></div>
-        </button>
-      </form>
-      <div class="status" id="setup-org-status" hidden></div>
-    </div>
-    <div class="form-card">
-      <h3>Add a campaign</h3>
-      <form id="setup-campaign-form">
-        <div class="form-row double">
-          <label>Organization
-            <select id="setup-campaign-org" required></select>
-          </label>
-          <label>Campaign name
-            <input id="setup-campaign-name" type="text" placeholder="Community Relief" required/>
-          </label>
-        </div>
-        <div class="form-row double">
-          <label>Campaign code (optional)
-            <input id="setup-campaign-code" type="text" placeholder="community_relief"/>
-          </label>
-          <label>Donation types (comma separated)
-            <input id="setup-campaign-types" type="text" placeholder="tithe, zakat, dana"/>
-          </label>
-        </div>
-        <button class="btn liquid" type="submit">
-          <span>Save campaign</span>
-          <div class="liquid"></div>
-        </button>
-      </form>
-      <div class="status" id="setup-campaign-status" hidden></div>
+      </div>
     </div>
   </section>
 </main>
@@ -1394,7 +1553,8 @@
     setupCampaignCode: document.getElementById('setup-campaign-code'),
     setupCampaignTypes: document.getElementById('setup-campaign-types'),
     communityGrid: document.getElementById('community-campaigns'),
-    communityEmpty: document.getElementById('community-empty')
+    communityEmpty: document.getElementById('community-empty'),
+    manageCard: document.querySelector('.manage-card')
   };
 
   const HTML_ESCAPE_LOOKUP = {
@@ -2060,6 +2220,59 @@
     });
   }
 
+  function setupManagementTabs() {
+    const container = els.manageCard;
+    if (!container) return;
+    const buttons = Array.from(container.querySelectorAll('[data-tab-target]'));
+    if (!buttons.length) return;
+    const panels = new Map();
+    buttons.forEach(button => {
+      const targetId = button.dataset.tabTarget;
+      if (targetId) {
+        const panel = document.getElementById(targetId);
+        if (panel) {
+          panels.set(targetId, panel);
+        }
+      }
+    });
+
+    function activate(button) {
+      const targetId = button.dataset.tabTarget;
+      if (!targetId || !panels.has(targetId)) return;
+      buttons.forEach(btn => {
+        const isActive = btn === button;
+        btn.classList.toggle('is-active', isActive);
+        btn.setAttribute('aria-selected', String(isActive));
+        btn.tabIndex = isActive ? 0 : -1;
+      });
+      panels.forEach((panel, id) => {
+        const isActive = id === targetId;
+        panel.hidden = !isActive;
+        panel.classList.toggle('is-active', isActive);
+      });
+    }
+
+    buttons.forEach((button, index) => {
+      button.addEventListener('click', () => activate(button));
+      button.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        event.preventDefault();
+        const offset = event.key === 'ArrowRight' ? 1 : -1;
+        const nextIndex = (index + offset + buttons.length) % buttons.length;
+        const nextButton = buttons[nextIndex];
+        if (nextButton) {
+          nextButton.focus();
+          activate(nextButton);
+        }
+      });
+    });
+
+    const initial = buttons.find(btn => btn.classList.contains('is-active')) ?? buttons[0];
+    if (initial) {
+      activate(initial);
+    }
+  }
+
   function init() {
     renderSlides();
     renderSectors();
@@ -2067,6 +2280,7 @@
     populateFaithSelects();
     populateSectorSelects();
     setDonationTypeOptions(els.donationFaith.value);
+    setupManagementTabs();
     attachEvents();
     ensureDefaultOrganizations();
     updateOrgOptions();
