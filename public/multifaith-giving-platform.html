@@ -515,6 +515,14 @@
       color: var(--ink);
     }
 
+    .region-currency-image {
+      width: 72px;
+      height: 48px;
+      border-radius: 10px;
+      object-fit: cover;
+      box-shadow: inset 0 0 0 1px rgba(31, 41, 55, 0.12);
+    }
+
     .region-currency-code {
       font-size: 14px;
       font-weight: 700;
@@ -2124,7 +2132,7 @@
                 if (!normalized) return '';
                 const currency = CURRENCIES.get(normalized);
                 if (currency) {
-                  return `<li class="region-currency-item" data-code="${escapeHtml(currency.code)}"><span class="region-currency-name">${escapeHtml(currency.name)}</span><span class="region-currency-code">${escapeHtml(currency.code)}</span></li>`;
+                  return `<li class="region-currency-item" data-code="${escapeHtml(currency.code)}"><img class="region-currency-image" src="${escapeHtml(currency.src)}" alt="${escapeHtml(currency.name)}" loading="lazy"/><span class="region-currency-code">${escapeHtml(currency.code)}</span></li>`;
                 }
                 return `<li class="region-currency-item" data-code="${escapeHtml(normalized)}"><span class="region-currency-name">${escapeHtml(normalized)}</span></li>`;
               })
