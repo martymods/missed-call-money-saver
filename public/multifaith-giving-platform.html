@@ -283,11 +283,16 @@
 
     .region-transition {
       position: absolute;
-      inset: 0;
+      top: var(--transition-top, 0);
+      left: var(--transition-left, 0);
+      width: var(--transition-width, 100%);
+      height: var(--transition-height, 100%);
       pointer-events: none;
       opacity: 0;
       z-index: 1;
       transition: opacity 0.28s ease;
+      border-radius: inherit;
+      overflow: hidden;
     }
 
     .region-transition.is-active {
@@ -1764,6 +1769,40 @@
     });
   }
 
+  function getSlideMediaBounds(index) {
+    const slider = els.regionSlider;
+    const track = els.regionTrack;
+    if (!slider || !track) return null;
+    const slideEl = track.children?.[index];
+    const mediaEl = slideEl?.querySelector('.region-media');
+    if (!mediaEl) return null;
+    const sliderRect = slider.getBoundingClientRect();
+    const mediaRect = mediaEl.getBoundingClientRect();
+    return {
+      top: mediaRect.top - sliderRect.top,
+      left: mediaRect.left - sliderRect.left,
+      width: mediaRect.width,
+      height: mediaRect.height
+    };
+  }
+
+  function updateTransitionOverlayForIndex(index) {
+    const overlay = els.regionTransition;
+    if (!overlay) return;
+    const bounds = getSlideMediaBounds(index);
+    if (!bounds) {
+      overlay.style.removeProperty('--transition-top');
+      overlay.style.removeProperty('--transition-left');
+      overlay.style.removeProperty('--transition-width');
+      overlay.style.removeProperty('--transition-height');
+      return;
+    }
+    overlay.style.setProperty('--transition-top', `${bounds.top}px`);
+    overlay.style.setProperty('--transition-left', `${bounds.left}px`);
+    overlay.style.setProperty('--transition-width', `${bounds.width}px`);
+    overlay.style.setProperty('--transition-height', `${bounds.height}px`);
+  }
+
   function renderSlides() {
     els.regionTrack.innerHTML = '';
     els.sliderDots.innerHTML = '';
@@ -1821,6 +1860,7 @@
     }
     showSlide(0, false, true);
     attachFaithSymbolTilt();
+    updateTransitionOverlayForIndex(0);
   }
 
   function showSlide(index, manual = false, skipTransition = false) {
@@ -1862,6 +1902,7 @@
     }
     const duration = 1400;
     overlay.style.setProperty('--transition-duration', `${duration}ms`);
+    updateTransitionOverlayForIndex(currentIndex);
     state.preloadedSlideId = nextSlideData.id;
 
     // Reset animation state to allow retriggering
@@ -1888,6 +1929,7 @@
       nextScene.style.backgroundImage = 'none';
       nextScene.style.setProperty('--transition-mask-image', 'none');
       state.isTransitioning = false;
+      updateTransitionOverlayForIndex(state.slideIndex);
     };
 
     fallbackTimer = timerHost.setTimeout(finish, duration + 250);
@@ -1922,6 +1964,7 @@
         setRandomSlideImage(slide.id, slide.religion);
       }
     }
+    updateTransitionOverlayForIndex(state.slideIndex);
     if (manual) {
       resetAutoSlide();
     }
@@ -2449,6 +2492,9 @@
 
   function init() {
     renderSlides();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', () => updateTransitionOverlayForIndex(state.slideIndex));
+    }
     renderSectors();
     populateRegionSelects();
     populateFaithSelects();
