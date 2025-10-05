@@ -91,6 +91,73 @@
       border: 1px solid rgba(255, 255, 255, 0.16);
       box-shadow: 0 16px 40px rgba(76, 71, 143, 0.4);
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .btn.liquid {
+      padding: 0;
+      border-radius: 10px;
+      background: rgba(10, 17, 36, 0.7);
+      border: 1px solid rgba(114, 147, 255, 0.65);
+      box-shadow: 0 12px 30px rgba(114, 147, 255, 0.28);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      min-width: 0;
+    }
+
+    .btn.liquid span {
+      position: relative;
+      z-index: 1;
+      padding: 14px 36px;
+      color: #fff;
+    }
+
+    .btn.liquid .liquid {
+      position: absolute;
+      inset: -80px 0 auto;
+      height: 220px;
+      background: linear-gradient(135deg, rgba(114, 147, 255, 0.95), rgba(110, 247, 255, 0.75), rgba(255, 140, 214, 0.9));
+      background-size: 200% 200%;
+      animation: holographicFlow 8s ease-in-out infinite;
+      box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.65);
+      z-index: 0;
+      transition: 0.6s ease;
+    }
+
+    .btn.liquid .liquid::after,
+    .btn.liquid .liquid::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: 0;
+      left: 0;
+      transform: translate(-25%, -75%);
+      border-radius: 45%;
+    }
+
+    .btn.liquid .liquid::after {
+      background: rgba(18, 18, 32, 0.92);
+      box-shadow: 0 0 12px 6px rgba(114, 147, 255, 0.75), inset 0 0 8px rgba(114, 147, 255, 0.65);
+      animation: animate 5s linear infinite;
+      opacity: 0.85;
+    }
+
+    .btn.liquid .liquid::before {
+      background: rgba(18, 18, 32, 0.55);
+      box-shadow: 0 0 12px rgba(26, 26, 26, 0.4), inset 0 0 6px rgba(26, 26, 26, 0.45);
+      animation: animate 7s linear infinite;
+    }
+
+    .btn.liquid:hover .liquid {
+      top: -140px;
+    }
+
+    .btn.liquid:hover {
+      box-shadow: 0 0 8px rgba(114, 147, 255, 0.85), inset 0 0 6px rgba(114, 147, 255, 0.85);
+      transform: translateY(-2px);
     }
 
     .btn.ghost {
@@ -301,6 +368,58 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       font-size: 14px;
       color: #d9e3ff;
+    }
+
+    .faith-identity {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .faith-label {
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      font-size: 13px;
+      color: #a4b6ff;
+    }
+
+    .faith-symbol {
+      position: relative;
+      width: 66px;
+      height: 66px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(182, 141, 255, 0.95), rgba(92, 242, 255, 0.8), rgba(255, 176, 218, 0.95));
+      background-size: 200% 200%;
+      animation: holographicFlow 9s ease-in-out infinite;
+      mask-image: var(--symbol-image);
+      mask-repeat: no-repeat;
+      mask-position: center;
+      mask-size: 70%;
+      -webkit-mask-image: var(--symbol-image);
+      -webkit-mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      -webkit-mask-size: 70%;
+      box-shadow: 0 12px 28px rgba(124, 77, 255, 0.45);
+      transition: transform 0.18s ease, box-shadow 0.2s ease;
+      transform: perspective(600px) rotateX(0deg) rotateY(0deg);
+      transform-style: preserve-3d;
+      pointer-events: auto;
+    }
+
+    .faith-symbol::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.25);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .faith-symbol:hover {
+      box-shadow: 0 16px 40px rgba(114, 147, 255, 0.6);
     }
 
     .slider-controls {
@@ -648,6 +767,27 @@
       font-size: 14px;
     }
 
+    @keyframes animate {
+      0% {
+        transform: translate(-25%, -75%) rotate(0);
+      }
+      100% {
+        transform: translate(-25%, -75%) rotate(360deg);
+      }
+    }
+
+    @keyframes holographicFlow {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
     @media (max-width: 640px) {
       .hero-media {
         min-height: 200px;
@@ -672,7 +812,10 @@
     </div>
     <div class="inline-actions">
       <a class="btn ghost" href="#regions">Explore regions</a>
-      <a class="btn" href="#give">Start giving</a>
+      <a class="btn liquid" href="#give">
+        <span>Start giving</span>
+        <div class="liquid"></div>
+      </a>
       <a class="btn ghost" href="multifaith-campaign-create.html">Start receiving</a>
     </div>
   </nav>
@@ -684,7 +827,10 @@
       <h1>One place to give, across every faith community.</h1>
       <p>Launch fully-configured donation flows for churches, mosques, synagogues, temples, and sanghas in minutes. No waiting for a build plan—connect your organizations, publish campaigns, and accept gifts right now.</p>
       <div class="inline-actions">
-        <a class="btn" href="#give">Create a donation</a>
+        <a class="btn liquid" href="#give">
+          <span>Create a donation</span>
+          <div class="liquid"></div>
+        </a>
         <a class="btn ghost" href="#manage">Manage organizations</a>
         <a class="btn ghost" href="multifaith-campaign-create.html">Share my story</a>
       </div>
@@ -791,7 +937,10 @@
             <textarea id="donation-notes" placeholder="Dedicate this gift to..."></textarea>
           </label>
         </div>
-        <button class="btn" type="submit">Generate secure checkout</button>
+        <button class="btn liquid" type="submit">
+          <span>Generate secure checkout</span>
+          <div class="liquid"></div>
+        </button>
       </form>
       <div class="status" id="donation-status" hidden></div>
       <div class="result-block" id="donation-result" hidden>
@@ -833,7 +982,10 @@
             <input id="setup-org-stripe" type="text" placeholder="acct_123"/>
           </label>
         </div>
-        <button class="btn" type="submit">Save organization</button>
+        <button class="btn liquid" type="submit">
+          <span>Save organization</span>
+          <div class="liquid"></div>
+        </button>
       </form>
       <div class="status" id="setup-org-status" hidden></div>
     </div>
@@ -856,7 +1008,10 @@
             <input id="setup-campaign-types" type="text" placeholder="tithe, zakat, dana"/>
           </label>
         </div>
-        <button class="btn" type="submit">Save campaign</button>
+        <button class="btn liquid" type="submit">
+          <span>Save campaign</span>
+          <div class="liquid"></div>
+        </button>
       </form>
       <div class="status" id="setup-campaign-status" hidden></div>
     </div>
@@ -1120,6 +1275,14 @@
     { value: 'jewish', label: 'Judaism' }
   ];
 
+  const RELIGION_SYMBOLS = new Map([
+    ['christian', { label: 'Christianity', src: 'religion/christianity-symbol.png' }],
+    ['islam', { label: 'Islam', src: 'religion/islam-symbol.png' }],
+    ['hindu', { label: 'Hinduism', src: 'religion/hinduism-symbol.png' }],
+    ['buddhist', { label: 'Buddhism', src: 'religion/buddhism-symbol.png' }],
+    ['jewish', { label: 'Judaism', src: 'religion/judaism-symbol.PNG' }]
+  ]);
+
   const RELIGION_IMAGE_POOLS = new Map([
     ['christian', [
       'religion/christianity1.jpg',
@@ -1176,6 +1339,8 @@
       'religion/buddhism9.jpg'
     ]]
   ]);
+
+  const MAX_FAITH_SYMBOL_TILT = 10;
 
   const state = {
     orgs: [],
@@ -1331,6 +1496,33 @@
     }
   }
 
+  function handleFaithSymbolPointerMove(event) {
+    const el = event.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+    const rotateX = Math.max(-MAX_FAITH_SYMBOL_TILT, Math.min(MAX_FAITH_SYMBOL_TILT, -y * MAX_FAITH_SYMBOL_TILT));
+    const rotateY = Math.max(-MAX_FAITH_SYMBOL_TILT, Math.min(MAX_FAITH_SYMBOL_TILT, x * MAX_FAITH_SYMBOL_TILT));
+    el.style.transform = `perspective(600px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
+  }
+
+  function handleFaithSymbolPointerLeave(event) {
+    const el = event.currentTarget;
+    el.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg)';
+  }
+
+  function attachFaithSymbolTilt() {
+    const symbols = document.querySelectorAll('.faith-symbol');
+    symbols.forEach(symbol => {
+      if (symbol.dataset.tiltBound === 'true') return;
+      symbol.dataset.tiltBound = 'true';
+      symbol.addEventListener('pointermove', handleFaithSymbolPointerMove);
+      symbol.addEventListener('pointerleave', handleFaithSymbolPointerLeave);
+      symbol.addEventListener('pointerup', handleFaithSymbolPointerLeave);
+      symbol.addEventListener('pointercancel', handleFaithSymbolPointerLeave);
+    });
+  }
+
   function renderSlides() {
     els.regionTrack.innerHTML = '';
     els.sliderDots.innerHTML = '';
@@ -1340,11 +1532,16 @@
       const slideEl = document.createElement('article');
       slideEl.className = 'region-slide';
       slideEl.dataset.index = index;
+      const symbol = RELIGION_SYMBOLS.get(slide.religion);
+      const identity = symbol
+        ? `<div class="faith-identity" data-religion="${slide.religion}"><div class="faith-symbol" aria-hidden="true" style="--symbol-image: url('${symbol.src}')"></div><span class="faith-label">${escapeHtml(symbol.label)}</span></div>`
+        : '';
       slideEl.innerHTML = `
         <div class="region-media">
           <img class="region-image" alt="${slide.name} faith communities" loading="lazy"/>
         </div>
         <div class="region-meta">
+          ${identity}
           <h3>${slide.name}</h3>
           <p>${slide.copy}</p>
           <p><strong>Currencies:</strong> ${slide.currencies}</p>
@@ -1368,6 +1565,7 @@
       els.sliderDots.appendChild(dot);
     });
     showSlide(0, true);
+    attachFaithSymbolTilt();
   }
 
   function showSlide(index, manual = false) {
