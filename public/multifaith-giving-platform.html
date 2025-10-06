@@ -471,6 +471,38 @@
       color: var(--ink);
     }
 
+    .region-followers {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 4px;
+      align-self: flex-start;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(31, 41, 55, 0.12);
+      box-shadow: 0 12px 24px rgba(31, 41, 55, 0.12);
+      max-width: 260px;
+      min-width: 0;
+    }
+
+    .region-followers__label {
+      font-size: 12px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .region-followers__value {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+
+    .region-followers--loading .region-followers__value {
+      color: var(--muted);
+    }
+
     .region-currencies {
       grid-area: curr;
       display: flex;
@@ -3478,10 +3510,16 @@
       const slideEl = document.createElement('article');
       slideEl.className = 'region-slide';
       slideEl.dataset.index = index;
+      const config = QUICK_FAITH_MAP.get(slide.religion);
       const symbol = RELIGION_SYMBOLS.get(slide.religion);
       const identity = symbol
         ? `<div class="faith-identity" data-religion="${slide.religion}"><div class="faith-symbol" aria-hidden="true" style="--symbol-image: url('${symbol.src}')"></div><span class="faith-label">${escapeHtml(symbol.label)}</span></div>`
         : '';
+      const followersLabel = config?.metrics?.followersLabel || 'Global adherents';
+      const followersMarkup = `<div class="region-followers region-followers--loading" data-faith="${escapeHtml(slide.religion)}" data-label="${escapeHtml(followersLabel)}">
+          <span class="region-followers__label">${escapeHtml(followersLabel)}</span>
+          <span class="region-followers__value" aria-live="polite">Loading…</span>
+        </div>`;
       const currencyMarkup = Array.isArray(slide.currencies) && slide.currencies.length
         ? `<div class="region-currencies">
             <span class="region-currencies__label">Currencies</span>
@@ -3524,6 +3562,7 @@
         <div class="region-meta">
           ${identity}
           <h3>${slide.name}</h3>
+          ${followersMarkup}
           <p>${slide.copy}</p>
         </div>
         ${currencyMarkup}
@@ -3557,6 +3596,45 @@
   }
 
   function updateSlideMetrics() {
+    const followerNodes = document.querySelectorAll('.region-followers[data-faith]');
+    followerNodes.forEach(node => {
+      const faith = node.getAttribute('data-faith');
+      const valueEl = node.querySelector('.region-followers__value');
+      if (!faith || !valueEl) return;
+      const metrics = getMetricsForFaith(faith);
+      if (!metrics) {
+        valueEl.textContent = 'Loading…';
+        valueEl.removeAttribute('title');
+        valueEl.removeAttribute('aria-label');
+        node.classList.add('region-followers--loading');
+        return;
+      }
+      const followersEntry = metrics.followers || {};
+      const followersValue = followersEntry.value;
+      if (Number.isFinite(followersValue)) {
+        const config = QUICK_FAITH_MAP.get(faith);
+        const formatted = formatMetricNumber(followersValue, config?.locale) || String(Math.round(followersValue));
+        const yearSuffix = followersEntry.year ? ` (${followersEntry.year})` : '';
+        valueEl.textContent = `${formatted}${yearSuffix}`;
+        const label = node.dataset.label || 'Global adherents';
+        let precise = '';
+        try {
+          precise = new Intl.NumberFormat(config?.locale || undefined).format(followersValue);
+        } catch (err) {
+          precise = String(Math.round(followersValue));
+        }
+        const descriptive = label ? `${label}` : 'Global adherents';
+        valueEl.setAttribute('title', `${precise}${yearSuffix || ''} · ${descriptive}`);
+        valueEl.setAttribute('aria-label', `${formatted}${yearSuffix} ${descriptive}`);
+        node.classList.remove('region-followers--loading');
+      } else {
+        valueEl.textContent = '—';
+        valueEl.removeAttribute('title');
+        const label = node.dataset.label || 'Global adherents';
+        valueEl.setAttribute('aria-label', `Metric unavailable for ${label}`);
+        node.classList.add('region-followers--loading');
+      }
+    });
     const nodes = document.querySelectorAll('.region-tag[data-faith][data-metric]');
     nodes.forEach(node => {
       const faith = node.getAttribute('data-faith');
