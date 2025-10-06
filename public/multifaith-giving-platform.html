@@ -1064,6 +1064,12 @@
       gap: 12px;
     }
 
+    .quick-slider-hint {
+      font-size: 13px;
+      color: rgba(31, 41, 55, 0.68);
+      margin: -6px 0 10px;
+    }
+
     .quick-slider-track {
       position: relative;
       width: 100%;
@@ -1092,7 +1098,10 @@
       border-radius: 999px;
       cursor: pointer;
       background: rgba(255, 255, 255, 0.92);
-      box-shadow: 0 1px 8px rgba(0, 30, 63, 0.12), 0 0 2px rgba(0, 9, 20, 0.1);
+      border: 2px solid rgba(212, 162, 76, 0.45);
+      box-shadow:
+        0 0 0 3px rgba(255, 255, 255, 0.55),
+        0 12px 28px rgba(31, 41, 55, 0.22);
       overflow: hidden;
       transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
     }
@@ -1144,8 +1153,10 @@
 
     .quick-slider-thumb.active {
       transform: translate(-50%, -50%) scale(1.04);
-      box-shadow: 0 0 0 4px rgba(212, 162, 76, 0.12), 0 18px 38px rgba(31, 41, 55, 0.28);
-      background: rgba(255, 255, 255, 0.75);
+      box-shadow:
+        0 0 0 4px rgba(212, 162, 76, 0.22),
+        0 18px 38px rgba(31, 41, 55, 0.32);
+      background: rgba(255, 255, 255, 0.78);
     }
 
     .quick-slider-thumb.active .quick-slider-thumb-filter,
@@ -1186,6 +1197,51 @@
       flex-wrap: wrap;
       gap: 12px;
       justify-content: flex-end;
+    }
+
+    .quick-status-block {
+      display: grid;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .quick-result {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .quick-result a {
+      color: var(--accent);
+      font-weight: 600;
+      word-break: break-all;
+      text-decoration: none;
+    }
+
+    .quick-result a:hover {
+      text-decoration: underline;
+    }
+
+    .quick-copy {
+      padding: 8px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(212, 162, 76, 0.4);
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--accent);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .quick-copy:hover:not(:disabled) {
+      background: rgba(212, 162, 76, 0.12);
+      color: var(--ink);
+    }
+
+    .quick-copy:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .manage-tabs {
@@ -1713,7 +1769,7 @@
 <header>
   <nav class="nav">
     <div class="brand">
-      <strong>Orbital Collective</strong>
+      <strong>New Bright Water</strong>
       <span>Multi-faith giving platform</span>
     </div>
     <div class="inline-actions">
@@ -1846,7 +1902,7 @@
           </button>
         </div>
         <div class="quick-slider-wrapper">
-          <div class="quick-slider-track" id="quick-slider" role="slider" aria-valuemin="75" aria-valuemax="250" aria-valuenow="100" aria-label="Donation multiplier" tabindex="0">
+          <div class="quick-slider-track" id="quick-slider" role="slider" aria-valuemin="75" aria-valuemax="250" aria-valuenow="100" aria-label="Donation multiplier" aria-describedby="quick-slider-hint" tabindex="0">
             <div class="quick-slider-progress" id="quick-slider-progress"></div>
             <div class="quick-slider-thumb" id="quick-slider-thumb">
               <div class="quick-slider-thumb-filter"></div>
@@ -1855,6 +1911,7 @@
             </div>
           </div>
         </div>
+        <p class="quick-slider-hint" id="quick-slider-hint">Drag the glowing handle to raise or soften your multiplier.</p>
         <div class="quick-summary">
           <div>
             <strong id="quick-total">$225 ready for checkout</strong>
@@ -1869,6 +1926,13 @@
               <span>Create a donation link</span>
               <div class="liquid"></div>
             </button>
+          </div>
+          <div class="quick-status-block">
+            <div class="status" id="quick-status" role="status" hidden></div>
+            <div class="quick-result" id="quick-result" hidden>
+              <a id="quick-link" href="#" target="_blank" rel="noreferrer noopener"></a>
+              <button class="quick-copy" type="button" id="quick-copy">Copy link</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1951,7 +2015,7 @@
         </div>
         <div class="form-row triple">
           <label>Amount (local currency)
-            <input id="donation-amount" type="number" min="1" step="1" placeholder="50" required/>
+            <input id="donation-amount" type="number" min="1" max="999999999999" step="1" placeholder="50" required/>
           </label>
           <label>Frequency
             <select id="donation-frequency" required>
@@ -2074,7 +2138,7 @@
 </main>
 
 <footer>
-  © <span id="year"></span> Orbital Collective. Multi-faith donations, ready the moment you sign in.
+  © <span id="year"></span> New Bright Water. Multi-faith donations, ready the moment you sign in.
 </footer>
 
 <script>
@@ -2193,6 +2257,8 @@
 
   const QUICK_FAITH_MAP = new Map(QUICK_FAITHS.map((faith) => [faith.key, faith]));
 
+  const STRIPE_MAX_AMOUNT = 999999999999;
+
   const quickStripeCard = document.querySelector('.quick-stripe-card');
 
   if (quickStripeCard) {
@@ -2212,6 +2278,29 @@
     const quickShareBtn = document.getElementById('quick-share');
     const quickGenerateLabel = quickGenerateBtn ? quickGenerateBtn.querySelector('span') : null;
     const quickShareLabel = quickShareBtn ? quickShareBtn.querySelector('span') : null;
+    const quickStatus = document.getElementById('quick-status');
+    const quickResult = document.getElementById('quick-result');
+    const quickLink = document.getElementById('quick-link');
+    const quickCopyBtn = document.getElementById('quick-copy');
+
+    function resetQuickCopyButton() {
+      if (quickCopyBtn) {
+        quickCopyBtn.disabled = false;
+        quickCopyBtn.textContent = 'Copy link';
+      }
+    }
+
+    function clearQuickCheckoutFeedback() {
+      if (quickResult) {
+        quickResult.hidden = true;
+      }
+      if (quickLink) {
+        quickLink.textContent = '';
+        quickLink.removeAttribute('href');
+      }
+      resetQuickCopyButton();
+      clearStatus(quickStatus);
+    }
 
     if (quickSliderTrack && quickSliderProgress && quickSliderThumb && quickMultiplierLabel && quickTotal) {
       const QUICK_SLIDER_MIN = 0.75;
@@ -2275,6 +2364,7 @@
       }
 
       function updateQuickAmounts() {
+        clearQuickCheckoutFeedback();
         const config = QUICK_FAITH_MAP.get(quickState.faith);
         if (!config) return;
 
@@ -2471,6 +2561,51 @@
           event.preventDefault();
         }
       });
+
+      const quickElements = {
+        status: quickStatus,
+        result: quickResult,
+        link: quickLink,
+        copy: quickCopyBtn,
+        amountButtons: quickAmounts,
+        generateBtn: quickGenerateBtn,
+        shareBtn: quickShareBtn
+      };
+
+      if (quickGenerateBtn) {
+        quickGenerateBtn.addEventListener('click', () => {
+          performQuickCheckout('checkout', quickState, quickElements);
+        });
+      }
+
+      if (quickShareBtn) {
+        quickShareBtn.addEventListener('click', () => {
+          performQuickCheckout('link', quickState, quickElements);
+        });
+      }
+
+      if (quickCopyBtn) {
+        quickCopyBtn.addEventListener('click', async () => {
+          if (!quickLink || !quickLink.href) return;
+          if (!navigator?.clipboard?.writeText) {
+            setStatus(quickStatus, 'Copy not supported here—use the link above instead.', 'info');
+            return;
+          }
+          try {
+            await navigator.clipboard.writeText(quickLink.href);
+            setStatus(quickStatus, 'Donation link copied to your clipboard!', 'success');
+            quickCopyBtn.disabled = true;
+            quickCopyBtn.textContent = 'Copied!';
+            setTimeout(() => {
+              quickCopyBtn.disabled = false;
+              quickCopyBtn.textContent = 'Copy link';
+            }, 2400);
+          } catch (err) {
+            console.warn('Clipboard copy failed', err);
+            setStatus(quickStatus, 'Copy not supported here—use the link above instead.', 'info');
+          }
+        });
+      }
 
       window.addEventListener('resize', () => {
         quickSliderRect = quickSliderTrack.getBoundingClientRect();
@@ -3515,6 +3650,148 @@
     }
   }
 
+  function findQuickOrgForFaith(faith) {
+    if (!faith) return null;
+    const match = state.orgs.find(org => org?.religion === faith);
+    if (match) return match;
+    return DEFAULT_ORGS.find(org => org.religion === faith) || null;
+  }
+
+  function findQuickCampaignForOrg(orgId) {
+    if (!orgId) return null;
+    const list = state.campaignsByOrg.get(orgId);
+    if (Array.isArray(list) && list.length) {
+      return list[0];
+    }
+    const fallback = DEFAULT_CAMPAIGNS.get(orgId);
+    if (Array.isArray(fallback) && fallback.length) {
+      return fallback[0];
+    }
+    return null;
+  }
+
+  async function performQuickCheckout(mode, quickState, elements) {
+    if (!quickState || !elements) return;
+    const { status, result, link, copy, amountButtons, generateBtn, shareBtn } = elements;
+
+    const toggleBusy = (disabled) => {
+      [generateBtn, shareBtn].forEach((btn) => {
+        if (btn) {
+          btn.disabled = disabled;
+        }
+      });
+    };
+
+    if (result) {
+      result.hidden = true;
+    }
+    if (link) {
+      link.textContent = '';
+      link.removeAttribute('href');
+    }
+    if (copy) {
+      copy.disabled = false;
+      copy.textContent = 'Copy link';
+    }
+    clearStatus(status);
+
+    try {
+      const config = QUICK_FAITH_MAP.get(quickState.faith);
+      if (!config) {
+        throw new Error('Pick a tradition to start a checkout.');
+      }
+
+      const activeButton = amountButtons?.[quickState.selectedIndex];
+      const amount = Number(activeButton?.dataset.amountValue ?? 0);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error('Choose an amount first.');
+      }
+      if (amount > STRIPE_MAX_AMOUNT) {
+        throw new Error('Stripe supports donations up to 999,999,999,999 in your currency. Try a smaller gift.');
+      }
+
+      const org = findQuickOrgForFaith(quickState.faith);
+      if (!org || !org._id) {
+        throw new Error('No organization is available for this lane yet. Add one in the management tab.');
+      }
+
+      await loadCampaigns(org._id);
+      const campaign = findQuickCampaignForOrg(org._id);
+      if (!campaign || !campaign._id) {
+        throw new Error('No campaign is ready for this organization yet. Create one to continue.');
+      }
+
+      const donationTypes = Array.isArray(campaign.donationTypes) ? campaign.donationTypes : [];
+      const payload = {
+        orgId: org._id,
+        campaignId: campaign._id,
+        region: org.region,
+        religion: quickState.faith,
+        donationType: donationTypes[0] || 'general',
+        sector: campaign.sectorFocus,
+        amount,
+        currency: campaign.currency || config.currency || getCurrencyForRegion(org.region),
+        interval: undefined,
+        allowPromo: true,
+        campaignName: campaign.name,
+        orgName: org.name,
+        description: campaign.description
+      };
+
+      setStatus(status, mode === 'checkout' ? 'Preparing your checkout…' : 'Generating a shareable link…');
+      toggleBusy(true);
+      const data = await postJSON('/api/giving/payment-link', payload);
+      const url = data?.url;
+      if (!url) {
+        throw new Error('Payment link not returned.');
+      }
+
+      if (link) {
+        link.href = url;
+        link.textContent = url;
+      }
+      if (result) {
+        result.hidden = false;
+      }
+
+      let finalMessage = mode === 'checkout'
+        ? 'Checkout ready! We opened it in a new tab.'
+        : 'Donation link ready—copy it from below.';
+
+      if (mode === 'checkout') {
+        try {
+          window.open(url, '_blank', 'noopener');
+        } catch (err) {
+          console.warn('Popup blocked', err);
+          finalMessage = 'Checkout ready. Use the link below if the popup was blocked.';
+        }
+      } else if (navigator?.clipboard) {
+        try {
+          await navigator.clipboard.writeText(url);
+          finalMessage = 'Donation link copied to your clipboard!';
+          if (copy) {
+            copy.disabled = true;
+            copy.textContent = 'Copied!';
+            setTimeout(() => {
+              if (copy) {
+                copy.disabled = false;
+                copy.textContent = 'Copy link';
+              }
+            }, 2400);
+          }
+        } catch (err) {
+          console.warn('Clipboard copy failed', err);
+        }
+      }
+
+      setStatus(status, finalMessage, 'success');
+    } catch (error) {
+      setStatus(status, error?.message || 'Unable to generate checkout', 'error');
+    } finally {
+      toggleBusy(false);
+    }
+  }
+
   function handleOrgSelection() {
     const select = els.donationOrg;
     const option = select.options[select.selectedIndex];
@@ -3558,6 +3835,9 @@
     const amount = Number(els.donationAmount.value);
     if (!amount || Number.isNaN(amount)) {
       throw new Error('Enter a donation amount.');
+    }
+    if (amount > STRIPE_MAX_AMOUNT) {
+      throw new Error('Stripe supports donations up to 999,999,999,999 in your currency. Enter a smaller amount.');
     }
     const org = state.orgs.find(item => item?._id === orgId);
     const campaign = extractCampaignFromSelect();
