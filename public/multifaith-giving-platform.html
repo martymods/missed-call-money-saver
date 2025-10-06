@@ -65,6 +65,10 @@
       border-bottom: 1px solid rgba(31, 41, 55, 0.08);
     }
 
+    .mobile-app-bar {
+      display: none;
+    }
+
     .nav {
       width: min(100%, 1200px);
       margin: 0 auto;
@@ -2110,6 +2114,276 @@
         font-size: 13px;
       }
     }
+
+    @media (max-width: 760px) {
+      body {
+        background: linear-gradient(160deg, rgba(248, 246, 241, 0.96) 0%, rgba(226, 193, 132, 0.32) 45%, rgba(122, 157, 146, 0.28) 100%);
+      }
+
+      header {
+        display: none;
+      }
+
+      .mobile-app-bar {
+        position: sticky;
+        top: 0;
+        z-index: 120;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        margin: 0 16px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(212, 162, 76, 0.35);
+        box-shadow: 0 16px 28px rgba(31, 41, 55, 0.14);
+        backdrop-filter: blur(10px);
+      }
+
+      .mobile-brand {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        color: var(--ink);
+        text-transform: uppercase;
+      }
+
+      .mobile-brand span:last-child {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 600;
+        letter-spacing: 0.35px;
+      }
+
+      .mobile-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 20px;
+        border-radius: 999px;
+        font-weight: 700;
+        text-decoration: none;
+        color: var(--ink);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(212, 162, 76, 0.5);
+        background: rgba(255, 255, 255, 0.86);
+      }
+
+      .mobile-cta::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(212, 162, 76, 0.6), rgba(226, 193, 132, 0.55), rgba(122, 157, 146, 0.5));
+        opacity: 0.8;
+        mix-blend-mode: multiply;
+        animation: holographicFlow 8s ease-in-out infinite;
+      }
+
+      .mobile-cta span {
+        position: relative;
+        z-index: 1;
+      }
+
+      main {
+        padding: 18px 0 90px;
+        gap: 32px;
+        background: transparent;
+      }
+
+      main > section {
+        margin: 0 16px;
+        border-radius: 26px;
+        padding: 28px 24px;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(212, 162, 76, 0.25);
+        box-shadow: 0 30px 56px rgba(31, 41, 55, 0.18);
+        position: relative;
+        overflow: hidden;
+      }
+
+      main > section::before {
+        content: '';
+        position: absolute;
+        inset: -30% 35% auto -20%;
+        height: 220px;
+        background: radial-gradient(circle at top, rgba(212, 162, 76, 0.35), transparent 70%);
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      main > section > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero {
+        display: grid;
+        gap: 26px;
+        background: linear-gradient(145deg, rgba(212, 162, 76, 0.18), rgba(122, 157, 146, 0.2));
+        border: 1px solid rgba(212, 162, 76, 0.35);
+        box-shadow: 0 28px 48px rgba(122, 157, 146, 0.22);
+      }
+
+      .hero::before {
+        inset: -30% 10% auto -40%;
+      }
+
+      .hero h1 {
+        font-size: clamp(30px, 9vw, 40px);
+        line-height: 1.15;
+      }
+
+      .hero p {
+        font-size: 17px;
+        color: rgba(31, 41, 55, 0.75);
+      }
+
+      .hero .inline-actions {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero .inline-actions .btn {
+        width: 100%;
+      }
+
+      .hero-media {
+        background: transparent;
+        box-shadow: none;
+        border-radius: 20px;
+        padding: 4px 0;
+      }
+
+      .hero-list {
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 6px;
+      }
+
+      .hero-list li {
+        min-width: 240px;
+        scroll-snap-align: start;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(31, 41, 55, 0.08);
+        box-shadow: 0 16px 30px rgba(31, 41, 55, 0.18);
+      }
+
+      .quick-stripe-section {
+        display: grid;
+        gap: 24px;
+      }
+
+      .quick-stripe-section .lead {
+        font-size: 16px;
+      }
+
+      .quick-tabs {
+        overflow-x: auto;
+        padding: 6px;
+        gap: 10px;
+        scroll-snap-type: x mandatory;
+      }
+
+      .quick-tabs .manage-tab {
+        flex: 0 0 160px;
+        scroll-snap-align: start;
+        background: rgba(255, 255, 255, 0.72);
+        border-radius: 18px;
+        border: 1px solid rgba(212, 162, 76, 0.3);
+      }
+
+      .quick-panel {
+        background: rgba(255, 255, 255, 0.82);
+        border-radius: 22px;
+        padding: 22px;
+        box-shadow: inset 0 0 0 1px rgba(212, 162, 76, 0.2);
+      }
+
+      .quick-summary {
+        border-radius: 20px;
+        padding: 16px 18px;
+        background: rgba(248, 246, 241, 0.85);
+        box-shadow: inset 0 0 0 1px rgba(212, 162, 76, 0.2);
+      }
+
+      .region-slider {
+        margin: 0;
+        border-radius: 26px;
+        box-shadow: 0 30px 50px rgba(31, 41, 55, 0.2);
+      }
+
+      .region-slide {
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .region-media {
+        border-radius: 22px;
+        height: 200px;
+      }
+
+      .region-currency-list {
+        flex-direction: column;
+      }
+
+      .region-currency-item {
+        width: 100%;
+      }
+
+      .region-tags {
+        justify-content: stretch;
+        gap: 16px;
+      }
+
+      .region-tag {
+        width: 100%;
+        border-radius: 18px;
+        flex-direction: row;
+        height: auto;
+        padding: 18px;
+        justify-content: space-between;
+      }
+
+      .sector-grid,
+      .community-grid {
+        gap: 18px;
+      }
+
+      .form-card {
+        padding: 22px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 24px 44px rgba(31, 41, 55, 0.18);
+      }
+
+      .form-actions {
+        gap: 16px;
+        flex-direction: column;
+      }
+
+      .form-actions .btn {
+        width: 100%;
+        min-width: 0;
+      }
+
+      footer {
+        margin: 40px 0 30px;
+        padding: 24px 16px;
+        font-size: 13px;
+        border: none;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 20px;
+        box-shadow: 0 18px 40px rgba(31, 41, 55, 0.16);
+        width: calc(100% - 32px);
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2129,6 +2403,16 @@
     </div>
   </nav>
 </header>
+
+<div class="mobile-app-bar">
+  <div class="mobile-brand">
+    <span>New Bright Water</span>
+    <span>Giving Platform</span>
+  </div>
+  <a class="mobile-cta" href="#give">
+    <span>Start</span>
+  </a>
+</div>
 
 <main>
   <section class="hero">
