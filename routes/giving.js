@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const fsp = fs.promises;
 const crypto = require('crypto');
+const { getFaithMetrics } = require('../services/faithMetrics');
 
 const DATA_DIR = path.join(__dirname, '..', 'data', 'giving');
 const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'uploads', 'giving');
@@ -392,6 +393,19 @@ function createGivingRouter({ stripe, hasStripe = false, getAppBaseUrl }) {
         return res.status(error.statusCode).json({ error: 'stripe_error', message: error.message });
       }
       next(error);
+    }
+  });
+
+  router.get('/faith-metrics', async (req, res) => {
+    const forceRefresh = req.query?.refresh === '1';
+    try {
+      const metrics = await getFaithMetrics({ forceRefresh });
+      res.json(metrics);
+    } catch (error) {
+      console.error('[Giving] Unable to load faith metrics', {
+        error: error?.message || error
+      });
+      res.status(503).json({ error: 'faith_metrics_unavailable' });
     }
   });
 
