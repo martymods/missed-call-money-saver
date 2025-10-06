@@ -548,6 +548,7 @@
     .region-tag {
       position: relative;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
@@ -570,6 +571,7 @@
       transform-style: preserve-3d;
       transition: transform 0.5s ease, box-shadow 0.5s ease, background-position 0.6s ease, color 0.5s ease;
       overflow: hidden;
+      gap: 6px;
     }
 
     .region-tag::after {
@@ -609,6 +611,34 @@
     .region-tag:focus ~ .region-tag,
     .region-tag:active ~ .region-tag {
       transform: perspective(800px) rotateY(-25deg);
+    }
+
+    .region-tag-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .region-tag-metric {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(22, 78, 99, 0.12);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.45px;
+      text-transform: uppercase;
+      transition: opacity 0.3s ease;
+    }
+
+    .region-tag.region-tag--loading .region-tag-metric {
+      opacity: 0.6;
+      background: rgba(148, 163, 184, 0.18);
+      color: rgba(15, 23, 42, 0.65);
     }
 
     @keyframes regionTagSheen {
@@ -1192,6 +1222,53 @@
       font-size: 14px;
     }
 
+    .quick-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px 20px;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .quick-metric {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.04);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      min-height: 68px;
+    }
+
+    .quick-metric-label {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.35px;
+      color: rgba(15, 23, 42, 0.72);
+      text-transform: uppercase;
+    }
+
+    .quick-metric-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.4px;
+    }
+
+    .quick-metric.is-loading .quick-metric-value {
+      color: rgba(15, 23, 42, 0.6);
+    }
+
+    .quick-metrics-updated {
+      font-size: 12px;
+      color: rgba(15, 23, 42, 0.6);
+      letter-spacing: 0.3px;
+      flex-basis: 100%;
+      text-align: right;
+      margin-top: -4px;
+    }
+
     .quick-actions {
       display: flex;
       flex-wrap: wrap;
@@ -1492,6 +1569,15 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 18px;
+      }
+
+      .quick-metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-metrics-updated {
+        text-align: left;
+        margin-top: 0;
       }
 
       .hero-media {
@@ -1917,6 +2003,17 @@
             <strong id="quick-total">$225 ready for checkout</strong>
             <span id="quick-total-detail">Split across worship, meals, and relief in this lane.</span>
           </div>
+          <div class="quick-metrics" id="quick-metrics">
+            <div class="quick-metric is-loading" data-role="followers">
+              <span class="quick-metric-label" id="quick-metric-followers-label">Global adherents</span>
+              <span class="quick-metric-value" id="quick-metric-followers">Loading metrics…</span>
+            </div>
+            <div class="quick-metric is-loading" data-role="actions">
+              <span class="quick-metric-label" id="quick-metric-actions-label">Active community projects</span>
+              <span class="quick-metric-value" id="quick-metric-actions">Loading metrics…</span>
+            </div>
+          </div>
+          <div class="quick-metrics-updated" id="quick-metrics-updated">Metrics loading…</div>
           <div class="quick-actions">
             <button class="btn liquid" type="button" id="quick-generate">
               <span>Generate secure checkout</span>
@@ -2163,7 +2260,12 @@
       ],
       icon: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M32 8v48"/><path d="M18 20h28"/></g></svg>',
       ctaGenerate: 'Generate secure checkout',
-      ctaShare: 'Create a donation link'
+      ctaShare: 'Create a donation link',
+      metrics: {
+        followersLabel: 'Global adherents',
+        actionsLabel: 'Tracked community projects',
+        actionSectors: ['relief', 'food', 'youth', 'capital']
+      }
     },
     {
       key: 'islam',
@@ -2185,7 +2287,12 @@
       ],
       icon: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M40 8a20 20 0 1 0 0 48 22 22 0 1 1 0-48z" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="m46 32 10 4-10 4 6 9-10-4-2 11-2-11-10 4 6-9-10-4 10-4-6-9 10 4 2-11 2 11 10-4z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       ctaGenerate: 'Launch masjid checkout',
-      ctaShare: 'Share zakat link'
+      ctaShare: 'Share zakat link',
+      metrics: {
+        followersLabel: 'Global adherents',
+        actionsLabel: 'Relief & zakat actions tracked',
+        actionSectors: ['ramadan_food', 'water', 'education', 'infrastructure']
+      }
     },
     {
       key: 'jewish',
@@ -2207,7 +2314,12 @@
       ],
       icon: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="m32 6 10 18h-20l10-18zm0 52-10-18h20l-10 18zm-22-18 10-18 10 18H10zm44 0H34l10-18 10 18z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg>',
       ctaGenerate: 'Send synagogue checkout',
-      ctaShare: 'Share federation link'
+      ctaShare: 'Share federation link',
+      metrics: {
+        followersLabel: 'Global adherents',
+        actionsLabel: 'Active communal projects',
+        actionSectors: ['refugee', 'culture', 'energy', 'education']
+      }
     },
     {
       key: 'hindu',
@@ -2229,7 +2341,12 @@
       ],
       icon: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M20 24c0-6.627 5.373-12 12-12s12 5.373 12 12-5.373 12-12 12" fill="none" stroke="currentColor" stroke-width="4"/><path d="M32 36c-6 0-11 3.582-11 8s5 8 11 8 11-3.582 11-8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M30 18c0-3.314 2.239-6 5-6 2.209 0 4 1.791 4 4 0 1.657-1.343 3-3 3" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M14 24h12M38 24h12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>',
       ctaGenerate: 'Launch temple checkout',
-      ctaShare: 'Share seva link'
+      ctaShare: 'Share seva link',
+      metrics: {
+        followersLabel: 'Global adherents',
+        actionsLabel: 'Tracked seva initiatives',
+        actionSectors: ['disaster', 'seva', 'health', 'education']
+      }
     },
     {
       key: 'buddhist',
@@ -2251,7 +2368,12 @@
       ],
       icon: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="8" fill="none" stroke="currentColor" stroke-width="4"/><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M32 8v10"/><path d="M32 46v10"/><path d="M8 32h10"/><path d="M46 32h10"/><path d="m14 14 7 7"/><path d="m43 43 7 7"/><path d="m14 50 7-7"/><path d="m43 21 7-7"/></g></svg>',
       ctaGenerate: 'Send sangha checkout',
-      ctaShare: 'Share dana link'
+      ctaShare: 'Share dana link',
+      metrics: {
+        followersLabel: 'Global adherents',
+        actionsLabel: 'Meditation & relief efforts',
+        actionSectors: ['retreats', 'environment', 'elder', 'kitchen']
+      }
     }
   ];
 
@@ -2260,6 +2382,7 @@
   const STRIPE_MAX_AMOUNT = 999999999999;
 
   const quickStripeCard = document.querySelector('.quick-stripe-card');
+  let updateQuickMetricsDisplay = () => {};
 
   if (quickStripeCard) {
     const quickTabs = Array.from(quickStripeCard.querySelectorAll('.manage-tab'));
@@ -2282,6 +2405,12 @@
     const quickResult = document.getElementById('quick-result');
     const quickLink = document.getElementById('quick-link');
     const quickCopyBtn = document.getElementById('quick-copy');
+    const quickMetricsContainer = document.getElementById('quick-metrics');
+    const quickMetricsFollowersLabel = document.getElementById('quick-metric-followers-label');
+    const quickMetricsFollowersValue = document.getElementById('quick-metric-followers');
+    const quickMetricsActionsLabel = document.getElementById('quick-metric-actions-label');
+    const quickMetricsActionsValue = document.getElementById('quick-metric-actions');
+    const quickMetricsUpdated = document.getElementById('quick-metrics-updated');
 
     function resetQuickCopyButton() {
       if (quickCopyBtn) {
@@ -2310,6 +2439,7 @@
       const QUICK_PERCENT_FINE = 1.5;
 
       const amountFormatters = new Map();
+      const metricValueFormatters = new Map();
 
       const quickState = {
         faith: QUICK_FAITHS[0]?.key ?? null,
@@ -2338,6 +2468,29 @@
           );
         }
         return amountFormatters.get(key).format(Math.max(0, Math.round(value)));
+      }
+
+      function formatQuickMetric(value, locale) {
+        if (!Number.isFinite(value)) return null;
+        const key = `${locale || 'default'}`;
+        if (!metricValueFormatters.has(key)) {
+          try {
+            metricValueFormatters.set(
+              key,
+              new Intl.NumberFormat(locale || undefined, {
+                notation: 'compact',
+                maximumFractionDigits: 1
+              })
+            );
+          } catch (err) {
+            metricValueFormatters.set(key, null);
+          }
+        }
+        const formatter = metricValueFormatters.get(key);
+        if (formatter && typeof formatter.format === 'function') {
+          return formatter.format(value);
+        }
+        return formatMetricNumber(value, locale) || String(Math.round(value));
       }
 
       function formatMultiplier(value) {
@@ -2429,8 +2582,90 @@
           tab.style.boxShadow = isActive ? config.shadow : '';
         });
 
+        updateQuickMetricsDisplay();
         updateQuickAmounts();
       }
+
+      updateQuickMetricsDisplay = function updateQuickMetricsDisplay() {
+        if (!quickMetricsContainer) return;
+        const followersCard = quickMetricsContainer.querySelector('[data-role="followers"]');
+        const actionsCard = quickMetricsContainer.querySelector('[data-role="actions"]');
+        const config = QUICK_FAITH_MAP.get(quickState.faith);
+        if (quickMetricsFollowersLabel) {
+          quickMetricsFollowersLabel.textContent = config?.metrics?.followersLabel || 'Global adherents';
+        }
+        if (quickMetricsActionsLabel) {
+          quickMetricsActionsLabel.textContent = config?.metrics?.actionsLabel || 'Active community projects';
+        }
+        const metrics = getMetricsForFaith(quickState.faith);
+        if (!metrics) {
+          if (quickMetricsFollowersValue) quickMetricsFollowersValue.textContent = 'Loading metrics…';
+          if (quickMetricsActionsValue) quickMetricsActionsValue.textContent = 'Loading metrics…';
+          if (followersCard) followersCard.classList.add('is-loading');
+          if (actionsCard) actionsCard.classList.add('is-loading');
+          if (quickMetricsUpdated) quickMetricsUpdated.textContent = 'Metrics loading…';
+          return;
+        }
+
+        if (quickMetricsUpdated) {
+          if (state.metricsUpdatedAt) {
+            const updatedDate = new Date(state.metricsUpdatedAt);
+            if (!Number.isNaN(updatedDate.getTime())) {
+              quickMetricsUpdated.textContent = `Last updated ${updatedDate.toLocaleString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+              })}`;
+            } else {
+              quickMetricsUpdated.textContent = '';
+            }
+          } else {
+            quickMetricsUpdated.textContent = 'Live metrics';
+          }
+        }
+
+        const followersValue = metrics?.followers?.value;
+        if (Number.isFinite(followersValue)) {
+          const formattedFollowers = formatQuickMetric(followersValue, config?.locale) || String(Math.round(followersValue));
+          const yearSuffix = metrics.followers?.year ? ` (${metrics.followers.year})` : '';
+          if (quickMetricsFollowersValue) {
+            quickMetricsFollowersValue.textContent = `${formattedFollowers}${yearSuffix}`;
+          }
+          if (followersCard) followersCard.classList.remove('is-loading');
+        } else {
+          if (quickMetricsFollowersValue) quickMetricsFollowersValue.textContent = '—';
+          if (followersCard) followersCard.classList.add('is-loading');
+        }
+
+        const actionKeys = Array.isArray(config?.metrics?.actionSectors) && config.metrics.actionSectors.length
+          ? config.metrics.actionSectors
+          : Object.keys(metrics.sectors || {});
+        let actionsTotal = 0;
+        let hasActionData = false;
+        actionKeys.forEach(key => {
+          const value = metrics?.sectors?.[key]?.value;
+          if (Number.isFinite(value)) {
+            actionsTotal += value;
+            hasActionData = true;
+          }
+        });
+        if (!hasActionData && Number.isFinite(metrics?.totals?.sectorActions)) {
+          actionsTotal = metrics.totals.sectorActions;
+          hasActionData = true;
+        }
+
+        if (hasActionData) {
+          const formattedActions = formatQuickMetric(actionsTotal, config?.locale) || String(Math.round(actionsTotal));
+          if (quickMetricsActionsValue) {
+            quickMetricsActionsValue.textContent = `${formattedActions} actions`;
+          }
+          if (actionsCard) actionsCard.classList.remove('is-loading');
+        } else {
+          if (quickMetricsActionsValue) quickMetricsActionsValue.textContent = '—';
+          if (actionsCard) actionsCard.classList.add('is-loading');
+        }
+      };
 
       function setQuickFaith(key) {
         if (!QUICK_FAITH_MAP.has(key)) return;
@@ -2624,7 +2859,12 @@
       name: 'North America',
       religion: 'christian',
       copy: 'US and Canada support ACH, cards, Apple Pay, and bilingual receipts with IRS and CRA-compliant summaries.',
-      sectors: ['Community relief & shelters', 'Food security networks', 'Youth programming', 'Capital campaigns'],
+      sectors: [
+        { label: 'Community relief & shelters', metric: 'relief' },
+        { label: 'Food security networks', metric: 'food' },
+        { label: 'Youth programming', metric: 'youth' },
+        { label: 'Capital campaigns', metric: 'capital' }
+      ],
       currencies: ['USD', 'CAD']
     },
     {
@@ -2632,7 +2872,12 @@
       name: 'Europe',
       religion: 'jewish',
       copy: 'Localized SEPA payments with automatic Gift Aid statements and multilingual GDPR consent flows.',
-      sectors: ['Refugee welcome centers', 'Cultural preservation', 'Winter energy assistance', 'Education bursaries'],
+      sectors: [
+        { label: 'Refugee welcome centers', metric: 'refugee' },
+        { label: 'Cultural preservation', metric: 'culture' },
+        { label: 'Winter energy assistance', metric: 'energy' },
+        { label: 'Education bursaries', metric: 'education' }
+      ],
       currencies: ['EUR', 'GBP', 'SEK']
     },
     {
@@ -2640,7 +2885,12 @@
       name: 'Middle East & North Africa',
       religion: 'islam',
       copy: 'Arabic-first experiences with Ramadan scheduling, zakat calculators, and regional banking partners.',
-      sectors: ['Ramadan food parcels', 'Water & sanitation', 'Scholarships for girls', 'Mosque restoration'],
+      sectors: [
+        { label: 'Ramadan food parcels', metric: 'ramadan_food' },
+        { label: 'Water & sanitation', metric: 'water' },
+        { label: 'Scholarships for girls', metric: 'education' },
+        { label: 'Mosque restoration', metric: 'infrastructure' }
+      ],
       currencies: ['AED', 'SAR', 'EGP']
     },
     {
@@ -2648,7 +2898,12 @@
       name: 'South Asia',
       religion: 'hindu',
       copy: 'Handle INR, LKR, and NPR gifts with PAN capture, festival campaign presets, and WhatsApp confirmations.',
-      sectors: ['Disaster recovery', 'Temple seva programs', 'Health outreach', 'Education for children'],
+      sectors: [
+        { label: 'Disaster recovery', metric: 'disaster' },
+        { label: 'Temple seva programs', metric: 'seva' },
+        { label: 'Health outreach', metric: 'health' },
+        { label: 'Education for children', metric: 'education' }
+      ],
       currencies: ['INR', 'LKR', 'NPR']
     },
     {
@@ -2656,7 +2911,12 @@
       name: 'Asia Pacific',
       religion: 'buddhist',
       copy: 'From Singapore to Sydney: cards, BECS, and PayNow support with retreat management baked in.',
-      sectors: ['Retreat scholarships', 'Environmental care', 'Elder support services', 'Community kitchens'],
+      sectors: [
+        { label: 'Retreat scholarships', metric: 'retreats' },
+        { label: 'Environmental care', metric: 'environment' },
+        { label: 'Elder support services', metric: 'elder' },
+        { label: 'Community kitchens', metric: 'kitchen' }
+      ],
       currencies: ['AUD', 'SGD', 'NZD']
     }
   ];
@@ -2965,7 +3225,9 @@
     lastSlideImage: new Map(),
     hasRenderedInitialSlide: false,
     isTransitioning: false,
-    preloadedSlideId: null
+    preloadedSlideId: null,
+    metricsByFaith: new Map(),
+    metricsUpdatedAt: null
   };
 
   const SECTOR_TITLE_LOOKUP = new Map(SECTORS.map(sector => [sector.value, sector.title]));
@@ -3060,6 +3322,29 @@
     } catch (err) {
       return `${code} ${numeric.toFixed(2)}`;
     }
+  }
+
+  function formatMetricNumber(value, locale) {
+    if (!Number.isFinite(value)) return null;
+    try {
+      return new Intl.NumberFormat(locale || undefined, {
+        notation: 'compact',
+        maximumFractionDigits: 1
+      }).format(value);
+    } catch (err) {
+      return String(Math.round(value));
+    }
+  }
+
+  function getMetricsForFaith(faith) {
+    if (!faith) return null;
+    if (state.metricsByFaith instanceof Map) {
+      return state.metricsByFaith.get(faith) || null;
+    }
+    if (state.metricsByFaith && typeof state.metricsByFaith === 'object') {
+      return state.metricsByFaith[faith] || null;
+    }
+    return null;
   }
 
   function getCurrencyForRegion(region) {
@@ -3215,7 +3500,21 @@
         : '';
       const sectorsMarkup = Array.isArray(slide.sectors) && slide.sectors.length
         ? `<ul class="region-tags" aria-label="Regional focus areas">
-            ${slide.sectors.map(item => `<li class="region-tag">${escapeHtml(item)}</li>`).join('')}
+            ${slide.sectors
+              .map(item => {
+                const sector = typeof item === 'string' ? { label: item } : item || {};
+                const label = escapeHtml(sector.label || '');
+                const metricKey = sector.metric ? String(sector.metric).trim() : '';
+                const hasMetric = Boolean(metricKey);
+                const metricAttr = hasMetric ? ` data-metric="${escapeHtml(metricKey)}"` : '';
+                const faithAttr = hasMetric ? ` data-faith="${escapeHtml(slide.religion)}"` : '';
+                const metricMarkup = hasMetric
+                  ? '<span class="region-tag-metric">Loading metrics…</span>'
+                  : '';
+                const loadingClass = hasMetric ? ' region-tag--loading' : '';
+                return `<li class="region-tag${loadingClass}"${faithAttr}${metricAttr}><span class="region-tag-label">${label}</span>${metricMarkup}</li>`;
+              })
+              .join('')}
           </ul>`
         : '';
       slideEl.innerHTML = `
@@ -3252,8 +3551,42 @@
       els.transitionNext.style.setProperty('--transition-mask-image', 'none');
     }
     showSlide(0, false, true);
+    updateSlideMetrics();
     attachFaithSymbolTilt();
     updateTransitionOverlayForIndex(0);
+  }
+
+  function updateSlideMetrics() {
+    const nodes = document.querySelectorAll('.region-tag[data-faith][data-metric]');
+    nodes.forEach(node => {
+      const faith = node.getAttribute('data-faith');
+      const metricKey = node.getAttribute('data-metric');
+      const metricEl = node.querySelector('.region-tag-metric');
+      if (!metricEl) return;
+      const metrics = getMetricsForFaith(faith);
+      if (!metrics) {
+        metricEl.textContent = 'Loading metrics…';
+        node.classList.add('region-tag--loading');
+        return;
+      }
+      const sector = metrics?.sectors?.[metricKey];
+      if (sector && Number.isFinite(sector.value)) {
+        const config = QUICK_FAITH_MAP.get(faith);
+        const formatted = formatMetricNumber(sector.value, config?.locale);
+        const valueLabel = formatted ?? String(Math.round(sector.value));
+        metricEl.textContent = `${valueLabel} active`;
+        metricEl.setAttribute('aria-label', `${valueLabel} active initiatives`);
+        node.classList.remove('region-tag--loading');
+      } else if (sector && Object.prototype.hasOwnProperty.call(metrics.sectors || {}, metricKey)) {
+        metricEl.textContent = '—';
+        metricEl.setAttribute('aria-label', 'Metric unavailable');
+        node.classList.add('region-tag--loading');
+      } else {
+        metricEl.textContent = '—';
+        metricEl.setAttribute('aria-label', 'Metric unavailable');
+        node.classList.add('region-tag--loading');
+      }
+    });
   }
 
   function showSlide(index, manual = false, skipTransition = false) {
@@ -3474,6 +3807,41 @@
         els.communityEmpty.hidden = false;
         els.communityEmpty.textContent = 'Unable to load community campaigns right now. Please try again soon.';
       }
+    }
+  }
+
+  async function loadFaithMetrics(forceRefresh = false) {
+    const url = forceRefresh ? '/api/giving/faith-metrics?refresh=1' : '/api/giving/faith-metrics';
+    try {
+      const data = await fetchJSON(url);
+      const payload = data?.faiths ?? data?.metrics ?? {};
+      const metricsMap = new Map();
+      if (payload instanceof Map) {
+        payload.forEach((value, key) => metricsMap.set(key, value));
+      } else if (Array.isArray(payload)) {
+        payload.forEach(entry => {
+          if (entry && typeof entry === 'object') {
+            const key = entry.key || entry.faith || entry.id;
+            if (key) {
+              metricsMap.set(key, entry.value ?? entry.metrics ?? entry);
+            }
+          }
+        });
+      } else {
+        Object.entries(payload).forEach(([key, value]) => {
+          metricsMap.set(key, value);
+        });
+      }
+      state.metricsByFaith = metricsMap;
+      state.metricsUpdatedAt = data?.updatedAt || null;
+    } catch (error) {
+      console.warn('Unable to load faith metrics', error);
+      if (!(state.metricsByFaith instanceof Map)) {
+        state.metricsByFaith = new Map();
+      }
+    } finally {
+      updateQuickMetricsDisplay();
+      updateSlideMetrics();
     }
   }
 
@@ -4044,6 +4412,7 @@
     updateOrgOptions();
     loadOrganizations();
     loadCommunityCampaigns();
+    loadFaithMetrics();
     document.getElementById('year').textContent = new Date().getFullYear();
   }
 
