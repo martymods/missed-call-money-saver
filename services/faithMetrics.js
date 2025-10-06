@@ -168,14 +168,25 @@ async function fetchJSON(url, options = {}) {
   return response.json();
 }
 
+// Pew Research Center global religious composition snapshot (circa 2020).
+// Provides resilient follower counts when OWID endpoints return 404.
+const OWID_FOLLOWER_FALLBACKS = {
+  'christian-adherents': { value: 2382000000, year: 2020 },
+  'muslim-adherents': { value: 1907000000, year: 2020 },
+  'hindu-adherents': { value: 1161000000, year: 2020 },
+  'buddhist-adherents': { value: 507000000, year: 2020 },
+  'jewish-adherents': { value: 15000000, year: 2020 }
+};
+
 async function fetchOwidFollowers(indicator) {
   if (!indicator) return { value: null, year: null };
+  const fallback = OWID_FOLLOWER_FALLBACKS[indicator] || null;
   const url = `https://ourworldindata.org/grapher/${encodeURIComponent(indicator)}.tab`;
   try {
     const text = await fetchText(url, { headers: { Accept: 'text/tab-separated-values' } });
     const lines = text.trim().split(/\r?\n/);
     if (lines.length <= 1) {
-      return { value: null, year: null };
+      return fallback ? { ...fallback } : { value: null, year: null };
     }
     const headers = lines[0].split('\t');
     const entityIndex = headers.findIndex(header => header.toLowerCase() === 'entity');
@@ -194,8 +205,23 @@ async function fetchOwidFollowers(indicator) {
         latest = { value: rawValue, year: Number.isFinite(year) ? year : null };
       }
     }
+    if (!latest && fallback) {
+      console.warn('[FaithMetrics] OWID data missing rows, using fallback', { indicator });
+      return { ...fallback };
+    }
+    if (latest?.value == null && fallback) {
+      console.warn('[FaithMetrics] OWID data missing value, using fallback', { indicator });
+      return { ...fallback };
+    }
     return latest || { value: null, year: null };
   } catch (error) {
+    if (fallback) {
+      console.warn('[FaithMetrics] Failed to load OWID data, using fallback', {
+        indicator,
+        error: error?.message || error
+      });
+      return { ...fallback };
+    }
     console.warn('[FaithMetrics] Failed to load OWID data', { indicator, error: error?.message || error });
     return { value: null, year: null };
   }
