@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Spiritual Giving Platform</title>
+  <meta name="description" content="Fund secular spiritual communities with curated giving packages and stories that move donors to act." />
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f0ff;
+      --bg-soft: #ffffff;
+      --bg-glow: rgba(123, 97, 255, 0.14);
+      --ink: #1c1a28;
+      --muted: #5d5a72;
+      --accent: #7864ff;
+      --accent-strong: #4f32ff;
+      --accent-soft: rgba(120, 100, 255, 0.18);
+      --success: #38b893;
+      --card: #ffffff;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 10% 10%, rgba(120, 100, 255, 0.22), transparent 55%),
+        radial-gradient(circle at 88% 18%, rgba(79, 50, 255, 0.18), transparent 50%),
+        var(--bg);
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      font: 16px/1.6 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      letter-spacing: -0.01em;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(120, 100, 255, 0.2);
+    }
+
+    .nav {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .nav-actions {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .brand span {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 999px;
+      border: 0;
+      font-weight: 700;
+      background: linear-gradient(130deg, var(--accent) 0%, var(--accent-strong) 90%);
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 15px 35px rgba(120, 100, 255, 0.28);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 45px rgba(120, 100, 255, 0.34);
+    }
+
+    .btn.ghost {
+      background: rgba(120, 100, 255, 0.08);
+      color: var(--accent-strong);
+      box-shadow: none;
+    }
+
+    main {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      padding: 30px 20px 100px;
+      display: grid;
+      gap: 64px;
+      flex: 1 0 auto;
+    }
+
+    .hero {
+      display: grid;
+      gap: 28px;
+      align-items: center;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .hero-copy h1 {
+      margin: 0;
+      font-size: clamp(38px, 7vw, 62px);
+      line-height: 1.05;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-copy p {
+      margin: 18px 0 26px;
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 520px;
+    }
+
+    .cta-row {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .hero-points {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 14px;
+    }
+
+    .hero-points li {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(120, 100, 255, 0.16);
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .hero-points span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-weight: 800;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      padding: 26px;
+      border-radius: 24px;
+      background: var(--card);
+      border: 1px solid rgba(120, 100, 255, 0.12);
+      box-shadow: 0 25px 40px rgba(28, 26, 40, 0.08);
+      display: grid;
+      gap: 14px;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(120, 100, 255, 0.12);
+      color: var(--accent-strong);
+    }
+
+    section h2 {
+      margin: 0 0 16px;
+      font-size: clamp(28px, 4vw, 38px);
+      font-weight: 900;
+      letter-spacing: -0.015em;
+    }
+
+    section p.lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      max-width: 680px;
+      font-size: 17px;
+    }
+
+    .packages {
+      display: grid;
+      gap: 18px;
+    }
+
+    .package-card {
+      display: grid;
+      gap: 10px;
+      padding: 22px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(120, 100, 255, 0.18);
+      box-shadow: 0 15px 30px rgba(28, 26, 40, 0.07);
+    }
+
+    .package-card strong {
+      font-size: 18px;
+    }
+
+    .package-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px;
+    }
+
+    .metric {
+      padding: 20px;
+      border-radius: 18px;
+      background: rgba(120, 100, 255, 0.1);
+      border: 1px solid rgba(120, 100, 255, 0.12);
+      text-align: center;
+    }
+
+    .metric strong {
+      font-size: 28px;
+      display: block;
+      color: var(--accent-strong);
+    }
+
+    .story-board {
+      display: grid;
+      gap: 18px;
+    }
+
+    .story {
+      padding: 24px;
+      border-radius: 20px;
+      background: rgba(28, 26, 40, 0.82);
+      color: #f2f0ff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .story::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 85% 10%, rgba(120, 100, 255, 0.4), transparent 60%);
+      pointer-events: none;
+    }
+
+    .story h3 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .story p {
+      margin: 0 0 10px;
+      color: rgba(242, 240, 255, 0.88);
+    }
+
+    footer {
+      padding: 40px 20px 60px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 680px) {
+      header {
+        position: static;
+      }
+
+      .nav {
+        justify-content: center;
+        text-align: center;
+      }
+
+      .hero {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="nav" aria-label="Main navigation">
+      <div class="brand">
+        Spiritual Giving
+        <span>Secular soul care, funded together</span>
+      </div>
+      <div class="nav-actions">
+        <a class="btn ghost" href="#packages">View packages</a>
+        <a class="btn" href="#stories">Share a story</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <h1 id="hero-title">A funding hub for modern spiritual practice</h1>
+        <p>
+          Bring together mindfulness leaders, nature stewards, and compassion crews under one giving platform.
+          Bundle donations into ready-to-launch packages, and show supporters the stories that prove why spiritual
+          wellbeing matters.
+        </p>
+        <div class="cta-row" role="group" aria-label="Primary actions">
+          <a class="btn" href="#focus-areas">See the five pillars</a>
+          <a class="btn ghost" href="#metrics">Impact metrics</a>
+        </div>
+      </div>
+      <ul class="hero-points">
+        <li><span>1</span>Unified donor experience across every spiritual lane</li>
+        <li><span>2</span>Quick-start packages for events, scholarships, and supplies</li>
+        <li><span>3</span>Stories that highlight healing, resilience, and joy</li>
+      </ul>
+    </section>
+
+    <section id="focus-areas" aria-labelledby="focus-title">
+      <h2 id="focus-title">Five secular spiritual pillars</h2>
+      <p class="lead">Curate campaigns that speak to the most-requested paths to meaning and community—each grounded in
+        practice, not doctrine.</p>
+      <div class="card-grid">
+        <article class="card">
+          <h3>Mindfulness &amp; Meditation</h3>
+          <p>Secular mindfulness, compassion training, and stress relief labs for youth, caregivers, and first-time
+            practitioners.</p>
+          <div class="chip-row" aria-label="Funding highlights">
+            <span class="chip">Community sits</span>
+            <span class="chip">Scholarships</span>
+            <span class="chip">Teacher stipends</span>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Yoga, Breath &amp; Somatics</h3>
+          <p>Body-based practices that rebuild resilience with inclusive yoga, pranayama, and nervous-system support for
+            veterans, workplaces, and recovery communities.</p>
+          <div class="chip-row">
+            <span class="chip">Trauma-aware classes</span>
+            <span class="chip">Instructor grants</span>
+            <span class="chip">Equipment funds</span>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Nature Connection &amp; Eco-Spirituality</h3>
+          <p>Forest bathing walks, community gardens, and land stewardship that help people heal through relationship with
+            the Earth.</p>
+          <div class="chip-row">
+            <span class="chip">Native plantings</span>
+            <span class="chip">Rewilding days</span>
+            <span class="chip">Trail care kits</span>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Compassion in Action</h3>
+          <p>Mutual aid, crisis response, and kindness clubs that treat service as spiritual practice and keep neighbors
+            supported.</p>
+          <div class="chip-row">
+            <span class="chip">Meal packs</span>
+            <span class="chip">Care kits</span>
+            <span class="chip">Volunteer training</span>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Contemplative Arts &amp; Circles</h3>
+          <p>Creativity and reflection spaces—journaling cohorts, grief circles, sound baths, and men’s &amp; women’s circles
+            that welcome everyone.</p>
+          <div class="chip-row">
+            <span class="chip">Facilitator honoraria</span>
+            <span class="chip">Art supplies</span>
+            <span class="chip">Sliding-scale funds</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="packages" aria-labelledby="packages-title">
+      <h2 id="packages-title">Giving packages donors can act on today</h2>
+      <p class="lead">Launch pre-built bundles that map to common budget levels and clearly spell out the impact in each
+        pillar.</p>
+      <div class="packages">
+        <article class="package-card">
+          <strong>Starter Soul Care &mdash; $250</strong>
+          <p>Fund a first-timer meditation course with cushions and streamable recordings for 20 people.</p>
+          <div class="package-meta">
+            <span>Focus: Mindfulness &amp; Meditation</span>
+            <span>Impact: 400+ minutes meditated</span>
+            <span>Extras: 2 need-based scholarships</span>
+          </div>
+        </article>
+        <article class="package-card">
+          <strong>Embodied Healing Pack &mdash; $750</strong>
+          <p>Provide 6 weeks of trauma-sensitive yoga, breathwork, and nervous system coaching for a recovery group.</p>
+          <div class="package-meta">
+            <span>Focus: Yoga &amp; Somatics</span>
+            <span>Impact: 12 guided sessions</span>
+            <span>Extras: Instructor certification stipend</span>
+          </div>
+        </article>
+        <article class="package-card">
+          <strong>Earth Reverence Collective &mdash; $1,200</strong>
+          <p>Equip a neighborhood to plant 10 native trees, host a monthly sit-spot walk, and remove 500 lbs of litter.</p>
+          <div class="package-meta">
+            <span>Focus: Nature Connection</span>
+            <span>Impact: 60 volunteer hours</span>
+            <span>Extras: Garden accessibility upgrades</span>
+          </div>
+        </article>
+        <article class="package-card">
+          <strong>Compassion Pods &mdash; $2,000</strong>
+          <p>Back a kindness club that assembles 150 crisis-care kits, runs a weekly peer-support call, and micro-grants
+            emergency needs.</p>
+          <div class="package-meta">
+            <span>Focus: Compassion in Action</span>
+            <span>Impact: 150 households reached</span>
+            <span>Extras: Volunteer leadership training</span>
+          </div>
+        </article>
+        <article class="package-card">
+          <strong>Creative Sanctuary Fund &mdash; $3,500</strong>
+          <p>Seed a year of contemplative arts programming: journaling cohorts, grief circles, and seasonal sound journeys.</p>
+          <div class="package-meta">
+            <span>Focus: Contemplative Arts</span>
+            <span>Impact: 48 circle sessions</span>
+            <span>Extras: Sliding-scale access</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="metrics" aria-labelledby="metrics-title">
+      <h2 id="metrics-title">Trackable outcomes that keep donors engaged</h2>
+      <p class="lead">Share live dashboards or monthly recaps using simple, universal metrics—no religious jargon required.</p>
+      <div class="metrics-row">
+        <div class="metric">
+          <strong>Minutes meditated</strong>
+          <span>Automate via attendance check-ins</span>
+        </div>
+        <div class="metric">
+          <strong>Classes delivered</strong>
+          <span>Yoga &amp; somatic sessions completed</span>
+        </div>
+        <div class="metric">
+          <strong>Trees &amp; native species added</strong>
+          <span>Upload geotagged photos</span>
+        </div>
+        <div class="metric">
+          <strong>Meals &amp; care kits</strong>
+          <span>Compassion impact snapshots</span>
+        </div>
+        <div class="metric">
+          <strong>Well-being scores</strong>
+          <span>Short post-program reflections</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="stories" aria-labelledby="stories-title">
+      <h2 id="stories-title">Stories that show what giving feels like</h2>
+      <p class="lead">Use these narrative starters to invite donors into the heart of each pillar. Pair them with photos, voice
+        notes, or short clips from your community.</p>
+      <div class="story-board">
+        <article class="story">
+          <h3>“The after-school breath club”</h3>
+          <p>A public middle school counselor turned a small grant into a daily mindfulness lab. Attendance is up, detention
+            referrals are down 40%, and the students produced their own meditation podcast.</p>
+          <p><strong>Why it resonates:</strong> Donors see immediate emotional regulation wins for youth.</p>
+        </article>
+        <article class="story">
+          <h3>“Saturdays on the mat”</h3>
+          <p>Veterans meet for adaptive yoga and breathwork, then share coffee and job leads. One member credits the program
+            for helping them sleep through the night for the first time in years.</p>
+          <p><strong>Why it resonates:</strong> Healing and community, backed by measurable stress reduction.</p>
+        </article>
+        <article class="story">
+          <h3>“River stewards in the city”</h3>
+          <p>Neighbors host monthly river cleanups paired with silent reflection. They planted riparian buffers and turned a
+            vacant lot into a pollinator garden.</p>
+          <p><strong>Why it resonates:</strong> Tangible environmental impact plus shared awe.</p>
+        </article>
+        <article class="story">
+          <h3>“Kindness hotline”</h3>
+          <p>A mutual aid collective built a peer-support phone line staffed by volunteers. Donors underwrite training, data
+            plans, and 24/7 coverage.</p>
+          <p><strong>Why it resonates:</strong> Service is framed as spiritual practice, with direct relief for callers.</p>
+        </article>
+        <article class="story">
+          <h3>“Journals for the healing circle”</h3>
+          <p>Artists recovering from grief gather monthly to write, drum, and paint. Funds cover facilitator honoraria, art
+            kits, and travel stipends.</p>
+          <p><strong>Why it resonates:</strong> Creativity becomes a doorway back to connection and joy.</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="cta-title">
+      <h2 id="cta-title">Ready to launch your spiritual giving page?</h2>
+      <p class="lead">We’ll help you import contacts, craft your first campaign, and report back impact with just a few
+        clicks.</p>
+      <div class="cta-row" role="group" aria-label="Final actions">
+        <a class="btn" href="mailto:hello@delcotechdivision.com">Book a setup session</a>
+        <a class="btn ghost" href="https://www.delcotechdivision.com">Explore more solutions</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Spiritual Giving Platform &copy; <span id="year"></span> Delco Tech Division. All rights reserved.
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
