@@ -301,6 +301,86 @@
       margin: 0 auto;
     }
 
+    .region-narration-card {
+      margin: 18px auto 0;
+      max-width: 960px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 24px;
+      border: 1px solid rgba(212, 162, 76, 0.28);
+      box-shadow: 0 18px 34px rgba(31, 41, 55, 0.16);
+      padding: 20px 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .region-narration-card[data-state="loading"] {
+      opacity: 0.8;
+    }
+
+    .region-narration-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .region-narration-head strong {
+      font-size: 15px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: rgba(31, 41, 55, 0.72);
+    }
+
+    .region-narration-subject {
+      display: block;
+      font-size: 14px;
+      color: rgba(31, 41, 55, 0.65);
+      margin-top: 4px;
+    }
+
+    .region-narration-subject[hidden] {
+      display: none;
+    }
+
+    .region-narration-text {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.5;
+      color: rgba(31, 41, 55, 0.85);
+    }
+
+    .region-narration-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .region-narration-actions .btn {
+      min-width: 160px;
+    }
+
+    .region-narration-refresh,
+    .region-narration-stop {
+      border: none;
+      background: transparent;
+      font-weight: 600;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .region-narration-refresh:disabled,
+    .region-narration-stop:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .region-narration-stop[hidden] {
+      display: none;
+    }
+
     .region-track {
       display: flex;
       transition: transform 0.6s ease;
@@ -2658,6 +2738,21 @@
       </div>
       <div class="slider-dots" id="slider-dots"></div>
     </div>
+    <div class="region-narration-card" id="region-narration" hidden>
+      <div class="region-narration-head">
+        <div>
+          <strong>Slide narration</strong>
+          <span class="region-narration-subject" id="region-narration-subject" hidden></span>
+        </div>
+        <button class="region-narration-refresh" type="button" id="region-narration-refresh">New script</button>
+      </div>
+      <p class="region-narration-text" id="region-narration-text"></p>
+      <div class="region-narration-actions">
+        <button class="btn ghost" type="button" id="region-narration-play">Play narration</button>
+        <button class="region-narration-stop" type="button" id="region-narration-stop" hidden>Stop</button>
+      </div>
+      <div class="status" id="region-narration-status" hidden></div>
+    </div>
   </section>
 
   <section id="sectors">
@@ -2988,7 +3083,14 @@
     isTransitioning: false,
     preloadedSlideId: null,
     metricsByFaith: new Map(),
-    metricsUpdatedAt: null
+    metricsUpdatedAt: null,
+    narrationBySlide: new Map(),
+    narrationLoading: false,
+    narrationRequestId: 0,
+    currentNarrationSlideId: null,
+    activeNarrationAudio: null,
+    activeNarrationObjectUrl: null,
+    narrationVariantFallback: 'faith_narrator'
   };
 
   const QUICK_FAITH_MAP = new Map(QUICK_FAITHS.map((faith) => [faith.key, faith]));
@@ -3874,7 +3976,14 @@
     setupCampaignTypes: document.getElementById('setup-campaign-types'),
     communityGrid: document.getElementById('community-campaigns'),
     communityEmpty: document.getElementById('community-empty'),
-    manageCard: document.querySelector('.manage-card')
+    manageCard: document.querySelector('.manage-card'),
+    narrationCard: document.getElementById('region-narration'),
+    narrationText: document.getElementById('region-narration-text'),
+    narrationSubject: document.getElementById('region-narration-subject'),
+    narrationPlay: document.getElementById('region-narration-play'),
+    narrationStop: document.getElementById('region-narration-stop'),
+    narrationRefresh: document.getElementById('region-narration-refresh'),
+    narrationStatus: document.getElementById('region-narration-status')
   };
 
   const HTML_ESCAPE_LOOKUP = {
@@ -3909,6 +4018,10 @@
     const str = String(value ?? '').trim();
     if (str.length <= max) return str;
     return `${str.slice(0, Math.max(0, max - 1))}…`;
+  }
+
+  function collapseWhitespace(value) {
+    return String(value ?? '').replace(/\s+/g, ' ').trim();
   }
 
   function formatCurrency(amount, currency = 'usd') {
@@ -3996,6 +4109,242 @@
     } else if (!imgEl.src && next) {
       imgEl.src = next;
       state.lastSlideImage.set(slideId, next);
+    }
+  }
+
+  function setNarrationControlsState(stateLabel) {
+    const card = els.narrationCard;
+    if (!card) return;
+    if (stateLabel) {
+      card.dataset.state = stateLabel;
+    } else {
+      delete card.dataset.state;
+    }
+    const playBtn = els.narrationPlay;
+    const stopBtn = els.narrationStop;
+    const refreshBtn = els.narrationRefresh;
+    if (playBtn) {
+      if (stateLabel === 'loading') {
+        playBtn.disabled = true;
+        playBtn.textContent = 'Loading voice…';
+      } else if (stateLabel === 'playing') {
+        playBtn.disabled = true;
+        playBtn.textContent = 'Playing…';
+      } else {
+        playBtn.disabled = false;
+        playBtn.textContent = 'Play narration';
+      }
+    }
+    if (stopBtn) {
+      stopBtn.hidden = stateLabel !== 'playing';
+      stopBtn.disabled = stateLabel !== 'playing';
+    }
+    if (refreshBtn) {
+      refreshBtn.disabled = stateLabel === 'loading';
+    }
+  }
+
+  function stopNarrationPlayback() {
+    const audio = state.activeNarrationAudio;
+    if (audio) {
+      try {
+        audio.pause();
+      } catch (err) {
+        console.warn('Narration pause failed', err);
+      }
+    }
+    if (state.activeNarrationObjectUrl) {
+      try {
+        URL.revokeObjectURL(state.activeNarrationObjectUrl);
+      } catch (err) {
+        console.warn('Narration revoke failed', err);
+      }
+    }
+    state.activeNarrationAudio = null;
+    state.activeNarrationObjectUrl = null;
+    setNarrationControlsState('idle');
+  }
+
+  async function playNarrationText(text, variant) {
+    if (!text || !els.narrationCard) return;
+    stopNarrationPlayback();
+    setNarrationControlsState('loading');
+    setStatus(els.narrationStatus, 'Loading narration audio…');
+    try {
+      const params = new URLSearchParams();
+      params.set('t', text);
+      if (variant) {
+        params.set('variant', variant);
+      }
+      const response = await fetch(`/audio/tts?${params.toString()}`, { cache: 'no-store' });
+      if (!response.ok) {
+        const message = await response.text().catch(() => response.statusText);
+        throw new Error(message || 'Unable to load narration audio.');
+      }
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const audio = new Audio(objectUrl);
+      state.activeNarrationAudio = audio;
+      state.activeNarrationObjectUrl = objectUrl;
+      setNarrationControlsState('playing');
+      setStatus(els.narrationStatus, 'Playing narration…');
+      audio.addEventListener('ended', () => {
+        if (state.activeNarrationAudio === audio) {
+          stopNarrationPlayback();
+          clearStatus(els.narrationStatus);
+        }
+      });
+      audio.addEventListener('error', () => {
+        if (state.activeNarrationAudio === audio) {
+          stopNarrationPlayback();
+          setStatus(els.narrationStatus, 'Unable to play narration audio.', 'error');
+        }
+      });
+      await audio.play();
+    } catch (error) {
+      console.warn('Narration playback failed', error);
+      stopNarrationPlayback();
+      setStatus(els.narrationStatus, collapseWhitespace(error?.message) || 'Unable to play narration audio.', 'error');
+    }
+  }
+
+  function updateNarrationCard(record, slide) {
+    const card = els.narrationCard;
+    if (!card) return;
+    if (!record || !record.script) {
+      card.hidden = true;
+      return;
+    }
+    card.hidden = false;
+    if (els.narrationText) {
+      els.narrationText.textContent = record.script;
+    }
+    if (els.narrationSubject) {
+      const subjectLabel = collapseWhitespace(record?.subject?.label);
+      const subjectDetail = collapseWhitespace(record?.subject?.detail);
+      if (subjectLabel) {
+        els.narrationSubject.textContent = subjectDetail
+          ? `${subjectLabel} · ${subjectDetail}`
+          : subjectLabel;
+        els.narrationSubject.hidden = false;
+      } else {
+        els.narrationSubject.textContent = '';
+        els.narrationSubject.hidden = true;
+      }
+    }
+    setNarrationControlsState('idle');
+    clearStatus(els.narrationStatus);
+    if (slide) {
+      card.dataset.faith = slide.religion || '';
+      card.dataset.region = slide.id || '';
+    }
+  }
+
+  async function ensureNarrationForSlide(slide, options = {}) {
+    const { force = false, autoPlay = false } = options;
+    if (!slide || !els.narrationCard) return null;
+    const existing = state.narrationBySlide.get(slide.id);
+    if (existing && !force) {
+      updateNarrationCard(existing, slide);
+      if (autoPlay) {
+        await playNarrationText(existing.script, existing.variant || state.narrationVariantFallback);
+      }
+      return existing;
+    }
+
+    const requestId = (state.narrationRequestId || 0) + 1;
+    state.narrationRequestId = requestId;
+    state.narrationLoading = true;
+    els.narrationCard.hidden = false;
+    setNarrationControlsState('loading');
+    setStatus(els.narrationStatus, 'Drafting narration…');
+    const previous = existing || null;
+
+    try {
+      const payload = {
+        channel: 'multifaith-giving-platform',
+        slideId: slide.id,
+        religion: slide.religion,
+        region: slide.name,
+      };
+      const data = await postJSON('/api/giving/region-narration', payload);
+      if (state.narrationRequestId !== requestId) {
+        return null;
+      }
+      const script = collapseWhitespace(data?.script);
+      if (!script) {
+        throw new Error('Narration unavailable right now.');
+      }
+      const record = {
+        script,
+        subject: data?.subject || null,
+        variant: collapseWhitespace(data?.variant) || state.narrationVariantFallback || 'faith_narrator',
+        generatedAt: data?.generatedAt || new Date().toISOString(),
+      };
+      state.narrationBySlide.set(slide.id, record);
+      if (state.currentNarrationSlideId === slide.id) {
+        updateNarrationCard(record, slide);
+        if (autoPlay) {
+          await playNarrationText(record.script, record.variant);
+        }
+      }
+      return record;
+    } catch (error) {
+      if (state.narrationRequestId === requestId) {
+        console.warn('Narration load failed', error);
+        if (previous) {
+          state.narrationBySlide.set(slide.id, previous);
+          updateNarrationCard(previous, slide);
+          setStatus(els.narrationStatus, 'Using saved narration. Try again soon.', 'error');
+        } else {
+          setNarrationControlsState('idle');
+          setStatus(els.narrationStatus, collapseWhitespace(error?.message) || 'Unable to load narration.', 'error');
+        }
+      }
+      return null;
+    } finally {
+      if (state.narrationRequestId === requestId) {
+        state.narrationLoading = false;
+        if (!state.activeNarrationAudio) {
+          setNarrationControlsState('idle');
+        }
+      }
+    }
+  }
+
+  function setupNarrationControls() {
+    if (!els.narrationCard) return;
+    const playBtn = els.narrationPlay;
+    const refreshBtn = els.narrationRefresh;
+    const stopBtn = els.narrationStop;
+
+    if (playBtn) {
+      playBtn.addEventListener('click', async () => {
+        const slide = SLIDES[state.slideIndex];
+        if (!slide) return;
+        const record = state.narrationBySlide.get(slide.id);
+        if (record) {
+          await playNarrationText(record.script, record.variant || state.narrationVariantFallback);
+        } else {
+          await ensureNarrationForSlide(slide, { force: false, autoPlay: true });
+        }
+      });
+    }
+
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        if (state.narrationLoading) return;
+        const slide = SLIDES[state.slideIndex];
+        if (!slide) return;
+        await ensureNarrationForSlide(slide, { force: true, autoPlay: false });
+      });
+    }
+
+    if (stopBtn) {
+      stopBtn.addEventListener('click', () => {
+        stopNarrationPlayback();
+        clearStatus(els.narrationStatus);
+      });
     }
   }
 
@@ -4308,6 +4657,7 @@
 
   function finalizeSlideChange(newIndex, manual) {
     state.slideIndex = newIndex;
+    stopNarrationPlayback();
     const offset = -state.slideIndex * 100;
     els.regionTrack.style.transform = `translateX(${offset}%)`;
     const slides = Array.from(els.regionTrack.children);
@@ -4327,12 +4677,16 @@
       dot.classList.toggle('active', idx === state.slideIndex);
     });
     const slide = SLIDES[state.slideIndex];
+    state.currentNarrationSlideId = slide?.id || null;
     if (slide) {
       if (state.preloadedSlideId === slide.id) {
         state.preloadedSlideId = null;
       } else {
         setRandomSlideImage(slide.id, slide.religion);
       }
+      ensureNarrationForSlide(slide);
+    } else if (els.narrationCard) {
+      els.narrationCard.hidden = true;
     }
     updateTransitionOverlayForIndex(state.slideIndex);
     if (manual) {
@@ -5041,9 +5395,12 @@
   }
 
   function init() {
+    setupNarrationControls();
     renderSlides();
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', () => updateTransitionOverlayForIndex(state.slideIndex));
+      window.addEventListener('pagehide', stopNarrationPlayback);
+      window.addEventListener('beforeunload', stopNarrationPlayback);
     }
     renderSectors();
     populateRegionSelects();
