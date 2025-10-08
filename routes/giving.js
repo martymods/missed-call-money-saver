@@ -11,6 +11,101 @@ const ORGS_FILE = path.join(DATA_DIR, 'organizations.json');
 const CAMPAIGNS_FILE = path.join(DATA_DIR, 'campaigns.json');
 const COMMUNITY_FILE = path.join(DATA_DIR, 'community-campaigns.json');
 
+const REGION_NARRATION_CONFIG = [
+  {
+    id: 'NA',
+    channel: 'multifaith-giving-platform',
+    regionLabel: 'North America faith communities',
+    regionName: 'North America',
+    religion: 'christian',
+    religionLabel: 'Christianity',
+    adherentsLabel: '2.4B (2020)',
+    copy: 'US and Canada support ACH, cards, Apple Pay, and bilingual receipts with IRS and CRA-compliant summaries.',
+    currencies: ['United States dollar (USD)', 'Canadian dollar (CAD)'],
+    subjects: [
+      { key: 'relief', label: 'Community relief & shelters', detail: '34 active' },
+      { key: 'food', label: 'Food security networks', detail: '23 active' },
+      { key: 'youth', label: 'Youth programming', detail: '3 active' },
+      { key: 'capital', label: 'Capital campaigns', detail: '0 active' }
+    ],
+    voiceVariant: 'faith_narrator'
+  },
+  {
+    id: 'EU',
+    channel: 'multifaith-giving-platform',
+    regionLabel: 'Europe faith communities',
+    regionName: 'Europe',
+    religion: 'jewish',
+    religionLabel: 'Judaism',
+    adherentsLabel: '15M (2020)',
+    copy: 'Localized SEPA payments with automatic Gift Aid statements and multilingual GDPR consent flows.',
+    currencies: ['Euro (EUR)', 'Pound sterling (GBP)', 'Swedish krona (SEK)'],
+    subjects: [
+      { key: 'refugee', label: 'Refugee welcome centers', detail: '0 active' },
+      { key: 'culture', label: 'Cultural preservation', detail: '1 active' },
+      { key: 'energy', label: 'Winter energy assistance', detail: '0 active' },
+      { key: 'education', label: 'Education bursaries', detail: '1 active' }
+    ],
+    voiceVariant: 'faith_narrator'
+  },
+  {
+    id: 'MENA',
+    channel: 'multifaith-giving-platform',
+    regionLabel: 'Middle East & North Africa faith communities',
+    regionName: 'Middle East & North Africa',
+    religion: 'islam',
+    religionLabel: 'Islam',
+    adherentsLabel: '1.9B (2020)',
+    copy: 'Arabic-first experiences with Ramadan scheduling, zakat calculators, and regional banking partners.',
+    currencies: ['United Arab Emirates dirham (AED)', 'Saudi riyal (SAR)', 'Egyptian pound (EGP)'],
+    subjects: [
+      { key: 'ramadan_food', label: 'Ramadan food parcels', detail: '89 active' },
+      { key: 'water', label: 'Water & sanitation', detail: '6 active' },
+      { key: 'education', label: 'Scholarships for girls', detail: '5 active' },
+      { key: 'infrastructure', label: 'Mosque restoration', detail: '0 active' }
+    ],
+    voiceVariant: 'faith_narrator'
+  },
+  {
+    id: 'SA',
+    channel: 'multifaith-giving-platform',
+    regionLabel: 'South Asia faith communities',
+    regionName: 'South Asia',
+    religion: 'hindu',
+    religionLabel: 'Hinduism',
+    adherentsLabel: '1.161B (2020)',
+    copy: 'Handle INR, LKR, and NPR gifts with PAN capture, festival campaign presets, and WhatsApp confirmations.',
+    currencies: ['Indian rupee (INR)', 'Sri Lankan rupee (LKR)', 'Nepalese rupee (NPR)'],
+    subjects: [
+      { key: 'disaster', label: 'Disaster recovery', detail: '13 active' },
+      { key: 'seva', label: 'Temple seva programs', detail: '4 active' },
+      { key: 'health', label: 'Health outreach', detail: '1 active' },
+      { key: 'education', label: 'Education for children', detail: '0 active' }
+    ],
+    voiceVariant: 'faith_narrator'
+  },
+  {
+    id: 'APAC',
+    channel: 'multifaith-giving-platform',
+    regionLabel: 'Asia Pacific faith communities',
+    regionName: 'Asia Pacific',
+    religion: 'buddhist',
+    religionLabel: 'Buddhism',
+    adherentsLabel: '507M (2020)',
+    copy: 'From Singapore to Sydney: cards, BECS, and PayNow support with retreat management baked in.',
+    currencies: ['Australian dollar (AUD)', 'Singapore dollar (SGD)', 'New Zealand dollar (NZD)'],
+    subjects: [
+      { key: 'retreats', label: 'Retreat scholarships', detail: '0 active' },
+      { key: 'environment', label: 'Environmental care', detail: '0 active' },
+      { key: 'elder', label: 'Elder support services', detail: '0 active' },
+      { key: 'kitchen', label: 'Community kitchens', detail: '0 active' }
+    ],
+    voiceVariant: 'faith_narrator'
+  }
+];
+
+const REGION_NARRATION_MAP = new Map(REGION_NARRATION_CONFIG.map((entry) => [entry.id, entry]));
+
 fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
@@ -101,6 +196,59 @@ function ensureArray(value) {
   return [value];
 }
 
+function pickRandom(list) {
+  if (!Array.isArray(list) || list.length === 0) return null;
+  const index = Math.floor(Math.random() * list.length);
+  return list[index];
+}
+
+function collapseWhitespace(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim();
+}
+
+function limitSentences(value, max = 2) {
+  const text = collapseWhitespace(value);
+  if (!text) return '';
+  const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  return sentences.slice(0, Math.max(1, max)).join(' ').trim();
+}
+
+function buildNarrationFallback(config, subject) {
+  const focusLabel = collapseWhitespace(subject?.label) || 'local initiatives';
+  const focusDetail = collapseWhitespace(subject?.detail);
+  const focusSentenceDetail = focusDetail ? ` (${focusDetail})` : '';
+  const regionName = collapseWhitespace(config?.regionName) || 'this region';
+  const religionLabel = collapseWhitespace(config?.religionLabel) || 'Faith communities';
+  const copy = collapseWhitespace(config?.copy);
+  const firstSentence = `${religionLabel} communities across ${regionName} are championing ${focusLabel}${focusSentenceDetail}.`;
+  if (!copy) {
+    return firstSentence;
+  }
+  return limitSentences(`${firstSentence} ${copy}`, 2);
+}
+
+function narrationContainsOtherFaiths(script, config) {
+  if (!script) return false;
+  const text = script.toLowerCase();
+  const currentFaiths = new Set([
+    (config?.religion || '').toLowerCase(),
+    (config?.religionLabel || '').toLowerCase(),
+  ]);
+  for (const entry of REGION_NARRATION_CONFIG) {
+    if (entry.id === config.id) continue;
+    const tokens = [entry.religion, entry.religionLabel, entry.regionName, entry.regionLabel]
+      .map((token) => String(token || '').toLowerCase())
+      .filter(Boolean);
+    for (const token of tokens) {
+      if (!token || currentFaiths.has(token)) continue;
+      if (text.includes(token)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 async function appendRecord(filePath, record) {
   const list = await readJson(filePath, []);
   list.push(record);
@@ -116,7 +264,7 @@ function createMockLink(baseUrl, campaignName) {
   return { id, url, provider: 'mock' };
 }
 
-function createGivingRouter({ stripe, hasStripe = false, getAppBaseUrl }) {
+function createGivingRouter({ stripe, hasStripe = false, getAppBaseUrl, openai = null }) {
   const router = express.Router();
 
   router.get('/organizations', async (_req, res, next) => {
@@ -203,6 +351,91 @@ function createGivingRouter({ stripe, hasStripe = false, getAppBaseUrl }) {
       res.json({ campaigns });
     } catch (error) {
       next(error);
+    }
+  });
+
+  router.post('/region-narration', async (req, res) => {
+    try {
+      const channel = sanitizeString(req.body?.channel) || 'multifaith-giving-platform';
+      const rawSlideId = sanitizeString(req.body?.slideId);
+      const normalizedSlideId = rawSlideId ? rawSlideId.toUpperCase() : '';
+      const religionKey = sanitizeString(req.body?.religion).toLowerCase();
+
+      if (channel !== 'multifaith-giving-platform') {
+        return res.status(404).json({ error: 'channel_not_supported' });
+      }
+
+      let config = null;
+      if (normalizedSlideId) {
+        config = REGION_NARRATION_MAP.get(normalizedSlideId) || null;
+      }
+      if (!config && religionKey) {
+        config = REGION_NARRATION_CONFIG.find((entry) => entry.religion === religionKey) || null;
+      }
+      if (!config) {
+        return res.status(404).json({ error: 'region_not_found' });
+      }
+
+      const subject = pickRandom(config.subjects) || null;
+      const fallbackScript = buildNarrationFallback(config, subject);
+
+      let script = fallbackScript;
+      const subjectSummary = subject
+        ? `${subject.label}${subject.detail ? ` — ${subject.detail}` : ''}`
+        : 'Regional infrastructure';
+
+      if (openai && process.env.OPENAI_API_KEY) {
+        try {
+          const systemPrompt = `You are the warm narrator for the Multifaith Giving Platform slider. `
+            + `Speak in 1-2 sentences, under 60 words total. `
+            + `Focus only on the provided faith tradition and highlight. `
+            + `Do not mention other regions or religions. `
+            + `Keep the tone inviting and informative.`;
+          const userPrompt = [
+            `Faith tradition: ${config.religionLabel}`,
+            `Region: ${config.regionLabel}`,
+            `Key highlight: ${subjectSummary}`,
+            `Regional detail: ${config.copy}`,
+            `Global adherents: ${config.adherentsLabel}`,
+            `Currencies supported: ${(config.currencies || []).join(', ') || 'Not specified'}`,
+            'Task: Provide a 1-2 sentence narration for this slide. Keep the focus on the highlight. '
+              + 'If there is nothing active, mention readiness or preparation instead of other faiths.'
+          ].join('\n');
+
+          const completion = await openai.chat.completions.create({
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            temperature: 0.7,
+            max_tokens: 160,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+          });
+
+          const candidate = limitSentences(completion.choices?.[0]?.message?.content || '', 2);
+          if (candidate && !narrationContainsOtherFaiths(candidate, config)) {
+            script = candidate;
+          }
+        } catch (error) {
+          console.error('[Giving] Narration OpenAI error', {
+            message: error?.message || error,
+            slideId: config.id,
+          });
+          script = fallbackScript;
+        }
+      }
+
+      res.json({
+        script,
+        subject: subject
+          ? { key: subject.key, label: subject.label, detail: subject.detail }
+          : null,
+        variant: config.voiceVariant || 'faith_narrator',
+        generatedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('[Giving] Narration generation failed', error);
+      res.status(500).json({ error: 'narration_failed' });
     }
   });
 

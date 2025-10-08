@@ -98,6 +98,7 @@ function publishAutomationEvent(event){
 const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
 const FALLBACK_ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
 const ELEVENLABS_DEFAULT_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || FALLBACK_ELEVENLABS_VOICE_ID;
+const ELEVENLABS_SECONDARY_VOICE_ID = process.env.ELEVENLABS_VOICE_ID_2 || process.env.ELEVENLABS_VOICE_ID_FAITH || null;
 const ELEVENLABS_MAX_CONCURRENCY = Math.max(1, Number(process.env.ELEVENLABS_MAX_CONCURRENCY || '4'));
 const ELEVENLABS_MAX_ATTEMPTS = Math.max(1, Number(process.env.ELEVENLABS_MAX_ATTEMPTS || '3'));
 const ELEVENLABS_RETRY_BASE_DELAY_MS = Math.max(50, Number(process.env.ELEVENLABS_RETRY_BASE_DELAY_MS || '300'));
@@ -143,12 +144,25 @@ const ELEVENLABS_PRESETS = {
       use_speaker_boost: true,
     },
   },
+  faith_narrator: {
+    label: 'Multifaith narrator (ElevenLabs)',
+    variant: 'faith_narrator',
+    voiceId: ELEVENLABS_SECONDARY_VOICE_ID || ELEVENLABS_DEFAULT_VOICE_ID,
+    modelId: ELEVENLABS_MODEL_ID,
+    voiceSettings: {
+      stability: 0.58,
+      similarity_boost: 0.9,
+      style: 0.35,
+      use_speaker_boost: true,
+    },
+  },
 };
 
 const POLLY_PRESETS = {
   warm: { label: 'Warm & friendly (Polly.Joanna)', voice: 'Polly.Joanna', language: 'en-US', variant: 'warm' },
   bold: { label: 'Bold & confident (Polly.Matthew)', voice: 'Polly.Matthew', language: 'en-US', variant: 'bold' },
   calm: { label: 'Calm & precise (Polly.Amy)', voice: 'Polly.Amy', language: 'en-GB', variant: 'calm' },
+  faith_narrator: { label: 'Narration (Polly.Joanna)', voice: 'Polly.Joanna', language: 'en-US', variant: 'faith_narrator' },
 };
 
 const USE_ELEVENLABS = Boolean(process.env.ELEVENLABS_API_KEY);
@@ -828,6 +842,7 @@ app.use('/api/giving', createGivingRouter({
   stripe,
   hasStripe: hasStripeSecret,
   getAppBaseUrl: resolveAppBaseUrl,
+  openai,
 }));
 app.use('/api/users', createUserRouter());
 app.use('/api/integrations', createIntegrationsRouter());
