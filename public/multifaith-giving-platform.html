@@ -3090,7 +3090,10 @@
     currentNarrationSlideId: null,
     activeNarrationAudio: null,
     activeNarrationObjectUrl: null,
-    narrationVariantFallback: 'faith_narrator'
+    narrationVariantFallback: 'faith_narrator',
+    narrationContinuous: false,
+    narrationCooldownUntil: 0,
+    pendingNarrationSlideId: null
   };
 
   const QUICK_FAITH_MAP = new Map(QUICK_FAITHS.map((faith) => [faith.key, faith]));
@@ -4123,29 +4126,41 @@
     const playBtn = els.narrationPlay;
     const stopBtn = els.narrationStop;
     const refreshBtn = els.narrationRefresh;
+    const isLoading = stateLabel === 'loading';
+    const isPlaying = stateLabel === 'playing';
     if (playBtn) {
-      if (stateLabel === 'loading') {
-        playBtn.disabled = true;
-        playBtn.textContent = 'Loading voice…';
-      } else if (stateLabel === 'playing') {
-        playBtn.disabled = true;
-        playBtn.textContent = 'Playing…';
-      } else {
-        playBtn.disabled = false;
-        playBtn.textContent = 'Play narration';
+      let label = 'Play narration';
+      if (isLoading) {
+        label = 'Loading voice…';
+      } else if (isPlaying) {
+        label = state.narrationContinuous ? 'Continuous narration playing…' : 'Playing narration…';
+      } else if (state.narrationContinuous) {
+        label = 'Continuous narration enabled';
       }
+      playBtn.disabled = isLoading;
+      playBtn.textContent = label;
+      playBtn.setAttribute('aria-pressed', String(Boolean(state.narrationContinuous)));
+      playBtn.classList.toggle('is-active', Boolean(state.narrationContinuous));
     }
     if (stopBtn) {
-      stopBtn.hidden = stateLabel !== 'playing';
-      stopBtn.disabled = stateLabel !== 'playing';
+      stopBtn.hidden = !isPlaying;
+      stopBtn.disabled = !isPlaying;
     }
     if (refreshBtn) {
-      refreshBtn.disabled = stateLabel === 'loading';
+      refreshBtn.disabled = isLoading || isPlaying;
+    }
+    if (isLoading || isPlaying) {
+      pauseAutoSlide();
+    } else if (!state.narrationContinuous && stateLabel === 'idle') {
+      resetAutoSlide();
     }
   }
 
-  function stopNarrationPlayback() {
+  function stopNarrationPlayback(arg) {
+    const options = (arg && typeof arg === 'object' && !('type' in arg)) ? arg : {};
+    const { keepState = false } = options;
     const audio = state.activeNarrationAudio;
+    const hadAudio = Boolean(audio);
     if (audio) {
       try {
         audio.pause();
@@ -4162,12 +4177,34 @@
     }
     state.activeNarrationAudio = null;
     state.activeNarrationObjectUrl = null;
-    setNarrationControlsState('idle');
+    if (!keepState) {
+      setNarrationControlsState('idle');
+    }
+    return hadAudio;
+  }
+
+  async function handleNarrationAfterPlayback() {
+    const pendingId = state.pendingNarrationSlideId;
+    if (pendingId) {
+      state.pendingNarrationSlideId = null;
+      if (state.currentNarrationSlideId === pendingId) {
+        const pendingSlide = SLIDES.find(item => item && item.id === pendingId);
+        if (pendingSlide) {
+          await ensureNarrationForSlide(pendingSlide, { force: false, autoPlay: state.narrationContinuous });
+          return;
+        }
+      }
+    }
+    if (state.narrationContinuous) {
+      await advanceContinuousNarration();
+    } else {
+      setNarrationControlsState('idle');
+    }
   }
 
   async function playNarrationText(text, variant) {
     if (!text || !els.narrationCard) return;
-    stopNarrationPlayback();
+    stopNarrationPlayback({ keepState: true });
     setNarrationControlsState('loading');
     setStatus(els.narrationStatus, 'Loading narration audio…');
     try {
@@ -4188,10 +4225,16 @@
       state.activeNarrationObjectUrl = objectUrl;
       setNarrationControlsState('playing');
       setStatus(els.narrationStatus, 'Playing narration…');
-      audio.addEventListener('ended', () => {
+      audio.addEventListener('ended', async () => {
         if (state.activeNarrationAudio === audio) {
-          stopNarrationPlayback();
+          stopNarrationPlayback({ keepState: true });
           clearStatus(els.narrationStatus);
+          try {
+            await handleNarrationAfterPlayback();
+          } catch (err) {
+            console.warn('Narration continuation failed', err);
+            setNarrationControlsState('idle');
+          }
         }
       });
       audio.addEventListener('error', () => {
@@ -4206,6 +4249,40 @@
       stopNarrationPlayback();
       setStatus(els.narrationStatus, collapseWhitespace(error?.message) || 'Unable to play narration audio.', 'error');
     }
+  }
+
+  function isNarrationOnCooldown() {
+    return typeof state.narrationCooldownUntil === 'number' && state.narrationCooldownUntil > Date.now();
+  }
+
+  function startNarrationCooldown() {
+    state.narrationCooldownUntil = Date.now() + 10000;
+  }
+
+  async function playCurrentNarration() {
+    if (state.narrationLoading || state.activeNarrationAudio) {
+      return;
+    }
+    const slide = SLIDES[state.slideIndex];
+    if (!slide) return;
+    await ensureNarrationForSlide(slide, { force: false, autoPlay: true });
+  }
+
+  async function advanceContinuousNarration() {
+    if (!state.narrationContinuous) {
+      setNarrationControlsState('idle');
+      return;
+    }
+    if (state.isTransitioning) {
+      return;
+    }
+    const totalSlides = Array.isArray(SLIDES) ? SLIDES.length : 0;
+    if (!totalSlides) {
+      setNarrationControlsState('idle');
+      return;
+    }
+    const nextIndex = (state.slideIndex + 1) % totalSlides;
+    showSlide(nextIndex, false);
   }
 
   function updateNarrationCard(record, slide) {
@@ -4244,6 +4321,15 @@
     const { force = false, autoPlay = false } = options;
     if (!slide || !els.narrationCard) return null;
     const existing = state.narrationBySlide.get(slide.id);
+    if (state.activeNarrationAudio && !force && state.currentNarrationSlideId && slide.id !== state.currentNarrationSlideId) {
+      if (existing) {
+        updateNarrationCard(existing, slide);
+        return existing;
+      }
+      state.pendingNarrationSlideId = slide.id;
+      setStatus(els.narrationStatus, 'Narration queued. Waiting for current audio to finish.');
+      return null;
+    }
     if (existing && !force) {
       updateNarrationCard(existing, slide);
       if (autoPlay) {
@@ -4320,13 +4406,33 @@
 
     if (playBtn) {
       playBtn.addEventListener('click', async () => {
-        const slide = SLIDES[state.slideIndex];
-        if (!slide) return;
-        const record = state.narrationBySlide.get(slide.id);
-        if (record) {
-          await playNarrationText(record.script, record.variant || state.narrationVariantFallback);
-        } else {
-          await ensureNarrationForSlide(slide, { force: false, autoPlay: true });
+        if (state.narrationContinuous) {
+          state.narrationContinuous = false;
+          startNarrationCooldown();
+          if (!state.activeNarrationAudio) {
+            clearStatus(els.narrationStatus);
+          } else {
+            setStatus(els.narrationStatus, 'Continuous narration disabled. Current audio will finish.');
+          }
+          setNarrationControlsState(state.activeNarrationAudio ? 'playing' : 'idle');
+          return;
+        }
+        if (isNarrationOnCooldown()) {
+          setStatus(els.narrationStatus, 'Narration is cooling down. Please wait 10 seconds before replaying.');
+          return;
+        }
+        clearStatus(els.narrationStatus);
+        state.narrationContinuous = true;
+        pauseAutoSlide();
+        setNarrationControlsState(state.activeNarrationAudio ? 'playing' : 'idle');
+        try {
+          await playCurrentNarration();
+        } catch (error) {
+          console.warn('Narration autoplay failed', error);
+          state.narrationContinuous = false;
+          startNarrationCooldown();
+          setNarrationControlsState('idle');
+          setStatus(els.narrationStatus, collapseWhitespace(error?.message) || 'Unable to start narration autoplay.', 'error');
         }
       });
     }
@@ -4342,8 +4448,14 @@
 
     if (stopBtn) {
       stopBtn.addEventListener('click', () => {
-        stopNarrationPlayback();
+        const wasContinuous = state.narrationContinuous;
+        state.narrationContinuous = false;
+        const hadAudio = stopNarrationPlayback({ keepState: true });
         clearStatus(els.narrationStatus);
+        if (wasContinuous || hadAudio) {
+          startNarrationCooldown();
+        }
+        setNarrationControlsState('idle');
       });
     }
   }
@@ -4684,7 +4796,7 @@
       } else {
         setRandomSlideImage(slide.id, slide.religion);
       }
-      ensureNarrationForSlide(slide);
+      ensureNarrationForSlide(slide, { autoPlay: state.narrationContinuous });
     } else if (els.narrationCard) {
       els.narrationCard.hidden = true;
     }
@@ -4707,9 +4819,17 @@
     showSlide(state.slideIndex - 1, true);
   }
 
-  function resetAutoSlide() {
+  function pauseAutoSlide() {
     if (state.autoTimer) {
       clearInterval(state.autoTimer);
+      state.autoTimer = null;
+    }
+  }
+
+  function resetAutoSlide() {
+    pauseAutoSlide();
+    if (state.narrationContinuous) {
+      return;
     }
     state.autoTimer = setInterval(nextSlide, 8000);
   }
