@@ -44,6 +44,298 @@
       flex-direction: column;
     }
 
+    /* Futuristic holo input system */
+    .glitch-input-wrapper {
+      --bg-color: rgba(15, 23, 42, 0.82);
+      --primary-color: var(--accent);
+      --secondary-color: #a855f7;
+      --text-color: var(--text);
+      --font-family: "Fira Code", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --glitch-anim-duration: 0.4s;
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 0.4rem 0;
+    }
+
+    .glitch-input-wrapper .input-container {
+      position: relative;
+      width: 100%;
+      font-family: var(--font-family);
+    }
+
+    .glitch-input-wrapper .holo-input {
+      width: 100%;
+      min-height: 3.25rem;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(15, 23, 42, 0.9));
+      border: none;
+      border-bottom: 2px solid rgba(148, 163, 184, 0.25);
+      outline: none;
+      padding: 0 1rem;
+      color: var(--primary-color);
+      font-family: inherit;
+      font-size: 1rem;
+      caret-color: var(--primary-color);
+      z-index: 10;
+      transition:
+        background 0.3s ease,
+        border-color 0.3s ease,
+        color 0.3s ease;
+      border-radius: 0.75rem;
+    }
+
+    .glitch-input-wrapper .holo-input::-webkit-outer-spin-button,
+    .glitch-input-wrapper .holo-input::-webkit-inner-spin-button {
+      margin: 0;
+      -webkit-appearance: none;
+    }
+
+    .glitch-input-wrapper .holo-input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    .glitch-input-wrapper .input-label {
+      position: absolute;
+      top: 0.95rem;
+      left: 1rem;
+      color: var(--text-color);
+      opacity: 0.68;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 11;
+      font-size: 0.78rem;
+    }
+
+    .glitch-input-wrapper .holo-input:focus + .input-label,
+    .glitch-input-wrapper .holo-input:not(:placeholder-shown) + .input-label {
+      top: -1.15rem;
+      left: 0;
+      font-size: 0.7rem;
+      opacity: 1;
+      color: var(--primary-color);
+    }
+
+    .glitch-input-wrapper .holo-input:focus + .input-label::before,
+    .glitch-input-wrapper .holo-input:focus + .input-label::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(15, 23, 42, 0.85);
+      overflow: hidden;
+    }
+
+    .glitch-input-wrapper .holo-input:focus + .input-label::before {
+      color: var(--secondary-color);
+      animation: glitch-label var(--glitch-anim-duration)
+        cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    }
+
+    .glitch-input-wrapper .holo-input:focus + .input-label::after {
+      color: var(--primary-color);
+      animation: glitch-label var(--glitch-anim-duration)
+        cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both;
+    }
+
+    .glitch-input-wrapper .input-border,
+    .glitch-input-wrapper .input-scanline,
+    .glitch-input-wrapper .input-glow,
+    .glitch-input-wrapper .input-corners {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      border-radius: 0.75rem;
+    }
+
+    .glitch-input-wrapper .input-border {
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      opacity: 0.45;
+      transition: all 0.3s ease;
+    }
+
+    .glitch-input-wrapper .corner {
+      position: absolute;
+      width: 0.85rem;
+      height: 0.85rem;
+      border: 2px solid var(--primary-color);
+      transition: all 0.3s ease;
+      opacity: 0.45;
+    }
+
+    .glitch-input-wrapper .corner-tl {
+      top: -0.25rem;
+      left: -0.25rem;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .glitch-input-wrapper .corner-tr {
+      top: -0.25rem;
+      right: -0.25rem;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    .glitch-input-wrapper .corner-bl {
+      bottom: -0.25rem;
+      left: -0.25rem;
+      border-right: none;
+      border-top: none;
+    }
+
+    .glitch-input-wrapper .corner-br {
+      bottom: -0.25rem;
+      right: -0.25rem;
+      border-left: none;
+      border-top: none;
+    }
+
+    .glitch-input-wrapper .input-glow {
+      background: radial-gradient(
+        ellipse at center,
+        rgba(56, 189, 248, 0.25) 0%,
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .glitch-input-wrapper .input-scanline {
+      height: 100%;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(56, 189, 248, 0.08) 48%,
+        rgba(56, 189, 248, 0.25) 50%,
+        rgba(56, 189, 248, 0.08) 52%,
+        transparent 100%
+      );
+      opacity: 0;
+    }
+
+    .glitch-input-wrapper .input-data-stream {
+      position: absolute;
+      bottom: 4px;
+      left: 0;
+      width: 100%;
+      height: 0.28rem;
+      display: flex;
+      gap: 1px;
+      opacity: 0;
+      transition: opacity 0.3s ease 0.1s;
+    }
+
+    .glitch-input-wrapper .stream-bar {
+      flex-grow: 1;
+      background-color: var(--primary-color);
+      transition:
+        transform 0.2s,
+        opacity 0.2s;
+      transform: scaleY(0);
+      transform-origin: bottom;
+      opacity: 0.25;
+    }
+
+    .glitch-input-wrapper .holo-input:focus {
+      border-color: transparent;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.14), rgba(15, 23, 42, 0.9));
+      color: #f8fafc;
+    }
+
+    .glitch-input-wrapper .holo-input:focus ~ .input-border {
+      opacity: 1;
+      border-color: rgba(56, 189, 248, 0.65);
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.28);
+    }
+
+    .glitch-input-wrapper .holo-input:focus ~ .input-corners .corner {
+      width: 1.15rem;
+      height: 1.15rem;
+      border-width: 3px;
+      opacity: 1;
+    }
+
+    .glitch-input-wrapper .holo-input:focus ~ .input-glow {
+      opacity: 1;
+    }
+
+    .glitch-input-wrapper .holo-input:focus ~ .input-scanline {
+      animation: scan-vertical 4s linear infinite;
+    }
+
+    .glitch-input-wrapper .holo-input:focus ~ .input-data-stream {
+      opacity: 1;
+    }
+
+    .glitch-input-wrapper .holo-input:focus ~ .input-data-stream .stream-bar {
+      animation: data-pulse 2s infinite;
+      animation-delay: calc(var(--i) * 0.1s);
+      opacity: 0.9;
+    }
+
+    @keyframes glitch-label {
+      0% {
+        transform: translate(0);
+        clip-path: inset(0 0 0 0);
+      }
+      20% {
+        transform: translate(-0.2rem, 0.1rem);
+        clip-path: inset(50% 0 20% 0);
+      }
+      40% {
+        transform: translate(0.1rem, -0.1rem);
+        clip-path: inset(20% 0 60% 0);
+      }
+      60% {
+        transform: translate(-0.15rem, 0.1rem);
+        clip-path: inset(80% 0 5% 0);
+      }
+      80% {
+        transform: translate(0.15rem, -0.15rem);
+        clip-path: inset(30% 0 45% 0);
+      }
+      100% {
+        transform: translate(0);
+        clip-path: inset(0 0 0 0);
+      }
+    }
+
+    @keyframes scan-vertical {
+      0% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+      25% {
+        opacity: 0.5;
+      }
+      75% {
+        opacity: 0.5;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+    }
+
+    @keyframes data-pulse {
+      0%,
+      100% {
+        transform: scaleY(0.2);
+        opacity: 0.3;
+      }
+      50% {
+        transform: scaleY(1);
+        opacity: 0.8;
+      }
+    }
+
     header {
       position: sticky;
       top: 0;
@@ -11187,6 +11479,149 @@
         }
       });
     })();
+
+    const HOLO_SUPPORTED_TYPES = ['text', 'email', 'password', 'search', 'url', 'number', 'tel'];
+    let holoAutoId = 0;
+
+    function buildHoloLabel(input) {
+      const dataLabel = input.getAttribute('data-label');
+      if (dataLabel && dataLabel.trim()) return dataLabel.trim();
+      const ariaLabel = input.getAttribute('aria-label');
+      if (ariaLabel && ariaLabel.trim()) return ariaLabel.trim();
+      const placeholder = input.getAttribute('data-original-placeholder');
+      if (placeholder && placeholder.trim()) return placeholder.trim();
+      const rawPlaceholder = input.getAttribute('placeholder');
+      if (rawPlaceholder && rawPlaceholder.trim()) return rawPlaceholder.trim();
+      const name = input.getAttribute('name');
+      if (name && name.trim()) {
+        return name
+          .replace(/[-_]+/g, ' ')
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .trim();
+      }
+      return 'Input';
+    }
+
+    function convertToHoloInput(input) {
+      if (!input || input.dataset.holoProcessed === 'true') return;
+      const typeAttr = (input.getAttribute('type') || 'text').toLowerCase();
+      if (input.hasAttribute('type') && !HOLO_SUPPORTED_TYPES.includes(typeAttr)) {
+        return;
+      }
+      if (!input.hasAttribute('type')) {
+        input.setAttribute('type', 'text');
+      }
+
+      const parent = input.parentNode;
+      if (!parent || input.closest('.glitch-input-wrapper')) {
+        input.dataset.holoProcessed = 'true';
+        input.classList.add('holo-input');
+        return;
+      }
+
+      const nextSibling = input.nextSibling;
+      const originalPlaceholder = input.getAttribute('placeholder') || '';
+      input.setAttribute('data-original-placeholder', originalPlaceholder);
+      input.setAttribute('placeholder', ' ');
+      input.classList.add('holo-input');
+
+      if (!input.id || !input.id.trim()) {
+        holoAutoId += 1;
+        input.id = `holo-input-${holoAutoId}`;
+      }
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'glitch-input-wrapper';
+
+      const container = document.createElement('div');
+      container.className = 'input-container';
+
+      const label = document.createElement('label');
+      const labelText = buildHoloLabel(input);
+      const labelDisplay = labelText.toUpperCase();
+      label.setAttribute('for', input.id);
+      label.className = 'input-label';
+      label.dataset.text = labelDisplay;
+      label.textContent = labelDisplay;
+
+      const border = document.createElement('div');
+      border.className = 'input-border';
+
+      const scanline = document.createElement('div');
+      scanline.className = 'input-scanline';
+
+      const glow = document.createElement('div');
+      glow.className = 'input-glow';
+
+      const dataStream = document.createElement('div');
+      dataStream.className = 'input-data-stream';
+      for (let i = 0; i < 10; i += 1) {
+        const bar = document.createElement('div');
+        bar.className = 'stream-bar';
+        bar.style.setProperty('--i', i);
+        dataStream.appendChild(bar);
+      }
+
+      const corners = document.createElement('div');
+      corners.className = 'input-corners';
+      ['tl', 'tr', 'bl', 'br'].forEach(position => {
+        const corner = document.createElement('div');
+        corner.className = `corner corner-${position}`;
+        corners.appendChild(corner);
+      });
+
+      container.appendChild(input);
+      container.appendChild(label);
+      container.appendChild(border);
+      container.appendChild(scanline);
+      container.appendChild(glow);
+      container.appendChild(dataStream);
+      container.appendChild(corners);
+      wrapper.appendChild(container);
+
+      if (nextSibling) {
+        parent.insertBefore(wrapper, nextSibling);
+      } else {
+        parent.appendChild(wrapper);
+      }
+
+      input.dataset.holoProcessed = 'true';
+    }
+
+    function initializeHoloInputs(context = document) {
+      const selectors = HOLO_SUPPORTED_TYPES.map(type => `input[type="${type}"]`).concat('input:not([type])');
+      const candidates = context.querySelectorAll(selectors.join(', '));
+      candidates.forEach(convertToHoloInput);
+    }
+
+    function observeHoloInputs() {
+      const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          mutation.addedNodes.forEach(node => {
+            if (node.nodeType !== 1) return;
+            if (node.matches?.('.glitch-input-wrapper')) return;
+            if (node.matches?.('input')) {
+              convertToHoloInput(node);
+            }
+            const inputs = node.querySelectorAll?.('input');
+            if (inputs && inputs.length) {
+              inputs.forEach(convertToHoloInput);
+            }
+          });
+        });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        initializeHoloInputs();
+        observeHoloInputs();
+      }, { once: true });
+    } else {
+      initializeHoloInputs();
+      observeHoloInputs();
+    }
 
     handleNavigation();
     drainStoredScanQueue();
