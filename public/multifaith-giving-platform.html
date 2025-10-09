@@ -374,7 +374,7 @@
       color: var(--ink);
     }
 
-    .hero-list li span {
+    .hero-list li span:first-child {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -384,6 +384,19 @@
       background: rgba(212, 162, 76, 0.18);
       color: var(--accent);
       font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .hero-list li span:last-child {
+      display: block;
+      width: auto;
+      height: auto;
+      border-radius: 0;
+      background: none;
+      color: inherit;
+      font-weight: 600;
+      line-height: 1.4;
+      flex: 1;
     }
 
     section h2 {
