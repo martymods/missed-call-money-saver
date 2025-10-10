@@ -6989,8 +6989,12 @@
   ];
 
   const FAITH_LEADER_MAP = new Map(FAITH_LEADER_DECK.map(entry => [entry.faith, entry]));
-  const WIKIPEDIA_SUMMARY_ENDPOINT = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
-  const WIKIPEDIA_RELATED_ENDPOINT = 'https://en.wikipedia.org/api/rest_v1/page/related/';
+  const FAITH_LEADER_API_BASE = '/api/giving/faith-leaders';
+
+  function buildLeaderApiPath(slug) {
+    if (!slug) return '';
+    return `${FAITH_LEADER_API_BASE}/${encodeURIComponent(String(slug).trim().replace(/\s+/g, '_'))}`;
+  }
   const leaderSummaryCache = new Map();
   const leaderSignalsCache = new Map();
   let leaderTabButtons = [];
@@ -7246,12 +7250,18 @@
       return cached;
     }
     try {
-      const response = await fetch(`${WIKIPEDIA_SUMMARY_ENDPOINT}${encodeURIComponent(leader.wiki)}`);
+      const endpoint = buildLeaderApiPath(leader.wiki);
+      if (!endpoint) {
+        const fallback = leader?.story || '';
+        leaderSummaryCache.set(leader.wiki, fallback);
+        return fallback;
+      }
+      const response = await fetch(`${endpoint}/summary`, { cache: 'no-store' });
       if (!response.ok) {
         throw new Error('Unable to load summary');
       }
       const data = await response.json();
-      const summary = data?.extract || data?.description || leader.story || '';
+      const summary = data?.summary || data?.extract || data?.description || leader.story || '';
       leaderSummaryCache.set(leader.wiki, summary);
       return summary;
     } catch (error) {
@@ -7437,27 +7447,17 @@
       return leaderSignalsCache.get(leader.wiki) || [];
     }
     try {
-      const response = await fetch(`${WIKIPEDIA_RELATED_ENDPOINT}${encodeURIComponent(leader.wiki)}?redirect=true`);
+      const endpoint = buildLeaderApiPath(leader.wiki);
+      if (!endpoint) {
+        leaderSignalsCache.set(leader.wiki, []);
+        return [];
+      }
+      const response = await fetch(`${endpoint}/signals`, { cache: 'no-store' });
       if (!response.ok) {
         throw new Error('Unable to load related pages');
       }
       const data = await response.json();
-      const pages = Array.isArray(data?.pages) ? data.pages.slice(0, 4) : [];
-      const entries = pages
-        .map(page => {
-          if (!page) return null;
-          const title = page?.titles?.display || page?.title;
-          const url = page?.content_urls?.desktop?.page || page?.content_urls?.mobile?.page;
-          const description = page?.description || page?.extract;
-          if (!title) return null;
-          return {
-            text: title,
-            url,
-            meta: description || 'Live brief from Wikimedia feeds',
-            type: 'live'
-          };
-        })
-        .filter(Boolean);
+      const entries = Array.isArray(data?.entries) ? data.entries : [];
       leaderSignalsCache.set(leader.wiki, entries);
       return entries;
     } catch (error) {

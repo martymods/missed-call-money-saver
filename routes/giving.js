@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const fsp = fs.promises;
 const crypto = require('crypto');
+const fetch = require('node-fetch');
 const { getFaithMetrics } = require('../services/faithMetrics');
 
 const DATA_DIR = path.join(__dirname, '..', 'data', 'giving');
@@ -10,6 +11,11 @@ const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'uploads', 'giving');
 const ORGS_FILE = path.join(DATA_DIR, 'organizations.json');
 const CAMPAIGNS_FILE = path.join(DATA_DIR, 'campaigns.json');
 const COMMUNITY_FILE = path.join(DATA_DIR, 'community-campaigns.json');
+const WIKIPEDIA_API_BASE = 'https://en.wikipedia.org/api/rest_v1';
+const WIKIPEDIA_HEADERS = {
+  'accept': 'application/json; charset=utf-8',
+  'user-agent': 'DelcoTechDivision/1.0 (+https://www.delcotechdivision.com)'
+};
 
 const REGION_NARRATION_CONFIG = [
   {
@@ -202,6 +208,47 @@ function pickRandom(list) {
   return list[index];
 }
 
+function normalizeWikiTitle(value) {
+  if (!value) return '';
+  const trimmed = sanitizeString(value).replace(/\s+/g, ' ').replace(/\s/g, '_');
+  return trimmed;
+}
+
+async function fetchWikipediaJson(pathname) {
+  const url = `${WIKIPEDIA_API_BASE}${pathname}`;
+  const response = await fetch(url, { headers: WIKIPEDIA_HEADERS });
+  if (response.status === 404) {
+    return { ok: false, status: 404, data: null };
+  }
+  if (!response.ok) {
+    const error = new Error(`Wikipedia request failed with status ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  const data = await response.json();
+  return { ok: true, status: response.status, data };
+}
+
+function mapWikipediaRelatedEntries(pages) {
+  if (!Array.isArray(pages)) return [];
+  return pages
+    .slice(0, 4)
+    .map(page => {
+      if (!page) return null;
+      const title = page?.titles?.display || page?.title;
+      const url = page?.content_urls?.desktop?.page || page?.content_urls?.mobile?.page;
+      const description = page?.description || page?.extract || null;
+      if (!title) return null;
+      return {
+        text: title,
+        url,
+        meta: description || 'Live brief from Wikimedia feeds',
+        type: 'live',
+      };
+    })
+    .filter(Boolean);
+}
+
 function collapseWhitespace(value) {
   return String(value ?? '').replace(/\s+/g, ' ').trim();
 }
@@ -266,6 +313,42 @@ function createMockLink(baseUrl, campaignName) {
 
 function createGivingRouter({ stripe, hasStripe = false, getAppBaseUrl, openai = null }) {
   const router = express.Router();
+
+  router.get('/faith-leaders/:title/summary', async (req, res) => {
+    const title = normalizeWikiTitle(req.params?.title);
+    if (!title) {
+      return res.status(400).json({ error: 'leader_title_required' });
+    }
+    try {
+      const result = await fetchWikipediaJson(`/page/summary/${encodeURIComponent(title)}`);
+      if (!result.ok || !result.data) {
+        return res.json({ summary: null, missing: true });
+      }
+      const summary = result.data?.extract || result.data?.description || null;
+      res.json({ summary, page: result.data });
+    } catch (error) {
+      console.error('Failed to fetch Wikipedia summary', { title, error });
+      res.json({ summary: null, error: 'wikipedia_unreachable' });
+    }
+  });
+
+  router.get('/faith-leaders/:title/signals', async (req, res) => {
+    const title = normalizeWikiTitle(req.params?.title);
+    if (!title) {
+      return res.status(400).json({ error: 'leader_title_required' });
+    }
+    try {
+      const result = await fetchWikipediaJson(`/page/related/${encodeURIComponent(title)}?redirect=true`);
+      if (!result.ok || !result.data) {
+        return res.json({ entries: [], missing: true });
+      }
+      const entries = mapWikipediaRelatedEntries(result.data?.pages);
+      res.json({ entries, pages: result.data?.pages || [] });
+    } catch (error) {
+      console.error('Failed to fetch Wikipedia related pages', { title, error });
+      res.json({ entries: [], error: 'wikipedia_unreachable' });
+    }
+  });
 
   router.get('/organizations', async (_req, res, next) => {
     try {
