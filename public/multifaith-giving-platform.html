@@ -1532,6 +1532,19 @@
     .form-row {
       display: grid;
       gap: 16px;
+      grid-template-columns: 1fr;
+    }
+
+    .form-row label {
+      display: grid;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .form-row label > input,
+    .form-row label > select,
+    .form-row label > textarea {
+      width: 100%;
     }
 
     .form-actions {
