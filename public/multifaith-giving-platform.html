@@ -436,6 +436,489 @@
       gap: 14px;
     }
 
+    .leaders-lab {
+      --leaders-accent: var(--accent);
+      --leaders-accent-soft: rgba(212, 162, 76, 0.14);
+      margin: 80px 0;
+      padding: 48px;
+      border-radius: 32px;
+      border: 1px solid rgba(31, 41, 55, 0.12);
+      background: linear-gradient(135deg, rgba(212, 162, 76, 0.08), rgba(122, 157, 146, 0.08)), rgba(255, 255, 255, 0.86);
+      box-shadow: 0 24px 48px rgba(31, 41, 55, 0.16);
+      display: grid;
+      gap: 28px;
+    }
+
+    .leaders-lab-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+
+    .leaders-lab-head h2 {
+      margin-bottom: 14px;
+    }
+
+    .leaders-lab-ticker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      max-width: 360px;
+      margin-left: auto;
+    }
+
+    .leaders-ticker-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--leaders-accent-soft);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid rgba(31, 41, 55, 0.08);
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .leaders-ticker-chip strong {
+      color: var(--leaders-accent);
+    }
+
+    .leaders-lab-shell {
+      display: grid;
+      gap: 28px;
+    }
+
+    .leaders-tabs {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .leader-tab {
+      padding: 10px 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(31, 41, 55, 0.16);
+      background: rgba(255, 255, 255, 0.82);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: rgba(31, 41, 55, 0.72);
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .leader-tab:hover,
+    .leader-tab:focus {
+      transform: translateY(-2px);
+      border-color: var(--leaders-accent);
+      color: var(--leaders-accent);
+      outline: none;
+    }
+
+    .leader-tab.is-active {
+      background: var(--leaders-accent);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 14px 30px rgba(31, 41, 55, 0.18);
+    }
+
+    .leaders-body {
+      display: grid;
+      grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+      gap: 32px;
+      align-items: start;
+    }
+
+    .leaders-summary {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 28px;
+      border: 1px solid rgba(31, 41, 55, 0.1);
+      box-shadow: 0 18px 40px rgba(31, 41, 55, 0.12);
+      padding: 22px 24px;
+      display: grid;
+      gap: 22px;
+      position: sticky;
+      top: 108px;
+    }
+
+    .leaders-summary p {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.6;
+      color: rgba(31, 41, 55, 0.8);
+    }
+
+    .leaders-metrics {
+      display: grid;
+      gap: 12px;
+    }
+
+    .leader-metric {
+      background: rgba(31, 41, 55, 0.04);
+      border-radius: 18px;
+      padding: 16px 18px;
+      border: 1px solid rgba(31, 41, 55, 0.08);
+      border-left: 4px solid var(--leaders-accent);
+      display: grid;
+      gap: 6px;
+    }
+
+    .leader-metric strong {
+      font-size: 17px;
+      letter-spacing: -0.2px;
+      color: var(--ink);
+    }
+
+    .leader-metric span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .leader-metric span span {
+      font-size: 12px;
+      color: rgba(31, 41, 55, 0.6);
+      letter-spacing: 0.2px;
+    }
+
+    .leaders-pipelines h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: rgba(31, 41, 55, 0.65);
+    }
+
+    .leaders-pipelines ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .leaders-pipelines li {
+      background: rgba(31, 41, 55, 0.04);
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(31, 41, 55, 0.06);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .leaders-main {
+      display: grid;
+      gap: 24px;
+    }
+
+    .leaders-carousel {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .leaders-carousel-viewport {
+      overflow: hidden;
+      border-radius: 26px;
+      border: 1px solid rgba(31, 41, 55, 0.1);
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .leaders-carousel-track {
+      display: grid;
+      grid-auto-flow: column;
+      gap: 18px;
+      padding: 16px 18px 22px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+    }
+
+    .leaders-carousel-track::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .leaders-carousel-track::-webkit-scrollbar-thumb {
+      background: rgba(31, 41, 55, 0.15);
+      border-radius: 999px;
+    }
+
+    .leader-card {
+      min-width: 320px;
+      max-width: 320px;
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 22px;
+      border: 1px solid rgba(31, 41, 55, 0.1);
+      box-shadow: 0 18px 36px rgba(31, 41, 55, 0.16);
+      display: grid;
+      gap: 0;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      scroll-snap-align: center;
+    }
+
+    .leader-card:hover,
+    .leader-card:focus {
+      transform: translateY(-6px);
+      box-shadow: 0 22px 44px rgba(31, 41, 55, 0.22);
+      outline: none;
+    }
+
+    .leader-card.is-active {
+      border-color: var(--leaders-accent);
+      box-shadow: 0 26px 52px rgba(31, 41, 55, 0.26);
+      transform: translateY(-8px);
+    }
+
+    .leader-card-media {
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px 22px 0 0;
+    }
+
+    .leader-card-media img {
+      width: 100%;
+      height: 190px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .leader-card-body {
+      padding: 18px 20px 20px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .leader-card-header {
+      display: grid;
+      gap: 4px;
+    }
+
+    .leader-card-title {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.2px;
+    }
+
+    .leader-card-role {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .leader-card-stats {
+      display: grid;
+      gap: 6px;
+    }
+
+    .leader-card-stat {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: rgba(31, 41, 55, 0.78);
+      gap: 12px;
+    }
+
+    .leader-card-stat strong {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .leader-card-stat span {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      text-align: right;
+    }
+
+    .leader-card-stat small {
+      font-size: 11px;
+      color: rgba(31, 41, 55, 0.58);
+      letter-spacing: 0.2px;
+    }
+
+    .leader-card-story {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+      color: rgba(31, 41, 55, 0.75);
+      min-height: 66px;
+    }
+
+    .leader-tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .leader-tag {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--leaders-accent-soft);
+      color: rgba(31, 41, 55, 0.8);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .leaders-carousel-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(31, 41, 55, 0.08);
+      color: var(--ink);
+      font-size: 24px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .leaders-carousel-btn:hover,
+    .leaders-carousel-btn:focus {
+      background: var(--leaders-accent);
+      color: #fff;
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .leaders-carousel-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .leader-intel-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .leader-intel-block {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 22px;
+      border: 1px solid rgba(31, 41, 55, 0.1);
+      padding: 18px 20px;
+      display: grid;
+      gap: 12px;
+      box-shadow: 0 14px 32px rgba(31, 41, 55, 0.14);
+    }
+
+    .leader-intel-block h3 {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: rgba(31, 41, 55, 0.68);
+    }
+
+    .leader-intel-block p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.5;
+      color: rgba(31, 41, 55, 0.82);
+    }
+
+    .leader-briefing,
+    .leader-signals,
+    .leader-links {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .leader-briefing li,
+    .leader-signals li {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(31, 41, 55, 0.04);
+      border: 1px solid rgba(31, 41, 55, 0.06);
+      font-size: 14px;
+      line-height: 1.5;
+      color: rgba(31, 41, 55, 0.8);
+    }
+
+    .leader-signals li {
+      position: relative;
+      display: grid;
+      gap: 6px;
+    }
+
+    .leader-signal-entry a {
+      color: var(--leaders-accent);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .leader-signal-entry a:hover,
+    .leader-signal-entry a:focus {
+      text-decoration: underline;
+    }
+
+    .leader-signal-entry small {
+      font-size: 12px;
+      color: rgba(31, 41, 55, 0.6);
+      line-height: 1.4;
+    }
+
+    .leader-signal-entry.leader-signal-live {
+      border-color: var(--leaders-accent);
+      box-shadow: inset 0 0 0 1px rgba(212, 162, 76, 0.2);
+      background: rgba(212, 162, 76, 0.12);
+    }
+
+    .leader-signal-entry.leader-signal-loading {
+      font-style: italic;
+      color: rgba(31, 41, 55, 0.62);
+      background: rgba(31, 41, 55, 0.05);
+      animation: signalPulse 2s ease-in-out infinite;
+    }
+
+    .leader-signal-entry.leader-signal-placeholder {
+      color: rgba(31, 41, 55, 0.6);
+    }
+
+    @keyframes signalPulse {
+      0% {
+        opacity: 0.55;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0.55;
+      }
+    }
+
+    .leader-links li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .leader-links a {
+      font-weight: 600;
+      color: var(--leaders-accent);
+      text-decoration: none;
+    }
+
+    .leader-links a:hover,
+    .leader-links a:focus {
+      text-decoration: underline;
+    }
+
     .region-narration-card[data-state="loading"] {
       opacity: 0.8;
     }
@@ -1753,6 +2236,19 @@
         width: 100%;
         justify-content: flex-start;
       }
+
+      .leaders-lab {
+        padding: 36px 28px;
+      }
+
+      .leaders-body {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .leaders-summary {
+        position: relative;
+        top: auto;
+      }
     }
 
     @media (max-width: 720px) {
@@ -1777,6 +2273,32 @@
       .quick-stripe-card {
         padding: 24px;
         border-radius: 22px;
+      }
+      .leaders-lab {
+        padding: 30px 22px;
+        gap: 22px;
+      }
+
+      .leaders-lab-head {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .leaders-lab-ticker {
+        margin-left: 0;
+      }
+
+      .leaders-carousel {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .leaders-carousel-btn {
+        display: none;
+      }
+
+      .leader-card {
+        min-width: 260px;
+        max-width: 260px;
       }
 
       .quick-tabs {
@@ -2893,6 +3415,53 @@
         <button class="region-narration-stop" type="button" id="region-narration-stop" hidden data-i18n="regions.narrationStop">Stop</button>
       </div>
       <div class="status" id="region-narration-status" hidden></div>
+    </div>
+  </section>
+
+  <section id="leaders-lab" class="leaders-lab">
+    <div class="leaders-lab-head">
+      <div>
+        <h2>Global faith leadership dispatch</h2>
+        <p class="lead">Command a civilization-scale view of every tradition’s headline makers. Slide through active leaders, tap the data tabs, and watch live dossiers assemble from open knowledge feeds.</p>
+      </div>
+      <div class="leaders-lab-ticker" id="leaders-ticker" aria-live="polite"></div>
+    </div>
+    <div class="leaders-lab-shell">
+      <div class="leaders-tabs" id="leaders-tabs" role="tablist" aria-label="Faith leadership datasets"></div>
+      <div class="leaders-body">
+        <aside class="leaders-summary" id="leaders-summary-card">
+          <p id="leaders-summary"></p>
+          <div class="leaders-metrics" id="leaders-metrics" aria-live="polite"></div>
+          <div class="leaders-pipelines">
+            <h3>Campaign arcs</h3>
+            <ul id="leaders-pipelines"></ul>
+          </div>
+        </aside>
+        <div class="leaders-main">
+          <div class="leaders-carousel">
+            <button class="leaders-carousel-btn prev" id="leaders-prev" type="button" aria-label="Previous leader">‹</button>
+            <div class="leaders-carousel-viewport" id="leaders-viewport">
+              <div class="leaders-carousel-track" id="leaders-track"></div>
+            </div>
+            <button class="leaders-carousel-btn next" id="leaders-next" type="button" aria-label="Next leader">›</button>
+          </div>
+          <div class="leader-intel-grid">
+            <div class="leader-intel-block">
+              <h3>Live dossier</h3>
+              <p id="leader-story"></p>
+              <ul id="leader-briefing" class="leader-briefing"></ul>
+            </div>
+            <div class="leader-intel-block">
+              <h3>Signal watch</h3>
+              <ul id="leader-signals" class="leader-signals"></ul>
+            </div>
+            <div class="leader-intel-block">
+              <h3>Official channels</h3>
+              <ul id="leader-links" class="leader-links"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -4991,6 +5560,1431 @@
     }
   ];
 
+  const FAITH_LEADER_DECK = [
+    {
+      "faith": "christianity",
+      "label": "Christianity",
+      "accent": "#d4a24c",
+      "ticker": [
+        {
+          "label": "Global flock",
+          "value": "≈2.3B adherents"
+        },
+        {
+          "label": "Broadcast reach",
+          "value": "600+ TV & radio outlets"
+        },
+        {
+          "label": "Charity footprint",
+          "value": "140+ nations active relief"
+        }
+      ],
+      "summary": "Ecumenical networks coordinate worldwide sacraments, humanitarian corridors, and diplomatic envoys across Catholic, Orthodox, Anglican, and Charismatic movements.",
+      "metrics": [
+        {
+          "title": "World communion",
+          "value": "≈2.3B",
+          "detail": "1.3B Catholics, 180M Orthodox, 110M Anglicans, major Protestant fellowships"
+        },
+        {
+          "title": "Media footprint",
+          "value": "600+ outlets",
+          "detail": "Lakewood broadcasts, Vatican media, 20M+ combined social reach"
+        },
+        {
+          "title": "Relief pipelines",
+          "value": "Global Caritas",
+          "detail": "Caritas, Anglican Relief & Development, megachurch aid corridors"
+        }
+      ],
+      "pipelines": [
+        "Laudato Si’ diplomacy linking Vatican envoys to COP and UN summits.",
+        "Megachurch broadcast networks underwriting U.S. and Latin American disaster response.",
+        "Anglican & Orthodox synods coordinating cease-fire dialogues and reconstruction funds."
+      ],
+      "leaders": [
+        {
+          "id": "pope_francis",
+          "name": "Pope Francis",
+          "title": "Supreme Pontiff, Roman Catholic Church",
+          "story": "Argentine Jesuit pope championing social justice, migrants, and climate action.",
+          "wiki": "Pope_Francis",
+          "image": "religion/leaders/christianity/pop_francis.jpg",
+          "metrics": [
+            {
+              "label": "Catholic faithful",
+              "value": "1.3B",
+              "detail": "Parishes across 240+ nations"
+            },
+            {
+              "label": "Media presence",
+              "value": "7M+ followers",
+              "detail": "Pontifex accounts and Vatican media"
+            },
+            {
+              "label": "Diplomatic cadence",
+              "value": "Global summits",
+              "detail": "UN, COP, interfaith councils"
+            }
+          ],
+          "tags": [
+            "Laudato Si’",
+            "Synodality",
+            "Migrant advocacy"
+          ],
+          "operations": [
+            "Issues encyclicals and synod updates guiding Catholic social teaching on ecology and equity.",
+            "Deploys Caritas Internationalis for refugee corridors and frontline relief."
+          ],
+          "signals": [
+            "Latest homilies amplify cease-fire appeals and humanitarian truces.",
+            "Vatican updates highlight 2025 Jubilee and climate diplomacy tours."
+          ],
+          "links": [
+            {
+              "label": "Vatican News",
+              "url": "https://www.vaticannews.va/en.html"
+            },
+            {
+              "label": "X @Pontifex",
+              "url": "https://twitter.com/Pontifex"
+            }
+          ]
+        },
+        {
+          "id": "joel_osteen",
+          "name": "Joel Osteen",
+          "title": "Senior Pastor, Lakewood Church",
+          "story": "Televangelist broadcasting weekly services from Houston to a global audience.",
+          "wiki": "Joel_Osteen",
+          "image": "religion/leaders/christianity/Joel_Osteen.png",
+          "metrics": [
+            {
+              "label": "Weekly attendance",
+              "value": "≈52K",
+              "detail": "Largest U.S. megachurch"
+            },
+            {
+              "label": "Broadcast reach",
+              "value": "600+ outlets",
+              "detail": "Television and radio syndication"
+            },
+            {
+              "label": "Social reach",
+              "value": "20M+",
+              "detail": "Followers across major platforms"
+            }
+          ],
+          "tags": [
+            "Broadcast ministry",
+            "Prosperity messaging",
+            "Disaster relief"
+          ],
+          "operations": [
+            "Streams sermons into 183 countries with simultaneous translation hubs.",
+            "Mobilizes Lakewood relief drives for hurricanes and community care."
+          ],
+          "signals": [
+            "Charity Navigator lists Lakewood Church (EIN 74-6066273) as an active 501(c)(3).",
+            "Recent programming spotlights housing recovery and global prayer events."
+          ],
+          "links": [
+            {
+              "label": "Lakewood Church",
+              "url": "https://www.lakewoodchurch.com/"
+            },
+            {
+              "label": "Charity Navigator profile",
+              "url": "https://www.charitynavigator.org/ein/746066273"
+            }
+          ]
+        },
+        {
+          "id": "patriarch_kirill",
+          "name": "Patriarch Kirill of Moscow",
+          "title": "Patriarch, Russian Orthodox Church",
+          "story": "Eastern Orthodoxy leader shaping church-state messaging and global synods.",
+          "wiki": "Patriarch_Kirill_of_Moscow",
+          "image": "religion/leaders/christianity/patriarch_Kirill_of_Moscow.png",
+          "metrics": [
+            {
+              "label": "Orthodox faithful",
+              "value": "≈180M",
+              "detail": "Moscow Patriarchate claim"
+            },
+            {
+              "label": "Global councils",
+              "value": "Pan-Orthodox",
+              "detail": "Delegations across Europe, Asia, Americas"
+            },
+            {
+              "label": "Media coverage",
+              "value": "High",
+              "detail": "Statements tracked by international press"
+            }
+          ],
+          "tags": [
+            "Orthodox unity",
+            "Geopolitics",
+            "Council leadership"
+          ],
+          "operations": [
+            "Chairs Holy Synod directives impacting dioceses throughout Russia and the diaspora.",
+            "Coordinates Orthodox humanitarian agencies aligned with Moscow Patriarchate policy."
+          ],
+          "signals": [
+            "Recent sermons emphasize national identity and wartime messaging.",
+            "Ecumenical observers track his role in dialogues on Ukraine and global Orthodoxy."
+          ],
+          "links": [
+            {
+              "label": "Patriarchate News",
+              "url": "https://mospat.ru/en/"
+            },
+            {
+              "label": "OrthoChristian",
+              "url": "https://orthochristian.com/"
+            }
+          ]
+        },
+        {
+          "id": "justin_welby",
+          "name": "Archbishop Justin Welby",
+          "title": "Archbishop of Canterbury, Anglican Communion",
+          "story": "Global Anglican figure engaging governments on peace, development, and reconciliation.",
+          "wiki": "Justin_Welby",
+          "image": "religion/leaders/christianity/archbishop_Justin_Welby.png",
+          "metrics": [
+            {
+              "label": "Anglican faithful",
+              "value": "≈85–110M",
+              "detail": "Worldwide Anglican Communion"
+            },
+            {
+              "label": "Diplomatic missions",
+              "value": "Frequent",
+              "detail": "Peacemaking visits and Lambeth Palace convenings"
+            },
+            {
+              "label": "Media cadence",
+              "value": "Regular",
+              "detail": "Interviews, synod addresses, House of Lords remarks"
+            }
+          ],
+          "tags": [
+            "Peacemaking",
+            "Ecumenism",
+            "Development"
+          ],
+          "operations": [
+            "Leads Lambeth Palace task forces on conflict mediation and economic inclusion.",
+            "Partners with Anglican Relief & Development Fund on climate and refugee corridors."
+          ],
+          "signals": [
+            "Recent statements spotlight Gaza cease-fire advocacy and debt relief appeals.",
+            "Anglican Communion updates highlight pilgrimages across Africa and the Pacific."
+          ],
+          "links": [
+            {
+              "label": "Lambeth Palace",
+              "url": "https://www.archbishopofcanterbury.org/"
+            },
+            {
+              "label": "Anglican Communion",
+              "url": "https://www.anglicancommunion.org/"
+            }
+          ]
+        },
+        {
+          "id": "joyce_meyer",
+          "name": "Joyce Meyer",
+          "title": "President, Joyce Meyer Ministries",
+          "story": "Charismatic author and broadcaster mobilizing global humanitarian and teaching tours.",
+          "wiki": "Joyce_Meyer",
+          "image": "religion/leaders/christianity/joyce_Meyer.jpg",
+          "metrics": [
+            {
+              "label": "Media footprint",
+              "value": "600 TV / 400 radio",
+              "detail": "Enjoying Everyday Life syndication"
+            },
+            {
+              "label": "Books sold",
+              "value": "40M+",
+              "detail": "70+ titles across 100 languages"
+            },
+            {
+              "label": "Relief hubs",
+              "value": "Global",
+              "detail": "Hand of Hope disaster & medical outreaches"
+            }
+          ],
+          "tags": [
+            "Women’s ministry",
+            "Humanitarian aid",
+            "Media"
+          ],
+          "operations": [
+            "Coordinates Hand of Hope teams delivering trauma counseling, clean water, and food relief.",
+            "Hosts large-scale conferences empowering women leaders and faith-based entrepreneurs."
+          ],
+          "signals": [
+            "Recent broadcasts focus on resilience, financial stewardship, and disaster recovery efforts.",
+            "Foundation reports highlight medical missions and anti-trafficking partnerships."
+          ],
+          "links": [
+            {
+              "label": "Joyce Meyer Ministries",
+              "url": "https://joycemeyer.org/"
+            },
+            {
+              "label": "Enjoying Everyday Life",
+              "url": "https://joycemeyer.org/broadcasthome"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "faith": "islam",
+      "label": "Islam",
+      "accent": "#4e7c6b",
+      "ticker": [
+        {
+          "label": "Population reach",
+          "value": "≈1.9B Muslims"
+        },
+        {
+          "label": "Scholarship hubs",
+          "value": "Al-Azhar & Hawza"
+        },
+        {
+          "label": "Relief engines",
+          "value": "Zakat & waqf networks"
+        }
+      ],
+      "summary": "Sunni and Shia authorities orchestrate jurisprudence, national policy, and humanitarian drives from Cairo to Tehran, blending scholarly tradition with modern media outreach.",
+      "metrics": [
+        {
+          "title": "Population served",
+          "value": "≈1.9B",
+          "detail": "Iran, Egypt, Levant, Sub-Saharan and diaspora communities"
+        },
+        {
+          "title": "Scholarly institutions",
+          "value": "Al-Azhar & Hawza",
+          "detail": "Authoritative fatwa councils and seminaries"
+        },
+        {
+          "title": "Charitable flows",
+          "value": "Zakat networks",
+          "detail": "State and NGO relief programs across the Muslim world"
+        }
+      ],
+      "pipelines": [
+        "Supreme Leader directives steering Iranian governance, security, and relief priorities.",
+        "Al-Azhar convenings partnering with the Vatican, UN, and Muslim Council of Elders on peace.",
+        "Nation of Islam and global preachers mobilizing social justice and youth empowerment campaigns."
+      ],
+      "leaders": [
+        {
+          "id": "ali_khamenei",
+          "name": "Ayatollah Ali Khamenei",
+          "title": "Supreme Leader of Iran",
+          "story": "Iran’s highest authority overseeing state policy, military doctrine, and religious institutions.",
+          "wiki": "Ali_Khamenei",
+          "image": "religion/leaders/islam/ayatollah_Ali_Khamene.png",
+          "metrics": [
+            {
+              "label": "Shia population",
+              "value": "≈85M Iranians",
+              "detail": "Nearly 90% of Iran’s citizens"
+            },
+            {
+              "label": "Regional influence",
+              "value": "High",
+              "detail": "Guides Iraq, Syria, and Lebanon policy"
+            },
+            {
+              "label": "Media reach",
+              "value": "Millions",
+              "detail": "Official speeches, websites, and X"
+            }
+          ],
+          "tags": [
+            "Wilayat al-faqih",
+            "Regional policy",
+            "Clerical authority"
+          ],
+          "operations": [
+            "Issues binding guidance on domestic governance, foreign policy, and security strategy.",
+            "Oversees expansive religious endowments supporting education, relief, and media arms."
+          ],
+          "signals": [
+            "Recent speeches address Gaza, sanctions resistance, and technological self-reliance.",
+            "Office communiqués promote Islamic unity conferences and youth innovation centers."
+          ],
+          "links": [
+            {
+              "label": "Office of the Supreme Leader",
+              "url": "https://www.leader.ir/en"
+            },
+            {
+              "label": "X @Khamenei_ir",
+              "url": "https://twitter.com/khamenei_ir"
+            }
+          ]
+        },
+        {
+          "id": "ahmed_al_tayeb",
+          "name": "Sheikh Ahmed al-Tayeb",
+          "title": "Grand Imam of Al-Azhar",
+          "story": "Foremost Sunni scholar guiding Al-Azhar’s global education, fatwas, and interfaith diplomacy.",
+          "wiki": "Ahmed_el-Tayeb",
+          "image": "religion/leaders/islam/sheikh Ahmed al-Tayeb.jpg",
+          "metrics": [
+            {
+              "label": "Al-Azhar students",
+              "value": "Millions",
+              "detail": "Campuses and affiliates worldwide"
+            },
+            {
+              "label": "Interfaith summits",
+              "value": "Frequent",
+              "detail": "UN, Vatican, Human Fraternity agenda"
+            },
+            {
+              "label": "Fatwa output",
+              "value": "Daily",
+              "detail": "Dar al-Ifta guidance and media responses"
+            }
+          ],
+          "tags": [
+            "Al-Azhar",
+            "Interfaith dialogue",
+            "Sunni jurisprudence"
+          ],
+          "operations": [
+            "Leads Al-Azhar councils updating curricula, accreditation, and moderate jurisprudence.",
+            "Co-authored the Document on Human Fraternity championing pluralism and coexistence."
+          ],
+          "signals": [
+            "Recent visits include Abu Dhabi’s Abrahamic Family House and UN youth peace forums.",
+            "Statements tackle AI ethics, extremism prevention, and refugee integration."
+          ],
+          "links": [
+            {
+              "label": "Al-Azhar",
+              "url": "https://www.alazhar.eg/"
+            },
+            {
+              "label": "Muslim Council of Elders",
+              "url": "https://muslim-elders.com/en"
+            }
+          ]
+        },
+        {
+          "id": "ali_al_sistani",
+          "name": "Grand Ayatollah Ali al-Sistani",
+          "title": "Marja of Najaf",
+          "story": "Iraq’s senior Shia cleric whose guidance shapes politics, security, and social welfare.",
+          "wiki": "Ali_al-Sistani",
+          "image": "religion/leaders/islam/grand Ayatollah Ali al-Sistani.jpg",
+          "metrics": [
+            {
+              "label": "Iraqi Shia followers",
+              "value": "Millions",
+              "detail": "Najaf marja‘iyya network"
+            },
+            {
+              "label": "Political influence",
+              "value": "Decisive",
+              "detail": "Fatwas steer elections and reforms"
+            },
+            {
+              "label": "Relief directives",
+              "value": "Nationwide",
+              "detail": "Funds hospitals, IDPs, and scholarships"
+            }
+          ],
+          "tags": [
+            "Marja‘iyya",
+            "National reconciliation",
+            "Humanitarian aid"
+          ],
+          "operations": [
+            "Issues guidance stabilizing Iraqi institutions, security forces, and constitutional order.",
+            "Channels religious taxes into clinics, education trusts, and crisis response centers."
+          ],
+          "signals": [
+            "Recent messages call for calm amid protests and demand anti-corruption reforms.",
+            "Meetings with UNAMI stress sovereignty, minority protection, and service delivery."
+          ],
+          "links": [
+            {
+              "label": "Office of al-Sistani",
+              "url": "https://www.sistani.org/english/"
+            }
+          ]
+        },
+        {
+          "id": "ismail_menk",
+          "name": "Mufti Ismail Menk",
+          "title": "Scholar & motivational speaker",
+          "story": "Zimbabwe-born Sunni scholar delivering viral lectures and pastoral guidance worldwide.",
+          "wiki": "Ismail_ibn_Musa_Menk",
+          "image": "religion/leaders/islam/mufti_Ismail_Menk.jpg",
+          "metrics": [
+            {
+              "label": "Online followers",
+              "value": "Millions",
+              "detail": "YouTube, Instagram, X audiences"
+            },
+            {
+              "label": "Lecture tours",
+              "value": "Global",
+              "detail": "Annual circuits across six continents"
+            },
+            {
+              "label": "Charity drives",
+              "value": "Frequent",
+              "detail": "Partners with Muslim Aid and One Ummah"
+            }
+          ],
+          "tags": [
+            "Digital da‘wah",
+            "Motivational talks",
+            "Charity partnerships"
+          ],
+          "operations": [
+            "Produces daily reminders and long-form lectures with multilingual subtitles.",
+            "Champions zakat and sadaqah fundraising for health care, wells, and orphan care."
+          ],
+          "signals": [
+            "Recent series covers Ramadan preparation, mental wellbeing, and youth resilience.",
+            "Collaborates with Islamic Relief and local councils on disaster appeals."
+          ],
+          "links": [
+            {
+              "label": "MuftiMenk.com",
+              "url": "https://muftimenk.com/"
+            },
+            {
+              "label": "YouTube",
+              "url": "https://www.youtube.com/user/MuftiMenkOfficial"
+            }
+          ]
+        },
+        {
+          "id": "louis_farrakhan",
+          "name": "Louis Farrakhan",
+          "title": "Leader, Nation of Islam",
+          "story": "U.S. Black Muslim leader with significant cultural influence and controversy.",
+          "wiki": "Louis_Farrakhan",
+          "image": "religion/leaders/islam/louis_Farrakhan.jpg",
+          "metrics": [
+            {
+              "label": "Nation of Islam",
+              "value": "Tens of thousands",
+              "detail": "U.S. mosques and study groups"
+            },
+            {
+              "label": "Mass events",
+              "value": "Saviours’ Day",
+              "detail": "Annual conventions with national draw"
+            },
+            {
+              "label": "Media attention",
+              "value": "High",
+              "detail": "Extensive coverage and debate"
+            }
+          ],
+          "tags": [
+            "Nation of Islam",
+            "Civil rights",
+            "Controversy"
+          ],
+          "operations": [
+            "Organizes large conventions, economic initiatives, and neighborhood redevelopment projects.",
+            "Delivers lengthy addresses on racial justice, geopolitics, and NOI theology broadcast via Final Call."
+          ],
+          "signals": [
+            "Recent speeches emphasize economic independence and 2024 U.S. political strategy.",
+            "NOI media highlights farming cooperatives, youth academies, and conflict responses."
+          ],
+          "links": [
+            {
+              "label": "Nation of Islam",
+              "url": "https://www.noi.org/"
+            },
+            {
+              "label": "Final Call",
+              "url": "https://www.finalcall.com/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "faith": "judaism",
+      "label": "Judaism",
+      "accent": "#4a6fa5",
+      "ticker": [
+        {
+          "label": "Chief Rabbinate",
+          "value": "6M Israelis served"
+        },
+        {
+          "label": "Reform network",
+          "value": "≈2M North American members"
+        },
+        {
+          "label": "Digital services",
+          "value": "Global livestream worship"
+        }
+      ],
+      "summary": "Chief rabbis, Reform presidents, and innovative U.S. congregations balance halakhic courts, social justice, and interfaith outreach across Israel and the diaspora.",
+      "metrics": [
+        {
+          "title": "Global population",
+          "value": "≈15M",
+          "detail": "6M in Israel, 7M+ across diaspora communities"
+        },
+        {
+          "title": "Institutional reach",
+          "value": "Chief Rabbinate & URJ",
+          "detail": "Halakhic courts, 2M Reform Jews, 7K+ congregations"
+        },
+        {
+          "title": "Community programming",
+          "value": "Hybrid services",
+          "detail": "Livestream worship, social action cohorts, youth engagement"
+        }
+      ],
+      "pipelines": [
+        "Chief Rabbinate courts oversee marriage, kashrut, and conversion policy nationwide.",
+        "URJ congregations mobilize social justice, democracy, and climate campaigns across North America.",
+        "Progressive synagogues like IKAR and Central Synagogue pioneer digital-first ritual and civic coalitions."
+      ],
+      "leaders": [
+        {
+          "id": "angela_buchdahl",
+          "name": "Rabbi Angela Buchdahl",
+          "title": "Senior Rabbi, Central Synagogue",
+          "story": "Prominent Reform rabbi blending music, tradition, and civic advocacy in New York City.",
+          "wiki": "Angela_Warnick_Buchdahl",
+          "image": "religion/leaders/judaism/rabbi Angela Buchdahl.jpg",
+          "metrics": [
+            {
+              "label": "Congregants",
+              "value": "≈7,000",
+              "detail": "Central Synagogue members"
+            },
+            {
+              "label": "Livestream viewers",
+              "value": "Millions",
+              "detail": "Weekly services & High Holy Days"
+            },
+            {
+              "label": "Interfaith forums",
+              "value": "Frequent",
+              "detail": "Civic coalitions and national platforms"
+            }
+          ],
+          "tags": [
+            "Reform leadership",
+            "Interfaith",
+            "Music & prayer"
+          ],
+          "operations": [
+            "Leads hybrid worship, choirs, and social impact grants serving New York and global viewers.",
+            "Speaks nationwide on inclusion, Asian Jewish identity, and civic solidarity."
+          ],
+          "signals": [
+            "Recent sermons address antisemitism, democracy, and community resilience.",
+            "Central Synagogue podcasts spotlight local service partners and interfaith allies."
+          ],
+          "links": [
+            {
+              "label": "Central Synagogue",
+              "url": "https://www.centralsynagogue.org/"
+            },
+            {
+              "label": "Sermons & Music",
+              "url": "https://www.centralsynagogue.org/worship/sermons-music"
+            }
+          ]
+        },
+        {
+          "id": "david_yosef",
+          "name": "Rabbi David Yosef",
+          "title": "Sephardi Chief Rabbi of Israel",
+          "story": "Halakhic authority overseeing Sephardi rabbinical courts, kashrut, and Torah education.",
+          "wiki": "David_Yosef",
+          "image": "religion/leaders/judaism/rabbi David Yosef.jpg",
+          "metrics": [
+            {
+              "label": "Rabbinical courts",
+              "value": "Nationwide",
+              "detail": "Marriage, conversion, kashrut oversight"
+            },
+            {
+              "label": "Torah lectures",
+              "value": "Weekly",
+              "detail": "Kol Halacha broadcasts and shiurim"
+            },
+            {
+              "label": "Halakhic rulings",
+              "value": "Influential",
+              "detail": "Guides Sephardi practice worldwide"
+            }
+          ],
+          "tags": [
+            "Sephardi halakha",
+            "Chief Rabbinate",
+            "Scholarship"
+          ],
+          "operations": [
+            "Chairs Supreme Rabbinical Council shaping national religious services and certification.",
+            "Publishes Halacha Brurah volumes and hosts daily teachings for global communities."
+          ],
+          "signals": [
+            "Recent rulings cover Passover kashrut guidance and conversion standards.",
+            "Meets Israeli ministers on cost-of-living, religious services, and social cohesion."
+          ],
+          "links": [
+            {
+              "label": "Chief Rabbinate",
+              "url": "https://www.gov.il/en/departments/chiefrabbinate"
+            },
+            {
+              "label": "Kol Halacha",
+              "url": "https://www.kolhalacha.org/"
+            }
+          ]
+        },
+        {
+          "id": "kalman_meir_bar",
+          "name": "Rabbi Kalman Meir Bar",
+          "title": "Ashkenazi Chief Rabbi of Israel",
+          "story": "Ashkenazi chief rabbi guiding halakhic policy, security briefings, and diaspora ties.",
+          "wiki": "Kalman_Meir_Bar",
+          "image": "religion/leaders/judaism/rabbi Kalman Meir Ber.jpg",
+          "metrics": [
+            {
+              "label": "Synagogue network",
+              "value": "Largest",
+              "detail": "Hundreds of Ashkenazi communities"
+            },
+            {
+              "label": "Public briefings",
+              "value": "Frequent",
+              "detail": "National religious debates"
+            },
+            {
+              "label": "Kashrut oversight",
+              "value": "Nationwide",
+              "detail": "Certification and standards"
+            }
+          ],
+          "tags": [
+            "Chief Rabbinate",
+            "Halakhic policy",
+            "Community engagement"
+          ],
+          "operations": [
+            "Oversees rabbinical appointments, kashrut certification, and religious council coordination.",
+            "Advocates on security, conversion reform, and diaspora relations with Israeli leadership."
+          ],
+          "signals": [
+            "Recent addresses cover wartime pastoral care and unity appeals.",
+            "Chief Rabbinate circulars outline kosher certification digitization and training."
+          ],
+          "links": [
+            {
+              "label": "Religious Services Ministry",
+              "url": "https://www.gov.il/en/departments/ministry_of_religious_services"
+            }
+          ]
+        },
+        {
+          "id": "rick_jacobs",
+          "name": "Rabbi Rick Jacobs",
+          "title": "President, Union for Reform Judaism",
+          "story": "Leads the largest Jewish denomination in North America with a focus on social justice and movement strategy.",
+          "wiki": "Rick_Jacobs_(rabbi)",
+          "image": "religion/leaders/judaism/rabbi Rick Jacobs.jpg",
+          "metrics": [
+            {
+              "label": "Reform Jews",
+              "value": "≈2M",
+              "detail": "URJ-affiliated congregants"
+            },
+            {
+              "label": "Congregations",
+              "value": "800+",
+              "detail": "North American synagogues"
+            },
+            {
+              "label": "Advocacy campaigns",
+              "value": "Nationwide",
+              "detail": "Racial justice, democracy, climate"
+            }
+          ],
+          "tags": [
+            "URJ",
+            "Social justice",
+            "North America"
+          ],
+          "operations": [
+            "Guides URJ strategy on racial justice, youth engagement, and Israel-Diaspora relations.",
+            "Hosts Biennial gatherings and Religious Action Center initiatives for policy change."
+          ],
+          "signals": [
+            "Recent statements urge safeguarding democracy in the U.S. and Israel.",
+            "URJ launches youth voter outreach and congregational climate partnerships."
+          ],
+          "links": [
+            {
+              "label": "URJ",
+              "url": "https://urj.org/"
+            },
+            {
+              "label": "Religious Action Center",
+              "url": "https://rac.org/"
+            }
+          ]
+        },
+        {
+          "id": "sharon_brous",
+          "name": "Rabbi Sharon Brous",
+          "title": "Founding Rabbi, IKAR",
+          "story": "Progressive Jewish leader fusing ritual innovation with social change in Los Angeles.",
+          "wiki": "Sharon_Brous",
+          "image": "religion/leaders/judaism/rabbi Sharon Brous.png",
+          "metrics": [
+            {
+              "label": "IKAR network",
+              "value": "Growing",
+              "detail": "LA membership and national partners"
+            },
+            {
+              "label": "National platform",
+              "value": "High",
+              "detail": "Top-ranked influential rabbi"
+            },
+            {
+              "label": "Civic campaigns",
+              "value": "Ongoing",
+              "detail": "Housing justice, racial equity"
+            }
+          ],
+          "tags": [
+            "IKAR",
+            "Civic activism",
+            "Progressive Judaism"
+          ],
+          "operations": [
+            "Designs immersive services blending liturgy, art, and activism for multifaith coalitions.",
+            "Speaks at national gatherings on democracy, belonging, and shared society."
+          ],
+          "signals": [
+            "Recent sermons address Israeli democracy protests and coalition building.",
+            "IKAR newsletters highlight refugee sponsorships and mutual aid pods."
+          ],
+          "links": [
+            {
+              "label": "IKAR",
+              "url": "https://www.ikar-la.org/"
+            },
+            {
+              "label": "TED Talk",
+              "url": "https://www.ted.com/talks/rabbi_sharon_brous"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "faith": "hinduism",
+      "label": "Hinduism",
+      "accent": "#c9772d",
+      "ticker": [
+        {
+          "label": "Yoga programs",
+          "value": "11M+ digital followers"
+        },
+        {
+          "label": "Volunteer corps",
+          "value": "≈4M RSS swayamsevaks"
+        },
+        {
+          "label": "Humanitarian drives",
+          "value": "Rally for Rivers & Amma relief"
+        }
+      ],
+      "summary": "Hindu teachers steward expansive yoga schools, volunteer corps, and nationalist movements powering wellness, ecology, and policy influence across India and the diaspora.",
+      "metrics": [
+        {
+          "title": "Global students",
+          "value": "800M+ touched",
+          "detail": "Art of Living claims since 1981"
+        },
+        {
+          "title": "Digital subscribers",
+          "value": "11M+",
+          "detail": "Sadhguru YouTube community"
+        },
+        {
+          "title": "Volunteer capacity",
+          "value": "≈4M",
+          "detail": "RSS swayamsevaks and seva brigades"
+        }
+      ],
+      "pipelines": [
+        "Isha Foundation campaigns like Rally for Rivers and Save Soil restore ecology.",
+        "Art of Living peace delegations deliver trauma relief, breathwork, and conflict mediation worldwide.",
+        "RSS and Patanjali networks coordinate education, health camps, and political mobilization."
+      ],
+      "leaders": [
+        {
+          "id": "sadhguru",
+          "name": "Sadhguru (Jaggi Vasudev)",
+          "title": "Founder, Isha Foundation",
+          "story": "Yogi and author leading Inner Engineering programs and global ecological campaigns.",
+          "wiki": "Sadhguru",
+          "image": "religion/leaders/hinduism/sadhguru Jaggi Vasudev.png",
+          "metrics": [
+            {
+              "label": "YouTube audience",
+              "value": "11M+",
+              "detail": "Daily yoga & wisdom videos"
+            },
+            {
+              "label": "Global centers",
+              "value": "300+",
+              "detail": "Isha Foundation hubs"
+            },
+            {
+              "label": "Environmental drives",
+              "value": "Massive",
+              "detail": "Rally for Rivers, Save Soil"
+            }
+          ],
+          "tags": [
+            "Isha Foundation",
+            "Save Soil",
+            "UN speaker"
+          ],
+          "operations": [
+            "Hosts forums at the UN, WEF, and universities on ecology, youth, and mental resilience.",
+            "Runs tree planting, agroforestry, and rural education programs through Isha outreach."
+          ],
+          "signals": [
+            "Latest campaigns push Save Soil policy adoption and farmer outreach.",
+            "Podcasts highlight youth leadership, science partnerships, and Conscious Planet updates."
+          ],
+          "links": [
+            {
+              "label": "Isha Foundation",
+              "url": "https://isha.sadhguru.org/"
+            },
+            {
+              "label": "Conscious Planet",
+              "url": "https://consciousplanet.org/"
+            }
+          ]
+        },
+        {
+          "id": "ravi_shankar",
+          "name": "Sri Sri Ravi Shankar",
+          "title": "Founder, Art of Living",
+          "story": "Spiritual teacher running breathwork, mediation, and humanitarian programs in 180 countries.",
+          "wiki": "Ravi_Shankar_(spiritual_leader)",
+          "image": "religion/leaders/hinduism/sri Sri Ravi Shankar.jpg",
+          "metrics": [
+            {
+              "label": "Global programs",
+              "value": "180 countries",
+              "detail": "Art of Living instructors"
+            },
+            {
+              "label": "Claimed impact",
+              "value": "800M+",
+              "detail": "Participants in stress-relief courses"
+            },
+            {
+              "label": "Social followers",
+              "value": "20M+",
+              "detail": "Across major networks"
+            }
+          ],
+          "tags": [
+            "Art of Living",
+            "Peace mediation",
+            "Breathwork"
+          ],
+          "operations": [
+            "Facilitates trauma relief, prison programs, and conflict mediation from Colombia to Kashmir.",
+            "Organizes mega-events such as the World Culture Festival drawing millions of attendees."
+          ],
+          "signals": [
+            "Recent tours include European peace concerts and youth mental health summits.",
+            "UNDP partnerships with Art of Living advance climate resilience training."
+          ],
+          "links": [
+            {
+              "label": "Art of Living",
+              "url": "https://www.artofliving.org/"
+            },
+            {
+              "label": "Gurudev social",
+              "url": "https://www.facebook.com/SriSriRaviShankar"
+            }
+          ]
+        },
+        {
+          "id": "amma",
+          "name": "Mata Amritanandamayi (Amma)",
+          "title": "Founder, Embracing the World",
+          "story": "Hugging saint providing darshan, humanitarian relief, and global education projects.",
+          "wiki": "Mata_Amritanandamayi",
+          "image": "religion/leaders/hinduism/mata Amritanandamayi Amma.jpg",
+          "metrics": [
+            {
+              "label": "People embraced",
+              "value": "33M+",
+              "detail": "Worldwide darshan tours"
+            },
+            {
+              "label": "Humanitarian spend",
+              "value": "Billions INR",
+              "detail": "Hospitals, housing, scholarships"
+            },
+            {
+              "label": "Ashram network",
+              "value": "Global",
+              "detail": "Amritapuri and international centers"
+            }
+          ],
+          "tags": [
+            "Amma",
+            "Humanitarian aid",
+            "Compassion"
+          ],
+          "operations": [
+            "Runs hospitals, universities, orphanages, and disaster relief through Embracing the World.",
+            "Leads hugging darshan tours raising funds for global relief and spiritual instruction."
+          ],
+          "signals": [
+            "ReliefWeb briefs cite Amma’s teams aiding floods, earthquakes, and refugee support.",
+            "Amrita Vishwa Vidyapeetham launches clean water and robotics initiatives."
+          ],
+          "links": [
+            {
+              "label": "Embracing the World",
+              "url": "https://www.embracingtheworld.org/"
+            },
+            {
+              "label": "Amritapuri",
+              "url": "https://www.amritapuri.org/"
+            }
+          ]
+        },
+        {
+          "id": "baba_ramdev",
+          "name": "Baba Ramdev",
+          "title": "Co-founder, Patanjali Ayurved",
+          "story": "Yoga entrepreneur and activist influencing wellness markets and nationalist politics.",
+          "wiki": "Baba_Ramdev",
+          "image": "religion/leaders/hinduism/baba Ramdev.jpg",
+          "metrics": [
+            {
+              "label": "Patanjali revenue",
+              "value": "₹10,664 crore",
+              "detail": "FY2022 turnover"
+            },
+            {
+              "label": "Yoga broadcasts",
+              "value": "Daily",
+              "detail": "Millions of viewers"
+            },
+            {
+              "label": "Political mobilization",
+              "value": "High",
+              "detail": "Anti-corruption & nationalist rallies"
+            }
+          ],
+          "tags": [
+            "Patanjali",
+            "Yoga televangelist",
+            "Activism"
+          ],
+          "operations": [
+            "Hosts national yoga camps and daily television sessions promoting Ayurveda and fitness.",
+            "Expands Patanjali FMCG, pharmaceuticals, and farmer cooperatives across India."
+          ],
+          "signals": [
+            "Recent addresses push indigenous medicine, election reforms, and fitness missions.",
+            "Patanjali announces new wellness centers and rural supply-chain investments."
+          ],
+          "links": [
+            {
+              "label": "Patanjali Ayurved",
+              "url": "https://www.patanjaliayurved.net/"
+            },
+            {
+              "label": "Yoga channel",
+              "url": "https://www.youtube.com/c/SwamiRamdevOfficial"
+            }
+          ]
+        },
+        {
+          "id": "mohan_bhagwat",
+          "name": "Mohan Bhagwat",
+          "title": "Sarsanghchalak, RSS",
+          "story": "Leader of India’s largest Hindu nationalist volunteer organization shaping social policy.",
+          "wiki": "Mohan_Bhagwat",
+          "image": "religion/leaders/hinduism/mohan Bhagwat.png",
+          "metrics": [
+            {
+              "label": "RSS volunteers",
+              "value": "≈4M",
+              "detail": "Swayamsevak network"
+            },
+            {
+              "label": "Public addresses",
+              "value": "Frequent",
+              "detail": "Nationwide tours and Vijayadashami speech"
+            },
+            {
+              "label": "Policy influence",
+              "value": "Significant",
+              "detail": "Guides BJP-aligned social agenda"
+            }
+          ],
+          "tags": [
+            "RSS",
+            "Nation-building",
+            "Volunteerism"
+          ],
+          "operations": [
+            "Guides daily shakhas, service projects, and ideological training for RSS cadres.",
+            "Engages government leaders on education, social harmony, and national security."
+          ],
+          "signals": [
+            "Latest speeches stress social cohesion, indigenous knowledge, and economic self-reliance.",
+            "RSS relief teams deploy for floods, pandemics, and rural development."
+          ],
+          "links": [
+            {
+              "label": "RSS",
+              "url": "https://www.rss.org/"
+            },
+            {
+              "label": "Organiser Weekly",
+              "url": "https://organiser.org/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "faith": "buddhism",
+      "label": "Buddhism",
+      "accent": "#6f86c3",
+      "ticker": [
+        {
+          "label": "Tibetan leadership",
+          "value": "Global compassion tours"
+        },
+        {
+          "label": "Thai Sangha",
+          "value": "≈65M Buddhists"
+        },
+        {
+          "label": "Lay movements",
+          "value": "11M SGI members"
+        }
+      ],
+      "summary": "Tibetan lamas, Thai patriarchs, and lay Buddhist movements pair contemplative training with peace advocacy, humanitarian relief, and education across continents.",
+      "metrics": [
+        {
+          "title": "Followers engaged",
+          "value": "Hundreds of millions",
+          "detail": "Tibetan, Theravada, and Nichiren communities"
+        },
+        {
+          "title": "Education hubs",
+          "value": "Retreat centers",
+          "detail": "Monasteries and dharma centers worldwide"
+        },
+        {
+          "title": "Peace advocacy",
+          "value": "Global",
+          "detail": "Nobel laureate diplomacy and SGI dialogues"
+        }
+      ],
+      "pipelines": [
+        "Dalai Lama and Tibetan leaders conduct compassion tours and human-rights advocacy worldwide.",
+        "Karmapa and Panchen Lama oversee monastic education, environmental programs, and digital archives.",
+        "Thai Sangha and Soka Gakkai run schools, disaster relief, and youth peace initiatives."
+      ],
+      "leaders": [
+        {
+          "id": "dalai_lama",
+          "name": "Dalai Lama (14th)",
+          "title": "Spiritual leader of Tibetan Buddhism",
+          "story": "Nobel Peace laureate advocating compassion, nonviolence, and Tibetan autonomy.",
+          "wiki": "14th_Dalai_Lama",
+          "image": "religion/leaders/buddhism/dalai Lama 14th.jpg",
+          "metrics": [
+            {
+              "label": "Global followers",
+              "value": "Millions",
+              "detail": "Tibetan and worldwide devotees"
+            },
+            {
+              "label": "International visits",
+              "value": "Frequent",
+              "detail": "Engagements with world leaders"
+            },
+            {
+              "label": "Digital reach",
+              "value": "Massive",
+              "detail": "Livestreamed teachings & social media"
+            }
+          ],
+          "tags": [
+            "Tibetan Buddhism",
+            "Peace prize",
+            "Compassion"
+          ],
+          "operations": [
+            "Delivers teachings on secular ethics, compassion, and Tibetan autonomy to global audiences.",
+            "Supports Tibetan exile education, health, and refugee services from Dharamsala."
+          ],
+          "signals": [
+            "Recent dialogues explore neuroscience of compassion and youth leadership.",
+            "Upcoming schedule includes European teachings and interfaith panels."
+          ],
+          "links": [
+            {
+              "label": "Dalai Lama",
+              "url": "https://www.dalailama.com/"
+            },
+            {
+              "label": "Office of Tibet",
+              "url": "https://tibet.net/"
+            }
+          ]
+        },
+        {
+          "id": "ogyen_trinley_dorje",
+          "name": "Ogyen Trinley Dorje",
+          "title": "17th Karmapa",
+          "story": "Head of the Karma Kagyu school teaching across Asia, Europe, and the Americas.",
+          "wiki": "Ogyen_Trinley_Dorje",
+          "image": "religion/leaders/buddhism/ogyen Trinley Dorje 17th Karmapa.jpg",
+          "metrics": [
+            {
+              "label": "Kagyu centers",
+              "value": "Global",
+              "detail": "Hundreds of affiliated monasteries"
+            },
+            {
+              "label": "Teaching tours",
+              "value": "Regular",
+              "detail": "Asia, Europe, North America"
+            },
+            {
+              "label": "Environmental programs",
+              "value": "Active",
+              "detail": "Khoryug & youth eco-initiatives"
+            }
+          ],
+          "tags": [
+            "17th Karmapa",
+            "Digital dharma",
+            "Environment"
+          ],
+          "operations": [
+            "Leads Kagyu Monlam, digitizes manuscripts, and mentors monastics on environmental stewardship.",
+            "Hosts virtual teachings connecting diaspora communities with Himalayan monasteries."
+          ],
+          "signals": [
+            "Recent webcasts emphasize monastic education reform and compassionate activism.",
+            "Khoryug network expands glacier and river protection projects."
+          ],
+          "links": [
+            {
+              "label": "Kagyu Office",
+              "url": "https://www.kagyuoffice.org/"
+            },
+            {
+              "label": "Karmapa YouTube",
+              "url": "https://www.youtube.com/c/karmapafoundation"
+            }
+          ]
+        },
+        {
+          "id": "gyaltsen_norbu",
+          "name": "Gyaltsen Norbu (11th Panchen Lama)",
+          "title": "State-recognized Panchen Lama",
+          "story": "Chinese-recognized Panchen Lama overseeing Buddhist education in Tibetan regions.",
+          "wiki": "Gyaincain_Norbu",
+          "image": "religion/leaders/buddhism/gyaltsen Norbu 11th Panchen Lama.jpg",
+          "metrics": [
+            {
+              "label": "Monastic oversight",
+              "value": "Tibet & China",
+              "detail": "State-sanctioned monasteries"
+            },
+            {
+              "label": "Education programs",
+              "value": "Expanding",
+              "detail": "Buddhist academies in Tibet and Beijing"
+            },
+            {
+              "label": "Official events",
+              "value": "Regular",
+              "detail": "Forums, ordinations, and state ceremonies"
+            }
+          ],
+          "tags": [
+            "Panchen Lama",
+            "Chinese administration",
+            "Education"
+          ],
+          "operations": [
+            "Leads Buddhist councils and ordination ceremonies within Chinese-governed monasteries.",
+            "Supports cultural preservation projects aligned with state development plans."
+          ],
+          "signals": [
+            "Recent appearances include Beijing Buddhist forums and Tibet development conferences.",
+            "Chinese media highlight his emphasis on patriotism and religious harmony."
+          ],
+          "links": [
+            {
+              "label": "Xinhua coverage",
+              "url": "https://english.news.cn/"
+            },
+            {
+              "label": "China Buddhism",
+              "url": "http://www.chinabuddhism.com.cn/en/"
+            }
+          ]
+        },
+        {
+          "id": "thai_patriarch",
+          "name": "Somdet Phra Ariyavongsagatanana IX",
+          "title": "Supreme Patriarch of Thailand",
+          "story": "Head of the Thai Buddhist monastic order advising government and royal ceremonies.",
+          "wiki": "Somdet_Phra_Ariyavongsagatanana_(Amborn_Ambaro)",
+          "image": "religion/leaders/buddhism/supreme Patriarch of Thailand Somdet Phra Ariyavongsagatanana IX.jpg",
+          "metrics": [
+            {
+              "label": "Thai Buddhists",
+              "value": "≈65M",
+              "detail": "National sangha under his guidance"
+            },
+            {
+              "label": "State ceremonies",
+              "value": "Key role",
+              "detail": "Royal and national rites"
+            },
+            {
+              "label": "Monastic reforms",
+              "value": "Active",
+              "detail": "Education and disciplinary oversight"
+            }
+          ],
+          "tags": [
+            "Thai Sangha",
+            "Monastic governance",
+            "Royal council"
+          ],
+          "operations": [
+            "Chairs Supreme Sangha Council overseeing 40K+ temples and monastic education.",
+            "Advises Thai government on ethics, disaster relief, and youth development."
+          ],
+          "signals": [
+            "Recent directives emphasize digital monk training and anti-corruption standards.",
+            "Coordinates Buddhist relief for floods and pandemic recovery efforts."
+          ],
+          "links": [
+            {
+              "label": "Thai Sangha News",
+              "url": "https://www.onab.go.th/"
+            },
+            {
+              "label": "Bangkok Post religion",
+              "url": "https://www.bangkokpost.com/life/social-and-lifestyle"
+            }
+          ]
+        },
+        {
+          "id": "daisaku_ikeda",
+          "name": "Daisaku Ikeda",
+          "title": "President Emeritus, Soka Gakkai International",
+          "story": "Lay Buddhist philosopher and peace activist guiding SGI’s 11M members worldwide.",
+          "wiki": "Daisaku_Ikeda",
+          "image": "religion/leaders/buddhism/daisaku Ikeda.jpg",
+          "metrics": [
+            {
+              "label": "SGI members",
+              "value": "11M+",
+              "detail": "192 countries and territories"
+            },
+            {
+              "label": "Peace proposals",
+              "value": "Annual",
+              "detail": "Submissions to the United Nations"
+            },
+            {
+              "label": "Institutions",
+              "value": "Global",
+              "detail": "Schools, museums, culture centers"
+            }
+          ],
+          "tags": [
+            "SGI",
+            "Peace activism",
+            "Education"
+          ],
+          "operations": [
+            "Authored yearly peace proposals advancing nuclear abolition and human dignity.",
+            "Guided SGI humanitarian relief, education initiatives, and interfaith dialogues worldwide."
+          ],
+          "signals": [
+            "Recent SGI statements emphasize nuclear disarmament and youth empowerment.",
+            "Ikeda Center releases dialogues on value creation and global citizenship."
+          ],
+          "links": [
+            {
+              "label": "Soka Gakkai International",
+              "url": "https://www.sgi.org/"
+            },
+            {
+              "label": "Ikeda Center",
+              "url": "https://www.ikedacenter.org/"
+            }
+          ]
+        }
+      ]
+    }
+  ];
+
+  const FAITH_LEADER_MAP = new Map(FAITH_LEADER_DECK.map(entry => [entry.faith, entry]));
+  const WIKIPEDIA_SUMMARY_ENDPOINT = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
+  const WIKIPEDIA_RELATED_ENDPOINT = 'https://en.wikipedia.org/api/rest_v1/page/related/';
+  const leaderSummaryCache = new Map();
+  const leaderSignalsCache = new Map();
+  let leaderTabButtons = [];
+  let leaderCardEntries = [];
+  let currentLeaderConfig = null;
+
+
   const state = {
     orgs: [],
     campaignsByOrg: new Map(),
@@ -5015,12 +7009,612 @@
     narrationContinuous: false,
     narrationCooldownUntil: 0,
     pendingNarrationSlideId: null,
+    leaderFaith: null,
+    leaderIndex: 0,
+    activeLeaderId: null,
     language: DEFAULT_LANGUAGE
   };
 
   const QUICK_FAITH_MAP = new Map(QUICK_FAITHS.map((faith) => [faith.key, faith]));
 
   const STRIPE_MAX_AMOUNT = 999999999999;
+
+  function getFaithLeaderConfig(faith) {
+    if (!faith) return null;
+    return FAITH_LEADER_MAP.get(faith) || null;
+  }
+
+  function setLeadersAccent(color) {
+    const section = els.leadersLab;
+    if (!section) return;
+    if (color) {
+      section.style.setProperty('--leaders-accent', color);
+      const soft = hexToRgba(color, 0.18) || 'rgba(212, 162, 76, 0.14)';
+      section.style.setProperty('--leaders-accent-soft', soft);
+    } else {
+      section.style.removeProperty('--leaders-accent');
+      section.style.removeProperty('--leaders-accent-soft');
+    }
+  }
+
+  function clearChildren(node) {
+    if (!node) return;
+    while (node.firstChild) {
+      node.removeChild(node.firstChild);
+    }
+  }
+
+  function renderLeadersTicker(config) {
+    const container = els.leadersTicker;
+    if (!container) return;
+    clearChildren(container);
+    const items = Array.isArray(config?.ticker) ? config.ticker : [];
+    if (!items.length) {
+      container.hidden = true;
+      return;
+    }
+    container.hidden = false;
+    items.forEach(item => {
+      if (!item) return;
+      const chip = document.createElement('span');
+      chip.className = 'leaders-ticker-chip';
+      const label = document.createElement('span');
+      label.textContent = item.label || '';
+      const value = document.createElement('strong');
+      value.textContent = item.value || '';
+      chip.append(label, value);
+      container.appendChild(chip);
+    });
+  }
+
+  function renderLeadersSummary(config) {
+    if (els.leadersSummary) {
+      els.leadersSummary.textContent = config?.summary || '';
+    }
+    if (els.leadersMetrics) {
+      clearChildren(els.leadersMetrics);
+      const metrics = Array.isArray(config?.metrics) ? config.metrics : [];
+      if (!metrics.length) {
+        const card = document.createElement('div');
+        card.className = 'leader-metric';
+        const heading = document.createElement('strong');
+        heading.textContent = 'Awaiting metrics';
+        const caption = document.createElement('span');
+        caption.textContent = 'Add more data to unlock insights.';
+        card.append(heading, caption);
+        els.leadersMetrics.appendChild(card);
+      } else {
+        metrics.forEach(metric => {
+          if (!metric) return;
+          const card = document.createElement('div');
+          card.className = 'leader-metric';
+          const heading = document.createElement('strong');
+          heading.textContent = metric.value || '';
+          const caption = document.createElement('span');
+          caption.textContent = metric.title || '';
+          if (metric.detail) {
+            const detail = document.createElement('span');
+            detail.textContent = metric.detail;
+            caption.appendChild(document.createElement('br'));
+            caption.appendChild(detail);
+          }
+          card.append(heading, caption);
+          els.leadersMetrics.appendChild(card);
+        });
+      }
+    }
+    if (els.leadersPipelines) {
+      clearChildren(els.leadersPipelines);
+      const pipelines = Array.isArray(config?.pipelines) ? config.pipelines : [];
+      if (!pipelines.length) {
+        const li = document.createElement('li');
+        li.textContent = 'Add campaigns to see strategic arcs.';
+        els.leadersPipelines.appendChild(li);
+      } else {
+        pipelines.forEach(item => {
+          if (!item) return;
+          const li = document.createElement('li');
+          li.textContent = item;
+          els.leadersPipelines.appendChild(li);
+        });
+      }
+    }
+  }
+
+  function buildLeaderCard(leader, index) {
+    const card = document.createElement('article');
+    card.className = 'leader-card';
+    card.dataset.index = String(index);
+    card.setAttribute('role', 'button');
+    card.tabIndex = -1;
+
+    const media = document.createElement('div');
+    media.className = 'leader-card-media';
+    if (leader?.image) {
+      const img = document.createElement('img');
+      img.src = encodeURI(leader.image);
+      img.alt = leader.name || 'Faith leader portrait';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      media.appendChild(img);
+    }
+    card.appendChild(media);
+
+    const body = document.createElement('div');
+    body.className = 'leader-card-body';
+
+    const header = document.createElement('div');
+    header.className = 'leader-card-header';
+    const title = document.createElement('h3');
+    title.className = 'leader-card-title';
+    title.textContent = leader?.name || 'Leader';
+    header.appendChild(title);
+    if (leader?.title) {
+      const role = document.createElement('p');
+      role.className = 'leader-card-role';
+      role.textContent = leader.title;
+      header.appendChild(role);
+    }
+    body.appendChild(header);
+
+    if (Array.isArray(leader?.metrics) && leader.metrics.length) {
+      const stats = document.createElement('div');
+      stats.className = 'leader-card-stats';
+      leader.metrics.slice(0, 3).forEach(metric => {
+        if (!metric) return;
+        const stat = document.createElement('div');
+        stat.className = 'leader-card-stat';
+        const value = document.createElement('strong');
+        value.textContent = metric.value || '';
+        const label = document.createElement('span');
+        label.textContent = metric.label || '';
+        if (metric.detail) {
+          const detail = document.createElement('small');
+          detail.textContent = metric.detail;
+          label.appendChild(detail);
+        }
+        stat.append(value, label);
+        stats.appendChild(stat);
+      });
+      body.appendChild(stats);
+    }
+
+    const story = document.createElement('p');
+    story.className = 'leader-card-story';
+    story.textContent = leader?.story || 'Live dossier loading…';
+    body.appendChild(story);
+
+    if (Array.isArray(leader?.tags) && leader.tags.length) {
+      const tagList = document.createElement('div');
+      tagList.className = 'leader-tag-list';
+      leader.tags.forEach(tag => {
+        if (!tag) return;
+        const badge = document.createElement('span');
+        badge.className = 'leader-tag';
+        badge.textContent = tag;
+        tagList.appendChild(badge);
+      });
+      body.appendChild(tagList);
+    }
+
+    card.appendChild(body);
+
+    card.addEventListener('click', () => activateLeader(index));
+    card.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        activateLeader(index, { focus: true });
+      }
+    });
+
+    return { element: card, leader, storyEl: story };
+  }
+
+  function applyLeaderSummary(leaderId, summary) {
+    const text = (summary || '').trim();
+    leaderCardEntries.forEach(entry => {
+      if (entry.leader?.id === leaderId && entry.storyEl) {
+        entry.storyEl.textContent = text || entry.leader?.story || '';
+      }
+    });
+    if (state.activeLeaderId === leaderId && els.leaderStory) {
+      const active = leaderCardEntries.find(entry => entry.leader?.id === leaderId);
+      const fallback = active?.leader?.story || '';
+      els.leaderStory.textContent = text || fallback;
+    }
+  }
+
+  async function fetchLeaderSummary(leader) {
+    if (!leader?.wiki) {
+      return leader?.story || '';
+    }
+    const cached = leaderSummaryCache.get(leader.wiki);
+    if (cached != null) {
+      return cached;
+    }
+    try {
+      const response = await fetch(`${WIKIPEDIA_SUMMARY_ENDPOINT}${encodeURIComponent(leader.wiki)}`);
+      if (!response.ok) {
+        throw new Error('Unable to load summary');
+      }
+      const data = await response.json();
+      const summary = data?.extract || data?.description || leader.story || '';
+      leaderSummaryCache.set(leader.wiki, summary);
+      return summary;
+    } catch (error) {
+      const fallback = leader?.story || '';
+      leaderSummaryCache.set(leader.wiki, fallback);
+      return fallback;
+    }
+  }
+
+  function hydrateLeaderSummary(leader, storyEl) {
+    if (!leader) return;
+    const fallback = leader.story || '';
+    if (storyEl) {
+      storyEl.textContent = fallback || 'Live dossier loading…';
+    }
+    if (!leader.wiki) {
+      applyLeaderSummary(leader.id, fallback);
+      return;
+    }
+    const cached = leaderSummaryCache.get(leader.wiki);
+    if (cached != null) {
+      applyLeaderSummary(leader.id, cached || fallback);
+      return;
+    }
+    fetchLeaderSummary(leader)
+      .then(summary => applyLeaderSummary(leader.id, summary || fallback))
+      .catch(() => applyLeaderSummary(leader.id, fallback));
+  }
+
+  function renderLeaderCarousel(config) {
+    currentLeaderConfig = config || null;
+    const track = els.leadersTrack;
+    if (!track) return;
+    clearChildren(track);
+    leaderCardEntries = [];
+    const leaders = Array.isArray(config?.leaders) ? config.leaders : [];
+    leaders.forEach((leader, index) => {
+      const entry = buildLeaderCard(leader, index);
+      leaderCardEntries.push(entry);
+      track.appendChild(entry.element);
+      hydrateLeaderSummary(leader, entry.storyEl);
+    });
+    if (els.leadersViewport) {
+      try {
+        els.leadersViewport.scrollTo({ left: 0, behavior: 'auto' });
+      } catch (err) {
+        els.leadersViewport.scrollLeft = 0;
+      }
+    }
+    updateLeaderNavigationButtons(leaders.length);
+  }
+
+  function updateLeaderNavigationButtons(total) {
+    if (els.leadersPrev) {
+      els.leadersPrev.disabled = total <= 0 || state.leaderIndex <= 0;
+    }
+    if (els.leadersNext) {
+      const maxIndex = Math.max(0, total - 1);
+      els.leadersNext.disabled = total <= 0 || state.leaderIndex >= maxIndex;
+    }
+  }
+
+  function scrollLeaderIntoView(card) {
+    if (!card) return;
+    try {
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    } catch (error) {
+      if (els.leadersViewport) {
+        const left = card.offsetLeft - (els.leadersViewport.clientWidth / 2 - card.clientWidth / 2);
+        els.leadersViewport.scrollLeft = Math.max(0, left);
+      }
+    }
+  }
+
+  function activateLeader(index, options = {}) {
+    const leaders = currentLeaderConfig?.leaders || [];
+    if (!leaders.length) return;
+    const nextIndex = Math.max(0, Math.min(leaders.length - 1, index));
+    state.leaderIndex = nextIndex;
+    leaderCardEntries.forEach((entry, idx) => {
+      const isActive = idx === nextIndex;
+      entry.element.classList.toggle('is-active', isActive);
+      entry.element.setAttribute('aria-current', isActive ? 'true' : 'false');
+      entry.element.tabIndex = isActive ? 0 : -1;
+      if (isActive && options.focus) {
+        entry.element.focus();
+      }
+    });
+    updateLeaderNavigationButtons(leaders.length);
+    const activeEntry = leaderCardEntries[nextIndex];
+    if (activeEntry) {
+      if (options.scroll !== false) {
+        scrollLeaderIntoView(activeEntry.element);
+      }
+      updateLeaderDetails(activeEntry.leader);
+    }
+  }
+
+  function populateList(listElement, items, emptyText) {
+    if (!listElement) return;
+    clearChildren(listElement);
+    const collection = Array.isArray(items) ? items.filter(Boolean) : [];
+    if (!collection.length) {
+      const li = document.createElement('li');
+      li.textContent = emptyText || 'No updates posted yet.';
+      listElement.appendChild(li);
+      return;
+    }
+    collection.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      listElement.appendChild(li);
+    });
+  }
+
+  function populateLinks(listElement, links) {
+    if (!listElement) return;
+    clearChildren(listElement);
+    const collection = Array.isArray(links) ? links.filter(link => link && link.url) : [];
+    if (!collection.length) {
+      const li = document.createElement('li');
+      li.textContent = 'No official channels listed.';
+      listElement.appendChild(li);
+      return;
+    }
+    collection.forEach(link => {
+      const li = document.createElement('li');
+      const anchor = document.createElement('a');
+      anchor.href = link.url;
+      anchor.target = '_blank';
+      anchor.rel = 'noreferrer noopener';
+      anchor.textContent = link.label || link.url;
+      li.appendChild(anchor);
+      listElement.appendChild(li);
+    });
+  }
+
+  function createSignalListItem(entry) {
+    const li = document.createElement('li');
+    li.className = 'leader-signal-entry';
+    if (!entry || (typeof entry === 'object' && !entry.text && !entry.url && !entry.meta)) {
+      li.textContent = typeof entry === 'string' ? entry : '';
+      return li;
+    }
+    if (typeof entry === 'string') {
+      li.textContent = entry;
+      return li;
+    }
+    const { text, url, meta, type } = entry;
+    if (type === 'live') {
+      li.classList.add('leader-signal-live');
+    } else if (type === 'loading') {
+      li.classList.add('leader-signal-loading');
+    } else if (type === 'placeholder') {
+      li.classList.add('leader-signal-placeholder');
+    }
+    if (url) {
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.target = '_blank';
+      anchor.rel = 'noreferrer noopener';
+      anchor.textContent = text || url;
+      li.appendChild(anchor);
+    } else if (text) {
+      const span = document.createElement('span');
+      span.textContent = text;
+      li.appendChild(span);
+    }
+    if (meta) {
+      const metaEl = document.createElement('small');
+      metaEl.textContent = meta;
+      li.appendChild(metaEl);
+    }
+    if (!li.childNodes.length) {
+      li.textContent = text || '';
+    }
+    return li;
+  }
+
+  async function fetchLeaderSignals(leader) {
+    if (!leader?.wiki) return [];
+    if (leaderSignalsCache.has(leader.wiki)) {
+      return leaderSignalsCache.get(leader.wiki) || [];
+    }
+    try {
+      const response = await fetch(`${WIKIPEDIA_RELATED_ENDPOINT}${encodeURIComponent(leader.wiki)}?redirect=true`);
+      if (!response.ok) {
+        throw new Error('Unable to load related pages');
+      }
+      const data = await response.json();
+      const pages = Array.isArray(data?.pages) ? data.pages.slice(0, 4) : [];
+      const entries = pages
+        .map(page => {
+          if (!page) return null;
+          const title = page?.titles?.display || page?.title;
+          const url = page?.content_urls?.desktop?.page || page?.content_urls?.mobile?.page;
+          const description = page?.description || page?.extract;
+          if (!title) return null;
+          return {
+            text: title,
+            url,
+            meta: description || 'Live brief from Wikimedia feeds',
+            type: 'live'
+          };
+        })
+        .filter(Boolean);
+      leaderSignalsCache.set(leader.wiki, entries);
+      return entries;
+    } catch (error) {
+      leaderSignalsCache.set(leader.wiki, []);
+      return [];
+    }
+  }
+
+  function renderLeaderSignals(leader) {
+    if (!els.leaderSignals) return;
+    clearChildren(els.leaderSignals);
+    const staticSignals = Array.isArray(leader?.signals) ? leader.signals.filter(Boolean) : [];
+    staticSignals.forEach(signal => {
+      els.leaderSignals.appendChild(createSignalListItem({ text: signal }));
+    });
+    let placeholderItem = null;
+    if (!staticSignals.length) {
+      placeholderItem = createSignalListItem({ text: 'Monitor press feeds for the next bulletin.', type: 'placeholder' });
+      els.leaderSignals.appendChild(placeholderItem);
+    }
+    if (!leader?.wiki) {
+      return;
+    }
+    if (leaderSignalsCache.has(leader.wiki)) {
+      const cached = leaderSignalsCache.get(leader.wiki) || [];
+      if (cached.length) {
+        if (placeholderItem?.isConnected) {
+          placeholderItem.remove();
+        }
+        cached.forEach(entry => {
+          els.leaderSignals.appendChild(createSignalListItem(entry));
+        });
+      }
+      return;
+    }
+    const loadingItem = createSignalListItem({ text: 'Scanning live knowledge feeds…', type: 'loading' });
+    els.leaderSignals.appendChild(loadingItem);
+    fetchLeaderSignals(leader)
+      .then(entries => {
+        if (state.activeLeaderId !== leader.id) {
+          return;
+        }
+        if (loadingItem.isConnected) {
+          loadingItem.remove();
+        }
+        if (entries.length) {
+          if (placeholderItem?.isConnected) {
+            placeholderItem.remove();
+          }
+          entries.forEach(entry => {
+            els.leaderSignals.appendChild(createSignalListItem(entry));
+          });
+        } else if (!staticSignals.length && !placeholderItem?.isConnected) {
+          els.leaderSignals.appendChild(createSignalListItem({ text: 'No live bulletins available yet.', type: 'placeholder' }));
+        }
+      })
+      .catch(() => {
+        if (state.activeLeaderId !== leader.id) {
+          return;
+        }
+        if (loadingItem.isConnected) {
+          loadingItem.textContent = 'Live feeds unavailable at this moment.';
+          loadingItem.classList.remove('leader-signal-loading');
+          loadingItem.classList.add('leader-signal-placeholder');
+        }
+      });
+  }
+
+  function updateLeaderDetails(leader) {
+    if (!leader) return;
+    state.activeLeaderId = leader.id || null;
+    if (els.leaderStory) {
+      els.leaderStory.textContent = leader.story || 'Live dossier loading…';
+    }
+    populateList(els.leaderBriefing, leader.operations, 'Waiting for campaign directives.');
+    renderLeaderSignals(leader);
+    populateLinks(els.leaderLinks, leader.links);
+    hydrateLeaderSummary(leader, null);
+  }
+
+  function buildLeaderTabs() {
+    const container = els.leadersTabs;
+    if (!container) return;
+    clearChildren(container);
+    leaderTabButtons = [];
+    FAITH_LEADER_DECK.forEach((entry, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'leader-tab';
+      button.textContent = entry.label;
+      button.dataset.faith = entry.faith;
+      button.setAttribute('role', 'tab');
+      button.setAttribute('aria-controls', 'leaders-summary-card');
+      const isActive = entry.faith === state.leaderFaith;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      button.tabIndex = isActive ? 0 : -1;
+      button.addEventListener('click', () => activateFaith(entry.faith));
+      button.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        event.preventDefault();
+        const offset = event.key === 'ArrowRight' ? 1 : -1;
+        const nextIndex = (index + offset + FAITH_LEADER_DECK.length) % FAITH_LEADER_DECK.length;
+        const nextFaith = FAITH_LEADER_DECK[nextIndex]?.faith;
+        if (nextFaith) {
+          const nextButton = leaderTabButtons[nextIndex];
+          if (nextButton) {
+            nextButton.focus();
+          }
+          activateFaith(nextFaith);
+        }
+      });
+      container.appendChild(button);
+      leaderTabButtons.push(button);
+    });
+  }
+
+  function updateLeaderTabs(faith) {
+    leaderTabButtons.forEach(button => {
+      const isActive = button.dataset.faith === faith;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      button.tabIndex = isActive ? 0 : -1;
+    });
+  }
+
+  function activateFaith(faith) {
+    const config = getFaithLeaderConfig(faith);
+    if (!config) return;
+    state.leaderFaith = config.faith;
+    state.leaderIndex = 0;
+    setLeadersAccent(config.accent);
+    renderLeadersTicker(config);
+    renderLeadersSummary(config);
+    renderLeaderCarousel(config);
+    updateLeaderTabs(config.faith);
+    activateLeader(0, { scroll: false });
+  }
+
+  function shiftLeader(delta) {
+    const leaders = currentLeaderConfig?.leaders || [];
+    if (!leaders.length) return;
+    const target = state.leaderIndex + delta;
+    if (target < 0 || target >= leaders.length) return;
+    activateLeader(target);
+  }
+
+  function initFaithLeaders() {
+    if (!els.leadersLab || !FAITH_LEADER_DECK.length) return;
+    if (!state.leaderFaith) {
+      state.leaderFaith = FAITH_LEADER_DECK[0].faith;
+    }
+    buildLeaderTabs();
+    activateFaith(state.leaderFaith);
+    if (els.leadersPrev) {
+      els.leadersPrev.addEventListener('click', () => shiftLeader(-1));
+    }
+    if (els.leadersNext) {
+      els.leadersNext.addEventListener('click', () => shiftLeader(1));
+    }
+    if (els.leadersViewport) {
+      els.leadersViewport.addEventListener('wheel', event => {
+        if (!event.shiftKey) return;
+        event.preventDefault();
+        const delta = event.deltaY > 0 ? 1 : -1;
+        shiftLeader(delta);
+      }, { passive: false });
+    }
+  }
+
 
   const quickStripeCard = document.querySelector('.quick-stripe-card');
   let updateQuickMetricsDisplay = () => {};
@@ -5895,6 +8489,21 @@
     sliderDots: document.getElementById('slider-dots'),
     prevSlide: document.getElementById('prev-slide'),
     nextSlide: document.getElementById('next-slide'),
+    leadersLab: document.getElementById('leaders-lab'),
+    leadersTabs: document.getElementById('leaders-tabs'),
+    leadersTicker: document.getElementById('leaders-ticker'),
+    leadersSummaryCard: document.getElementById('leaders-summary-card'),
+    leadersSummary: document.getElementById('leaders-summary'),
+    leadersMetrics: document.getElementById('leaders-metrics'),
+    leadersPipelines: document.getElementById('leaders-pipelines'),
+    leadersTrack: document.getElementById('leaders-track'),
+    leadersViewport: document.getElementById('leaders-viewport'),
+    leadersPrev: document.getElementById('leaders-prev'),
+    leadersNext: document.getElementById('leaders-next'),
+    leaderStory: document.getElementById('leader-story'),
+    leaderBriefing: document.getElementById('leader-briefing'),
+    leaderSignals: document.getElementById('leader-signals'),
+    leaderLinks: document.getElementById('leader-links'),
     sectorGrid: document.getElementById('sector-grid'),
     donationForm: document.getElementById('donation-form'),
     donationRegion: document.getElementById('donation-region'),
@@ -5999,6 +8608,28 @@
     } catch (err) {
       return String(Math.round(value));
     }
+  }
+
+  function hexToRgba(hex, alpha = 1) {
+    if (!hex) return null;
+    const value = String(hex).trim().replace('#', '');
+    if (![3, 6].includes(value.length)) return null;
+    const segmentLength = value.length === 3 ? 1 : 2;
+    const components = [];
+    for (let index = 0; index < value.length; index += segmentLength) {
+      let chunk = value.slice(index, index + segmentLength);
+      if (chunk.length === 1) {
+        chunk += chunk;
+      }
+      const numeric = parseInt(chunk, 16);
+      if (Number.isNaN(numeric)) {
+        return null;
+      }
+      components.push(numeric);
+    }
+    const [r = 0, g = 0, b = 0] = components;
+    const normalizedAlpha = Math.max(0, Math.min(1, Number(alpha)));
+    return `rgba(${r}, ${g}, ${b}, ${normalizedAlpha})`;
   }
 
   function getMetricsForFaith(faith) {
@@ -7545,6 +10176,7 @@
     state.language = initialLanguage;
     applyLanguageAttributes(getLanguageOption(initialLanguage));
     applyStaticTranslations();
+    initFaithLeaders();
     initLanguageSwitchers();
     updateFooterCopy();
 
