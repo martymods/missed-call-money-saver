@@ -1052,6 +1052,11 @@ app.get('/book', (req, res) => {
   return res.redirect('/checkout');      // fallback if env not set
 });
 
+// Serve the Book Club landing page explicitly to avoid static cache misses
+app.get(['/bookclub', '/bookclub.html'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'bookclub.html'));
+});
+
 // 1) Serve everything in /public (so /robots.txt, /favicon.ico work)
 app.use(express.static(path.join(__dirname, 'public'), {
   extensions: ['html'] // lets /dental resolve to index.html automatically
