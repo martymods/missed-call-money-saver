@@ -110,6 +110,64 @@
       background-color: var(--primary);
     }
 
+    .button.primary,
+    button.primary,
+    .button.secondary,
+    button.secondary,
+    .button.ghost,
+    button.ghost {
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: transform var(--transition), box-shadow var(--transition), border var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 18px;
+    }
+
+    .button.primary,
+    button.primary {
+      background: var(--primary);
+      color: var(--white);
+      box-shadow: 0 10px 20px rgba(33, 158, 154, 0.25);
+    }
+
+    .button.secondary,
+    button.secondary {
+      background: var(--dark-gray);
+      color: var(--white);
+      box-shadow: 0 10px 20px rgba(49, 49, 49, 0.2);
+    }
+
+    .button.ghost,
+    button.ghost {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid rgba(33, 158, 154, 0.4);
+      box-shadow: none;
+    }
+
+    .button.primary:hover,
+    .button.primary:focus,
+    button.primary:hover,
+    button.primary:focus,
+    .button.secondary:hover,
+    .button.secondary:focus,
+    button.secondary:hover,
+    button.secondary:focus,
+    .button.ghost:hover,
+    .button.ghost:focus,
+    button.ghost:hover,
+    button.ghost:focus {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(33, 158, 154, 0.25);
+    }
+
     .row {
       max-width: 1024px;
       margin: 0 auto;
@@ -163,6 +221,48 @@
       justify-content: flex-end;
       gap: 20px;
       flex: 1;
+    }
+
+    .auth-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .auth-actions button {
+      font-size: 13px;
+      padding: 8px 16px;
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(33, 158, 154, 0.12);
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
+    .user-chip img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .user-chip .user-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .user-chip button {
+      background: none;
+      border: none;
+      color: var(--dark-gray);
+      font-size: 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .main-navigation {
@@ -245,6 +345,99 @@
       position: relative;
       overflow-x: hidden;
       background: var(--surface);
+    }
+
+    .auth-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 40;
+    }
+
+    .auth-modal.hidden {
+      display: none;
+    }
+
+    .auth-modal_content {
+      background: var(--white);
+      max-width: 460px;
+      width: 100%;
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .auth-modal_content h2 {
+      margin-bottom: 0;
+      font-size: 26px;
+    }
+
+    .auth-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: none;
+      border: none;
+      font-size: 14px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      color: var(--dark-gray);
+      text-transform: uppercase;
+    }
+
+    .auth-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .auth-form-group label {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .auth-form-group input,
+    .auth-form-group textarea,
+    .member-form input,
+    .member-form textarea,
+    .member-form select {
+      border: 1px solid var(--medium-gray);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    .auth-form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .social-login {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .social-login button {
+      flex: 1;
+      min-width: 120px;
+      border-radius: 999px;
+      border: 1px solid rgba(49, 49, 49, 0.15);
+      background: var(--white);
+      cursor: pointer;
+      padding: 10px 14px;
+      font-weight: 600;
     }
 
     .main-container.prevent-scroll {
@@ -739,6 +932,387 @@
       text-transform: uppercase;
     }
 
+    .member-only {
+      display: none;
+    }
+
+    .member-only.active {
+      display: block;
+    }
+
+    .member-hub {
+      background: linear-gradient(135deg, rgba(33, 158, 154, 0.12), rgba(33, 158, 154, 0.02));
+      padding: 60px 20px;
+      margin-top: 60px;
+    }
+
+    .member-hub .hub-grid {
+      max-width: 1024px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 22px;
+    }
+
+    .hub-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 16px 34px rgba(33, 158, 154, 0.14);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .hub-card header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .profile-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .profile-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(33, 158, 154, 0.2);
+    }
+
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(33, 158, 154, 0.12);
+      color: var(--dark-gray);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .points-display {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .badge-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .badge {
+      padding: 8px 14px;
+      border-radius: 12px;
+      background: rgba(255, 206, 86, 0.22);
+      color: #705e1e;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .member-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .member-actions button {
+      flex: 1 1 180px;
+      border-radius: 8px;
+      border: 1px solid rgba(33, 158, 154, 0.3);
+      background: rgba(33, 158, 154, 0.08);
+      color: var(--dark-gray);
+      font-weight: 600;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .member-actions button:hover,
+    .member-actions button:focus {
+      background: rgba(33, 158, 154, 0.22);
+    }
+
+    .member-actions button[disabled] {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .public-archives {
+      padding: 40px 20px 0;
+    }
+
+    .public-archives .archive-grid {
+      max-width: 1024px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+    }
+
+    .archive-card {
+      background: var(--white);
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .discussion-board {
+      padding: 60px 20px;
+    }
+
+    .discussion-thread {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .comment-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.07);
+      display: flex;
+      gap: 14px;
+    }
+
+    .comment-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .comment-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .comment-actions {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .comment-actions button {
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .comment-flagged {
+      font-size: 13px;
+      color: rgba(214, 118, 33, 0.9);
+      font-weight: 600;
+    }
+
+    .comment-form {
+      max-width: 900px;
+      margin: 24px auto 0;
+      background: var(--white);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 15px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .comment-form textarea {
+      width: 100%;
+      min-height: 120px;
+      border-radius: 10px;
+      border: 1px solid var(--medium-gray);
+      padding: 14px;
+      font-size: 15px;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .comment-form button {
+      margin-top: 14px;
+    }
+
+    .login-nudge {
+      font-size: 14px;
+      color: rgba(49, 49, 49, 0.65);
+      margin-top: 12px;
+    }
+
+    .events-section {
+      padding: 60px 20px;
+      background: var(--white);
+    }
+
+    .events-grid {
+      max-width: 1024px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      align-items: start;
+    }
+
+    .event-card,
+    .reward-card,
+    .membership-card,
+    .merch-card {
+      background: var(--surface);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .reward-card button,
+    .membership-card a,
+    .merch-card a,
+    .event-card button {
+      align-self: flex-start;
+    }
+
+    .rewards-grid,
+    .membership-grid,
+    .merch-grid {
+      max-width: 1024px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .reward-points {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stripe-link,
+    .affiliate-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(49, 49, 49, 0.12);
+      background: #fff;
+      font-weight: 600;
+      transition: border var(--transition), transform var(--transition);
+    }
+
+    .stripe-link:hover,
+    .stripe-link:focus,
+    .affiliate-link:hover,
+    .affiliate-link:focus {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .moderation-panel {
+      border-top: 1px solid rgba(49, 49, 49, 0.12);
+      padding-top: 16px;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .moderation-panel.active {
+      display: flex;
+    }
+
+    .moderation-item {
+      background: rgba(255, 186, 120, 0.22);
+      padding: 12px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .suggestion-form textarea {
+      min-height: 100px;
+    }
+
+    .activity-log {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .activity-log li {
+      background: rgba(33, 158, 154, 0.08);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .calendly-wrapper {
+      min-height: 620px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(33, 158, 154, 0.15);
+      box-shadow: 0 15px 36px rgba(0, 0, 0, 0.12);
+    }
+
+    .event-history {
+      margin-top: 30px;
+    }
+
+    .event-history ul {
+      list-style: none;
+      padding-left: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .event-history li {
+      background: rgba(33, 158, 154, 0.1);
+      padding: 12px 14px;
+      border-radius: 10px;
+    }
+
+    .affiliate-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .blueprint-cta {
+      margin-top: 18px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
     @media (max-width: 900px) {
       .book-item .overlay-details {
         max-height: none;
@@ -765,6 +1339,12 @@
         width: 100%;
       }
 
+      .auth-actions {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 10px;
+      }
+
       .main-navigation {
         border-left: none;
         padding-left: 0;
@@ -782,6 +1362,18 @@
 
       #grid {
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      }
+
+      .member-actions button {
+        flex: 1 1 140px;
+      }
+
+      .hub-card {
+        padding: 20px;
+      }
+
+      .events-grid {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -822,6 +1414,35 @@
       </ul>
     </nav>
 
+    <div id="auth-modal" class="auth-modal hidden" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <div class="auth-modal_content">
+        <button class="auth-close" type="button" aria-label="Close sign in">Close</button>
+        <h2 id="auth-title">Join the Delco Tech Book Club</h2>
+        <p>Unlock progress tracking, moderated discussions, rewards, and RSVP tools. Profiles live in MongoDB when connected to the full stack; locally we’ll keep your progress in your browser.</p>
+        <form id="auth-form" class="member-form">
+          <div class="auth-form-group">
+            <label for="auth-name">Display name</label>
+            <input id="auth-name" name="name" type="text" placeholder="Avery Reader" required />
+          </div>
+          <div class="auth-form-group">
+            <label for="auth-email">Email</label>
+            <input id="auth-email" name="email" type="email" placeholder="reader@example.com" required />
+          </div>
+          <div class="auth-form-group">
+            <label for="auth-bio">Short bio</label>
+            <textarea id="auth-bio" name="bio" placeholder="Tell the community what you love to read."></textarea>
+          </div>
+          <button class="button primary" type="submit">Create Member Profile</button>
+        </form>
+        <div class="social-login">
+          <button type="button" data-provider="google">Continue with Google</button>
+          <button type="button" data-provider="apple">Continue with Apple</button>
+          <button type="button" data-provider="github">Continue with GitHub</button>
+        </div>
+        <p class="login-nudge">Need help? Email <a href="mailto:bookclub@delcotech.co">bookclub@delcotech.co</a>.</p>
+      </div>
+    </div>
+
     <div class="main clearfix">
       <header id="header" class="page-header">
         <div class="page-header-container row">
@@ -837,6 +1458,14 @@
               <label class="input_label input_label-search" for="input-search">
                 <span class="input_label-content">Search Library</span>
               </label>
+            </div>
+          </div>
+          <div class="auth-actions">
+            <button id="login-button" class="button primary" type="button">Sign In</button>
+            <div id="user-chip" class="user-chip" hidden>
+              <img id="user-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=Reader" alt="Member avatar" />
+              <span class="user-name" id="user-name">Reader</span>
+              <button id="logout-button" type="button">Sign Out</button>
             </div>
           </div>
         </div>
@@ -1297,52 +1926,310 @@
 
       <section class="blueprint" id="blueprint">
         <div class="summary">
-          <h2>Community Platform Blueprint</h2>
-          <p>Everything outlined in our original build brief now lives on this page. Visitors can browse freely, while members unlock deeper interactions powered by MongoDB, Stripe, Calendly, and trusted book APIs.</p>
+          <h2>Community Platform Control Center</h2>
+          <p>The Delco Tech Book Club blends public discovery with member-only depth. Explore the open stacks, then unlock MongoDB-powered profiles, Calendly RSVPs, Stripe billing, and real rewards when you join.</p>
+          <div class="blueprint-cta">
+            <button class="button secondary" type="button" data-open-auth="true">Become a Member</button>
+            <a class="button ghost" href="#archives">Tour Open Access</a>
+            <a class="button ghost" href="#discussions">Preview Discussions</a>
+          </div>
         </div>
 
         <div class="blueprint-grid">
           <article class="blueprint-card">
             <h3>Open Access</h3>
-            <p>Book lists, discussion archives, event highlights, and the merch shop remain open to the public. Curious readers can explore without friction, building a pipeline of future members.</p>
+            <p>Book lists, discussion archives, event highlights, and the merch shop stay public so curious readers can explore without friction.</p>
+            <ul>
+              <li><a href="#archives">Public archives</a> showcase curated lists and trusted affiliate links.</li>
+              <li>Guest visitors can browse threads and event highlights any time.</li>
+            </ul>
           </article>
           <article class="blueprint-card">
             <h3>Optional Profiles</h3>
-            <p>Members register with email or social login. MongoDB stores avatars, bios, shelving lists, badges, and points so progress persists between visits.</p>
+            <p>Members register with email or social login. When the production stack is connected, MongoDB stores avatars, bios, shelves, and badges so progress persists across devices.</p>
+            <ul>
+              <li>Local prototype data lives securely in your browser.</li>
+              <li>Sync hooks are ready for MongoDB Atlas deployment.</li>
+            </ul>
           </article>
           <article class="blueprint-card">
-            <h3>Member Features</h3>
-            <p>Logged-in readers comment, submit suggestions, track reading progress, and join events. Clear prompts encourage sign-ups exactly when engagement peaks.</p>
+            <h3>Member Momentum</h3>
+            <p>Logged-in readers earn points for finishing books, sharing reviews, attending events, and submitting suggestions.</p>
+            <ul>
+              <li>Track reading progress directly from each book overlay.</li>
+              <li>Redeem rewards like merch discounts or honorary moderator roles.</li>
+            </ul>
           </article>
           <article class="blueprint-card">
-            <h3>Moderated Discussions</h3>
-            <p>Book hubs host threaded conversations with moderation tools and alerts to keep the community supportive and safe.</p>
+            <h3>Moderation &amp; Safety</h3>
+            <p>Threaded hubs include one-click flagging, moderation queues, and audit logs to keep the community supportive and safe.</p>
+            <ul>
+              <li>Flagged posts pause from view until a moderator resolves them.</li>
+              <li>Badge unlocks grant trusted roles without leaving the browser.</li>
+            </ul>
           </article>
         </div>
+      </section>
 
-        <div class="blueprint-section">
-          <h2>Gamification &amp; Rewards</h2>
-          <div class="badge-row">
-            <span class="pill">Points System</span>
-            <span class="pill">Badges</span>
-            <span class="pill">Redeemable Rewards</span>
+      <section class="public-archives" id="archives">
+        <div class="row">
+          <h2>Open Access Experiences</h2>
+          <p>Everything here is discoverable without logging in, creating a welcoming front door for future members.</p>
+        </div>
+        <div class="archive-grid">
+          <article class="archive-card">
+            <h3>Curated Lists</h3>
+            <p>Browse featured classics, fantasy, sci-fi, and more. Each title carries transparent affiliate buttons to Bookshop.org and Libro.fm.</p>
+            <a class="affiliate-link" href="#browse">Browse the Catalog</a>
+          </article>
+          <article class="archive-card">
+            <h3>Discussion Archives</h3>
+            <p>Read past community highlights and moderator picks. Flagged items remain hidden until a moderator approves them.</p>
+            <a class="affiliate-link" href="#discussions">View Live Threads</a>
+          </article>
+          <article class="archive-card">
+            <h3>Event Highlights</h3>
+            <p>See upcoming author chats, workshops, and community meetups. Calendly widgets keep RSVP flows quick and familiar.</p>
+            <a class="affiliate-link" href="#events">Upcoming Events</a>
+          </article>
+          <article class="archive-card">
+            <h3>Merch Preview</h3>
+            <p>Limited-run apparel and accessories stay shoppable for guests. Members unlock reward redemptions and exclusive drops.</p>
+            <a class="affiliate-link" href="#merch">Shop the Merch Table</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="discussion-board" id="discussions">
+        <div class="row">
+          <h2>Community Discussions</h2>
+          <p>Threaded conversations pair with moderation tools and alerts so the community stays generous, curious, and safe.</p>
+        </div>
+        <div class="discussion-thread" id="discussion-thread" aria-live="polite"></div>
+        <form id="comment-form" class="comment-form" novalidate>
+          <div class="auth-form-group">
+            <label for="comment-book">Book hub</label>
+            <select id="comment-book" name="book">
+              <option value="general">General Discussion</option>
+              <option value="Of Mice and Men">Of Mice and Men</option>
+              <option value="The Great Gatsby">The Great Gatsby</option>
+              <option value="Moby Dick">Moby Dick</option>
+              <option value="Mary Poppins">Mary Poppins</option>
+              <option value="Lord of the Flies">Lord of the Flies</option>
+            </select>
           </div>
-          <p>Members earn points for finishing books, sharing reviews, attending events, and contributing to discussions. Milestones like <em>Prolific Reader</em> or <em>Discussion Starter</em> unlock badges, while point redemptions deliver merch discounts, digital exclusives, or honorary roles.</p>
-        </div>
+          <div class="auth-form-group">
+            <label for="comment-message">Add your voice</label>
+            <textarea id="comment-message" name="message" placeholder="Share a takeaway, question, or favorite quote." required></textarea>
+          </div>
+          <button class="button primary" type="submit">Post to Thread</button>
+          <p class="login-nudge" id="comment-nudge">Sign in to earn points and keep your contributions tied to your profile.</p>
+        </form>
+      </section>
 
-        <div class="blueprint-section">
-          <h2>Monetization Mix</h2>
-          <ul>
-            <li><strong>Affiliate Book Links:</strong> Trusted partner links appear on each book page with transparent messaging.</li>
-            <li><strong>Membership Subscriptions:</strong> Monthly and annual tiers add perks such as exclusive guides, private forums, and discount codes.</li>
-            <li><strong>Ticketed Events:</strong> Calendly embeds and Stripe Checkout simplify RSVPs for virtual and in-person gatherings.</li>
-            <li><strong>Merchandise:</strong> Branded apparel, journals, and seasonal bundles tie into reward incentives.</li>
-          </ul>
+      <section class="member-hub member-only" id="member-hub">
+        <div class="row">
+          <h2>Member HQ</h2>
+          <p>Welcome back! Everything you do here syncs to your profile so badges, shelves, and event history are ready for a future MongoDB backend.</p>
         </div>
+        <div class="hub-grid">
+          <article class="hub-card" id="profile-card">
+            <header>
+              <div class="profile-meta">
+                <img id="profile-avatar" class="profile-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=Reader" alt="Profile avatar" />
+                <div>
+                  <h3 id="profile-display">Member Name</h3>
+                  <p id="profile-email">member@example.com</p>
+                  <div class="chip" id="profile-role">Member</div>
+                </div>
+              </div>
+              <button id="edit-profile-btn" class="button ghost" type="button">Edit</button>
+            </header>
+            <p id="profile-bio-display">Add a short bio to tell the community what you’re reading.</p>
+            <form id="profile-edit-form" class="member-form" hidden>
+              <div class="auth-form-group">
+                <label for="profile-name-input">Display name</label>
+                <input id="profile-name-input" name="displayName" type="text" />
+              </div>
+              <div class="auth-form-group">
+                <label for="profile-avatar-input">Avatar URL</label>
+                <input id="profile-avatar-input" name="avatar" type="url" placeholder="https://" />
+              </div>
+              <div class="auth-form-group">
+                <label for="profile-bio-input">Bio</label>
+                <textarea id="profile-bio-input" name="bio"></textarea>
+              </div>
+              <button class="button primary" type="submit">Save Profile</button>
+            </form>
+            <div class="chip-list" id="shelf-stats">
+              <span class="chip">0 currently reading</span>
+              <span class="chip">0 finished</span>
+            </div>
+          </article>
 
-        <div class="blueprint-section" id="events">
+          <article class="hub-card">
+            <header>
+              <h3>Shelves &amp; Progress</h3>
+            </header>
+            <h4>Currently Reading</h4>
+            <div class="chip-list" id="current-shelf"></div>
+            <h4>Completed</h4>
+            <div class="chip-list" id="completed-shelf"></div>
+            <div class="member-actions">
+              <button class="ghost" type="button" id="reset-progress">Reset Shelves</button>
+            </div>
+          </article>
+
+          <article class="hub-card">
+            <header>
+              <h3>Points, Badges &amp; Activity</h3>
+            </header>
+            <div class="points-display" id="points-total">0</div>
+            <p>Earn points by finishing books (+150), posting discussion replies (+25), suggesting reads (+40), and attending events (+100).</p>
+            <div class="badge-grid" id="badge-grid"></div>
+            <h4>Rewards Unlocked</h4>
+            <div class="chip-list" id="rewards-owned"></div>
+            <h4>Recent Activity</h4>
+            <ul class="activity-log" id="activity-log"></ul>
+            <div class="moderation-panel" id="moderation-panel">
+              <h4>Moderation Queue</h4>
+              <div id="moderation-items"></div>
+            </div>
+          </article>
+
+          <article class="hub-card">
+            <header>
+              <h3>Suggestions &amp; Requests</h3>
+            </header>
+            <form id="suggestion-form" class="member-form suggestion-form" novalidate>
+              <div class="auth-form-group">
+                <label for="suggestion-title">Title or idea</label>
+                <input id="suggestion-title" name="title" type="text" placeholder="Add a book, guest, or feature" required />
+              </div>
+              <div class="auth-form-group">
+                <label for="suggestion-notes">Notes</label>
+                <textarea id="suggestion-notes" name="notes" placeholder="Why should the club add this?"></textarea>
+              </div>
+              <button class="button primary" type="submit">Submit Suggestion</button>
+            </form>
+            <h4>Submitted Ideas</h4>
+            <ul class="activity-log" id="suggestion-list"></ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="events-section" id="events">
+        <div class="row">
           <h2>Events &amp; Scheduling</h2>
-          <p>Inline Calendly widgets enable RSVP without leaving the site. Attendance writes back to MongoDB, updating point totals and unlocking badges like “Event Attendee.”</p>
+          <p>Reserve a seat without leaving the site. Calendly handles RSVPs while MongoDB-ready hooks log attendance and points.</p>
+        </div>
+        <div class="events-grid">
+          <div class="event-card">
+            <h3>RSVP in Seconds</h3>
+            <p>Pick a time for the next live author chat or workshop. Calendly writes back to the club’s scheduling table.</p>
+            <div class="calendly-wrapper">
+              <div class="calendly-inline-widget" data-url="https://calendly.com/delcobookclub/author-chat?hide_event_type_details=1&primary_color=219e9a" style="min-width: 320px; height: 620px"></div>
+            </div>
+          </div>
+          <div class="event-card">
+            <h3>Log Attendance</h3>
+            <p>When you join an event, tap the button below. Your MongoDB profile receives +100 points and unlocks the Event Attendee badge.</p>
+            <button class="button primary" type="button" id="log-attendance">I Attended an Event</button>
+            <p class="login-nudge">Attendance history syncs when you’re signed in.</p>
+          </div>
+          <div class="event-card">
+            <h3>Upcoming Highlights</h3>
+            <ul>
+              <li><strong>April 18:</strong> World-building with N.K. Jemisin</li>
+              <li><strong>April 25:</strong> Poetry &amp; Prose community open mic</li>
+              <li><strong>May 2:</strong> Tech and storytelling lab</li>
+            </ul>
+            <p>Ticketed workshops flow through Stripe Checkout for instant confirmation.</p>
+          </div>
+        </div>
+        <div class="event-history member-only" id="attendance-panel">
+          <h3>Your Attendance Log</h3>
+          <ul id="attendance-list"></ul>
+        </div>
+      </section>
+
+      <section class="public-archives" id="membership">
+        <div class="row">
+          <h2>Membership Subscriptions</h2>
+          <p>Stripe Checkout powers monthly and annual plans. Activate a test link below or swap in live product IDs when deploying.</p>
+        </div>
+        <div class="membership-grid">
+          <article class="membership-card">
+            <h3>Monthly Reader</h3>
+            <p>$12 / month · Cancel anytime</p>
+            <ul>
+              <li>Private Discord lounge &amp; office hours</li>
+              <li>Exclusive reading guides and discussion prompts</li>
+              <li>10% merch discount code delivered automatically</li>
+            </ul>
+            <a class="stripe-link" href="https://buy.stripe.com/test_bIYdU5b0s6Fsf4Q7ss" target="_blank" rel="noopener">Start Monthly Plan</a>
+          </article>
+          <article class="membership-card">
+            <h3>Annual Founder</h3>
+            <p>$120 / year · Two months free</p>
+            <ul>
+              <li>Access to private author salons</li>
+              <li>Early merch drops + 20% discount</li>
+              <li>Complimentary ticket to one premium event</li>
+            </ul>
+            <a class="stripe-link" href="https://buy.stripe.com/test_6oE5kZ2Bo1M63kE28b" target="_blank" rel="noopener">Join Annual Plan</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="public-archives" id="rewards">
+        <div class="row">
+          <h2>Rewards Marketplace</h2>
+          <p>Earn points automatically and cash them in for real perks.</p>
+        </div>
+        <div class="rewards-grid">
+          <article class="reward-card">
+            <h3>15% Merch Discount</h3>
+            <p>Redeem for a one-time code good on any apparel or journal purchase.</p>
+            <div class="reward-points">Cost: 250 pts</div>
+            <button class="button secondary" type="button" data-reward="merch-discount">Redeem</button>
+          </article>
+          <article class="reward-card">
+            <h3>Digital Exclusive Guide</h3>
+            <p>Unlock the monthly members-only reading companion PDF.</p>
+            <div class="reward-points">Cost: 180 pts</div>
+            <button class="button secondary" type="button" data-reward="digital-guide">Redeem</button>
+          </article>
+          <article class="reward-card">
+            <h3>Honorary Moderator Badge</h3>
+            <p>Step into the stewardship circle. Includes access to the moderation queue.</p>
+            <div class="reward-points">Cost: 400 pts</div>
+            <button class="button secondary" type="button" data-reward="moderator-role">Redeem</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="public-archives" id="merch">
+        <div class="row">
+          <h2>Merchandise</h2>
+          <p>Seasonal drops stay aligned with the rewards program so loyal members feel the love.</p>
+        </div>
+        <div class="merch-grid">
+          <article class="merch-card">
+            <h3>Book Club Hoodie</h3>
+            <p>Soft teal fleece with the Delco Tech crest. Ships worldwide.</p>
+            <a class="stripe-link" href="https://buy.stripe.com/test_5kA9DJ2Bo6Fs9UQdQR" target="_blank" rel="noopener">Buy with Stripe</a>
+          </article>
+          <article class="merch-card">
+            <h3>Annotated Journal</h3>
+            <p>Dot-grid pages, reading habit tracker, and prompts sourced from community feedback.</p>
+            <a class="stripe-link" href="https://buy.stripe.com/test_9AQ8yZ0n4fpm45O5kn" target="_blank" rel="noopener">Buy with Stripe</a>
+          </article>
+          <article class="merch-card">
+            <h3>Seasonal Bundle</h3>
+            <p>Quarterly shipment featuring a surprise title, companion playlist, and limited enamel pin.</p>
+            <a class="stripe-link" href="https://buy.stripe.com/test_dR68yZ0n49Fe0zu9AF" target="_blank" rel="noopener">Reserve Bundle</a>
+          </article>
         </div>
       </section>
 
@@ -1468,6 +2355,946 @@
         }
       });
 
+      const STORAGE_KEY = 'delcoBookClubMember';
+      const COMMENTS_KEY = 'delcoBookClubComments';
+
+      const authModal = document.getElementById('auth-modal');
+      const loginButton = document.getElementById('login-button');
+      const logoutButton = document.getElementById('logout-button');
+      const userChip = document.getElementById('user-chip');
+      const userNameEl = document.getElementById('user-name');
+      const userAvatarEl = document.getElementById('user-avatar');
+      const authForm = document.getElementById('auth-form');
+      const socialButtons = document.querySelectorAll('.social-login button');
+      const openAuthButtons = document.querySelectorAll('[data-open-auth]');
+      const memberSections = document.querySelectorAll('.member-only');
+      const profileDisplay = document.getElementById('profile-display');
+      const profileEmail = document.getElementById('profile-email');
+      const profileBioDisplay = document.getElementById('profile-bio-display');
+      const profileRole = document.getElementById('profile-role');
+      const profileAvatarImg = document.getElementById('profile-avatar');
+      const profileEditForm = document.getElementById('profile-edit-form');
+      const editProfileBtn = document.getElementById('edit-profile-btn');
+      const profileNameInput = document.getElementById('profile-name-input');
+      const profileAvatarInput = document.getElementById('profile-avatar-input');
+      const profileBioInput = document.getElementById('profile-bio-input');
+      const shelfStats = document.getElementById('shelf-stats');
+      const currentShelf = document.getElementById('current-shelf');
+      const completedShelf = document.getElementById('completed-shelf');
+      const resetProgressBtn = document.getElementById('reset-progress');
+      const pointsTotal = document.getElementById('points-total');
+      const badgeGrid = document.getElementById('badge-grid');
+      const rewardsOwned = document.getElementById('rewards-owned');
+      const activityLog = document.getElementById('activity-log');
+      const suggestionForm = document.getElementById('suggestion-form');
+      const suggestionList = document.getElementById('suggestion-list');
+      const commentForm = document.getElementById('comment-form');
+      const commentBook = document.getElementById('comment-book');
+      const commentMessage = document.getElementById('comment-message');
+      const commentNudge = document.getElementById('comment-nudge');
+      const commentThread = document.getElementById('discussion-thread');
+      const moderationPanel = document.getElementById('moderation-panel');
+      const moderationItems = document.getElementById('moderation-items');
+      const attendancePanel = document.getElementById('attendance-panel');
+      const attendanceList = document.getElementById('attendance-list');
+      const logAttendanceBtn = document.getElementById('log-attendance');
+      const rewardButtons = document.querySelectorAll('[data-reward]');
+
+      const rewardsConfig = {
+        'merch-discount': { cost: 250, label: '15% Merch Discount' },
+        'digital-guide': { cost: 180, label: 'Digital Exclusive Guide' },
+        'moderator-role': { cost: 400, label: 'Honorary Moderator Badge', grantRole: 'moderator' },
+      };
+
+      const parseStored = (key, fallback) => {
+        try {
+          const stored = localStorage.getItem(key);
+          return stored ? JSON.parse(stored) : fallback;
+        } catch (error) {
+          console.warn(`Unable to parse ${key}`, error);
+          return fallback;
+        }
+      };
+
+      const createAvatar = (seed) => `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed || 'Reader')}&background=%23e0f7f6`;
+
+      const normalizeUser = (data) => {
+        if (!data) {
+          return null;
+        }
+        return {
+          id: data.id || `user-${Date.now()}`,
+          name: data.name || 'Member',
+          email: data.email || '',
+          bio: data.bio || '',
+          avatar: data.avatar || createAvatar(data.name),
+          role: data.role || 'member',
+          points: Number.isFinite(data.points) ? data.points : 0,
+          shelves: {
+            current: Array.isArray(data?.shelves?.current) ? data.shelves.current : [],
+            completed: Array.isArray(data?.shelves?.completed) ? data.shelves.completed : [],
+          },
+          comments: Array.isArray(data.comments) ? data.comments : [],
+          suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
+          rewards: Array.isArray(data.rewards) ? data.rewards : [],
+          events: Array.isArray(data.events) ? data.events : [],
+          activity: Array.isArray(data.activity) ? data.activity : [],
+          badges: Array.isArray(data.badges) ? data.badges : [],
+        };
+      };
+
+      let user = normalizeUser(parseStored(STORAGE_KEY, null));
+      let comments = parseStored(COMMENTS_KEY, []);
+      if (!Array.isArray(comments)) {
+        comments = [];
+      }
+
+      if (!comments.length) {
+        comments = [
+          {
+            id: 'seed-1',
+            book: 'The Great Gatsby',
+            message:
+              'The green light always feels like the internet’s status icon for longing. What modern symbols remind you of Gatsby’s hope?',
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6).toISOString(),
+            author: {
+              name: 'Moderator Jules',
+              avatar: createAvatar('Moderator Jules'),
+            },
+            userId: 'mod-seed',
+            flagged: false,
+          },
+          {
+            id: 'seed-2',
+            book: 'Mary Poppins',
+            message:
+              'Just finished rereading Chapter 3 – the tea party on the ceiling is still a masterclass in joyful absurdity.',
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+            author: {
+              name: 'Riley A.',
+              avatar: createAvatar('Riley A'),
+            },
+            userId: 'seed-user',
+            flagged: false,
+          },
+        ];
+        localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
+      }
+
+      const saveComments = () => {
+        localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
+      };
+
+      const saveUser = () => {
+        if (user) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+        }
+      };
+
+      const clearUser = () => {
+        localStorage.removeItem(STORAGE_KEY);
+      };
+
+      const isModerator = () => user?.role === 'moderator';
+
+      const updateMemberVisibility = () => {
+        memberSections.forEach((section) => {
+          if (user) {
+            section.classList.add('active');
+          } else {
+            section.classList.remove('active');
+          }
+        });
+      };
+
+      const updateOverlayActions = () => {
+        document.querySelectorAll('.member-actions-inline button').forEach((btn) => {
+          btn.disabled = !user;
+        });
+      };
+
+      const addActivity = (message) => {
+        if (!user) {
+          return;
+        }
+        user.activity = [{ message, timestamp: new Date().toISOString() }, ...(user.activity || [])].slice(0, 20);
+      };
+
+      const awardPoints = (amount, reason) => {
+        if (!user) {
+          return;
+        }
+        user.points += amount;
+        addActivity(`${reason} (+${amount} pts)`);
+        saveUser();
+      };
+
+      const badgeRules = [
+        { id: 'prolific-reader', label: 'Prolific Reader', check: (member) => member.shelves.completed.length >= 3 },
+        { id: 'discussion-starter', label: 'Discussion Starter', check: (member) => member.comments.length >= 3 },
+        { id: 'event-attendee', label: 'Event Attendee', check: (member) => member.events.length >= 1 },
+        { id: 'idea-generator', label: 'Idea Generator', check: (member) => member.suggestions.length >= 2 },
+        { id: 'moderator', label: 'Moderator', check: (member) => member.role === 'moderator' },
+      ];
+
+      const updateBadges = () => {
+        if (!user) {
+          return;
+        }
+        user.badges = user.badges || [];
+        badgeRules.forEach((rule) => {
+          if (rule.check(user) && !user.badges.includes(rule.label)) {
+            user.badges.push(rule.label);
+            addActivity(`Unlocked badge: ${rule.label}`);
+          }
+        });
+        saveUser();
+      };
+
+      const renderBadges = () => {
+        if (!badgeGrid) {
+          return;
+        }
+        badgeGrid.innerHTML = '';
+        if (!user || !user.badges.length) {
+          const empty = document.createElement('p');
+          empty.className = 'login-nudge';
+          empty.textContent = 'Earn badges by finishing books, posting, and attending events.';
+          badgeGrid.appendChild(empty);
+          return;
+        }
+        user.badges.forEach((badge) => {
+          const span = document.createElement('span');
+          span.className = 'badge';
+          span.textContent = badge;
+          badgeGrid.appendChild(span);
+        });
+      };
+
+      const renderRewards = () => {
+        if (!rewardsOwned) {
+          return;
+        }
+        rewardsOwned.innerHTML = '';
+        if (!user || !user.rewards.length) {
+          const empty = document.createElement('span');
+          empty.className = 'chip';
+          empty.textContent = 'No rewards redeemed yet';
+          rewardsOwned.appendChild(empty);
+          return;
+        }
+        user.rewards.forEach((reward) => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.textContent = `${reward.label} · ${new Date(reward.redeemedAt).toLocaleDateString()}`;
+          rewardsOwned.appendChild(chip);
+        });
+      };
+
+      const renderActivity = () => {
+        if (!activityLog) {
+          return;
+        }
+        activityLog.innerHTML = '';
+        if (!user || !user.activity.length) {
+          const empty = document.createElement('li');
+          empty.textContent = 'Your actions will appear here once you start engaging.';
+          activityLog.appendChild(empty);
+          return;
+        }
+        user.activity.forEach((item) => {
+          const li = document.createElement('li');
+          li.textContent = `${item.message} — ${new Date(item.timestamp).toLocaleString()}`;
+          activityLog.appendChild(li);
+        });
+      };
+
+      const renderShelves = () => {
+        if (!user) {
+          currentShelf.innerHTML = '';
+          completedShelf.innerHTML = '';
+          shelfStats.innerHTML = '<span class="chip">0 currently reading</span><span class="chip">0 finished</span>';
+          return;
+        }
+
+        const makeChip = (item) => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.textContent = item.title;
+          return chip;
+        };
+
+        currentShelf.innerHTML = '';
+        completedShelf.innerHTML = '';
+
+        user.shelves.current.forEach((item) => {
+          currentShelf.appendChild(makeChip(item));
+        });
+
+        user.shelves.completed.forEach((item) => {
+          completedShelf.appendChild(makeChip(item));
+        });
+
+        shelfStats.innerHTML = '';
+        const currentStat = document.createElement('span');
+        currentStat.className = 'chip';
+        currentStat.textContent = `${user.shelves.current.length} currently reading`;
+        const completedStat = document.createElement('span');
+        completedStat.className = 'chip';
+        completedStat.textContent = `${user.shelves.completed.length} finished`;
+        shelfStats.append(currentStat, completedStat);
+      };
+
+      const renderSuggestions = () => {
+        if (!suggestionList) {
+          return;
+        }
+        suggestionList.innerHTML = '';
+        if (!user || !user.suggestions.length) {
+          const empty = document.createElement('li');
+          empty.textContent = 'Submit a suggestion to see it logged here.';
+          suggestionList.appendChild(empty);
+          return;
+        }
+        user.suggestions.forEach((idea) => {
+          const li = document.createElement('li');
+          li.textContent = `${idea.title} — ${new Date(idea.createdAt).toLocaleDateString()}`;
+          if (idea.notes) {
+            const notes = document.createElement('div');
+            notes.style.marginTop = '6px';
+            notes.textContent = idea.notes;
+            li.appendChild(notes);
+          }
+          suggestionList.appendChild(li);
+        });
+      };
+
+      const renderAttendance = () => {
+        if (!attendanceList) {
+          return;
+        }
+        attendanceList.innerHTML = '';
+        if (!user || !user.events.length) {
+          const empty = document.createElement('li');
+          empty.textContent = 'No events logged yet.';
+          attendanceList.appendChild(empty);
+          return;
+        }
+        user.events.forEach((event) => {
+          const li = document.createElement('li');
+          li.textContent = `${event.name} — ${new Date(event.attendedAt).toLocaleString()}`;
+          attendanceList.appendChild(li);
+        });
+      };
+
+      const updatePointsDisplay = () => {
+        if (pointsTotal) {
+          pointsTotal.textContent = user ? user.points : 0;
+        }
+      };
+
+      const updateProfileUI = () => {
+        if (!user) {
+          profileDisplay.textContent = 'Member Name';
+          profileEmail.textContent = 'member@example.com';
+          profileBioDisplay.textContent = 'Add a short bio to tell the community what you’re reading.';
+          profileRole.textContent = 'Member';
+          profileAvatarImg.src = createAvatar('Reader');
+          return;
+        }
+        profileDisplay.textContent = user.name;
+        profileEmail.textContent = user.email;
+        profileBioDisplay.textContent = user.bio || 'Share what you’re excited to read next.';
+        profileRole.textContent = user.role === 'moderator' ? 'Moderator' : 'Member';
+        profileAvatarImg.src = user.avatar || createAvatar(user.name);
+        if (profileEditForm) {
+          profileNameInput.value = user.name;
+          profileAvatarInput.value = user.avatar;
+          profileBioInput.value = user.bio;
+        }
+      };
+
+      const updateAuthUI = () => {
+        if (loginButton) {
+          loginButton.hidden = !!user;
+        }
+        if (userChip) {
+          userChip.hidden = !user;
+        }
+        if (userNameEl) {
+          userNameEl.textContent = user ? user.name : 'Reader';
+        }
+        if (userAvatarEl) {
+          userAvatarEl.src = user ? user.avatar || createAvatar(user.name) : createAvatar('Reader');
+        }
+        if (commentNudge) {
+          commentNudge.textContent = user
+            ? `Signed in as ${user.name}. Thoughtful replies earn +25 points.`
+            : 'Sign in to earn points and keep your contributions tied to your profile.';
+        }
+        updateMemberVisibility();
+        updateOverlayActions();
+      };
+
+      const updateMemberUI = () => {
+        updateProfileUI();
+        updatePointsDisplay();
+        renderBadges();
+        renderRewards();
+        renderActivity();
+        renderShelves();
+        renderSuggestions();
+        renderAttendance();
+        updateModerationPanel();
+      };
+
+      const openAuthModal = () => {
+        if (!authModal) {
+          return;
+        }
+        authModal.classList.remove('hidden');
+        mainContainer.classList.add('prevent-scroll');
+      };
+
+      const hideAuthModal = () => {
+        if (!authModal) {
+          return;
+        }
+        authModal.classList.add('hidden');
+        if (!mainOverlay.classList.contains('active') && !mainContainer.classList.contains('nav-menu-open')) {
+          mainContainer.classList.remove('prevent-scroll');
+        }
+      };
+
+      const renderComments = () => {
+        if (!commentThread) {
+          return;
+        }
+        commentThread.innerHTML = '';
+        if (!comments.length) {
+          const empty = document.createElement('p');
+          empty.className = 'login-nudge';
+          empty.textContent = 'No posts yet. Sign in to start the conversation.';
+          commentThread.appendChild(empty);
+          return;
+        }
+        const sorted = comments.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        sorted.forEach((comment) => {
+          const card = document.createElement('article');
+          card.className = 'comment-card';
+          card.dataset.commentId = comment.id;
+
+          const avatar = document.createElement('img');
+          avatar.className = 'comment-avatar';
+          avatar.src = comment.author?.avatar || createAvatar(comment.author?.name || 'Reader');
+          avatar.alt = `${comment.author?.name || 'Member'} avatar`;
+
+          const content = document.createElement('div');
+          const meta = document.createElement('div');
+          meta.className = 'comment-meta';
+
+          const author = document.createElement('strong');
+          author.textContent = comment.author?.name || 'Reader';
+
+          const time = document.createElement('span');
+          time.style.fontSize = '12px';
+          time.style.color = 'rgba(49, 49, 49, 0.6)';
+          time.textContent = new Date(comment.createdAt).toLocaleString();
+
+          meta.append(author, time);
+          content.appendChild(meta);
+
+          const message = document.createElement('p');
+          if (comment.flagged && !isModerator()) {
+            message.className = 'comment-flagged';
+            message.textContent = 'This comment is under review by the moderation team.';
+          } else {
+            message.textContent = comment.message;
+          }
+          content.appendChild(message);
+
+          const footer = document.createElement('div');
+          footer.className = 'comment-actions';
+
+          if (comment.book && comment.book !== 'general') {
+            const context = document.createElement('span');
+            context.textContent = `#${comment.book}`;
+            context.style.color = 'rgba(33, 158, 154, 0.9)';
+            context.style.fontWeight = '700';
+            footer.appendChild(context);
+          }
+
+          if (user) {
+            const flagBtn = document.createElement('button');
+            flagBtn.type = 'button';
+            flagBtn.dataset.action = 'flag';
+            flagBtn.dataset.commentId = comment.id;
+            flagBtn.textContent = comment.flagged ? 'Flagged' : 'Flag';
+            flagBtn.disabled = comment.flagged;
+            footer.appendChild(flagBtn);
+          }
+
+          if (isModerator()) {
+            const approveBtn = document.createElement('button');
+            approveBtn.type = 'button';
+            approveBtn.dataset.action = 'approve';
+            approveBtn.dataset.commentId = comment.id;
+            approveBtn.textContent = 'Approve';
+            footer.appendChild(approveBtn);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.dataset.action = 'remove';
+            removeBtn.dataset.commentId = comment.id;
+            removeBtn.textContent = 'Remove';
+            footer.appendChild(removeBtn);
+          }
+
+          if (footer.children.length) {
+            content.appendChild(footer);
+          }
+
+          card.append(avatar, content);
+          commentThread.appendChild(card);
+        });
+      };
+
+      const updateModerationPanel = () => {
+        if (!moderationPanel || !moderationItems) {
+          return;
+        }
+        const flagged = comments.filter((comment) => comment.flagged);
+        if (isModerator() && flagged.length) {
+          moderationPanel.classList.add('active');
+          moderationItems.innerHTML = '';
+          flagged.forEach((comment) => {
+            const row = document.createElement('div');
+            row.className = 'moderation-item';
+            row.innerHTML = `<span><strong>${comment.author?.name || 'Reader'}</strong> flagged in <em>${comment.book || 'General'}</em></span>`;
+            const actions = document.createElement('div');
+            const approve = document.createElement('button');
+            approve.type = 'button';
+            approve.dataset.action = 'approve';
+            approve.dataset.commentId = comment.id;
+            approve.textContent = 'Approve';
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.dataset.action = 'remove';
+            remove.dataset.commentId = comment.id;
+            remove.textContent = 'Remove';
+            actions.append(approve, remove);
+            row.appendChild(actions);
+            moderationItems.appendChild(row);
+          });
+        } else {
+          moderationPanel.classList.remove('active');
+          moderationItems.innerHTML = '';
+        }
+      };
+
+      const handleMemberAction = (action, title) => {
+        if (!user || !title) {
+          return;
+        }
+        const currentShelfItems = user.shelves.current || [];
+        const completedShelfItems = user.shelves.completed || [];
+
+        if (action === 'current') {
+          if (!currentShelfItems.some((item) => item.title === title)) {
+            currentShelfItems.push({ title, addedAt: new Date().toISOString() });
+            addActivity(`Added ${title} to currently reading`);
+          }
+        } else if (action === 'finished') {
+          const alreadyCompleted = completedShelfItems.some((item) => item.title === title);
+          user.shelves.current = currentShelfItems.filter((item) => item.title !== title);
+          if (!alreadyCompleted) {
+            completedShelfItems.push({ title, addedAt: new Date().toISOString() });
+            awardPoints(150, `Finished ${title}`);
+          }
+        } else if (action === 'suggest') {
+          if (suggestionForm) {
+            suggestionForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const suggestionTitle = document.getElementById('suggestion-title');
+            const suggestionNotes = document.getElementById('suggestion-notes');
+            if (suggestionTitle) {
+              suggestionTitle.value = title;
+            }
+            if (suggestionNotes) {
+              suggestionNotes.focus();
+            }
+          }
+        }
+
+        user.shelves.current = currentShelfItems;
+        user.shelves.completed = completedShelfItems;
+        saveUser();
+        updateBadges();
+        updateMemberUI();
+      };
+
+      const flagComment = (commentId) => {
+        const comment = comments.find((item) => item.id === commentId);
+        if (!comment || comment.flagged) {
+          return;
+        }
+        comment.flagged = true;
+        comment.flaggedBy = user?.name || 'Member';
+        comment.flaggedAt = new Date().toISOString();
+        saveComments();
+        renderComments();
+        updateModerationPanel();
+      };
+
+      const approveComment = (commentId) => {
+        const comment = comments.find((item) => item.id === commentId);
+        if (!comment) {
+          return;
+        }
+        comment.flagged = false;
+        saveComments();
+        renderComments();
+        updateModerationPanel();
+      };
+
+      const removeComment = (commentId) => {
+        const removed = comments.find((item) => item.id === commentId);
+        comments = comments.filter((item) => item.id !== commentId);
+        saveComments();
+        if (user && removed?.userId === user.id) {
+          user.comments = (user.comments || []).filter((id) => id !== commentId);
+          saveUser();
+          updateMemberUI();
+        }
+        renderComments();
+        updateModerationPanel();
+      };
+
+      const initializeBookOverlays = () => {
+        bookItems.forEach((item) => {
+          const overlayDesc = item.querySelector('.overlay-desc');
+          if (!overlayDesc) {
+            return;
+          }
+          const bookTitle = item.dataset.title || overlayDesc.querySelector('.overlay_title')?.textContent || 'Selection';
+
+          if (!overlayDesc.querySelector('.member-actions-inline')) {
+            const container = document.createElement('div');
+            container.className = 'member-actions member-actions-inline';
+            container.dataset.bookTitle = bookTitle;
+            container.innerHTML = `
+              <button type="button" data-action="current">Add to Currently Reading</button>
+              <button type="button" data-action="finished">Mark as Finished (+150)</button>
+              <button type="button" data-action="suggest">Suggest for Spotlight</button>
+            `;
+            overlayDesc.appendChild(container);
+          }
+
+          if (!overlayDesc.querySelector('.affiliate-links')) {
+            const links = document.createElement('div');
+            links.className = 'affiliate-links';
+            links.innerHTML = `
+              <a class="affiliate-link" href="https://bookshop.org/search?keywords=${encodeURIComponent(bookTitle)}" target="_blank" rel="noopener">Support via Bookshop.org</a>
+              <a class="affiliate-link" href="https://libro.fm/search?q=${encodeURIComponent(bookTitle)}" target="_blank" rel="noopener">Listen on Libro.fm</a>
+            `;
+            overlayDesc.appendChild(links);
+          }
+        });
+        updateOverlayActions();
+      };
+
+      document.addEventListener('click', (event) => {
+        const actionButton = event.target.closest('.member-actions-inline button[data-action]');
+        if (actionButton) {
+          event.preventDefault();
+          if (!user) {
+            openAuthModal();
+            return;
+          }
+          const title = actionButton.closest('.member-actions-inline')?.dataset.bookTitle;
+          handleMemberAction(actionButton.dataset.action, title);
+        }
+
+        const authTrigger = event.target.closest('[data-open-auth]');
+        if (authTrigger) {
+          event.preventDefault();
+          openAuthModal();
+        }
+      });
+
+      if (authModal) {
+        const closeBtn = authModal.querySelector('.auth-close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', () => {
+            hideAuthModal();
+          });
+        }
+        authModal.addEventListener('click', (event) => {
+          if (event.target === authModal) {
+            hideAuthModal();
+          }
+        });
+      }
+
+      if (loginButton) {
+        loginButton.addEventListener('click', () => {
+          openAuthModal();
+        });
+      }
+
+      if (logoutButton) {
+        logoutButton.addEventListener('click', () => {
+          user = null;
+          clearUser();
+          updateAuthUI();
+          updateMemberUI();
+        });
+      }
+
+      if (authForm) {
+        authForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const name = authForm.querySelector('#auth-name')?.value.trim();
+          const email = authForm.querySelector('#auth-email')?.value.trim();
+          const bio = authForm.querySelector('#auth-bio')?.value.trim();
+          if (!name || !email) {
+            return;
+          }
+          user = normalizeUser({
+            id: `user-${Date.now()}`,
+            name,
+            email,
+            bio,
+            avatar: createAvatar(name),
+            points: 0,
+          });
+          addActivity('Joined the Delco Tech Book Club');
+          saveUser();
+          hideAuthModal();
+          authForm.reset();
+          updateBadges();
+          updateAuthUI();
+          updateMemberUI();
+        });
+      }
+
+      socialButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const provider = button.dataset.provider || 'member';
+          const pretty = provider.charAt(0).toUpperCase() + provider.slice(1);
+          const nameField = authForm?.querySelector('#auth-name');
+          const emailField = authForm?.querySelector('#auth-email');
+          const bioField = authForm?.querySelector('#auth-bio');
+          if (nameField) {
+            nameField.value = `${pretty} Reader`;
+          }
+          if (emailField) {
+            emailField.value = `${provider}.reader@example.com`;
+          }
+          if (bioField) {
+            bioField.value = 'Excited to read with Delco Tech!';
+          }
+          openAuthModal();
+        });
+      });
+
+      if (editProfileBtn && profileEditForm) {
+        editProfileBtn.addEventListener('click', () => {
+          profileEditForm.hidden = !profileEditForm.hidden;
+        });
+
+        profileEditForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+          if (!user) {
+            return;
+          }
+          user.name = profileNameInput.value.trim() || user.name;
+          user.avatar = profileAvatarInput.value.trim() || user.avatar;
+          user.bio = profileBioInput.value.trim();
+          saveUser();
+          updateProfileUI();
+          updateAuthUI();
+          profileEditForm.hidden = true;
+        });
+      }
+
+      if (resetProgressBtn) {
+        resetProgressBtn.addEventListener('click', () => {
+          if (!user) {
+            openAuthModal();
+            return;
+          }
+          if (confirm('Reset your current and completed shelves?')) {
+            user.shelves.current = [];
+            user.shelves.completed = [];
+            saveUser();
+            updateMemberUI();
+          }
+        });
+      }
+
+      if (commentForm) {
+        commentForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+          if (!user) {
+            openAuthModal();
+            return;
+          }
+          const message = commentMessage?.value.trim();
+          if (!message) {
+            return;
+          }
+          const book = commentBook?.value || 'general';
+          const newComment = {
+            id: `comment-${Date.now()}`,
+            book,
+            message,
+            createdAt: new Date().toISOString(),
+            author: {
+              name: user.name,
+              avatar: user.avatar,
+            },
+            userId: user.id,
+            flagged: false,
+          };
+          comments.push(newComment);
+          saveComments();
+          user.comments = [...(user.comments || []), newComment.id];
+          awardPoints(25, 'Shared a discussion reply');
+          addActivity(`Posted in ${book === 'general' ? 'General Discussion' : book}`);
+          commentForm.reset();
+          updateBadges();
+          renderComments();
+          updateMemberUI();
+        });
+      }
+
+      if (commentThread) {
+        commentThread.addEventListener('click', (event) => {
+          const button = event.target.closest('.comment-actions button');
+          if (!button) {
+            return;
+          }
+          const { action, commentId } = button.dataset;
+          if (!commentId) {
+            return;
+          }
+          if (action === 'flag') {
+            if (!user) {
+              openAuthModal();
+              return;
+            }
+            flagComment(commentId);
+          } else if (action === 'approve' && isModerator()) {
+            approveComment(commentId);
+          } else if (action === 'remove' && isModerator()) {
+            removeComment(commentId);
+          }
+        });
+      }
+
+      if (moderationItems) {
+        moderationItems.addEventListener('click', (event) => {
+          const button = event.target.closest('button[data-action][data-comment-id]');
+          if (!button || !isModerator()) {
+            return;
+          }
+          const { action, commentId } = button.dataset;
+          if (action === 'approve') {
+            approveComment(commentId);
+          } else if (action === 'remove') {
+            removeComment(commentId);
+          }
+        });
+      }
+
+      if (suggestionForm) {
+        suggestionForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+          if (!user) {
+            openAuthModal();
+            return;
+          }
+          const title = document.getElementById('suggestion-title')?.value.trim();
+          const notes = document.getElementById('suggestion-notes')?.value.trim();
+          if (!title) {
+            return;
+          }
+          const suggestion = {
+            id: `suggestion-${Date.now()}`,
+            title,
+            notes,
+            createdAt: new Date().toISOString(),
+          };
+          user.suggestions = [...(user.suggestions || []), suggestion];
+          awardPoints(40, 'Shared a suggestion');
+          addActivity(`Suggested ${title}`);
+          saveUser();
+          updateBadges();
+          updateMemberUI();
+          suggestionForm.reset();
+        });
+      }
+
+      if (logAttendanceBtn) {
+        logAttendanceBtn.addEventListener('click', () => {
+          if (!user) {
+            openAuthModal();
+            return;
+          }
+          const attendance = {
+            id: `event-${Date.now()}`,
+            name: 'Community Gathering',
+            attendedAt: new Date().toISOString(),
+          };
+          user.events = [...(user.events || []), attendance];
+          awardPoints(100, 'Attended an event');
+          saveUser();
+          updateBadges();
+          updateMemberUI();
+        });
+      }
+
+      rewardButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const rewardId = button.dataset.reward;
+          const config = rewardsConfig[rewardId];
+          if (!config) {
+            return;
+          }
+          if (!user) {
+            openAuthModal();
+            return;
+          }
+          if (user.points < config.cost) {
+            alert('Earn a few more points to unlock this reward.');
+            return;
+          }
+          user.points -= config.cost;
+          user.rewards = [...(user.rewards || []), { id: rewardId, label: config.label, redeemedAt: new Date().toISOString() }];
+          if (config.grantRole) {
+            user.role = config.grantRole;
+          }
+          addActivity(`Redeemed ${config.label}`);
+          saveUser();
+          updateBadges();
+          updateMemberUI();
+        });
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && authModal && !authModal.classList.contains('hidden')) {
+          hideAuthModal();
+        }
+      });
+
+      initializeBookOverlays();
+      updateAuthUI();
+      if (user) {
+        updateBadges();
+      }
+      updateMemberUI();
+      renderComments();
+
       const applyFilters = () => {
         const activeGroup = document.querySelector('.filter-item.active')?.dataset.group || 'all';
         const query = searchInput.value.trim().toLowerCase();
@@ -1525,5 +3352,6 @@
       }
     });
   </script>
+  <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 </body>
 </html>
