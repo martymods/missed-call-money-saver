@@ -1,178 +1,1529 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Community Book Club Platform Blueprint</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Delco Tech Book Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;600;700;900&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css" />
   <style>
-    :root{
-      --bg:#0a0d1a; --surface:#111936; --card:#162246; --muted:#7f8bb8;
-      --accent:#ff7f5f; --accent2:#ffb86c; --text:#f2f5ff; --edge:rgba(255,255,255,0.08);
+    :root {
+      --primary: #219e9a;
+      --light-gray: #ecf0f1;
+      --medium-gray: #d2d6d5;
+      --dark-gray: #313131;
+      --black: #000000;
+      --white: #ffffff;
+      --surface: #f7f8f9;
+      --overlay-bg: rgba(49, 49, 49, 0.75);
+      --transition: 250ms ease-out;
     }
-    *{box-sizing:border-box}
-    body{margin:0;font:16px/1.6 "Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);background:var(--bg);}
-    a{color:#ffd5b3}
-    header{position:sticky;top:0;z-index:20;background:rgba(10,13,26,0.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--edge);}
-    nav{max-width:1100px;margin:auto;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
-    .logo{display:flex;flex-direction:column;gap:4px;font-weight:800;letter-spacing:0.3px;text-transform:uppercase;font-size:14px;color:#ffccb3;}
-    .links{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
-    .badge{padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#111936;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.6px;}
-    main{max-width:1100px;margin:auto;padding:40px 20px 80px;display:grid;gap:40px;}
-    section{background:var(--surface);border:1px solid var(--edge);border-radius:20px;padding:28px 24px;box-shadow:0 20px 60px rgba(5,8,20,0.45);}
-    h1{margin:0;font-size:36px;line-height:1.1;font-weight:900;}
-    h2{margin:28px 0 12px;font-size:26px;color:#ffd9c1;}
-    h3{margin:20px 0 8px;font-size:20px;color:#ffbfa3;}
-    p{margin:12px 0;color:#d6dcff;}
-    ul{margin:12px 0 12px 22px;padding:0;color:#d6dcff;}
-    li{margin:8px 0;}
-    .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
-    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:18px 20px;}
-    .highlight{border-left:3px solid var(--accent);padding-left:16px;background:rgba(255,130,96,0.08);border-radius:14px;margin:16px 0;padding-top:12px;padding-bottom:12px;}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:rgba(255,127,95,0.12);color:#ffcbb2;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
-    .footer{color:var(--muted);font-size:13px;text-align:center;padding:30px 16px 50px;}
-    @media (max-width:640px){
-      nav{flex-direction:column;align-items:flex-start;}
-      header{position:static;}
-      h1{font-size:30px;}
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html,
+    body,
+    .main,
+    .main-container {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: var(--dark-gray);
+      background: var(--light-gray);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    h2,
+    h3 {
+      margin: 6px 0;
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: var(--dark-gray);
+    }
+
+    h2 {
+      font-size: 28px;
+    }
+
+    h3 {
+      font-size: 24px;
+    }
+
+    h4 {
+      margin: 0 0 12px;
+      font-size: 22px;
+      line-height: 40px;
+      color: rgba(49, 49, 49, 0.7);
+    }
+
+    p {
+      margin: 12px 0;
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.4;
+    }
+
+    p.author {
+      margin-bottom: 10px;
+      letter-spacing: -1px;
+      font-weight: 400;
+      color: rgba(49, 49, 49, 0.5);
+    }
+
+    ul {
+      padding-left: 22px;
+    }
+
+    a.button {
+      display: inline-block;
+      margin-bottom: 0;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 3px;
+      background-color: rgba(49, 49, 49, 0.5);
+      color: var(--white);
+      transition: background-color var(--transition);
+    }
+
+    a.button:hover,
+    a.button:focus {
+      background-color: var(--primary);
+    }
+
+    .row {
+      max-width: 1024px;
+      margin: 0 auto;
+      padding: 0 20px;
+      width: 100%;
+    }
+
+    .page-header {
+      position: relative;
+      margin-bottom: 55px;
+      width: 100%;
+      border-bottom: 1px solid var(--medium-gray);
+      background-color: var(--white);
+      z-index: 10;
+    }
+
+    .page-header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 15px 0;
+    }
+
+    .main-logo {
+      display: inline-block;
+      padding: 1em 0;
+    }
+
+    .main-logo .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: var(--dark-gray);
+      text-transform: uppercase;
+    }
+
+    .main-logo .logo::before {
+      content: '\\f02d';
+      font-family: 'fontawesome';
+      font-size: 28px;
+      color: var(--primary);
+    }
+
+    .menu-search {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .main-navigation {
+      position: relative;
+      padding-left: 20px;
+      border-left: 1px solid var(--medium-gray);
+    }
+
+    .main-navigation a {
+      display: inline-block;
+      line-height: 40px;
+      vertical-align: middle;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--dark-gray);
+    }
+
+    .main-navigation a::before {
+      content: '\\f0c9';
+      display: inline-block;
+      padding-right: 10px;
+      font-family: 'fontawesome';
+      font-size: 18px;
+      color: rgba(49, 49, 49, 0.45);
+    }
+
+    .catalog-search {
+      position: relative;
+      margin: 0 0 0 10px;
+      width: 260px;
+      max-width: 100%;
+    }
+
+    .input_field {
+      width: 100%;
+      padding: 14px 7px 0;
+      border: none;
+      border-radius: 0;
+      color: var(--dark-gray);
+      font-family: inherit;
+      font-size: 15px;
+      background: transparent;
+      border-bottom: 1px solid rgba(49, 49, 49, 0.45);
+      transition: border-color var(--transition);
+    }
+
+    .input_field:focus {
+      outline: none;
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .input_label {
+      position: absolute;
+      bottom: 8px;
+      left: 0;
+      width: 100%;
+      color: var(--medium-gray);
+      pointer-events: none;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .input_label-search::after {
+      content: '\\f002';
+      position: absolute;
+      right: 5px;
+      top: 0;
+      font-family: 'fontawesome';
+      color: rgba(49, 49, 49, 0.45);
+    }
+
+    .input_field:focus + .input_label,
+    .input--filled .input_label {
+      transform: translateY(-18px);
+      opacity: 0.8;
+      font-size: 12px;
+    }
+
+    .main-container {
+      position: relative;
+      overflow-x: hidden;
+      background: var(--surface);
+    }
+
+    .main-container.prevent-scroll {
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .nav-menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 300px;
+      max-width: 90vw;
+      height: 100%;
+      background: var(--primary);
+      transform: translate3d(100%, 0, 0);
+      transition: transform 0.5s;
+      z-index: 30;
+      color: #f3efe0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav-menu h2 {
+      margin: 0;
+      padding: 1em;
+      font-size: 32px;
+      font-weight: 300;
+      color: rgba(0, 0, 0, 0.4);
+    }
+
+    .nav-menu ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex: 1;
+    }
+
+    .nav-menu li a {
+      display: block;
+      padding: 1em 1.2em;
+      color: #f3efe0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 500;
+      box-shadow: inset 0 -1px rgba(0, 0, 0, 0.2);
+      transition: background 0.3s;
+    }
+
+    .nav-menu li:first-child a {
+      box-shadow: inset 0 -1px rgba(0, 0, 0, 0.2), inset 0 1px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-menu li a:hover,
+    .nav-menu li a:focus {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-menu .menu-close {
+      margin: 1em;
+      align-self: flex-end;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 999px;
+      padding: 0.4em 0.8em;
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: #f3efe0;
+      cursor: pointer;
+    }
+
+    .nav-menu-open .nav-menu {
+      transform: translate3d(0, 0, 0);
+    }
+
+    .main {
+      position: relative;
+      min-height: 100vh;
+    }
+
+    .page-container {
+      max-width: 1024px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    .page-title {
+      margin-bottom: 20px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 30px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--medium-gray);
+    }
+
+    .filter-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .filter-options .filter-item {
+      font-size: 14px;
+      color: var(--dark-gray);
+      padding-bottom: 6px;
+      border-bottom: 3px solid transparent;
+      transition: color var(--transition), border-color var(--transition);
+    }
+
+    .filter-options .filter-item.active {
+      color: var(--primary);
+      font-weight: 700;
+      border-color: var(--primary);
+    }
+
+    .sort-options {
+      min-width: 160px;
+      font-size: 14px;
+      padding: 8px 10px;
+      border: 1px solid var(--medium-gray);
+      border-radius: 4px;
+      background: var(--white);
+      color: var(--dark-gray);
+    }
+
+    #grid {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 30px;
+    }
+
+    .book-item {
+      position: relative;
+      padding: 15px;
+      background: var(--white);
+      border-radius: 6px;
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+      transition: transform var(--transition), box-shadow var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .book-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.1);
+    }
+
+    .book-item .bk-img {
+      position: relative;
+      display: flex;
+      gap: 20px;
+    }
+
+    .book-item .bk-wrapper {
+      position: relative;
+      width: 150px;
+      height: 215px;
+      perspective: 1400px;
+      flex-shrink: 0;
+    }
+
+    .book-item .bk-book {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transition: transform 0.5s;
+    }
+
+    .book-item .bk-front,
+    .book-item .bk-back,
+    .book-item .bk-front > div {
+      position: absolute;
+      width: 150px;
+      height: 215px;
+      border-radius: 0 3px 3px 0;
+    }
+
+    .book-item .bk-front {
+      transform: translate3d(0, 0, 20px);
+      transform-origin: 0% 50%;
+      box-shadow: inset 4px 0 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .book-item .bk-front::after,
+    .book-item .bk-back::after,
+    .book-item .bk-cover::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 10px;
+      width: 3px;
+      background: rgba(0, 0, 0, 0.06);
+      box-shadow: 1px 0 3px rgba(255, 255, 255, 0.1);
+    }
+
+    .book-item .bk-back {
+      transform: rotate3d(0, 1, 0, -180deg) translate3d(0, 0, 20px);
+      border-radius: 3px 0 0 3px;
+      opacity: 0;
+      transition: opacity var(--transition);
+      box-shadow: 5px 7px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .book-item .bk-left {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: -20px;
+      width: 40px;
+      transform: rotate3d(0, 1, 0, -90deg);
+      transform-origin: left center;
+      border-radius: 3px 0 0 3px;
+      background: var(--primary);
+    }
+
+    .book-item .bk-cover {
+      position: absolute;
+      inset: 0;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: top left;
+    }
+
+    .book-item:hover .bk-book {
+      transform: rotate3d(0, 1, 0, 25deg);
+    }
+
+    .book-item:hover .bk-back {
+      opacity: 1;
+    }
+
+    .item-details h3 {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-details p:not(.author) {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .overlay-details {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(800px, 90vw);
+      max-height: 80vh;
+      background: var(--white);
+      border-radius: 8px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+      padding: 40px 30px;
+      display: none;
+      gap: 30px;
+      z-index: 3;
+    }
+
+    .book-item.overlay-open .overlay-details {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .overlay-image {
+      position: relative;
+      width: 260px;
+      max-width: 100%;
+      margin-right: 20px;
+    }
+
+    .overlay-image .back-color {
+      position: absolute;
+      inset: 0;
+      border-radius: 6px;
+      opacity: 0.4;
+    }
+
+    .overlay-image img {
+      position: relative;
+      border-radius: 6px;
+      box-shadow: -12px 12px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .overlay-desc,
+    .overlay-preview {
+      flex: 1;
+      min-width: 240px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .overlay-preview {
+      display: none;
+    }
+
+    .book-item.preview-open .overlay-desc {
+      display: none;
+    }
+
+    .book-item.preview-open .overlay-preview {
+      display: block;
+    }
+
+    .close-overlay-btn,
+    .back-preview-btn {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      text-indent: -9999px;
+      cursor: pointer;
+      opacity: 0.4;
+      transition: opacity var(--transition);
+    }
+
+    .close-overlay-btn:hover,
+    .back-preview-btn:hover {
+      opacity: 1;
+    }
+
+    .close-overlay-btn::before,
+    .close-overlay-btn::after,
+    .back-preview-btn::before,
+    .back-preview-btn::after {
+      content: '';
+      position: absolute;
+      left: 14px;
+      width: 2px;
+      background: var(--dark-gray);
+    }
+
+    .close-overlay-btn {
+      top: 12px;
+      right: 12px;
+    }
+
+    .close-overlay-btn::before {
+      height: 30px;
+      transform: rotate(45deg);
+    }
+
+    .close-overlay-btn::after {
+      height: 30px;
+      transform: rotate(-45deg);
+    }
+
+    .back-preview-btn {
+      top: 12px;
+      left: -34px;
+    }
+
+    .back-preview-btn::before {
+      top: 7px;
+      height: 16px;
+      transform: rotate(45deg);
+    }
+
+    .back-preview-btn::after {
+      top: 7px;
+      height: 16px;
+      transform: rotate(-45deg);
+    }
+
+    .overlay-preview .preview-content {
+      padding-top: 20px;
+      border-top: 1px solid var(--medium-gray);
+    }
+
+    .main-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--overlay-bg);
+      display: none;
+      z-index: 20;
+    }
+
+    .main-overlay.active {
+      display: block;
+    }
+
+    .main-overlay .overlay-full {
+      position: absolute;
+      inset: 0;
+    }
+
+    .page-footer {
+      background: var(--white);
+      border-top: 1px solid var(--medium-gray);
+      padding: 30px 0;
+    }
+
+    .page-footer .footer-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+      font-size: 13px;
+      color: rgba(49, 49, 49, 0.6);
+    }
+
+    .blueprint {
+      padding: 60px 20px 90px;
+      background: #101523;
+      color: #e4e8ff;
+    }
+
+    .blueprint h2 {
+      color: #ffdbc4;
+      font-size: 30px;
+    }
+
+    .blueprint h3 {
+      color: #ffd3b2;
+      font-size: 22px;
+    }
+
+    .blueprint .summary {
+      max-width: 960px;
+      margin: 0 auto 40px;
+      text-align: center;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .blueprint-grid {
+      max-width: 1024px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .blueprint-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .blueprint-card p {
+      color: rgba(228, 232, 255, 0.82);
+    }
+
+    .blueprint-section {
+      max-width: 1024px;
+      margin: 60px auto 0;
+    }
+
+    .blueprint-section + .blueprint-section {
+      margin-top: 80px;
+    }
+
+    .blueprint-section ul {
+      color: rgba(228, 232, 255, 0.82);
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .badge-row .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255, 150, 110, 0.15);
+      color: #ffd0b1;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 900px) {
+      .book-item .overlay-details {
+        max-height: none;
+        overflow-y: auto;
+      }
+
+      .overlay-image {
+        margin-right: 0;
+      }
+
+      .back-preview-btn {
+        left: auto;
+        right: 44px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .page-header-container {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .menu-search {
+        width: 100%;
+      }
+
+      .main-navigation {
+        border-left: none;
+        padding-left: 0;
+      }
+
+      .catalog-search {
+        width: 100%;
+        margin: 0;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      #grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      }
+    }
+
+    @media (max-width: 600px) {
+      .book-item {
+        padding: 12px;
+      }
+
+      .book-item .bk-img {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .book-item .item-details {
+        padding-right: 0;
+      }
+
+      .book-item .bk-wrapper {
+        margin: 0 auto;
+      }
+
+      .overlay-details {
+        padding: 30px 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <header>
-    <nav>
-      <div class="logo">
-        <span>Delco Tech Division</span>
-        <span class="badge">Book Club Experience</span>
-      </div>
-      <div class="links">
-        <span>Home</span>
-        <span>Books</span>
-        <span>Events</span>
-        <span>Shop</span>
-        <span>About</span>
-      </div>
+  <div id="main-container" class="main-container nav-effect-1">
+    <nav class="nav-menu nav-effect-1" id="menu-1" aria-label="Book club menu">
+      <button class="menu-close" type="button">Close</button>
+      <h2>The Library</h2>
+      <ul>
+        <li><a href="#browse" class="menu-link">Browse</a></li>
+        <li><a href="#blueprint" class="menu-link">Blueprint</a></li>
+        <li><a href="#events" class="menu-link">Events</a></li>
+        <li><a href="#contact" class="menu-link">Contact</a></li>
+      </ul>
     </nav>
-  </header>
 
-  <main>
-    <section>
-      <h1>Open Access and Member Sign-Up</h1>
-      <div class="highlight">
-        <p>The platform keeps core content public-first to welcome curious visitors, while layering optional accounts and MongoDB-backed profiles for those ready to participate.</p>
+    <div class="main clearfix">
+      <header id="header" class="page-header">
+        <div class="page-header-container row">
+          <div class="main-logo">
+            <a href="#browse" class="logo">The Library</a>
+          </div>
+          <div class="menu-search">
+            <div class="main-navigation">
+              <a href="#" class="menu-toggle" aria-expanded="false">Menu</a>
+            </div>
+            <div class="catalog-search">
+              <input class="shuffle-search input_field" type="search" autocomplete="off" maxlength="128" id="input-search" placeholder="" />
+              <label class="input_label input_label-search" for="input-search">
+                <span class="input_label-content">Search Library</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="page-container" id="browse">
+        <div class="page-title category-title">
+          <h2>Featured Catalog</h2>
+        </div>
+
+        <section id="book_list">
+          <div class="toolbar row">
+            <div class="filter-options">
+              <a href="#" class="filter-item active" data-group="all">All Categories</a>
+              <a href="#" class="filter-item" data-group="fantasy">Fantasy</a>
+              <a href="#" class="filter-item" data-group="sci-fi">Sci-Fi</a>
+              <a href="#" class="filter-item" data-group="classic">Classics</a>
+              <a href="#" class="filter-item" data-group="fairy">Fairy Tale</a>
+              <a href="#" class="filter-item" data-group="young">Young Adult</a>
+            </div>
+            <div>
+              <select class="sort-options" aria-label="Sort books">
+                <option value="" disabled selected>Sort by</option>
+                <option value="featured">Featured</option>
+                <option value="title">Alphabetical</option>
+                <option value="date-created">Published</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-shuffle">
+            <ul id="grid">
+              <li class="book-item" data-groups='["classic"]' data-date-created="1937" data-title="Of Mice and Men" data-color="#fcc278">
+                <div class="bk-img">
+                  <div class="bk-wrapper">
+                    <div class="bk-book bk-bookdefault">
+                      <div class="bk-front">
+                        <div class="bk-cover" style="background-image: url('https://interactivejoe.com/book-viewer/assets/images/bk_1-small.jpg');"></div>
+                      </div>
+                      <div class="bk-back" style="background-color:#fcc278"></div>
+                      <div class="bk-left" style="background-color:#fcc278"></div>
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <h3 class="book-item_title">Of Mice and Men</h3>
+                    <p class="author">by John Steinbeck • 1937</p>
+                    <p>Two displaced migrant ranch workers search for a place to belong in Steinbeck's enduring portrait of friendship and hope during the Great Depression.</p>
+                    <a href="#" class="button details">Details</a>
+                  </div>
+                </div>
+                <div class="overlay-details">
+                  <a href="#" class="close-overlay-btn">Close</a>
+                  <div class="overlay-image">
+                    <div class="back-color"></div>
+                    <img src="https://interactivejoe.com/book-viewer/assets/images/bk_1-large.jpg" alt="Of Mice and Men cover" />
+                  </div>
+                  <div class="overlay-desc activated">
+                    <h2 class="overlay_title">Of Mice and Men</h2>
+                    <p class="author">by John Steinbeck</p>
+                    <p class="published">1937</p>
+                    <p class="synopsis">Two friends, George and Lennie, chase a dream of owning land while navigating the harsh realities and prejudice of Depression-era California. Explore themes of companionship, dignity, and the cost of the American Dream.</p>
+                    <a href="#" class="button preview">Preview</a>
+                  </div>
+                  <div class="overlay-preview">
+                    <a href="#" class="back-preview-btn">Back</a>
+                    <h4 class="preview-title">Preview</h4>
+                    <div class="preview-content">
+                      <h5>Chapter 1</h5>
+                      <p>George and Lennie arrive at a quiet riverside clearing, pausing before another chance at work. Lennie delights in the gentle water while George urges caution, hinting at the trouble that follows them from town to town.</p>
+                      <p>As they share beans over a campfire, their dream of owning a small farm feels almost tangible. Lennie imagines the rabbits he will tend, while George keeps a wary eye on the dangers waiting when they report for work at the ranch.</p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <li class="book-item" data-groups='["classic","young"]' data-date-created="1951" data-title="The Catcher in the Rye" data-color="#009c8b">
+                <div class="bk-img">
+                  <div class="bk-wrapper">
+                    <div class="bk-book bk-bookdefault">
+                      <div class="bk-front">
+                        <div class="bk-cover" style="background-image: url('https://interactivejoe.com/book-viewer/assets/images/bk_2-small.jpg');"></div>
+                      </div>
+                      <div class="bk-back" style="background-color:#009c8b"></div>
+                      <div class="bk-left" style="background-color:#009c8b"></div>
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <h3 class="book-item_title">The Catcher in the Rye</h3>
+                    <p class="author">by J.D. Salinger • 1951</p>
+                    <p>Holden Caulfield wanders New York City in a coming-of-age story that examines grief, identity, and the search for authenticity amid the phoniness of adulthood.</p>
+                    <a href="#" class="button details">Details</a>
+                  </div>
+                </div>
+                <div class="overlay-details">
+                  <a href="#" class="close-overlay-btn">Close</a>
+                  <div class="overlay-image">
+                    <div class="back-color"></div>
+                    <img src="https://interactivejoe.com/book-viewer/assets/images/bk_2-large.jpg" alt="The Catcher in the Rye cover" />
+                  </div>
+                  <div class="overlay-desc activated">
+                    <h2 class="overlay_title">The Catcher in the Rye</h2>
+                    <p class="author">by J.D. Salinger</p>
+                    <p class="published">1951</p>
+                    <p class="synopsis">Holden narrates three restless days after being expelled from prep school, seeking genuine connections while grieving the loss of his brother. His raw voice continues to resonate with readers navigating their own transitions.</p>
+                    <a href="#" class="button preview">Preview</a>
+                  </div>
+                  <div class="overlay-preview">
+                    <a href="#" class="back-preview-btn">Back</a>
+                    <h4 class="preview-title">Preview</h4>
+                    <div class="preview-content">
+                      <h5>Chapter 1</h5>
+                      <p>Holden opens with wry candor, dismissing the idea of giving a conventional autobiography. Instead, he hints at an “madman stuff” that began around last Christmas, hooking readers with his distinctive tone.</p>
+                      <p>Expelled from Pencey Prep, he stands on Thomsen Hill watching the football game, detached from the traditions that once gave structure to his life. The loneliness of that moment shapes his decision to leave school early.</p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <li class="book-item" data-groups='["classic","sci-fi"]' data-date-created="1949" data-title="1984" data-color="#9c9688">
+                <div class="bk-img">
+                  <div class="bk-wrapper">
+                    <div class="bk-book bk-bookdefault">
+                      <div class="bk-front">
+                        <div class="bk-cover" style="background-image: url('https://interactivejoe.com/book-viewer/assets/images/bk_3-small.jpg');"></div>
+                      </div>
+                      <div class="bk-back" style="background-color:#9c9688"></div>
+                      <div class="bk-left" style="background-color:#9c9688"></div>
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <h3 class="book-item_title">1984</h3>
+                    <p class="author">by George Orwell • 1949</p>
+                    <p>Winston Smith rebels against totalitarian surveillance in this dystopian classic that warns of the dangers of propaganda, censorship, and eroded personal freedoms.</p>
+                    <a href="#" class="button details">Details</a>
+                  </div>
+                </div>
+                <div class="overlay-details">
+                  <a href="#" class="close-overlay-btn">Close</a>
+                  <div class="overlay-image">
+                    <div class="back-color"></div>
+                    <img src="https://interactivejoe.com/book-viewer/assets/images/bk_3-large.jpg" alt="1984 cover" />
+                  </div>
+                  <div class="overlay-desc activated">
+                    <h2 class="overlay_title">1984</h2>
+                    <p class="author">by George Orwell</p>
+                    <p class="published">1949</p>
+                    <p class="synopsis">Under the eye of Big Brother, Winston quietly questions the Party’s absolute power. His forbidden romance with Julia and their secret rebellion explore the cost of truth in a world built on lies.</p>
+                    <a href="#" class="button preview">Preview</a>
+                  </div>
+                  <div class="overlay-preview">
+                    <a href="#" class="back-preview-btn">Back</a>
+                    <h4 class="preview-title">Preview</h4>
+                    <div class="preview-content">
+                      <h5>Part One</h5>
+                      <p>In the grim hallway of Victory Mansions, Winston slips inside his flat and begins a clandestine diary—an act punishable by death. The telescreen drones slogans while he scratches the date with trembling hands.</p>
+                      <p>Memories of his mother and sister surface, hinting at the personal losses that shaped his quiet defiance. The world of Oceania comes into focus through Winston’s haunted recollections.</p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <li class="book-item" data-groups='["fantasy","young"]' data-date-created="1997" data-title="Harry Potter and the Sorcerer's Stone" data-color="#7a4930">
+                <div class="bk-img">
+                  <div class="bk-wrapper">
+                    <div class="bk-book bk-bookdefault">
+                      <div class="bk-front">
+                        <div class="bk-cover" style="background-image: url('https://interactivejoe.com/book-viewer/assets/images/bk_13-small.jpg');"></div>
+                      </div>
+                      <div class="bk-back" style="background-color:#7a4930"></div>
+                      <div class="bk-left" style="background-color:#7a4930"></div>
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <h3 class="book-item_title">Harry Potter and the Sorcerer's Stone</h3>
+                    <p class="author">by J.K. Rowling • 1997</p>
+                    <p>Discover the wizarding world alongside Harry as he uncovers hidden magic, makes lifelong friends, and confronts the dark legacy of Lord Voldemort.</p>
+                    <a href="#" class="button details">Details</a>
+                  </div>
+                </div>
+                <div class="overlay-details">
+                  <a href="#" class="close-overlay-btn">Close</a>
+                  <div class="overlay-image">
+                    <div class="back-color"></div>
+                    <img src="https://interactivejoe.com/book-viewer/assets/images/bk_13-large.jpg" alt="Harry Potter and the Sorcerer's Stone cover" />
+                  </div>
+                  <div class="overlay-desc activated">
+                    <h2 class="overlay_title">Harry Potter and the Sorcerer's Stone</h2>
+                    <p class="author">by J.K. Rowling</p>
+                    <p class="published">1997</p>
+                    <p class="synopsis">Letters whisk Harry to Hogwarts, where he meets Ron and Hermione, discovers his talent for Quidditch, and learns about the mysterious stone everyone seems to covet.</p>
+                    <a href="#" class="button preview">Preview</a>
+                  </div>
+                  <div class="overlay-preview">
+                    <a href="#" class="back-preview-btn">Back</a>
+                    <h4 class="preview-title">Preview</h4>
+                    <div class="preview-content">
+                      <h5>Chapter 7</h5>
+                      <p>Sorting Hat whispers, candles float, and Harry feels the electric excitement of finding a home in Gryffindor. Our preview captures the wonder of first nights at Hogwarts.</p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <li class="book-item" data-groups='["fantasy","young"]' data-date-created="2000" data-title="Harry Potter and the Goblet of Fire" data-color="#9a9c43">
+                <div class="bk-img">
+                  <div class="bk-wrapper">
+                    <div class="bk-book bk-bookdefault">
+                      <div class="bk-front">
+                        <div class="bk-cover" style="background-image: url('https://interactivejoe.com/book-viewer/assets/images/bk_16-small.jpg');"></div>
+                      </div>
+                      <div class="bk-back" style="background-color:#9a9c43"></div>
+                      <div class="bk-left" style="background-color:#9a9c43"></div>
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <h3 class="book-item_title">Harry Potter and the Goblet of Fire</h3>
+                    <p class="author">by J.K. Rowling • 2000</p>
+                    <p>The Triwizard Tournament tests Harry’s courage with dragon duels, underwater rescues, and a final maze that changes the fate of the wizarding world.</p>
+                    <a href="#" class="button details">Details</a>
+                  </div>
+                </div>
+                <div class="overlay-details">
+                  <a href="#" class="close-overlay-btn">Close</a>
+                  <div class="overlay-image">
+                    <div class="back-color"></div>
+                    <img src="https://interactivejoe.com/book-viewer/assets/images/bk_16-large.jpg" alt="Harry Potter and the Goblet of Fire cover" />
+                  </div>
+                  <div class="overlay-desc activated">
+                    <h2 class="overlay_title">Harry Potter and the Goblet of Fire</h2>
+                    <p class="author">by J.K. Rowling</p>
+                    <p class="published">2000</p>
+                    <p class="synopsis">International competition arrives at Hogwarts. While Harry faces life-threatening tasks, whispers of Voldemort’s return become impossible to ignore.</p>
+                    <a href="#" class="button preview">Preview</a>
+                  </div>
+                  <div class="overlay-preview">
+                    <a href="#" class="back-preview-btn">Back</a>
+                    <h4 class="preview-title">Preview</h4>
+                    <div class="preview-content">
+                      <h5>Chapter 31</h5>
+                      <p>Ahead of the final task, Harry walks the stadium’s edge, feeling the weight of friendship, fear, and expectation. The maze looms, promising both glory and danger.</p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <li class="book-item" data-groups='["classic","fairy"]' data-date-created="1900" data-title="The Wonderful Wizard of Oz" data-color="#705e1e">
+                <div class="bk-img">
+                  <div class="bk-wrapper">
+                    <div class="bk-book bk-bookdefault">
+                      <div class="bk-front">
+                        <div class="bk-cover" style="background-image: url('https://interactivejoe.com/book-viewer/assets/images/bk_9-small.jpg');"></div>
+                      </div>
+                      <div class="bk-back" style="background-color:#705e1e"></div>
+                      <div class="bk-left" style="background-color:#705e1e"></div>
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <h3 class="book-item_title">The Wonderful Wizard of Oz</h3>
+                    <p class="author">by L. Frank Baum • 1900</p>
+                    <p>Dorothy and Toto follow the Yellow Brick Road with newfound friends, learning about courage, love, and self-belief in this beloved American fairy tale.</p>
+                    <a href="#" class="button details">Details</a>
+                  </div>
+                </div>
+                <div class="overlay-details">
+                  <a href="#" class="close-overlay-btn">Close</a>
+                  <div class="overlay-image">
+                    <div class="back-color"></div>
+                    <img src="https://interactivejoe.com/book-viewer/assets/images/bk_9-large.jpg" alt="The Wonderful Wizard of Oz cover" />
+                  </div>
+                  <div class="overlay-desc activated">
+                    <h2 class="overlay_title">The Wonderful Wizard of Oz</h2>
+                    <p class="author">by L. Frank Baum</p>
+                    <p class="published">1900</p>
+                    <p class="synopsis">Swept to Oz, Dorothy meets the Scarecrow, Tin Woodman, and Cowardly Lion. Together they seek the Wizard, discovering that what they want most already lives within them.</p>
+                    <a href="#" class="button preview">Preview</a>
+                  </div>
+                  <div class="overlay-preview">
+                    <a href="#" class="back-preview-btn">Back</a>
+                    <h4 class="preview-title">Preview</h4>
+                    <div class="preview-content">
+                      <h5>Chapter 4</h5>
+                      <p>Dorothy meets the Scarecrow who longs for brains. Their conversation reveals the charming wit and moral lessons that have endeared the story to generations.</p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <li class="book-item" data-groups='["classic","fairy"]' data-date-created="1934" data-title="Mary Poppins" data-color="#939894">
+                <div class="bk-img">
+                  <div class="bk-wrapper">
+                    <div class="bk-book bk-bookdefault">
+                      <div class="bk-front">
+                        <div class="bk-cover" style="background-image: url('https://interactivejoe.com/book-viewer/assets/images/bk_10-small.jpg');"></div>
+                      </div>
+                      <div class="bk-back" style="background-color:#939894"></div>
+                      <div class="bk-left" style="background-color:#939894"></div>
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <h3 class="book-item_title">Mary Poppins</h3>
+                    <p class="author">by P.L. Travers • 1934</p>
+                    <p>The Banks family meets Mary Poppins, whose magical adventures bring delight and a touch of discipline to 17 Cherry Tree Lane.</p>
+                    <a href="#" class="button details">Details</a>
+                  </div>
+                </div>
+                <div class="overlay-details">
+                  <a href="#" class="close-overlay-btn">Close</a>
+                  <div class="overlay-image">
+                    <div class="back-color"></div>
+                    <img src="https://interactivejoe.com/book-viewer/assets/images/bk_10-large.jpg" alt="Mary Poppins cover" />
+                  </div>
+                  <div class="overlay-desc activated">
+                    <h2 class="overlay_title">Mary Poppins</h2>
+                    <p class="author">by P.L. Travers</p>
+                    <p class="published">1934</p>
+                    <p class="synopsis">A gust of wind delivers Mary Poppins to the Banks children. Carousel rides in the clouds and tea parties on the ceiling follow, balancing whimsy with heartfelt lessons.</p>
+                    <a href="#" class="button preview">Preview</a>
+                  </div>
+                  <div class="overlay-preview">
+                    <a href="#" class="back-preview-btn">Back</a>
+                    <h4 class="preview-title">Preview</h4>
+                    <div class="preview-content">
+                      <h5>Chapter 3</h5>
+                      <p>A visit to Uncle Albert turns upside down, literally, when laughter lifts everyone toward the ceiling. The scene highlights Travers’s imaginative storytelling.</p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <li class="book-item" data-groups='["classic"]' data-date-created="1925" data-title="The Great Gatsby" data-color="#e3b005">
+                <div class="bk-img">
+                  <div class="bk-wrapper">
+                    <div class="bk-book bk-bookdefault">
+                      <div class="bk-front">
+                        <div class="bk-cover" style="background-image: url('https://interactivejoe.com/book-viewer/assets/images/bk_5-small.jpg');"></div>
+                      </div>
+                      <div class="bk-back" style="background-color:#e3b005"></div>
+                      <div class="bk-left" style="background-color:#e3b005"></div>
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <h3 class="book-item_title">The Great Gatsby</h3>
+                    <p class="author">by F. Scott Fitzgerald • 1925</p>
+                    <p>Nick Carraway observes the glittering Jazz Age and the tragic pursuit of the American Dream through Jay Gatsby’s longing for Daisy Buchanan.</p>
+                    <a href="#" class="button details">Details</a>
+                  </div>
+                </div>
+                <div class="overlay-details">
+                  <a href="#" class="close-overlay-btn">Close</a>
+                  <div class="overlay-image">
+                    <div class="back-color"></div>
+                    <img src="https://interactivejoe.com/book-viewer/assets/images/bk_5-large.jpg" alt="The Great Gatsby cover" />
+                  </div>
+                  <div class="overlay-desc activated">
+                    <h2 class="overlay_title">The Great Gatsby</h2>
+                    <p class="author">by F. Scott Fitzgerald</p>
+                    <p class="published">1925</p>
+                    <p class="synopsis">Gatsby’s lavish parties mask a fragile dream. Explore the symbolism of the green light, the Valley of Ashes, and the hollowness that shadows wealth.</p>
+                    <a href="#" class="button preview">Preview</a>
+                  </div>
+                  <div class="overlay-preview">
+                    <a href="#" class="back-preview-btn">Back</a>
+                    <h4 class="preview-title">Preview</h4>
+                    <div class="preview-content">
+                      <h5>Chapter 5</h5>
+                      <p>Nick arranges Gatsby and Daisy’s reunion. Rain, nerves, and a tour of Gatsby’s opulent mansion create a cinematic moment filled with longing and nostalgia.</p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li class="book-item" data-groups='["classic","young"]' data-date-created="1954" data-title="Lord of the Flies" data-color="#db2e0f">
+                <div class="bk-img">
+                  <div class="bk-wrapper">
+                    <div class="bk-book bk-bookdefault">
+                      <div class="bk-front">
+                        <div class="bk-cover" style="background-image: url('https://interactivejoe.com/book-viewer/assets/images/bk_4-small.jpg');"></div>
+                      </div>
+                      <div class="bk-back" style="background-color:#db2e0f"></div>
+                      <div class="bk-left" style="background-color:#db2e0f"></div>
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <h3 class="book-item_title">Lord of the Flies</h3>
+                    <p class="author">by William Golding • 1954</p>
+                    <p>Stranded schoolboys attempt governance on a deserted island, revealing how quickly civilization can erode in the face of fear and power struggles.</p>
+                    <a href="#" class="button details">Details</a>
+                  </div>
+                </div>
+                <div class="overlay-details">
+                  <a href="#" class="close-overlay-btn">Close</a>
+                  <div class="overlay-image">
+                    <div class="back-color"></div>
+                    <img src="https://interactivejoe.com/book-viewer/assets/images/bk_4-large.jpg" alt="Lord of the Flies cover" />
+                  </div>
+                  <div class="overlay-desc activated">
+                    <h2 class="overlay_title">Lord of the Flies</h2>
+                    <p class="author">by William Golding</p>
+                    <p class="published">1954</p>
+                    <p class="synopsis">As Ralph, Piggy, and Jack vie for control, the boys’ society collapses. The novel invites discussion on leadership, morality, and the fragile line between order and chaos.</p>
+                    <a href="#" class="button preview">Preview</a>
+                  </div>
+                  <div class="overlay-preview">
+                    <a href="#" class="back-preview-btn">Back</a>
+                    <h4 class="preview-title">Preview</h4>
+                    <div class="preview-content">
+                      <h5>Chapter 2</h5>
+                      <p>The boys attempt to maintain a signal fire but lose control, foreshadowing the tragedy to come. The scene sparks conversation about responsibility and fear.</p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              <li class="book-item" data-groups='["classic"]' data-date-created="1851" data-title="Moby Dick" data-color="#a9afad">
+                <div class="bk-img">
+                  <div class="bk-wrapper">
+                    <div class="bk-book bk-bookdefault">
+                      <div class="bk-front">
+                        <div class="bk-cover" style="background-image: url('https://interactivejoe.com/book-viewer/assets/images/bk_6-small.jpg');"></div>
+                      </div>
+                      <div class="bk-back" style="background-color:#a9afad"></div>
+                      <div class="bk-left" style="background-color:#a9afad"></div>
+                    </div>
+                  </div>
+                  <div class="item-details">
+                    <h3 class="book-item_title">Moby Dick</h3>
+                    <p class="author">by Herman Melville • 1851</p>
+                    <p>Ishmael joins Captain Ahab’s obsessive hunt for the white whale, exploring the human psyche, fate, and the power of the sea.</p>
+                    <a href="#" class="button details">Details</a>
+                  </div>
+                </div>
+                <div class="overlay-details">
+                  <a href="#" class="close-overlay-btn">Close</a>
+                  <div class="overlay-image">
+                    <div class="back-color"></div>
+                    <img src="https://interactivejoe.com/book-viewer/assets/images/bk_6-large.jpg" alt="Moby Dick cover" />
+                  </div>
+                  <div class="overlay-desc activated">
+                    <h2 class="overlay_title">Moby Dick</h2>
+                    <p class="author">by Herman Melville</p>
+                    <p class="published">1851</p>
+                    <p class="synopsis">Sailing aboard the Pequod, readers encounter philosophical musings, camaraderie among sailors, and the looming threat of Ahab’s vengeance against Moby Dick.</p>
+                    <a href="#" class="button preview">Preview</a>
+                  </div>
+                  <div class="overlay-preview">
+                    <a href="#" class="back-preview-btn">Back</a>
+                    <h4 class="preview-title">Preview</h4>
+                    <div class="preview-content">
+                      <h5>Chapter 9</h5>
+                      <p>Father Mapple’s sermon warns of obsession and disobedience through the tale of Jonah, mirroring the fatal path Ahab will take in pursuit of the whale.</p>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
       </div>
-      <div class="grid">
-        <div class="card">
-          <h3>Public Browsing</h3>
-          <p>All primary sections—book lists, discussion archives, event highlights, the merch shop, and static pages—remain openly accessible. Visitors can browse navigation, explore reading guides, and understand the community without friction. This inclusive entry point mirrors best practices for community-led sites and builds a pipeline of newcomers who can convert into members later.</p>
-        </div>
-        <div class="card">
-          <h3>Optional Profiles</h3>
-          <p>When visitors want a personalized experience, they can register via email/password or social login. MongoDB stores each profile’s avatar, bio, shelving lists, badge unlocks, and rolling point totals so that progress persists across sessions. Keeping sign-up optional respects casual readers while letting invested members unlock richer features.</p>
-        </div>
-        <div class="card">
-          <h3>Member-Only Features</h3>
-          <p>Authenticated users gain the ability to comment, submit book suggestions, track reading progress, and participate in other interactive tools. We’ll prompt non-members with clear “Log in or sign up to join the discussion” calls to action whenever they attempt to interact, nudging them toward membership when their engagement peaks.</p>
-        </div>
-      </div>
-    </section>
 
-    <section>
-      <h2>Community Discussions and Interaction</h2>
-      <p>The conversation layer transforms passive reading into a vibrant, supportive community. Discussion tooling uses MongoDB collections to persist threads, replies, and moderation states.</p>
-      <h3>Book Discussion Pages</h3>
-      <p>Every featured book receives a deep-dive page showcasing cover art, author bios, synopsis, and the collective conversation. Anyone can read the thread; only logged-in members can contribute comments or replies, turning curiosity into sign-ups when readers are ready to join.</p>
-      <h3>Commenting System</h3>
-      <p>A familiar commenting interface (rich text box, submit button, threaded replies) sits below each book or club topic. AJAX updates deliver new posts in near-real time, and moderation pipelines flag concerning content. Email alerts notify members when someone responds, driving re-engagement.</p>
-      <h3>Club Topics &amp; Forums</h3>
-      <p>Beyond individual books, general forums—General Book Chat, Introduce Yourself, Off-Topic—allow broader bonding. Search and tagging help members find their interests quickly, and the same account requirement applies to posting to keep spam at bay.</p>
-      <h3>User Profiles &amp; Social Features</h3>
-      <p>Every member has a profile that showcases bios, favorite genres, recent comments, reviews, and gamification stats. Future roadmap items include following other readers or lightweight friend requests to deepen social ties without morphing into a full social network.</p>
-    </section>
+      <section class="blueprint" id="blueprint">
+        <div class="summary">
+          <h2>Community Platform Blueprint</h2>
+          <p>Everything outlined in our original build brief now lives on this page. Visitors can browse freely, while members unlock deeper interactions powered by MongoDB, Stripe, Calendly, and trusted book APIs.</p>
+        </div>
 
-    <section>
-      <h2>Gamification and Engagement</h2>
-      <p>Healthy, non-competitive motivation keeps members returning. All points, badge progress, and redemption histories live in MongoDB for quick aggregation and analytics.</p>
-      <div class="grid">
-        <div class="card">
-          <h3>Points System</h3>
-          <p>Members collect points for finishing books, sharing reviews, attending events, and contributing thoughtful discussion posts. To prevent spam, caps and moderator approval workflows can govern comment-based rewards. Points become the foundation for personalized progress dashboards.</p>
+        <div class="blueprint-grid">
+          <article class="blueprint-card">
+            <h3>Open Access</h3>
+            <p>Book lists, discussion archives, event highlights, and the merch shop remain open to the public. Curious readers can explore without friction, building a pipeline of future members.</p>
+          </article>
+          <article class="blueprint-card">
+            <h3>Optional Profiles</h3>
+            <p>Members register with email or social login. MongoDB stores avatars, bios, shelving lists, badges, and points so progress persists between visits.</p>
+          </article>
+          <article class="blueprint-card">
+            <h3>Member Features</h3>
+            <p>Logged-in readers comment, submit suggestions, track reading progress, and join events. Clear prompts encourage sign-ups exactly when engagement peaks.</p>
+          </article>
+          <article class="blueprint-card">
+            <h3>Moderated Discussions</h3>
+            <p>Book hubs host threaded conversations with moderation tools and alerts to keep the community supportive and safe.</p>
+          </article>
         </div>
-        <div class="card">
-          <h3>Badges &amp; Achievements</h3>
-          <p>Milestones like <em>Prolific Reader</em> (10 finished books), <em>Discussion Starter</em> (5 new threads), or <em>Event Attendee</em> (3 meetings) award digital badges displayed on profiles and optionally next to usernames. Recognition loops motivate ongoing contributions while celebrating meaningful achievements.</p>
-        </div>
-        <div class="card">
-          <h3>No Competitive Leaderboard</h3>
-          <p>To maintain a collaborative atmosphere, leaderboards stay private. Members see only their own totals and progress toward the next reward tier, keeping the focus on individual growth and shared celebration rather than head-to-head rankings.</p>
-        </div>
-        <div class="card">
-          <h3>Redeemable Rewards</h3>
-          <p>Points can unlock digital exclusives, merch discounts, tickets to special events, or honorary titles like “Book Ambassador.” Reward catalogs are easy to update via the admin console, and MongoDB records each redemption for fulfillment tracking.</p>
-        </div>
-      </div>
-    </section>
 
-    <section>
-      <h2>Monetization Strategies</h2>
-      <p>A diversified revenue mix supports sustainable programming while respecting community experience. Payment metadata and transaction logs persist in MongoDB collections tied to Stripe webhooks for reconciliation.</p>
-      <h3>1. Affiliate Book Links</h3>
-      <p>Each book page highlights “Buy this book” buttons using affiliate IDs (Amazon Associates, Bookshop.org, Audible). API responses can surface current pricing, cover art, and purchase links. Clear tooltips reinforce that purchases support the club at no extra cost.</p>
-      <h3>2. Membership Subscriptions</h3>
-      <p>Offer premium tiers (monthly or annual) with perks like exclusive guides, members-only forums, special event invitations, giveaways, and merch discounts. Stripe handles recurring billing while MongoDB stores membership status and entitlement flags for each user.</p>
-      <h3>3. Ticketed Events and Meetups</h3>
-      <p>Event listings allow members to RSVP or purchase tickets for virtual or in-person gatherings. Calendly embeds streamline scheduling, while paid tickets route through Stripe Checkout. Promo codes reward premium members or early birds, and attendance records sync back to user profiles.</p>
-      <h3>4. Merchandise and Product Sales</h3>
-      <p>A built-in shop sells branded apparel, tote bags, bookmarks, journals, and seasonal bundles. Payments run through the existing Stripe integration, and fulfillment statuses are tracked so admins know what to ship. Discounts and giveaways tie merch back into gamification and membership perks.</p>
-    </section>
-
-    <section>
-      <h2>Book Catalog Integration</h2>
-      <p>Automate book data ingestion with proven APIs to minimize manual entry.</p>
-      <ul>
-        <li><strong>Google Books API:</strong> Comprehensive metadata, cover art, ratings, and optional embedded previews. Admins can search by title, author, or ISBN and instantly import details into MongoDB collections.</li>
-        <li><strong>Open Library API:</strong> Excellent supplement for classic titles or additional cover options, especially for public domain works.</li>
-      </ul>
-      <p>Imported data feeds both public book pages and admin workflows. MongoDB stores canonical book records, while static assets like covers cache via CDN for fast delivery.</p>
-    </section>
-
-    <section>
-      <h2>Admin Control Panel</h2>
-      <p>A secure dashboard empowers organizers to curate content, manage members, and moderate discussions efficiently.</p>
-      <div class="grid">
-        <div class="card">
-          <h3>Book Management</h3>
-          <p>Admins can paste ISBNs or search the catalog, preview results, and publish new books with custom club metadata (reading schedule, discussion lead). The system writes the final selection into MongoDB and triggers creation of its discussion hub.</p>
+        <div class="blueprint-section">
+          <h2>Gamification &amp; Rewards</h2>
+          <div class="badge-row">
+            <span class="pill">Points System</span>
+            <span class="pill">Badges</span>
+            <span class="pill">Redeemable Rewards</span>
+          </div>
+          <p>Members earn points for finishing books, sharing reviews, attending events, and contributing to discussions. Milestones like <em>Prolific Reader</em> or <em>Discussion Starter</em> unlock badges, while point redemptions deliver merch discounts, digital exclusives, or honorary roles.</p>
         </div>
-        <div class="card">
-          <h3>Approve User Suggestions</h3>
-          <p>Member-submitted book pitches appear in a review queue with their notes. Admins approve to publish, archive for later, or decline with optional feedback. This balances community input with editorial oversight.</p>
-        </div>
-        <div class="card">
-          <h3>Community Moderation</h3>
-          <p>Moderators can review flagged comments, remove problematic posts, adjust user roles, and manage bans. Audit trails stay in MongoDB for accountability.</p>
-        </div>
-        <div class="card">
-          <h3>Events &amp; Merchandise</h3>
-          <p>Create or edit events, monitor RSVPs, download attendee lists, and manage ticket inventory. Update store products, prices, promo codes, and fulfillment statuses—all from one interface.</p>
-        </div>
-      </div>
-    </section>
 
-    <section>
-      <h2>Meeting Scheduling Integration</h2>
-      <p>Seamless RSVPs and reminders keep attendance high and logistics simple.</p>
-      <ul>
-        <li><span class="pill">Calendly Embeds</span> Inline widgets let members register for meetings without leaving the site. Automatic confirmations and reminders reduce no-shows.</li>
-        <li><span class="pill">Group Event Support</span> Configure attendance caps to protect limited seating for in-person meetups while allowing unlimited virtual sessions.</li>
-        <li><span class="pill">Calendar Utilities</span> Provide “Add to Calendar” buttons and follow-up automations so attendees stay informed.</li>
-        <li><span class="pill">Data Sync</span> Each RSVP and attendance check-in writes back to MongoDB, updating point totals and eligibility for badges like “Event Attendee.”</li>
-      </ul>
-      <p>Whether meetings happen online or around Delaware County, the scheduling layer integrates cleanly with the rest of the platform’s data model.</p>
-    </section>
-  </main>
+        <div class="blueprint-section">
+          <h2>Monetization Mix</h2>
+          <ul>
+            <li><strong>Affiliate Book Links:</strong> Trusted partner links appear on each book page with transparent messaging.</li>
+            <li><strong>Membership Subscriptions:</strong> Monthly and annual tiers add perks such as exclusive guides, private forums, and discount codes.</li>
+            <li><strong>Ticketed Events:</strong> Calendly embeds and Stripe Checkout simplify RSVPs for virtual and in-person gatherings.</li>
+            <li><strong>Merchandise:</strong> Branded apparel, journals, and seasonal bundles tie into reward incentives.</li>
+          </ul>
+        </div>
 
-  <div class="footer">
-    Built by Delco Tech Division — powered by MongoDB, Stripe, Calendly, and curated book APIs to keep the community turning pages together.
+        <div class="blueprint-section" id="events">
+          <h2>Events &amp; Scheduling</h2>
+          <p>Inline Calendly widgets enable RSVP without leaving the site. Attendance writes back to MongoDB, updating point totals and unlocking badges like “Event Attendee.”</p>
+        </div>
+      </section>
+
+      <footer id="footer" class="page-footer" role="contentinfo">
+        <div class="row footer-wrapper">
+          <div class="original-version">Explore the original inspiration at <a href="https://interactivejoe.com/book-viewer/" target="_blank" rel="noreferrer">interactivejoe.com</a>.</div>
+          <div class="copyright">&copy; <span id="year"></span> Delco Tech Division · Built for the Community Book Club.</div>
+          <div id="contact">Questions? Email <a href="mailto:hello@delcotechdivision.com">hello@delcotechdivision.com</a>.</div>
+        </div>
+      </footer>
+    </div>
+
+    <div class="main-overlay" aria-hidden="true">
+      <div class="overlay-full"></div>
+    </div>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const mainContainer = document.getElementById('main-container');
+      const menuToggle = document.querySelector('.menu-toggle');
+      const menuClose = document.querySelector('.menu-close');
+      const menuLinks = document.querySelectorAll('.menu-link');
+      const mainOverlay = document.querySelector('.main-overlay');
+      const overlayFull = document.querySelector('.overlay-full');
+      const filterItems = document.querySelectorAll('.filter-item');
+      const sortSelect = document.querySelector('.sort-options');
+      const searchInput = document.getElementById('input-search');
+      const grid = document.getElementById('grid');
+      const bookItems = Array.from(grid.querySelectorAll('.book-item'));
+
+      const closeMenu = () => {
+        mainContainer.classList.remove('nav-menu-open');
+        if (!mainOverlay.classList.contains('active')) {
+          mainContainer.classList.remove('prevent-scroll');
+        }
+        if (menuToggle) {
+          menuToggle.setAttribute('aria-expanded', 'false');
+        }
+      };
+
+      const openMenu = () => {
+        mainContainer.classList.add('nav-menu-open', 'prevent-scroll');
+        if (menuToggle) {
+          menuToggle.setAttribute('aria-expanded', 'true');
+        }
+      };
+
+      if (menuToggle) {
+        menuToggle.addEventListener('click', (event) => {
+          event.preventDefault();
+          if (mainContainer.classList.contains('nav-menu-open')) {
+            closeMenu();
+          } else {
+            openMenu();
+          }
+        });
+      }
+
+      if (menuClose) {
+        menuClose.addEventListener('click', closeMenu);
+      }
+      menuLinks.forEach((link) => link.addEventListener('click', closeMenu));
+
+      const closeOverlay = () => {
+        const openItem = document.querySelector('.book-item.overlay-open');
+        if (openItem) {
+          openItem.classList.remove('overlay-open', 'preview-open');
+        }
+        mainOverlay.classList.remove('active');
+        if (!mainContainer.classList.contains('nav-menu-open')) {
+          mainContainer.classList.remove('prevent-scroll');
+        }
+      };
+
+      const openOverlay = (item) => {
+        const color = item.dataset.color || '#219e9a';
+        const backdrop = item.querySelector('.overlay-image .back-color');
+        if (backdrop) {
+          backdrop.style.backgroundColor = color;
+        }
+        item.classList.add('overlay-open');
+        mainOverlay.classList.add('active');
+        mainContainer.classList.add('prevent-scroll');
+      };
+
+      bookItems.forEach((item) => {
+        const detailsButton = item.querySelector('.button.details');
+        const closeButton = item.querySelector('.close-overlay-btn');
+        const previewButton = item.querySelector('.button.preview');
+        const backPreviewButton = item.querySelector('.back-preview-btn');
+
+        detailsButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          openOverlay(item);
+        });
+
+        closeButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          closeOverlay();
+        });
+
+        if (previewButton) {
+          previewButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            item.classList.add('preview-open');
+          });
+        }
+
+        if (backPreviewButton) {
+          backPreviewButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            item.classList.remove('preview-open');
+          });
+        }
+      });
+
+      overlayFull.addEventListener('click', closeOverlay);
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeOverlay();
+          closeMenu();
+        }
+      });
+
+      const applyFilters = () => {
+        const activeGroup = document.querySelector('.filter-item.active')?.dataset.group || 'all';
+        const query = searchInput.value.trim().toLowerCase();
+        const sortValue = sortSelect.value;
+
+        const matches = bookItems.map((item) => {
+          const groups = JSON.parse(item.dataset.groups || '[]');
+          const matchesGroup = activeGroup === 'all' || groups.includes(activeGroup);
+          const text = `${item.dataset.title} ${item.querySelector('.author').textContent} ${item.querySelector('p:not(.author)').textContent}`.toLowerCase();
+          const matchesSearch = !query || text.includes(query);
+          item.style.display = matchesGroup && matchesSearch ? '' : 'none';
+          return item;
+        });
+
+        let sorted = matches;
+        if (sortValue === 'title') {
+          sorted = matches.slice().sort((a, b) => a.dataset.title.localeCompare(b.dataset.title));
+        } else if (sortValue === 'date-created') {
+          sorted = matches.slice().sort((a, b) => Number(b.dataset.dateCreated) - Number(a.dataset.dateCreated));
+        }
+
+        sorted.forEach((item) => grid.appendChild(item));
+      };
+
+      filterItems.forEach((filter) => {
+        filter.addEventListener('click', (event) => {
+          event.preventDefault();
+          filterItems.forEach((item) => item.classList.remove('active'));
+          filter.classList.add('active');
+          applyFilters();
+        });
+      });
+
+      sortSelect.addEventListener('change', applyFilters);
+
+      searchInput.addEventListener('input', () => {
+        if (searchInput.value.trim()) {
+          searchInput.parentElement.classList.add('input--filled');
+        } else {
+          searchInput.parentElement.classList.remove('input--filled');
+        }
+        applyFilters();
+      });
+
+      const setDefaultSort = () => {
+        sortSelect.value = '';
+      };
+
+      setDefaultSort();
+      applyFilters();
+
+      const year = document.getElementById('year');
+      if (year) {
+        year.textContent = new Date().getFullYear();
+      }
+    });
+  </script>
 </body>
 </html>
