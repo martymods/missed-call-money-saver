@@ -1,0 +1,14 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='600' height='900' viewBox='0 0 600 900'>
+  <defs>
+    <linearGradient id='the-catcher-in-the-rye-gradient' x1='0%' y1='0%' x2='0%' y2='100%'>
+      <stop offset='0%' stop-color='#009c8b' stop-opacity='0.95'/>
+      <stop offset='100%' stop-color='#009c8b' stop-opacity='0.75'/>
+    </linearGradient>
+  </defs>
+  <rect width='600' height='900' rx='36.0' fill='url(#the-catcher-in-the-rye-gradient)'/>
+  <rect x='48.0' y='108.0' width='504.0' height='684.0' rx='24.0' fill='rgba(255,255,255,0.12)'/>
+  <text x='300.0' y='360.0' fill='#ffffff' font-family="'Lato', 'Helvetica Neue', Arial, sans-serif" font-size='48' font-weight='700'>
+    <tspan x="300.0" dy="0" text-anchor="middle">The Catcher in</tspan><tspan x="300.0" dy="48" text-anchor="middle">the Rye</tspan>
+  </text>
+  <text x='300.0' y='765.0' fill='rgba(255,255,255,0.75)' font-family="'Roboto Slab', serif" font-size='26.400000000000002' text-anchor='middle'>Delco Tech Book Club</text>
+</svg>
