@@ -36,3 +36,8 @@
    - Or GET `/simulate/missed-call?from=+1YYYYYYYYYY`
    - Reply with your name → bot asks your need → bot replies with your Calendly link.
    - Check your Google Sheet for rows appearing/updated.
+
+9) Telegram order alerts
+   - Add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` to your environment (Render → Dashboard → Environment).
+   - Deploy the server (or run locally) and visit `/api/notifications/telegram/test?message=Hello%20from%20Delco` to confirm you receive the ping.
+   - Once configured, every Stripe Checkout session or Payment Intent created by the app will automatically push a summary (including delivery notes when available) to your chat.

@@ -22,9 +22,32 @@ const DANNYSWOK_ALLOWED_ORIGINS = (process.env.DANNYSWOK_ALLOWED_ORIGINS || '')
   .filter(Boolean);
 const DANNYSWOK_MENU_ORIGIN = process.env.DANNYSWOK_MENU_ORIGIN || null;
 
+const { notifyPaymentIntentCreated, notifyCheckoutSessionCreated } = require('./services/telegramNotifications');
 const fetch = global.fetch || require('node-fetch');
 if (!global.fetch) {
   global.fetch = fetch;
+}
+
+if (stripe?.paymentIntents?.create) {
+  const originalPaymentIntentCreate = stripe.paymentIntents.create.bind(stripe.paymentIntents);
+  stripe.paymentIntents.create = async function patchedPaymentIntentCreate(...args) {
+    const intent = await originalPaymentIntentCreate(...args);
+    Promise.resolve(
+      notifyPaymentIntentCreated({ intent, params: args[0] || null })
+    ).catch(() => {});
+    return intent;
+  };
+}
+
+if (stripe?.checkout?.sessions?.create) {
+  const originalCheckoutCreate = stripe.checkout.sessions.create.bind(stripe.checkout.sessions);
+  stripe.checkout.sessions.create = async function patchedCheckoutCreate(...args) {
+    const session = await originalCheckoutCreate(...args);
+    Promise.resolve(
+      notifyCheckoutSessionCreated({ session, params: args[0] || null })
+    ).catch(() => {});
+    return session;
+  };
 }
 
 const { twiml: { VoiceResponse } } = require('twilio');
@@ -42,6 +65,7 @@ const createTeamRouter = require('./routes/teams');
 const createWarehouseRouter = require('./routes/warehouse');
 const createGivingRouter = require('./routes/giving');
 const createDannysWokPayRouter = require('./routes/dannyswok-pay');
+const createNotificationsRouter = require('./routes/notifications');
 const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
 
 const jwt = require('jsonwebtoken');
@@ -850,6 +874,7 @@ app.use('/api/giving', createGivingRouter({
   getAppBaseUrl: resolveAppBaseUrl,
   openai,
 }));
+app.use('/api/notifications', createNotificationsRouter());
 app.use('/api/dannyswok', createDannysWokPayRouter({
   stripe,
   allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
