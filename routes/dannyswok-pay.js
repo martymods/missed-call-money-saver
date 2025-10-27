@@ -195,14 +195,6 @@ function sanitizeItemName(value) {
   return trimmed || 'Item';
 }
 
-function sanitizeCouponName(value) {
-  const description = sanitizeDescription(value);
-  if (!description) {
-    return 'Order Discount';
-  }
-  return description.slice(0, 40);
-}
-
 function extractItems(payload) {
   if (!payload || typeof payload !== 'object') {
     return [];
@@ -288,28 +280,6 @@ function aggregateExtraAmounts(payload) {
   }
 
   return result;
-}
-
-function calculateLineItemsTotal(lineItems) {
-  if (!Array.isArray(lineItems)) {
-    return 0;
-  }
-
-  return lineItems.reduce((total, item) => {
-    if (!item || typeof item !== 'object') {
-      return total;
-    }
-
-    const quantity = toPositiveInt(item.quantity, 1);
-    const unitAmountRaw = item.price_data?.unit_amount;
-    const unitAmount = Number(unitAmountRaw);
-
-    if (!Number.isFinite(unitAmount) || unitAmount <= 0) {
-      return total;
-    }
-
-    return total + unitAmount * quantity;
-  }, 0);
 }
 
 function sanitizeReturnUrl(url, fallback, allowedOrigins) {
@@ -482,16 +452,6 @@ function createDannysWokPayRouter({ stripe, allowedOrigins = [], menuOrigin = nu
       });
     }
 
-    const orderTotalCents = calculateLineItemsTotal(lineItems);
-    const orderReference = sanitizeDescription(
-      payload.orderId
-        || payload.orderNumber
-        || payload.orderReference
-        || payload.reference
-        || payload.order_id
-        || payload.referenceId
-    );
-
     const baseOrigin = menuOrigin || normalizedOrigins[0] || 'https://www.delcotechdivision.com';
     const baseUrl = baseOrigin.replace(/\/$/, '');
     const defaultSuccess = `${baseUrl}/?paid=1&session_id={CHECKOUT_SESSION_ID}`;
@@ -504,7 +464,7 @@ function createDannysWokPayRouter({ stripe, allowedOrigins = [], menuOrigin = nu
     const customer = payload.customer || payload.contact || payload.customerDetails || {};
     const delivery = payload.delivery || payload.address || payload.shipping || {};
 
-    const metadataBase = {
+    const metadata = sanitizeMetadata({
       flow: 'dannyswok_checkout',
       order_type: sanitizeDescription(payload.orderType || payload.type),
       instructions: sanitizeDescription(payload.instructions || payload.specialInstructions || payload.notes),
@@ -516,68 +476,16 @@ function createDannysWokPayRouter({ stripe, allowedOrigins = [], menuOrigin = nu
       service_fee_cents: extras.serviceFeeCents ? String(extras.serviceFeeCents) : undefined,
       subtotal_cents: subtotalCents ? String(subtotalCents) : undefined,
       discount_cents: extras.discountCents ? String(extras.discountCents) : undefined,
-      order_reference: orderReference || undefined,
       delivery_address: sanitizeDescription(
         delivery.fullAddress
           || [delivery.address1, delivery.address2, delivery.city, delivery.state, delivery.zip]
             .filter(Boolean)
             .join(', ')
       ),
-    };
-
-    let metadata = sanitizeMetadata(metadataBase) || {};
-
-    const rawDiscountCents = extras.discountCents;
-    let normalizedDiscountCents = 0;
-    if (typeof rawDiscountCents === 'number' && rawDiscountCents !== 0) {
-      normalizedDiscountCents = Math.abs(Math.round(rawDiscountCents));
-    }
-
-    let discountCoupon = null;
-    let appliedDiscountCents = 0;
-
-    if (
-      normalizedDiscountCents > 0
-      && orderTotalCents > 0
-      && typeof stripe?.coupons?.create === 'function'
-    ) {
-      const couponAmount = Math.min(normalizedDiscountCents, orderTotalCents);
-
-      if (couponAmount > 0) {
-        try {
-          const couponName = sanitizeCouponName(
-            payload.discountName || payload.promoName || payload.promoCode || payload.promo
-          );
-
-          const couponMetadata = sanitizeMetadata({
-            flow: 'dannyswok_checkout',
-            order_reference: orderReference || undefined,
-          });
-
-          discountCoupon = await stripe.coupons.create({
-            amount_off: couponAmount,
-            currency,
-            duration: 'once',
-            name: couponName,
-            max_redemptions: 1,
-            redeem_by: Math.floor(Date.now() / 1000) + 60 * 60,
-            metadata: couponMetadata,
-          });
-
-          appliedDiscountCents = couponAmount;
-        } catch (couponError) {
-          console.error("Failed to create Danny's Wok discount coupon", couponError);
-        }
-      }
-    }
-
-    if (discountCoupon && appliedDiscountCents > 0) {
-      metadata.discount_coupon_id = discountCoupon.id;
-      metadata.discount_coupon_amount_cents = String(appliedDiscountCents);
-    }
+    });
 
     try {
-      const sessionParams = {
+      const session = await stripe.checkout.sessions.create({
         mode: 'payment',
         payment_method_types: ['card', 'link'],
         line_items: lineItems,
@@ -585,14 +493,8 @@ function createDannysWokPayRouter({ stripe, allowedOrigins = [], menuOrigin = nu
         cancel_url: cancelUrl,
         allow_promotion_codes: Boolean(payload.allowPromo || payload.allowPromotionCodes),
         customer_email: sanitizeEmail(customer.email || payload.email),
-        metadata: Object.keys(metadata).length ? metadata : undefined,
-      };
-
-      if (discountCoupon && appliedDiscountCents > 0) {
-        sessionParams.discounts = [{ coupon: discountCoupon.id }];
-      }
-
-      const session = await stripe.checkout.sessions.create(sessionParams);
+        metadata,
+      });
 
       res.json({ id: session.id, url: session.url });
     } catch (error) {
