@@ -77,17 +77,13 @@
 
   <!-- Keep your existing checkout logic intact -->
   <script src="https://js.stripe.com/v3/"></script>
-  <script src="/js/delco-api.js"></script>
   <script>
     (async () => {
-      const resolved = window.delcoApi ? await window.delcoApi.resolveConfig() : { base: window.DELCO_BACKEND_BASE };
-      const API_BASE = resolved?.base || window.DELCO_BACKEND_BASE || 'https://www.delcotechdivision.com';
+      const API_BASE = window.DELCO_BACKEND_BASE || 'https://www.delcotechdivision.com';
 
-      let cfg = resolved?.config;
-      if (!cfg || typeof cfg !== 'object' || !Object.keys(cfg).length) {
-        cfg = await fetch(`${API_BASE}/config`).then(r => r.json()).catch(() => ({}));
-      }
-      const stripe = cfg?.stripePk ? Stripe(cfg.stripePk) : null;
+      // Expecting your backend to provide the same /config JSON as before
+      const cfg = await fetch(`${API_BASE}/config`).then(r=>r.json()).catch(()=>({}));
+      const stripe = cfg.stripePk ? Stripe(cfg.stripePk) : null;
 
       // Prefill promo from ?promo=
       const urlPromo = new URLSearchParams(location.search).get('promo') || '';

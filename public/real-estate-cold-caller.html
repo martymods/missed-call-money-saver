@@ -597,7 +597,6 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
   </div>
 
   <script src="https://js.stripe.com/v3/"></script>
-  <script src="/js/delco-api.js"></script>
   <script>
     const leadRows = document.getElementById('leadRows');
     const stageFilter = document.getElementById('stageFilter');
@@ -606,10 +605,7 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
     const planCards = Array.from(document.querySelectorAll('.plan-card'));
     let leadData = [];
     let stripeClient = null;
-    let API_BASE = window.DELCO_BACKEND_BASE || 'https://www.delcotechdivision.com';
-    const resolvedConfigPromise = window.delcoApi
-      ? window.delcoApi.resolveConfig().catch(() => null)
-      : Promise.resolve({ base: window.DELCO_BACKEND_BASE });
+    const API_BASE = window.DELCO_BACKEND_BASE || 'https://www.delcotechdivision.com';
 
     const PLAN_BUTTON_VERBS = {
       solo: 'Activate',
@@ -874,22 +870,14 @@ Can I send the booking link to lock your time?" rows="5"></textarea>
 
     setActivePlan('signal');
 
-    (async () => {
-      const resolved = await resolvedConfigPromise;
-      let cfg = resolved?.config;
-      if(resolved?.base){
-        API_BASE = resolved.base;
-      }
-      if(!cfg || typeof cfg !== 'object' || !Object.keys(cfg).length){
-        cfg = await fetch(`${API_BASE}/config`).then(r => r.json()).catch(() => ({}));
-      }
+    fetch(`${API_BASE}/config`).then(r => r.json()).then(cfg => {
       if(cfg?.stripePk && typeof Stripe === 'function'){
         stripeClient = Stripe(cfg.stripePk);
       }
       if(Array.isArray(cfg?.realEstatePlans)){
         cfg.realEstatePlans.forEach(updatePlanCardFromConfig);
       }
-    })().catch(() => {});
+    }).catch(() => {});
 
     // AI script generator
     const scriptForm = document.getElementById('scriptForm');
