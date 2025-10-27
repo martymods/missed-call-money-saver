@@ -112,7 +112,12 @@
 
   const TAX = Number((await fetch('/api/food/menu').then(r=>r.json())).taxRate || 0);
   const menu = (await fetch('/api/food/menu').then(r=>r.json())).items || [];
-  const cart = []; let deliveryCents = 0; let externalId = null; let tipCents = 0;
+  const cart = [];
+  let deliveryCents = 0;
+  let externalId = null;
+  let tipCents = 0;
+  let subtotalCents = 0;
+  let taxCents = 0;
 
   function renderMenu(){
     menuEl.innerHTML='';
@@ -143,7 +148,12 @@
     });
     const sub = cart.reduce((s,c)=>s+c.qty*c.price,0);
     const tax = sub*TAX;
-    subEl.textContent = money(sub); taxEl.textContent = money(tax); delivEl.textContent = money(deliveryCents/100); tipEl.textContent = money(tipCents/100);
+    subtotalCents = Math.round(sub*100);
+    taxCents = Math.round(tax*100);
+    subEl.textContent = money(sub);
+    taxEl.textContent = money(tax);
+    delivEl.textContent = money(deliveryCents/100);
+    tipEl.textContent = money(tipCents/100);
     totEl.textContent = money(sub+tax+(deliveryCents+tipCents)/100);
   }
 
@@ -185,8 +195,14 @@
     if(!externalId || !deliveryCents) return alert('Get a DoorDash quote first.');
     const a = addr();
     const items = cart.map(c=>({ name:c.name, qty:c.qty, priceCents: Math.round(c.price*100) }));
+    const totals = {
+      subtotalCents,
+      taxCents,
+      deliveryCents,
+      tipCents,
+    };
     const r = await fetch('/api/food/checkout',{ method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ items, tipCents, quote: { externalId, feeCents: deliveryCents }, address: a }) }).then(r=>r.json());
+      body: JSON.stringify({ items, tipCents, totals, quote: { externalId, feeCents: deliveryCents }, address: a }) }).then(r=>r.json());
     if(r.url) location.href = r.url; else alert('Could not start checkout.');
   };
 
