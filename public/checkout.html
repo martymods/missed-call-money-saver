@@ -79,8 +79,10 @@
   <script src="https://js.stripe.com/v3/"></script>
   <script>
     (async () => {
+      const API_BASE = window.DELCO_BACKEND_BASE || 'https://www.delcotechdivision.com';
+
       // Expecting your backend to provide the same /config JSON as before
-      const cfg = await fetch('/config').then(r=>r.json()).catch(()=>({}));
+      const cfg = await fetch(`${API_BASE}/config`).then(r=>r.json()).catch(()=>({}));
       const stripe = cfg.stripePk ? Stripe(cfg.stripePk) : null;
 
       // Prefill promo from ?promo=
@@ -91,7 +93,7 @@
       // Stripe Checkout Session
       document.getElementById('stripeBtn').addEventListener('click', async () => {
         const promo = (promoInput?.value || '').trim();
-        const sess = await fetch('/api/create-checkout-session', {
+        const sess = await fetch(`${API_BASE}/api/create-checkout-session`, {
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
           body: JSON.stringify({ promo })

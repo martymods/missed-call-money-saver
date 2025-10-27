@@ -1146,6 +1146,8 @@
       return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 }).format(amount);
     }
 
+    const API_BASE = window.DELCO_BACKEND_BASE || 'https://www.delcotechdivision.com';
+
     async function startDentalCheckout(plan, source){
       if(!plan) return;
       const btn = source instanceof HTMLElement ? source : null;
@@ -1155,7 +1157,7 @@
       }
 
       try{
-        const res = await fetch('/api/dental/checkout', {
+        const res = await fetch(`${API_BASE}/api/dental/checkout`, {
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ plan })
@@ -1189,7 +1191,7 @@
 
     window.startDentalCheckout = startDentalCheckout;
 
-    fetch('/config').then(r => r.json()).then(cfg => {
+    fetch(`${API_BASE}/config`).then(r => r.json()).then(cfg => {
       if(cfg?.stripePk){
         stripeClient = Stripe(cfg.stripePk);
       }
