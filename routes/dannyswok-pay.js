@@ -285,10 +285,11 @@ function aggregateExtraAmounts(payload) {
     tipCents: null,
     deliveryCents: null,
     serviceFeeCents: null,
+    expressCents: null,
     discountCents: null,
   };
 
-  const sources = [payload?.totals, payload];
+  const sources = [payload?.totals, payload?.fees, payload];
 
   for (const source of sources) {
     if (!source || typeof source !== 'object') continue;
@@ -296,10 +297,19 @@ function aggregateExtraAmounts(payload) {
     if (result.taxCents === null) {
       result.taxCents = parseMoney(source.taxCents, { assumeCents: true, allowZero: true })
         ?? parseMoney(source.tax, { allowZero: true });
+      if (result.taxCents === null) {
+        result.taxCents = parseMoney(source.estimatedTaxCents, { assumeCents: true, allowZero: true })
+          ?? parseMoney(source.estimatedTax, { allowZero: true })
+          ?? parseMoney(source.taxTotal, { allowZero: true });
+      }
     }
     if (result.tipCents === null) {
       result.tipCents = parseMoney(source.tipCents, { assumeCents: true, allowZero: true })
         ?? parseMoney(source.tip, { allowZero: true });
+      if (result.tipCents === null) {
+        result.tipCents = parseMoney(source.gratuityCents, { assumeCents: true, allowZero: true })
+          ?? parseMoney(source.gratuity, { allowZero: true });
+      }
     }
     if (result.deliveryCents === null) {
       result.deliveryCents = parseMoney(source.deliveryCents, { assumeCents: true, allowZero: true })
@@ -310,7 +320,19 @@ function aggregateExtraAmounts(payload) {
     if (result.serviceFeeCents === null) {
       result.serviceFeeCents = parseMoney(source.serviceFeeCents, { assumeCents: true, allowZero: true })
         ?? parseMoney(source.serviceFee, { allowZero: true })
-        ?? parseMoney(source.fees, { allowZero: true });
+        ?? parseMoney(source.fees, { allowZero: true })
+        ?? parseMoney(source.service, { allowZero: true });
+    }
+    if (result.expressCents === null) {
+      result.expressCents = parseMoney(source.expressCents, { assumeCents: true, allowZero: true })
+        ?? parseMoney(source.expressFeeCents, { assumeCents: true, allowZero: true })
+        ?? parseMoney(source.expressFee, { allowZero: true })
+        ?? parseMoney(source.expressDeliveryFee, { allowZero: true })
+        ?? parseMoney(source.expressDelivery, { allowZero: true })
+        ?? parseMoney(source.express, { allowZero: true })
+        ?? parseMoney(source.rushDeliveryFee, { allowZero: true })
+        ?? parseMoney(source.rushFee, { allowZero: true })
+        ?? parseMoney(source.rush, { allowZero: true });
     }
     if (result.discountCents === null) {
       result.discountCents = parseMoney(source.discountCents, { assumeCents: true, allowZero: true, allowNegative: true })
@@ -319,6 +341,85 @@ function aggregateExtraAmounts(payload) {
   }
 
   return result;
+}
+
+function calculateSubtotalCentsFromItems(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return 0;
+  }
+
+  let subtotal = 0;
+
+  for (const rawItem of items) {
+    const quantity = extractQuantityFromItem(rawItem);
+    const unitAmount = extractCentsFromItem(rawItem, quantity);
+    if (!Number.isInteger(unitAmount) || unitAmount <= 0) {
+      continue;
+    }
+
+    subtotal += unitAmount * Math.max(1, quantity);
+  }
+
+  return subtotal;
+}
+
+function extractSubtotalCents(payload) {
+  const sources = [payload?.totals, payload];
+
+  for (const source of sources) {
+    if (!source || typeof source !== 'object') continue;
+
+    const subtotal = parseMoney(source.subtotalCents, { assumeCents: true, allowZero: true })
+      ?? parseMoney(source.subtotal_amount_cents, { assumeCents: true, allowZero: true })
+      ?? parseMoney(source.subtotal, { allowZero: true })
+      ?? parseMoney(source.itemsTotal, { allowZero: true })
+      ?? parseMoney(source.items_total, { allowZero: true })
+      ?? parseMoney(source.orderSubtotal, { allowZero: true })
+      ?? parseMoney(source.amountBeforeFees, { allowZero: true });
+
+    if (subtotal !== null) {
+      return subtotal;
+    }
+  }
+
+  return null;
+}
+
+function extractTotalCents(payload) {
+  const sources = [payload?.totals, payload];
+
+  for (const source of sources) {
+    if (!source || typeof source !== 'object') continue;
+
+    const total = parseMoney(source.totalCents, { assumeCents: true, allowZero: true })
+      ?? parseMoney(source.amountCents, { assumeCents: true, allowZero: true })
+      ?? parseMoney(source.total, { allowZero: true })
+      ?? parseMoney(source.totalAmount, { allowZero: true })
+      ?? parseMoney(source.total_amount, { allowZero: true })
+      ?? parseMoney(source.totalDue, { allowZero: true })
+      ?? parseMoney(source.amountDue, { allowZero: true })
+      ?? parseMoney(source.amount_due, { allowZero: true })
+      ?? parseMoney(source.grandTotal, { allowZero: true })
+      ?? parseMoney(source.balanceDue, { allowZero: true });
+
+    if (total !== null) {
+      return total;
+    }
+  }
+
+  const amountRaw = payload?.amount;
+  const numericAmount = typeof amountRaw === 'number' ? amountRaw : Number(amountRaw);
+  if (Number.isInteger(numericAmount) && numericAmount > 0) {
+    return numericAmount;
+  }
+
+  const amountCentsRaw = payload?.amountCents;
+  const numericAmountCents = typeof amountCentsRaw === 'number' ? amountCentsRaw : Number(amountCentsRaw);
+  if (Number.isInteger(numericAmountCents) && numericAmountCents > 0) {
+    return numericAmountCents;
+  }
+
+  return null;
 }
 
 function sanitizeReturnUrl(url, fallback, allowedOrigins) {
@@ -367,21 +468,107 @@ function createDannysWokPayRouter({ stripe, allowedOrigins = [], menuOrigin = nu
       return res.status(503).json({ error: 'stripe_unavailable' });
     }
 
-    const amountRaw = req.body?.amount;
-    const amount = typeof amountRaw === 'number' ? amountRaw : Number(amountRaw);
+    const payload = req.body || {};
+    const items = extractItems(payload);
 
-    if (!Number.isFinite(amount) || amount <= 0) {
+    const subtotalFromItems = calculateSubtotalCentsFromItems(items);
+    const explicitSubtotal = extractSubtotalCents(payload);
+    const computedSubtotal = Number.isInteger(subtotalFromItems) && subtotalFromItems > 0
+      ? subtotalFromItems
+      : (Number.isInteger(explicitSubtotal) && explicitSubtotal > 0 ? explicitSubtotal : null);
+
+    const extras = aggregateExtraAmounts(payload);
+    const feeCandidates = [
+      extras.taxCents,
+      extras.deliveryCents,
+      extras.serviceFeeCents,
+      extras.tipCents,
+      extras.expressCents,
+    ];
+
+    let computedFees = 0;
+    for (const fee of feeCandidates) {
+      if (Number.isInteger(fee) && fee > 0) {
+        computedFees += fee;
+      }
+    }
+
+    let computedGrand = (computedSubtotal || 0) + computedFees;
+    const discountCents = Number.isInteger(extras.discountCents) ? extras.discountCents : 0;
+    if (discountCents > 0) {
+      computedGrand -= discountCents;
+    } else if (discountCents < 0) {
+      computedGrand += discountCents;
+    }
+
+    const explicitTotal = extractTotalCents(payload);
+    if ((!Number.isInteger(computedGrand) || computedGrand <= 0) && Number.isInteger(explicitTotal) && explicitTotal > 0) {
+      computedGrand = explicitTotal;
+    }
+
+    const amount = Number.isInteger(computedGrand) && computedGrand > 0
+      ? computedGrand
+      : (Number.isInteger(explicitTotal) && explicitTotal > 0 ? explicitTotal : null);
+
+    if (!Number.isInteger(amount) || amount <= 0) {
       return res.status(400).json({ error: 'invalid_amount' });
     }
 
-    if (!Number.isInteger(amount)) {
-      return res.status(400).json({ error: 'amount_must_be_integer' });
+    const currency = sanitizeCurrency(payload?.currency || payload?.currencyCode);
+    const description = sanitizeDescription(payload?.description || payload?.orderDescription);
+    const receiptEmail = sanitizeEmail(
+      payload?.receiptEmail
+        || payload?.email
+        || payload?.customer?.email
+        || payload?.contact?.email
+        || payload?.customerDetails?.email
+    );
+
+    const metadataInput = typeof payload?.metadata === 'object' && payload.metadata !== null
+      ? { ...payload.metadata }
+      : {};
+
+    if (Number.isInteger(computedSubtotal) && computedSubtotal > 0) {
+      metadataInput.subtotal_cents = String(computedSubtotal);
+    }
+    if (Number.isInteger(computedFees) && computedFees >= 0) {
+      metadataInput.fees_total_cents = String(computedFees);
+    }
+    if (Number.isInteger(extras.taxCents) && extras.taxCents >= 0) {
+      metadataInput.tax_cents = String(extras.taxCents);
+    }
+    if (Number.isInteger(extras.deliveryCents) && extras.deliveryCents >= 0) {
+      metadataInput.delivery_cents = String(extras.deliveryCents);
+    }
+    if (Number.isInteger(extras.serviceFeeCents) && extras.serviceFeeCents >= 0) {
+      metadataInput.service_fee_cents = String(extras.serviceFeeCents);
+    }
+    if (Number.isInteger(extras.tipCents) && extras.tipCents >= 0) {
+      metadataInput.tip_cents = String(extras.tipCents);
+    }
+    if (Number.isInteger(extras.expressCents) && extras.expressCents >= 0) {
+      metadataInput.express_cents = String(extras.expressCents);
+    }
+    if (Number.isInteger(discountCents) && discountCents !== 0) {
+      metadataInput.discount_cents = String(discountCents);
     }
 
-    const currency = sanitizeCurrency(req.body?.currency);
-    const description = sanitizeDescription(req.body?.description);
-    const receiptEmail = sanitizeEmail(req.body?.receiptEmail || req.body?.email);
-    const metadata = sanitizeMetadata(req.body?.metadata);
+    const fulfillment = sanitizeDescription(payload?.fulfillment || payload?.orderType || payload?.type);
+    if (fulfillment) {
+      metadataInput.fulfillment = fulfillment;
+    }
+
+    const instructions = sanitizeDescription(
+      payload?.instructions
+        || payload?.specialInstructions
+        || payload?.notes
+        || payload?.delivery?.instructions
+    );
+    if (instructions) {
+      metadataInput.instructions = instructions;
+    }
+
+    const metadata = sanitizeMetadata(metadataInput);
 
     try {
       const intent = await stripe.paymentIntents.create({
@@ -480,6 +667,17 @@ function createDannysWokPayRouter({ stripe, allowedOrigins = [], menuOrigin = nu
       });
     }
 
+    if (extras.expressCents && extras.expressCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency,
+          unit_amount: extras.expressCents,
+          product_data: { name: 'Express delivery' },
+        },
+        quantity: 1,
+      });
+    }
+
     if (extras.tipCents && extras.tipCents > 0) {
       lineItems.push({
         price_data: {
@@ -511,6 +709,7 @@ function createDannysWokPayRouter({ stripe, allowedOrigins = [], menuOrigin = nu
       customer_phone: sanitizePhone(customer.phone || delivery.phone),
       customer_email: sanitizeEmail(customer.email || payload.email),
       tip_cents: extras.tipCents ? String(extras.tipCents) : undefined,
+      express_cents: extras.expressCents ? String(extras.expressCents) : undefined,
       delivery_cents: extras.deliveryCents ? String(extras.deliveryCents) : undefined,
       service_fee_cents: extras.serviceFeeCents ? String(extras.serviceFeeCents) : undefined,
       subtotal_cents: subtotalCents ? String(subtotalCents) : undefined,
