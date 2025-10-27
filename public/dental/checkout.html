@@ -40,64 +40,71 @@
   </div>
 
   <script src="https://js.stripe.com/v3/"></script>
+  <script src="/js/delco-api.js"></script>
   <script>
-    const params = new URLSearchParams(location.search);
-    const requestedPlan = (params.get('plan') || 'starter').toLowerCase();
-    const canceled = params.get('canceled');
+    (async () => {
+      const params = new URLSearchParams(location.search);
+      const requestedPlan = (params.get('plan') || 'starter').toLowerCase();
+      const canceled = params.get('canceled');
 
-    const statusEl = document.getElementById('status');
-    const planNameEl = document.getElementById('planName');
-    const planPriceEl = document.getElementById('planPrice');
-    const planDescEl = document.getElementById('planDesc');
-    const payBtn = document.getElementById('payBtn');
+      const statusEl = document.getElementById('status');
+      const planNameEl = document.getElementById('planName');
+      const planPriceEl = document.getElementById('planPrice');
+      const planDescEl = document.getElementById('planDesc');
+      const payBtn = document.getElementById('payBtn');
 
-    if(canceled){
-      statusEl.textContent = 'Checkout was canceled. You can reopen it below when you are ready.';
-      statusEl.style.display = 'block';
-    }
-
-    let stripeClient = null;
-    let selectedPlan = null;
-
-    function formatCurrency(amount){
-      return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 }).format(amount);
-    }
-
-    const API_BASE = window.DELCO_BACKEND_BASE || 'https://www.delcotechdivision.com';
-
-    async function launchCheckout(){
-      if(!selectedPlan) return;
-      payBtn.disabled = true;
-      try{
-        const res = await fetch(`${API_BASE}/api/dental/checkout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ plan: selectedPlan.slug })
-        });
-        const data = await res.json().catch(() => ({}));
-        if(!res.ok){
-          throw new Error(data?.error || 'checkout_unavailable');
-        }
-        if(data.url){
-          window.location.href = data.url;
-          return;
-        }
-        if(data.id && stripeClient){
-          await stripeClient.redirectToCheckout({ sessionId: data.id });
-          return;
-        }
-        throw new Error('missing_checkout_url');
-      }catch(err){
-        console.error('dental checkout failed', err);
-        alert('Unable to open Stripe checkout right now. Please try again or contact support.');
-      }finally{
-        payBtn.disabled = false;
+      if(canceled){
+        statusEl.textContent = 'Checkout was canceled. You can reopen it below when you are ready.';
+        statusEl.style.display = 'block';
       }
-    }
 
-    payBtn.addEventListener('click', launchCheckout);
+      let stripeClient = null;
+      let selectedPlan = null;
 
-    fetch(`${API_BASE}/config`).then(r => r.json()).then(cfg => {
+      function formatCurrency(amount){
+        return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 }).format(amount);
+      }
+
+      const resolved = window.delcoApi ? await window.delcoApi.resolveConfig() : { base: window.DELCO_BACKEND_BASE };
+      const API_BASE = resolved?.base || window.DELCO_BACKEND_BASE || 'https://www.delcotechdivision.com';
+
+      async function launchCheckout(){
+        if(!selectedPlan) return;
+        payBtn.disabled = true;
+        try{
+          const res = await fetch(`${API_BASE}/api/dental/checkout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan: selectedPlan.slug })
+          });
+          const data = await res.json().catch(() => ({}));
+          if(!res.ok){
+            throw new Error(data?.error || 'checkout_unavailable');
+          }
+          if(data.url){
+            window.location.href = data.url;
+            return;
+          }
+          if(data.id && stripeClient){
+            await stripeClient.redirectToCheckout({ sessionId: data.id });
+            return;
+          }
+          throw new Error('missing_checkout_url');
+        }catch(err){
+          console.error('dental checkout failed', err);
+          alert('Unable to open Stripe checkout right now. Please try again or contact support.');
+        }finally{
+          payBtn.disabled = false;
+        }
+      }
+
+      payBtn.addEventListener('click', launchCheckout);
+
+      let cfg = resolved?.config;
+      if (!cfg || typeof cfg !== 'object' || !Object.keys(cfg).length) {
+        cfg = await fetch(`${API_BASE}/config`).then(r => r.json()).catch(() => ({}));
+      }
+
       if(cfg?.stripePk){
         stripeClient = Stripe(cfg.stripePk);
       }
@@ -116,10 +123,19 @@
       planPriceEl.textContent = `${formatCurrency(selectedPlan.setup)} setup • ${formatCurrency(selectedPlan.monthly)} / month`;
       planDescEl.textContent = selectedPlan.description || '';
       payBtn.textContent = `Secure ${selectedPlan.name}`;
-    }).catch(() => {
-      planNameEl.textContent = 'Plan unavailable';
-      planDescEl.textContent = 'We could not load pricing details. Refresh or contact support.';
-      payBtn.disabled = true;
+    })().catch(() => {
+      const planNameEl = document.getElementById('planName');
+      const planDescEl = document.getElementById('planDesc');
+      const payBtn = document.getElementById('payBtn');
+      if(planNameEl){
+        planNameEl.textContent = 'Plan unavailable';
+      }
+      if(planDescEl){
+        planDescEl.textContent = 'We could not load pricing details. Refresh or contact support.';
+      }
+      if(payBtn){
+        payBtn.disabled = true;
+      }
     });
   </script>
 </body>

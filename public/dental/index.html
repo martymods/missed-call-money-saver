@@ -875,6 +875,7 @@
   <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
   <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
   <script src="https://js.stripe.com/v3/"></script>
+  <script src="/js/delco-api.js"></script>
   <script>
     document.getElementById('yr').textContent = new Date().getFullYear();
 
@@ -1146,7 +1147,10 @@
       return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 }).format(amount);
     }
 
-    const API_BASE = window.DELCO_BACKEND_BASE || 'https://www.delcotechdivision.com';
+    let API_BASE = window.DELCO_BACKEND_BASE || 'https://www.delcotechdivision.com';
+    const resolvedConfigPromise = window.delcoApi
+      ? window.delcoApi.resolveConfig().catch(() => null)
+      : Promise.resolve({ base: window.DELCO_BACKEND_BASE });
 
     async function startDentalCheckout(plan, source){
       if(!plan) return;
@@ -1191,7 +1195,15 @@
 
     window.startDentalCheckout = startDentalCheckout;
 
-    fetch(`${API_BASE}/config`).then(r => r.json()).then(cfg => {
+    (async () => {
+      const resolved = await resolvedConfigPromise;
+      let cfg = resolved?.config;
+      if(resolved?.base){
+        API_BASE = resolved.base;
+      }
+      if(!cfg || typeof cfg !== 'object' || !Object.keys(cfg).length){
+        cfg = await fetch(`${API_BASE}/config`).then(r => r.json()).catch(() => ({}));
+      }
       if(cfg?.stripePk){
         stripeClient = Stripe(cfg.stripePk);
       }
@@ -1210,7 +1222,7 @@
           }
         });
       }
-    }).catch(() => {});
+    })().catch(() => {});
 
     document.querySelectorAll('[data-checkout]').forEach(el => {
       el.addEventListener('click', e => {
