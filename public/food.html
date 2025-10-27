@@ -65,7 +65,7 @@
       <h3>Your Order</h3>
       <div id="cart"></div>
       <div class="line"><span>Subtotal</span><b id="sub">$0</b></div>
-      <div class="line"><span>Tax</span><b id="tax">$0</b></div>
+      <div class="line"><span>Fees &amp; Estimated Tax</span><b id="tax">$0</b></div>
       <div class="line"><span>Delivery (DoorDash)</span><b id="deliv">$0</b></div>
       <div class="line"><span>Tip for Dasher</span><b id="tipv">$0</b></div>
       <div class="line" style="border-top:1px solid rgba(255,255,255,.14);padding-top:8px"><span>Total</span><b id="tot">$0</b></div>
@@ -112,7 +112,113 @@
 
   const TAX = Number((await fetch('/api/food/menu').then(r=>r.json())).taxRate || 0);
   const menu = (await fetch('/api/food/menu').then(r=>r.json())).items || [];
-  const cart = []; let deliveryCents = 0; let externalId = null; let tipCents = 0;
+  const cart = [];
+  let deliveryCents = 0;
+  let externalId = null;
+  let tipCents = 0;
+  let feesCents = 0;
+  let estimatedTaxCents = 0;
+  let currentQuote = null;
+
+  const toCents = val => {
+    if (val === null || val === undefined) return 0;
+    if (typeof val === 'object') {
+      if ('amount' in val) return toCents(val.amount);
+      if ('value' in val) return toCents(val.value);
+      if ('total' in val) return toCents(val.total);
+      if ('cents' in val) return toCents(val.cents);
+      return 0;
+    }
+    if (typeof val === 'string') {
+      const cleaned = val.trim();
+      if (!cleaned) return 0;
+      const normalized = cleaned.replace(/[^0-9.\-]/g, '');
+      if (!normalized) return 0;
+      const num = Number(normalized);
+      if (!Number.isFinite(num)) return 0;
+      if (normalized.includes('.')) return Math.round(num * 100);
+      return Math.round(num);
+    }
+    if (typeof val === 'number') {
+      if (!Number.isFinite(val)) return 0;
+      if (Number.isInteger(val) || Math.abs(val) >= 100) return Math.round(val);
+      return Math.round(val * 100);
+    }
+    return 0;
+  };
+
+  const pickFirstCents = values => {
+    for (const v of values) {
+      const cents = toCents(v);
+      if (cents > 0) return cents;
+    }
+    return 0;
+  };
+
+  function categorizeComponents(quote){
+    const result = { delivery: 0, fees: 0, tax: 0 };
+    if (!quote || typeof quote !== 'object') return result;
+    const arrays = [];
+    const maybeArrays = ['price_breakdown', 'fee_components', 'fees', 'additional_fees', 'charges'];
+    for (const key of maybeArrays) {
+      const val = quote[key];
+      if (Array.isArray(val)) arrays.push(...val);
+    }
+    for (const component of arrays) {
+      const cents = toCents(component?.amount ?? component?.fee ?? component?.total_fee_amount ?? component?.total ?? component?.value ?? component?.cents);
+      if (!cents) continue;
+      const type = String(component?.type || component?.code || component?.name || '').toLowerCase();
+      if (!type) {
+        result.fees += cents;
+        continue;
+      }
+      if (type.includes('delivery') || type.includes('drive') || type.includes('base')) {
+        result.delivery += cents;
+      } else if (type.includes('tax')) {
+        result.tax += cents;
+      } else if (type.includes('tip')) {
+        // Skip — handled separately in checkout payload
+      } else {
+        result.fees += cents;
+      }
+    }
+    return result;
+  }
+
+  function extractQuoteTotals(quote){
+    const components = categorizeComponents(quote);
+    const delivery = components.delivery || pickFirstCents([
+      quote?.deliveryCents,
+      quote?.delivery_fee_cents,
+      quote?.delivery_fee,
+      quote?.deliveryFee,
+      quote?.feeCents,
+      quote?.fee
+    ]);
+    const estimatedTax = components.tax || pickFirstCents([
+      quote?.estimatedTaxCents,
+      quote?.estimated_tax_cents,
+      quote?.tax_cents,
+      quote?.tax
+    ]);
+    let fees = components.fees || pickFirstCents([
+      quote?.feesAndTaxCents,
+      quote?.fees_and_tax_cents,
+      quote?.fees_cents,
+      quote?.fees,
+      quote?.service_fee_cents,
+      quote?.serviceFeeCents
+    ]);
+    if (!components.fees && !fees) {
+      const extraFees = pickFirstCents([quote?.additional_fee_cents, quote?.additionalFeesCents]);
+      if (extraFees) fees = extraFees;
+    }
+    return {
+      deliveryCents: Math.max(0, delivery),
+      feesCents: Math.max(0, fees),
+      estimatedTaxCents: Math.max(0, estimatedTax),
+    };
+  }
 
   function renderMenu(){
     menuEl.innerHTML='';
@@ -142,9 +248,14 @@
       cartEl.appendChild(d);
     });
     const sub = cart.reduce((s,c)=>s+c.qty*c.price,0);
-    const tax = sub*TAX;
-    subEl.textContent = money(sub); taxEl.textContent = money(tax); delivEl.textContent = money(deliveryCents/100); tipEl.textContent = money(tipCents/100);
-    totEl.textContent = money(sub+tax+(deliveryCents+tipCents)/100);
+    const fallbackTax = sub*TAX;
+    const combinedFeesTaxCents = Math.max(0, feesCents + estimatedTaxCents);
+    const feesTaxDollars = combinedFeesTaxCents ? combinedFeesTaxCents/100 : fallbackTax;
+    subEl.textContent = money(sub);
+    taxEl.textContent = money(feesTaxDollars);
+    delivEl.textContent = money(deliveryCents/100);
+    tipEl.textContent = money(tipCents/100);
+    totEl.textContent = money(sub + feesTaxDollars + (deliveryCents + tipCents)/100);
   }
 
   function addr(){
@@ -169,10 +280,14 @@
     const r = await fetch('/api/food/quote',{ method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ items, address: a }) }).then(r=>r.json());
     if(r.error) return alert('Quote failed.');
-    deliveryCents = r.quote?.fee || 0;
-    externalId = r.quote?.external_delivery_id || null;
+    currentQuote = r.quote || null;
+    externalId = currentQuote?.external_delivery_id || currentQuote?.externalId || null;
+    const breakdown = extractQuoteTotals(currentQuote);
+    deliveryCents = breakdown.deliveryCents || 0;
+    feesCents = breakdown.feesCents || 0;
+    estimatedTaxCents = breakdown.estimatedTaxCents || 0;
     tipCents = Math.round(deliveryCents*0.2); // default 20% tip suggestion
-    etaEl.textContent = r.quote?.dropoff_time ? `Estimated dropoff: ${r.quote.dropoff_time}` : '';
+    etaEl.textContent = currentQuote?.dropoff_time ? `Estimated dropoff: ${currentQuote.dropoff_time}` : '';
     renderCart();
   };
 
@@ -185,8 +300,16 @@
     if(!externalId || !deliveryCents) return alert('Get a DoorDash quote first.');
     const a = addr();
     const items = cart.map(c=>({ name:c.name, qty:c.qty, priceCents: Math.round(c.price*100) }));
+    const combinedFeesTaxCents = Math.max(0, feesCents + estimatedTaxCents);
+    const quotePayload = {
+      externalId,
+      deliveryCents,
+      feesCents: feesCents || undefined,
+      estimatedTaxCents: estimatedTaxCents || undefined,
+      feesAndTaxCents: combinedFeesTaxCents || undefined,
+    };
     const r = await fetch('/api/food/checkout',{ method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ items, tipCents, quote: { externalId, feeCents: deliveryCents }, address: a }) }).then(r=>r.json());
+      body: JSON.stringify({ items, tipCents, quote: quotePayload, address: a }) }).then(r=>r.json());
     if(r.url) location.href = r.url; else alert('Could not start checkout.');
   };
 

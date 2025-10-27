@@ -2551,6 +2551,33 @@ async function ddPost(path, body){
 function cents(n){ return Math.max(0, Math.round(Number(n||0)*100)); }
 function toE164Maybe(usPhone){ const d = String(usPhone||'').replace(/\D/g,''); return d.startsWith('1')? `+${d}` : `+1${d}`; }
 
+function parseCentsValue(value) {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === 'object') {
+    if ('amount' in value) return parseCentsValue(value.amount);
+    if ('value' in value) return parseCentsValue(value.value);
+    if ('total' in value) return parseCentsValue(value.total);
+    if ('cents' in value) return parseCentsValue(value.cents);
+    return 0;
+  }
+  if (typeof value === 'string') {
+    const cleaned = value.trim();
+    if (!cleaned) return 0;
+    const normalized = cleaned.replace(/[^0-9.\-]/g, '');
+    if (!normalized) return 0;
+    const num = Number(normalized);
+    if (!Number.isFinite(num)) return 0;
+    if (normalized.includes('.')) return Math.round(num * 100);
+    return Math.round(num);
+  }
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return 0;
+    if (Number.isInteger(value) || Math.abs(value) >= 100) return Math.round(value);
+    return Math.round(value * 100);
+  }
+  return 0;
+}
+
 app.post('/api/food/quote', async (req,res)=>{
   try{
     const { items=[], address={} } = req.body||{};
@@ -2584,7 +2611,27 @@ app.post('/api/food/checkout', async (req,res)=>{
   try{
     const { items=[], tipCents=0, quote={}, address={} } = req.body||{};
     if(!Array.isArray(items) || !items.length) return res.status(400).json({ error:'no_items' });
-    if(!quote?.externalId || !quote?.feeCents) return res.status(400).json({ error:'no_quote' });
+
+    const externalId = String(quote?.externalId || quote?.external_delivery_id || quote?.externalDeliveryId || '').trim();
+    if(!externalId) return res.status(400).json({ error:'no_quote' });
+
+    const subtotalCents = items.reduce((s,it)=> s + (Number(it.priceCents)||0)*(Number(it.qty)||0), 0);
+
+    const deliveryCents = Math.max(0, parseCentsValue(quote?.deliveryCents ?? quote?.delivery_fee_cents ?? quote?.feeCents ?? quote?.fee ?? 0));
+    const feesAndTaxCentsRaw = Math.max(0, parseCentsValue(quote?.feesAndTaxCents ?? quote?.fees_tax_cents ?? quote?.feesEstimatedTaxCents ?? 0));
+    const feesOnlyCents = Math.max(0, parseCentsValue(quote?.feesCents ?? quote?.fees ?? quote?.service_fee_cents ?? 0));
+    const estimatedTaxCents = Math.max(0, parseCentsValue(quote?.estimatedTaxCents ?? quote?.estimated_tax_cents ?? quote?.tax_cents ?? quote?.tax ?? 0));
+    let combinedFeesTaxCents = feesAndTaxCentsRaw;
+    if (!combinedFeesTaxCents && (feesOnlyCents || estimatedTaxCents)) {
+      combinedFeesTaxCents = feesOnlyCents + estimatedTaxCents;
+    } else if (combinedFeesTaxCents && (feesOnlyCents || estimatedTaxCents)) {
+      const alternate = feesOnlyCents + estimatedTaxCents;
+      if (alternate > combinedFeesTaxCents) combinedFeesTaxCents = alternate;
+    }
+
+    const fallbackFeesTaxCents = combinedFeesTaxCents ? 0 : Math.round(subtotalCents * TAX_RATE);
+    const appliedFeesTaxCents = combinedFeesTaxCents || fallbackFeesTaxCents;
+    const tipAmountCents = Math.max(0, parseCentsValue(tipCents));
 
     const line_items = [];
 
@@ -2598,17 +2645,40 @@ app.post('/api/food/checkout', async (req,res)=>{
       });
     }
 
-    // Tax (simple: subtotal * TAX_RATE)
-    const subtotalCents = items.reduce((s,it)=> s + (Number(it.priceCents)||0)*(Number(it.qty)||0), 0);
-    const taxCents = Math.round(subtotalCents * TAX_RATE);
-    if (taxCents > 0){
-      line_items.push({ price_data:{ currency:'usd', unit_amount: taxCents, product_data:{ name:'Sales Tax' } }, quantity:1 });
+    if (appliedFeesTaxCents > 0) {
+      line_items.push({
+        price_data:{ currency:'usd', unit_amount: Math.max(1, appliedFeesTaxCents), product_data:{ name:'Fees & Estimated Tax' } },
+        quantity:1
+      });
     }
 
-    // Delivery + Tip
-    line_items.push({ price_data:{ currency:'usd', unit_amount: Math.max(100, Number(quote.feeCents)||0), product_data:{ name:'Delivery (DoorDash)' } }, quantity:1 });
-    if (tipCents > 0){
-      line_items.push({ price_data:{ currency:'usd', unit_amount: Math.round(Number(tipCents)||0), product_data:{ name:'Dasher Tip' } }, quantity:1 });
+    if (deliveryCents > 0) {
+      line_items.push({
+        price_data:{ currency:'usd', unit_amount: Math.max(1, deliveryCents), product_data:{ name:'Delivery (DoorDash)' } },
+        quantity:1
+      });
+    }
+
+    if (tipAmountCents > 0){
+      line_items.push({ price_data:{ currency:'usd', unit_amount: tipAmountCents, product_data:{ name:'Dasher Tip' } }, quantity:1 });
+    }
+
+    const metadata = {
+      flow:'food',
+      dd_ext_id: externalId,
+      dd_fee: String(deliveryCents || 0),
+      dd_delivery_cents: String(deliveryCents || 0),
+      dd_fees_tax_cents: String(appliedFeesTaxCents || 0),
+      dd_fees_tax_source: combinedFeesTaxCents ? 'quote' : 'fallback',
+      cust_phone_e164: toE164Maybe(address.phone||''),
+      tip_cents: String(tipAmountCents || 0),
+      drop_addr: `${address.addr1}${address.addr2?(', '+address.addr2):''}, ${address.city}, ${address.state} ${address.zip}`,
+      drop_name: `${address.first||''} ${address.last||''}`.trim()
+    };
+
+    if (combinedFeesTaxCents) {
+      metadata.dd_fees_component_cents = String(feesOnlyCents || 0);
+      metadata.dd_estimated_tax_cents = String(estimatedTaxCents || 0);
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -2617,15 +2687,7 @@ app.post('/api/food/checkout', async (req,res)=>{
       line_items,
       success_url:`${APP_BASE_URL}/food-confirm?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:`${APP_BASE_URL}/food.html?canceled=1`,
-      metadata:{
-        flow:'food',
-        dd_ext_id: quote.externalId,
-        dd_fee: String(quote.feeCents||0),
-        cust_phone_e164: toE164Maybe(address.phone||''),
-        tip_cents: String(tipCents||0),
-        drop_addr: `${address.addr1}${address.addr2?(', '+address.addr2):''}, ${address.city}, ${address.state} ${address.zip}`,
-        drop_name: `${address.first||''} ${address.last||''}`.trim()
-      }
+      metadata
     });
 
     res.json({ url: session.url });
