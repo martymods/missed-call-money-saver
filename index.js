@@ -2582,9 +2582,10 @@ app.post('/api/food/quote', async (req,res)=>{
 
 app.post('/api/food/checkout', async (req,res)=>{
   try{
-    const { items=[], tipCents=0, quote={}, address={} } = req.body||{};
+    const { items=[], tipCents=0, quote={}, address={}, totals={} } = req.body||{};
     if(!Array.isArray(items) || !items.length) return res.status(400).json({ error:'no_items' });
-    if(!quote?.externalId || !quote?.feeCents) return res.status(400).json({ error:'no_quote' });
+    const hasFeeCents = quote && Object.prototype.hasOwnProperty.call(quote, 'feeCents');
+    if(!quote?.externalId || !hasFeeCents) return res.status(400).json({ error:'no_quote' });
 
     const line_items = [];
 
@@ -2599,16 +2600,29 @@ app.post('/api/food/checkout', async (req,res)=>{
     }
 
     // Tax (simple: subtotal * TAX_RATE)
-    const subtotalCents = items.reduce((s,it)=> s + (Number(it.priceCents)||0)*(Number(it.qty)||0), 0);
-    const taxCents = Math.round(subtotalCents * TAX_RATE);
+    const subtotalCents = Math.max(0, Math.round(Number(totals.subtotalCents) || 0))
+      || items.reduce((s,it)=> s + (Number(it.priceCents)||0)*(Number(it.qty)||0), 0);
+    const requestedTaxCents = Math.round(Number(totals.taxCents) || 0);
+    const taxCents = requestedTaxCents > 0
+      ? requestedTaxCents
+      : Math.round(subtotalCents * TAX_RATE);
     if (taxCents > 0){
-      line_items.push({ price_data:{ currency:'usd', unit_amount: taxCents, product_data:{ name:'Sales Tax' } }, quantity:1 });
+      line_items.push({ price_data:{ currency:'usd', unit_amount: taxCents, product_data:{ name:'Fees & Estimated Tax' } }, quantity:1 });
     }
 
     // Delivery + Tip
-    line_items.push({ price_data:{ currency:'usd', unit_amount: Math.max(100, Number(quote.feeCents)||0), product_data:{ name:'Delivery (DoorDash)' } }, quantity:1 });
-    if (tipCents > 0){
-      line_items.push({ price_data:{ currency:'usd', unit_amount: Math.round(Number(tipCents)||0), product_data:{ name:'Dasher Tip' } }, quantity:1 });
+    const deliveryFeeCentsRaw = Number(totals.deliveryCents);
+    const deliveryFeeCents = Number.isFinite(deliveryFeeCentsRaw) ? Math.max(0, Math.round(deliveryFeeCentsRaw)) : 0;
+    const tipCentsRaw = Number(totals.tipCents ?? tipCents);
+    const tipCentsInt = Number.isFinite(tipCentsRaw) ? Math.max(0, Math.round(tipCentsRaw)) : 0;
+    const deliveryLineCents = deliveryFeeCents > 0
+      ? deliveryFeeCents
+      : Math.max(0, Math.round(Number(quote.feeCents)||0));
+    if (deliveryLineCents > 0){
+      line_items.push({ price_data:{ currency:'usd', unit_amount: deliveryLineCents, product_data:{ name:'Delivery (DoorDash)' } }, quantity:1 });
+    }
+    if (tipCentsInt > 0){
+      line_items.push({ price_data:{ currency:'usd', unit_amount: tipCentsInt, product_data:{ name:'Dasher Tip' } }, quantity:1 });
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -2620,9 +2634,11 @@ app.post('/api/food/checkout', async (req,res)=>{
       metadata:{
         flow:'food',
         dd_ext_id: quote.externalId,
-        dd_fee: String(quote.feeCents||0),
+        dd_fee: String(deliveryLineCents||0),
         cust_phone_e164: toE164Maybe(address.phone||''),
-        tip_cents: String(tipCents||0),
+        tip_cents: String(tipCentsInt||0),
+        tax_cents: String(taxCents||0),
+        subtotal_cents: String(subtotalCents||0),
         drop_addr: `${address.addr1}${address.addr2?(', '+address.addr2):''}, ${address.city}, ${address.state} ${address.zip}`,
         drop_name: `${address.first||''} ${address.last||''}`.trim()
       }
