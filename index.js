@@ -16,13 +16,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' }); // 👈
 const STATIC_APP_BASE_URL = process.env.PUBLIC_BASE_URL || process.env.APP_BASE_URL || '';
 const DEFAULT_APP_BASE_URL = (STATIC_APP_BASE_URL || 'https://www.delcotechdivision.com').replace(/\/$/, '');
 const APP_BASE_URL = DEFAULT_APP_BASE_URL;
-const DEFAULT_DANNYSWOK_ALLOWED_ORIGINS = [
-  'https://dannyswok.com',
-  'https://www.dannyswok.com',
-  'https://dannyswok-clone.onrender.com',
-];
-const DANNYSWOK_ALLOWED_ORIGINS = (process.env.DANNYSWOK_ALLOWED_ORIGINS
-  || DEFAULT_DANNYSWOK_ALLOWED_ORIGINS.join(','))
+const DANNYSWOK_ALLOWED_ORIGINS = (process.env.DANNYSWOK_ALLOWED_ORIGINS || '')
   .split(',')
   .map(origin => origin.trim())
   .filter(Boolean);
