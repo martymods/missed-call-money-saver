@@ -224,6 +224,19 @@ function extractItems(payload) {
     return payload.menuItems;
   }
 
+  const nestedCollections = [
+    payload.cart?.items,
+    payload.order?.items,
+    payload.order?.lineItems,
+    payload.checkout?.items,
+  ];
+
+  for (const collection of nestedCollections) {
+    if (Array.isArray(collection)) {
+      return collection.slice();
+    }
+  }
+
   return [];
 }
 
