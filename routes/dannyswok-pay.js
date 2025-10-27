@@ -124,23 +124,30 @@ function parseMoney(value, { assumeCents = false, allowZero = false, allowNegati
   return cents;
 }
 
-const CENT_KEYS = [
+const UNIT_CENT_KEYS = [
   'priceCents',
-  'amountCents',
-  'totalCents',
-  'subtotalCents',
+  'unitPriceCents',
   'unitAmount',
   'unit_amount',
   'cents',
 ];
 
-const DOLLAR_KEYS = [
+const UNIT_DOLLAR_KEYS = [
   'price',
-  'amount',
-  'total',
-  'subtotal',
   'unitPrice',
   'unit_price',
+];
+
+const TOTAL_CENT_KEYS = [
+  'totalCents',
+  'subtotalCents',
+  'amountCents',
+];
+
+const TOTAL_DOLLAR_KEYS = [
+  'total',
+  'subtotal',
+  'amount',
   'value',
 ];
 
@@ -151,22 +158,54 @@ const QTY_KEYS = [
   'units',
 ];
 
-function extractCentsFromItem(item) {
+function normalizeAggregateAmount(cents, quantity) {
+  if (cents === null) {
+    return null;
+  }
+
+  const qty = toPositiveInt(quantity, 1);
+  if (qty <= 1) {
+    return cents;
+  }
+
+  if (cents % qty === 0) {
+    return cents / qty;
+  }
+
+  const divided = Math.round(cents / qty);
+  return divided > 0 ? divided : cents;
+}
+
+function extractCentsFromItem(item, quantity = 1) {
   if (!item || typeof item !== 'object') {
     return null;
   }
 
-  for (const key of CENT_KEYS) {
+  for (const key of UNIT_CENT_KEYS) {
     const cents = parseMoney(item[key], { assumeCents: true });
     if (cents !== null) {
       return cents;
     }
   }
 
-  for (const key of DOLLAR_KEYS) {
+  for (const key of UNIT_DOLLAR_KEYS) {
     const cents = parseMoney(item[key], { assumeCents: false });
     if (cents !== null) {
       return cents;
+    }
+  }
+
+  for (const key of TOTAL_CENT_KEYS) {
+    const cents = parseMoney(item[key], { assumeCents: true });
+    if (cents !== null) {
+      return normalizeAggregateAmount(cents, quantity);
+    }
+  }
+
+  for (const key of TOTAL_DOLLAR_KEYS) {
+    const cents = parseMoney(item[key], { assumeCents: false });
+    if (cents !== null) {
+      return normalizeAggregateAmount(cents, quantity);
     }
   }
 
@@ -382,11 +421,11 @@ function createDannysWokPayRouter({ stripe, allowedOrigins = [], menuOrigin = nu
     let subtotalCents = 0;
 
     for (const rawItem of items) {
-      const amount = extractCentsFromItem(rawItem);
+      const quantity = extractQuantityFromItem(rawItem);
+      const amount = extractCentsFromItem(rawItem, quantity);
       if (!amount || amount <= 0) {
         continue;
       }
-      const quantity = extractQuantityFromItem(rawItem);
       const name = sanitizeItemName(rawItem?.name || rawItem?.title || rawItem?.description);
       subtotalCents += amount * quantity;
       lineItems.push({
