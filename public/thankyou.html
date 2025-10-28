@@ -1,31 +1,455 @@
-<!-- thankyou.html -->
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Thank You — Delco Tech Division</title>
-  <meta name="description" content="Order received. We’ll confirm and start onboarding shortly."/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Thank you — Danny's Wok</title>
+  <meta name="description" content="Order received. Keep tracking your delivery and grab a hoodie before it sells out."/>
   <style>
-    :root{ --ink:#0f1220; --muted:#6b7280; --brand:#1955ff; --edge:#e6eafb; --ok:#16a34a; --card:#fff; --shadow:0 14px 34px rgba(16,30,80,.12) }
-    *{box-sizing:border-box}
-    html,body{margin:0}
-    body{font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;color:var(--ink);background:linear-gradient(180deg,#fff,#fbfcff)}
-    .wrap{max-width:900px;margin:0 auto;padding:20px}
-    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #e0e6ff;border-radius:999px;background:#f6f8ff;font-weight:800}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;border-radius:12px;border:1px solid #dfe6ff;background:#f6f8ff;color:#0f1b46;font-weight:800;text-decoration:none}
-    .btn.primary{background:var(--brand);border-color:#194df7;color:#fff}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:900px){.grid,.row{grid-template-columns:1fr}}
-    pre{white-space:pre-wrap;background:#0b1220;color:#e6ebff;border-radius:12px;padding:12px;border:1px solid #14264b}
+    :root {
+      --ink: #0f1220;
+      --muted: #6b7280;
+      --brand: #1955ff;
+      --edge: #e6eafb;
+      --ok: #16a34a;
+      --card: #fff;
+      --shadow: 0 14px 34px rgba(16, 30, 80, .12);
+      --merch-bg: #f7f8ff;
+      --merch-edge: #dbe1ff;
+      --merch-accent: #3740ff;
+      --merch-ink: #161f3d;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; }
+
+    body {
+      font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Inter, Arial, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #fff, #fbfcff);
+    }
+
+    a { color: inherit; }
+
+    .wrap {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 24px 20px 48px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--edge);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 10px;
+      border: 1px solid #e0e6ff;
+      border-radius: 999px;
+      background: #f6f8ff;
+      font-weight: 800;
+      color: var(--merch-ink);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 14px;
+      border-radius: 12px;
+      border: 1px solid #dfe6ff;
+      background: #f6f8ff;
+      color: #0f1b46;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: var(--brand);
+      border-color: #194df7;
+      color: #fff;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .grid,
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    pre {
+      white-space: pre-wrap;
+      background: #0b1220;
+      color: #e6ebff;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #14264b;
+      overflow-x: auto;
+    }
+
+    .merch-upsell {
+      margin-top: 28px;
+      background: var(--merch-bg);
+      border: 1px solid var(--merch-edge);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 28px 60px rgba(55, 64, 255, 0.12);
+    }
+
+    .merch-heading {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+      color: var(--merch-ink);
+    }
+
+    .merch-heading h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.25;
+    }
+
+    .merch-heading p {
+      margin: 0;
+      color: #3f4b7d;
+    }
+
+    .merch-product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .merch-product-card {
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid rgba(30, 40, 120, 0.08);
+      box-shadow: 0 16px 36px rgba(20, 30, 80, 0.12);
+      overflow: hidden;
+    }
+
+    .merch-product-image {
+      background: #f4f6ff;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .merch-product-image img {
+      width: 100%;
+      height: auto;
+      max-width: 220px;
+      object-fit: contain;
+    }
+
+    .merch-product-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .merch-product-body h3 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--merch-ink);
+    }
+
+    .merch-product-body p {
+      margin: 0;
+      color: #4f5a83;
+    }
+
+    .merch-product-price {
+      font-weight: 700;
+      color: var(--merch-accent);
+    }
+
+    .merch-add-button {
+      margin-top: auto;
+      align-self: flex-start;
+      background: linear-gradient(135deg, #4356ff, #1e2cff);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .merch-add-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(33, 54, 255, 0.22);
+    }
+
+    .merch-footnote {
+      margin-top: 18px;
+      color: #55609a;
+      font-size: 14px;
+    }
+
+    .merch-status {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      color: #09311b;
+      background: #dcfce7;
+      border: 1px solid #4ade80;
+      display: none;
+    }
+
+    .merch-status.is-visible {
+      display: block;
+    }
+
+    .merch-cart-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 12, 32, 0.55);
+      display: grid;
+      place-items: center;
+      z-index: 1200;
+      padding: 20px;
+      transition: opacity 0.2s ease;
+    }
+
+    .merch-cart-overlay.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .merch-cart-dialog {
+      position: relative;
+      width: min(600px, 100%);
+      max-height: 100%;
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 30px 60px rgba(9, 18, 56, 0.28);
+    }
+
+    .merch-cart-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      border: none;
+      background: transparent;
+      font-size: 28px;
+      line-height: 1;
+      cursor: pointer;
+      color: #3d4664;
+    }
+
+    .merch-cart-product {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--merch-ink);
+    }
+
+    .merch-cart-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin: 20px 0 10px;
+    }
+
+    .merch-cart-preview img {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(40, 50, 90, 0.14);
+      background: #f6f7ff;
+    }
+
+    .merch-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .merch-form-grid label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 14px;
+      color: #3f4b7d;
+    }
+
+    .merch-form-grid input,
+    .merch-form-grid textarea {
+      border-radius: 10px;
+      border: 1px solid rgba(30, 40, 120, 0.2);
+      padding: 10px 12px;
+      font: inherit;
+    }
+
+    .merch-form-grid textarea {
+      resize: vertical;
+      min-height: 68px;
+    }
+
+    .merch-form-grid .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .merch-size-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+      gap: 8px;
+      margin: 16px 0 22px;
+    }
+
+    .merch-size-options label {
+      border: 1px solid rgba(30, 40, 120, 0.18);
+      border-radius: 12px;
+      padding: 8px 10px;
+      text-align: center;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      color: #2d3a6f;
+      background: #f8f9ff;
+      position: relative;
+    }
+
+    .merch-size-options input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .merch-size-options label:has(input:checked) {
+      border-color: var(--merch-accent);
+      background: rgba(67, 86, 255, 0.12);
+      color: var(--merch-accent);
+    }
+
+    .merch-cart-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .merch-submit-button {
+      border: none;
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(135deg, #3f5bff, #182cfd);
+      transition: opacity 0.2s ease, transform 0.15s ease;
+    }
+
+    .merch-submit-button[disabled] {
+      opacity: 0.6;
+      cursor: progress;
+    }
+
+    .merch-cart-feedback {
+      min-height: 20px;
+      font-size: 14px;
+      color: #1d3a8a;
+    }
+
+    .merch-cart-pricing {
+      margin: 20px 0 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(30, 40, 120, 0.12);
+      background: #f9f9ff;
+      padding: 16px;
+      display: grid;
+      gap: 8px;
+      font-weight: 600;
+      color: #2d3a6f;
+    }
+
+    .merch-cart-pricing div {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .merch-cart-pricing .total {
+      font-size: 18px;
+      color: var(--merch-accent);
+    }
+
+    .merch-disclaimer {
+      margin-top: 18px;
+      font-size: 13px;
+      color: #5f678f;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    @media (max-width: 680px) {
+      .merch-upsell {
+        padding: 18px;
+      }
+
+      .merch-cart-dialog {
+        padding: 20px;
+      }
+
+      .merch-form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .merch-form-grid .full-width {
+        grid-column: auto;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:10px"><div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#0f3ed6,#1955ff);display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)">⚖️</div><div><b>Delco Tech Division</b><br><small style="color:var(--muted);font-weight:700">Order Confirmation</small></div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#0f3ed6,#1955ff);display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)">⚖️</div>
+        <div>
+          <b>Delco Tech Division</b><br>
+          <small style="color:var(--muted);font-weight:700">Order Confirmation</small>
+        </div>
+      </div>
       <a class="btn" href="/packages.html">Back to packages</a>
     </header>
 
@@ -61,15 +485,195 @@
       <h3>What happens next</h3>
       <ol>
         <li>We confirm your package, team size and security posture.</li>
-        <li>We wire automation: missed‑call textback → intake → calendar → payment → reviews.</li>
+        <li>We wire automation: missed-call textback → intake → calendar → payment → reviews.</li>
         <li>We set up reporting and, if selected, security controls aligned to governance.</li>
         <li>You’ll get a short playbook for staff (scripts, workflows, admin access).</li>
       </ol>
     </section>
 
+    <section class="merch-upsell" aria-labelledby="merchHeading">
+      <div class="merch-heading">
+        <h2 id="merchHeading">Extend the celebration with Danny's merch</h2>
+        <p>Keep the Danny's Wok energy going after dinner. Pick your favorite hoodie — we’ll tuck it into your order with the same care as your takeout.</p>
+      </div>
+
+      <div id="merchStatus" class="merch-status" role="status" aria-live="polite"></div>
+
+      <div class="merch-product-grid" role="list" aria-label="Danny's Wok hoodie catalog">
+        <article class="merch-product-card" role="listitem"
+          data-product="Ash Hoodie"
+          data-front-image="images/clothing/unisex-heavy-blend-hoodie-ash-front-68fdfdf7a900e.png"
+          data-back-image="images/clothing/unisex-heavy-blend-hoodie-ash-back-68fdfdf7a97ba.png"
+          data-front-alt="Ash hoodie front"
+          data-back-alt="Ash hoodie back">
+          <div class="merch-product-image">
+            <img src="images/clothing/unisex-heavy-blend-hoodie-ash-front-68fdfdf7a900e.png" alt="Ash hoodie front" loading="lazy"/>
+          </div>
+          <div class="merch-product-body">
+            <h3>Ash Hoodie</h3>
+            <p>Classic logo placement to rep the wok wherever you go.</p>
+            <p class="merch-product-price" data-price-label></p>
+            <button type="button" class="merch-add-button">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="merch-product-card" role="listitem"
+          data-product="Black Hoodie"
+          data-front-image="images/clothing/unisex-heavy-blend-hoodie-black-front-68fdfdf7a91eb.png"
+          data-back-image="images/clothing/unisex-heavy-blend-hoodie-black-back-68fdfdf7a9888.png"
+          data-front-alt="Black hoodie front"
+          data-back-alt="Black hoodie back">
+          <div class="merch-product-image">
+            <img src="images/clothing/unisex-heavy-blend-hoodie-black-front-68fdfdf7a91eb.png" alt="Black hoodie front" loading="lazy"/>
+          </div>
+          <div class="merch-product-body">
+            <h3>Black Hoodie</h3>
+            <p>The everyday essential with a subtle chest logo.</p>
+            <p class="merch-product-price" data-price-label></p>
+            <button type="button" class="merch-add-button">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="merch-product-card" role="listitem"
+          data-product="Irish Green Hoodie"
+          data-front-image="images/clothing/unisex-heavy-blend-hoodie-irish-green-front-68fdfdf7a929d.png"
+          data-back-image="images/clothing/unisex-heavy-blend-hoodie-irish-green-back-68fdfdf7a9934.png"
+          data-front-alt="Irish green hoodie front"
+          data-back-alt="Irish green hoodie back">
+          <div class="merch-product-image">
+            <img src="images/clothing/unisex-heavy-blend-hoodie-irish-green-front-68fdfdf7a929d.png" alt="Irish green hoodie front" loading="lazy"/>
+          </div>
+          <div class="merch-product-body">
+            <h3>Irish Green Hoodie</h3>
+            <p>Bright, bold, and ready for post-delivery adventures.</p>
+            <p class="merch-product-price" data-price-label></p>
+            <button type="button" class="merch-add-button">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="merch-product-card" role="listitem"
+          data-product="Navy Hoodie"
+          data-front-image="images/clothing/unisex-heavy-blend-hoodie-navy-front-68fdfdf7a9341.png"
+          data-back-image="images/clothing/unisex-heavy-blend-hoodie-navy-back-68fdfdf7a99c5.png"
+          data-front-alt="Navy hoodie front"
+          data-back-alt="Navy hoodie back">
+          <div class="merch-product-image">
+            <img src="images/clothing/unisex-heavy-blend-hoodie-navy-front-68fdfdf7a9341.png" alt="Navy hoodie front" loading="lazy"/>
+          </div>
+          <div class="merch-product-body">
+            <h3>Navy Hoodie</h3>
+            <p>Cozy fleece with a subtle front mark for everyday wear.</p>
+            <p class="merch-product-price" data-price-label></p>
+            <button type="button" class="merch-add-button">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="merch-product-card" role="listitem"
+          data-product="Red Hoodie"
+          data-front-image="images/clothing/unisex-heavy-blend-hoodie-red-front-68fdfdf7a93df.png"
+          data-back-image="images/clothing/unisex-heavy-blend-hoodie-red-back-68fdfdf7a9a50.png"
+          data-front-alt="Red hoodie front"
+          data-back-alt="Red hoodie back">
+          <div class="merch-product-image">
+            <img src="images/clothing/unisex-heavy-blend-hoodie-red-front-68fdfdf7a93df.png" alt="Red hoodie front" loading="lazy"/>
+          </div>
+          <div class="merch-product-body">
+            <h3>Red Hoodie</h3>
+            <p>Match the Danny's Wok color story with a bold pop of red.</p>
+            <p class="merch-product-price" data-price-label></p>
+            <button type="button" class="merch-add-button">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="merch-product-card" role="listitem"
+          data-product="Sport Grey Hoodie"
+          data-front-image="images/clothing/unisex-heavy-blend-hoodie-sport-grey-front-68fdfdf7a947a.png"
+          data-back-image="images/clothing/unisex-heavy-blend-hoodie-sport-grey-back-68fdfdf7a9ada.png"
+          data-front-alt="Sport grey hoodie front"
+          data-back-alt="Sport grey hoodie back">
+          <div class="merch-product-image">
+            <img src="images/clothing/unisex-heavy-blend-hoodie-sport-grey-front-68fdfdf7a947a.png" alt="Sport grey hoodie front" loading="lazy"/>
+          </div>
+          <div class="merch-product-body">
+            <h3>Sport Grey Hoodie</h3>
+            <p>Easy to layer, easy to love, ready for your next feast.</p>
+            <p class="merch-product-price" data-price-label></p>
+            <button type="button" class="merch-add-button">Add to cart</button>
+          </div>
+        </article>
+
+        <article class="merch-product-card" role="listitem"
+          data-product="White Hoodie"
+          data-front-image="images/clothing/unisex-heavy-blend-hoodie-white-front-68fdfdf7a951b.png"
+          data-back-image="images/clothing/unisex-heavy-blend-hoodie-white-back-68fdfdf7a9b65.png"
+          data-front-alt="White hoodie front"
+          data-back-alt="White hoodie back">
+          <div class="merch-product-image">
+            <img src="images/clothing/unisex-heavy-blend-hoodie-white-front-68fdfdf7a951b.png" alt="White hoodie front" loading="lazy"/>
+          </div>
+          <div class="merch-product-body">
+            <h3>White Hoodie</h3>
+            <p>Crisp white fleece with a minimalist front graphic.</p>
+            <p class="merch-product-price" data-price-label></p>
+            <button type="button" class="merch-add-button">Add to cart</button>
+          </div>
+        </article>
+      </div>
+
+      <p class="merch-footnote">Shipping &amp; handling is $11.99 per order. Apple Pay and major cards are accepted through Stripe.</p>
+    </section>
+
     <footer style="margin:16px 0;color:var(--muted);font-size:13px">© <span id="yr2"></span> Delco Tech Division</footer>
   </div>
 
+  <div class="merch-cart-overlay is-hidden" id="merchCart" aria-hidden="true">
+    <div class="merch-cart-dialog" role="dialog" aria-modal="true" aria-labelledby="merchCartTitle">
+      <button type="button" class="merch-cart-close" id="closeMerchCart" aria-label="Close merch cart">×</button>
+      <h3 id="merchCartTitle">Finish your hoodie pick</h3>
+      <p class="merch-cart-product" id="merchCartProduct">Hoodie</p>
+      <div class="merch-cart-pricing" aria-live="polite">
+        <div><span>Hoodie</span><span id="merchCartPrice">$33.00</span></div>
+        <div><span>Shipping &amp; Handling</span><span id="merchCartShipping">$11.99</span></div>
+        <div class="total"><span>Total</span><span id="merchCartTotal">$44.99</span></div>
+      </div>
+      <div class="merch-cart-preview" id="merchCartPreview" aria-hidden="true"></div>
+      <form class="merch-cart-form" id="merchCartForm">
+        <fieldset>
+          <legend class="visually-hidden">Select a hoodie size</legend>
+          <div class="merch-size-options" id="merchSizeOptions">
+            <label><input type="radio" name="merch-size" value="XS"/><span>XS</span></label>
+            <label><input type="radio" name="merch-size" value="S"/><span>S</span></label>
+            <label><input type="radio" name="merch-size" value="M" checked/><span>M</span></label>
+            <label><input type="radio" name="merch-size" value="L"/><span>L</span></label>
+            <label><input type="radio" name="merch-size" value="XL"/><span>XL</span></label>
+            <label><input type="radio" name="merch-size" value="2XL"/><span>2XL</span></label>
+            <label><input type="radio" name="merch-size" value="3XL"/><span>3XL</span></label>
+            <label><input type="radio" name="merch-size" value="4XL"/><span>4XL</span></label>
+            <label><input type="radio" name="merch-size" value="5XL"/><span>5XL</span></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend class="visually-hidden">Shipping information</legend>
+          <div class="merch-form-grid">
+            <label>Full name<input type="text" name="shipping-name" autocomplete="name" required/></label>
+            <label>Email<input type="email" name="shipping-email" autocomplete="email" required/></label>
+            <label>Street address<input type="text" name="shipping-address" autocomplete="street-address" required/></label>
+            <label>City<input type="text" name="shipping-city" autocomplete="address-level2" required/></label>
+            <label>State / Province<input type="text" name="shipping-state" autocomplete="address-level1" required/></label>
+            <label>ZIP / Postal code<input type="text" name="shipping-zip" autocomplete="postal-code" required/></label>
+            <label class="full-width">Delivery notes (optional)<textarea name="shipping-notes" rows="2" placeholder="Add any special instructions"></textarea></label>
+          </div>
+        </fieldset>
+        <div class="merch-cart-actions">
+          <button type="submit" class="merch-submit-button">Add hoodie &amp; checkout with Stripe</button>
+          <p class="merch-cart-feedback" id="merchCartFeedback" role="status" aria-live="polite"></p>
+        </div>
+      </form>
+      <p class="merch-disclaimer">Shipping typically begins within 2 business days. We’ll send updates to your email.</p>
+    </div>
+  </div>
+
+  <script src="https://js.stripe.com/v3/"></script>
   <script>
     const data = JSON.parse(localStorage.getItem('last_order')||'null');
     document.getElementById('yr2').textContent = new Date().getFullYear();
@@ -92,18 +696,27 @@
         <div>Price: ${data.config.billing==='annual' ? ('$'+money(data.price.total)+'/yr') : ('$'+money(data.price.total)+'/mo')} · Setup $${money(data.price.setup)}</div>`;
       document.getElementById('jsonBox').textContent = JSON.stringify(data,null,2);
 
-      // Email shortcut
       const subj = encodeURIComponent(`Delco order — ${data.pkg.name} for ${data.buyer.firm}`);
       const body = encodeURIComponent(JSON.stringify(data,null,2));
       document.getElementById('emailBtn').href = `mailto:${data.buyer.email}?subject=${subj}&body=${body}`;
 
-      // Quick ICS for a 30‑min kickoff in 2 business days @ 10:00 local
       const start = new Date();
       const addBusinessDays = (d,n)=>{ let x=0; while(x<n){ d.setDate(d.getDate()+1); const day=d.getDay(); if(day!==0 && day!==6) x++; } return d };
       const s = addBusinessDays(new Date(),2); s.setHours(10,0,0,0);
       const e = new Date(s.getTime()+30*60000);
       function iso(d){ return d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z' }
-      const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//DelcoTech//Packages//EN\nBEGIN:VEVENT\nUID:${Date.now()}@delcotechdivision.com\nDTSTAMP:${iso(new Date())}\nDTSTART:${iso(s)}\nDTEND:${iso(e)}\nSUMMARY:Delco Tech — Onboarding Kickoff\nDESCRIPTION:${data.pkg.name} — ${data.config.security.toUpperCase()} — ${data.buyer.firm}\nEND:VEVENT\nEND:VCALENDAR`;
+      const ics = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//DelcoTech//Packages//EN
+BEGIN:VEVENT
+UID:${Date.now()}@delcotechdivision.com
+DTSTAMP:${iso(new Date())}
+DTSTART:${iso(s)}
+DTEND:${iso(e)}
+SUMMARY:Delco Tech — Onboarding Kickoff
+DESCRIPTION:${data.pkg.name} — ${data.config.security.toUpperCase()} — ${data.buyer.firm}
+END:VEVENT
+END:VCALENDAR`;
       const blob = new Blob([ics], {type:'text/calendar'});
       const url = URL.createObjectURL(blob);
       const icsBtn = document.getElementById('icsBtn');
@@ -115,6 +728,291 @@
       alert('Local order log cleared on this browser.');
       location.reload();
     };
+  </script>
+  <script>
+    (function(){
+      const PRICE_MAP = new Map([
+        ['XS', 3300],
+        ['S', 3300],
+        ['SMALL', 3300],
+        ['M', 3300],
+        ['MEDIUM', 3300],
+        ['L', 3300],
+        ['LARGE', 3300],
+        ['XL', 3300],
+        ['X-LARGE', 3300],
+        ['XLARGE', 3300],
+        ['2XL', 3500],
+        ['XXL', 3500],
+        ['3XL', 3500],
+        ['XXXL', 3500],
+        ['4XL', 3800],
+        ['XXXXL', 3800],
+        ['5XL', 4000],
+        ['XXXXXL', 4000],
+      ]);
+      const SHIPPING_CENTS = 1199;
+      const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+      const merchStatus = document.getElementById('merchStatus');
+      const merchCart = document.getElementById('merchCart');
+      const merchCartProduct = document.getElementById('merchCartProduct');
+      const merchCartForm = document.getElementById('merchCartForm');
+      const merchCartFeedback = document.getElementById('merchCartFeedback');
+      const merchCartPreview = document.getElementById('merchCartPreview');
+      const closeMerchCart = document.getElementById('closeMerchCart');
+      const priceLabelEls = document.querySelectorAll('[data-price-label]');
+      const merchCartPrice = document.getElementById('merchCartPrice');
+      const merchCartShipping = document.getElementById('merchCartShipping');
+      const merchCartTotal = document.getElementById('merchCartTotal');
+
+      let selectedProduct = null;
+      let stripeClient = null;
+      let loadingStripe = false;
+      let returnFocusEl = null;
+
+      const API_BASE = window.DELCO_BACKEND_BASE || '';
+      const MERCH_API = `${API_BASE}/api/dannyswok`;
+
+      function formatMoney(cents){
+        return currency.format((cents || 0) / 100);
+      }
+
+      function normalizeSize(value){
+        if (!value) return 'M';
+        return String(value).trim().toUpperCase();
+      }
+
+      function getPriceForSize(size){
+        const normalized = normalizeSize(size);
+        return PRICE_MAP.get(normalized) || PRICE_MAP.get('M');
+      }
+
+      function showStatus(message, type = 'success'){
+        if (!merchStatus) return;
+        merchStatus.textContent = message || '';
+        merchStatus.classList.toggle('is-visible', Boolean(message));
+        merchStatus.style.background = type === 'error' ? '#fee2e2' : '#dcfce7';
+        merchStatus.style.color = type === 'error' ? '#991b1b' : '#065f46';
+        merchStatus.style.borderColor = type === 'error' ? '#fca5a5' : '#4ade80';
+      }
+
+      function hideMerchCart(){
+        if (!merchCart) return;
+        merchCart.classList.add('is-hidden');
+        merchCart.setAttribute('aria-hidden', 'true');
+        if (returnFocusEl && typeof returnFocusEl.focus === 'function') {
+          try { returnFocusEl.focus({ preventScroll: true }); } catch (error) { returnFocusEl.focus(); }
+        }
+        returnFocusEl = null;
+      }
+
+      function openMerchCart(productCard){
+        if (!productCard || !merchCart) return;
+        const name = productCard.dataset.product || productCard.querySelector('h3')?.textContent || "Danny's Wok Hoodie";
+        const frontImage = productCard.dataset.frontImage || '';
+        const backImage = productCard.dataset.backImage || '';
+        const frontAlt = productCard.dataset.frontAlt || '';
+        const backAlt = productCard.dataset.backAlt || '';
+
+        selectedProduct = { name, frontImage, backImage, frontAlt, backAlt };
+        merchCartProduct.textContent = name;
+
+        merchCartPreview.innerHTML = '';
+        const previews = [];
+        if (frontImage) previews.push({ src: frontImage, alt: frontAlt || `${name} front` });
+        if (backImage) previews.push({ src: backImage, alt: backAlt || `${name} back` });
+        previews.forEach(({ src, alt }) => {
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = alt;
+          merchCartPreview.appendChild(img);
+        });
+        merchCartPreview.setAttribute('aria-hidden', previews.length ? 'false' : 'true');
+
+        merchCartFeedback.textContent = '';
+        merchCartFeedback.style.color = '#1d3a8a';
+        merchCartForm.reset();
+        const defaultSize = merchCartForm.querySelector('input[name="merch-size"][value="M"]');
+        if (defaultSize) {
+          defaultSize.checked = true;
+        }
+        updatePriceSummary();
+
+        merchCart.classList.remove('is-hidden');
+        merchCart.setAttribute('aria-hidden', 'false');
+
+        const firstField = merchCartForm.querySelector('input[name="shipping-name"]');
+        if (firstField) {
+          try {
+            firstField.focus({ preventScroll: true });
+          } catch (error) {
+            firstField.focus();
+          }
+        }
+      }
+
+      function updatePriceSummary(){
+        const selected = merchCartForm.querySelector('input[name="merch-size"]:checked');
+        const priceCents = getPriceForSize(selected?.value);
+        merchCartPrice.textContent = formatMoney(priceCents);
+        merchCartShipping.textContent = formatMoney(SHIPPING_CENTS);
+        merchCartTotal.textContent = formatMoney(priceCents + SHIPPING_CENTS);
+      }
+
+      async function ensureStripe(){
+        if (stripeClient || loadingStripe) {
+          while (loadingStripe && !stripeClient) {
+            await new Promise((resolve) => setTimeout(resolve, 80));
+          }
+          return stripeClient;
+        }
+        loadingStripe = true;
+        try {
+          const cfg = await fetch(`${MERCH_API}/config`).then((res) => res.ok ? res.json() : Promise.reject(new Error('config_error')));
+          if (cfg?.stripePk && typeof Stripe === 'function') {
+            stripeClient = Stripe(cfg.stripePk);
+          }
+        } catch (error) {
+          console.error('Unable to load Stripe publishable key', error);
+        } finally {
+          loadingStripe = false;
+        }
+        return stripeClient;
+      }
+
+      async function startCheckout(payload){
+        merchCartFeedback.textContent = 'Contacting Stripe…';
+        try {
+          const response = await fetch(`${MERCH_API}/merch/checkout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error?.message || 'Unable to start checkout. Please try again.');
+          }
+          const data = await response.json();
+          if (data?.url) {
+            window.location.href = data.url;
+            return;
+          }
+          const stripe = await ensureStripe();
+          if (stripe && data?.id) {
+            await stripe.redirectToCheckout({ sessionId: data.id });
+            return;
+          }
+          throw new Error('Unable to start Stripe checkout. Please try again.');
+        } catch (error) {
+          console.error('Merch checkout error', error);
+          merchCartFeedback.textContent = error.message || 'Unable to start checkout. Please try again.';
+          merchCartFeedback.style.color = '#b91c1c';
+        }
+      }
+
+      function buildReturnUrl(status){
+        const url = new URL(window.location.href);
+        url.searchParams.set('merch', status);
+        url.searchParams.delete('session_id');
+        return url.toString();
+      }
+
+      merchCartForm.addEventListener('change', (event) => {
+        if (event.target?.name === 'merch-size') {
+          updatePriceSummary();
+        }
+      });
+
+      merchCartForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!selectedProduct) {
+          merchCartFeedback.textContent = 'Pick a hoodie to continue.';
+          merchCartFeedback.style.color = '#b91c1c';
+          return;
+        }
+        const submitBtn = merchCartForm.querySelector('.merch-submit-button');
+        const formData = new FormData(merchCartForm);
+        const size = formData.get('merch-size') || 'M';
+        const priceCents = getPriceForSize(size);
+        const name = (formData.get('shipping-name') || '').trim();
+        const email = (formData.get('shipping-email') || '').trim();
+        const address = (formData.get('shipping-address') || '').trim();
+        const city = (formData.get('shipping-city') || '').trim();
+        const state = (formData.get('shipping-state') || '').trim();
+        const zip = (formData.get('shipping-zip') || '').trim();
+        const notes = (formData.get('shipping-notes') || '').trim();
+
+        if (!name || !email || !address || !city || !state || !zip) {
+          merchCartFeedback.textContent = 'Fill out shipping details to continue.';
+          merchCartFeedback.style.color = '#b91c1c';
+          return;
+        }
+
+        const payload = {
+          productName: selectedProduct.name,
+          size,
+          quantity: 1,
+          priceCents,
+          shipping: {
+            name,
+            email,
+            address1: address,
+            city,
+            state,
+            postalCode: zip,
+            notes: notes || undefined,
+          },
+          images: {
+            front: selectedProduct.frontImage || undefined,
+            back: selectedProduct.backImage || undefined,
+          },
+          shippingCents: SHIPPING_CENTS,
+          successUrl: buildReturnUrl('success'),
+          cancelUrl: buildReturnUrl('canceled'),
+        };
+
+        merchCartFeedback.textContent = 'Redirecting you to Stripe…';
+        merchCartFeedback.style.color = '#1d3a8a';
+        if (submitBtn) {
+          submitBtn.disabled = true;
+        }
+        startCheckout(payload).finally(() => {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+          }
+        });
+      });
+
+      if (closeMerchCart) {
+        closeMerchCart.addEventListener('click', hideMerchCart);
+      }
+      merchCart?.addEventListener('click', (event) => {
+        if (event.target === merchCart) {
+          hideMerchCart();
+        }
+      });
+
+      document.querySelectorAll('.merch-add-button').forEach((button) => {
+        button.addEventListener('click', () => {
+          returnFocusEl = button;
+          openMerchCart(button.closest('.merch-product-card'));
+        });
+      });
+
+      priceLabelEls.forEach((node) => {
+        node.textContent = `From ${formatMoney(getPriceForSize('M'))} + ${formatMoney(SHIPPING_CENTS)} S&H`;
+      });
+      merchCartShipping.textContent = formatMoney(SHIPPING_CENTS);
+      updatePriceSummary();
+
+      const params = new URLSearchParams(window.location.search);
+      const merchStatusParam = params.get('merch');
+      if (merchStatusParam === 'success') {
+        showStatus('Hoodie locked in! Watch for a confirmation email with tracking details.');
+      } else if (merchStatusParam === 'canceled') {
+        showStatus('Checkout canceled — you can try again anytime.', 'error');
+      }
+    })();
   </script>
 </body>
 </html>
