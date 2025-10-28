@@ -65,6 +65,8 @@ const createTeamRouter = require('./routes/teams');
 const createWarehouseRouter = require('./routes/warehouse');
 const createGivingRouter = require('./routes/giving');
 const createDannysWokPayRouter = require('./routes/dannyswok-pay');
+const createDannysWokMenuRouter = require('./routes/dannyswok-menu');
+const createDannysWokAdminRouter = require('./routes/dannyswok-admin');
 const createNotificationsRouter = require('./routes/notifications');
 const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
 
@@ -875,6 +877,12 @@ app.use('/api/giving', createGivingRouter({
   openai,
 }));
 app.use('/api/notifications', createNotificationsRouter());
+app.use('/api/menu', createDannysWokMenuRouter({
+  allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
+}));
+app.use('/api/admin', createDannysWokAdminRouter({
+  allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
+}));
 app.use('/api/dannyswok', createDannysWokPayRouter({
   stripe,
   allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
