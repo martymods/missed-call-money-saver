@@ -927,6 +927,23 @@ app.use('/static/tts', express.static(TTS_CACHE_DIR, {
   },
 }));
 
+// Serve the admin console at friendly paths without requiring the nested directory.
+const adminConsoleFile = path.join(__dirname, 'public', 'delocoTech', 'admin.html');
+app.get([
+  '/admin',
+  '/admin/',
+  '/admin/index.html',
+  '/delocotech/admin',
+  '/delocotech/admin/',
+  '/delocotech/admin/index.html',
+], (req, res, next) => {
+  res.sendFile(adminConsoleFile, (err) => {
+    if (err) {
+      next(err);
+    }
+  });
+});
+
 // 👉 Serve the landing page & assets from /public
 app.use(express.static(path.join(__dirname, 'public')));
 
