@@ -83,6 +83,84 @@ function sanitizePhone(value) {
   return trimmed;
 }
 
+const HOODIE_SIZE_PRICE_MAP = new Map([
+  ['XS', 3300],
+  ['S', 3300],
+  ['M', 3300],
+  ['L', 3300],
+  ['XL', 3300],
+  ['2XL', 3500],
+  ['3XL', 3500],
+  ['4XL', 3800],
+  ['5XL', 4000],
+]);
+
+const HOODIE_SIZE_LABELS = {
+  XS: 'XS',
+  S: 'Small',
+  M: 'Medium',
+  L: 'Large',
+  XL: 'XL',
+  '2XL': '2XL',
+  '3XL': '3XL',
+  '4XL': '4XL',
+  '5XL': '5XL',
+};
+
+const HOODIE_DEFAULT_SIZE = 'M';
+const HOODIE_DEFAULT_PRICE_CENTS = 3300;
+const HOODIE_DEFAULT_SHIPPING_CENTS = 1199;
+
+function normalizeHoodieSize(value) {
+  if (typeof value !== 'string') {
+    return HOODIE_DEFAULT_SIZE;
+  }
+  const compact = value.trim().toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9]/g, '');
+  if (!compact) {
+    return HOODIE_DEFAULT_SIZE;
+  }
+  const lookup = {
+    XS: 'XS',
+    EXTRASMALL: 'XS',
+    S: 'S',
+    SMALL: 'S',
+    M: 'M',
+    MEDIUM: 'M',
+    L: 'L',
+    LARGE: 'L',
+    XL: 'XL',
+    XLARGE: 'XL',
+    EXTRALARGE: 'XL',
+    XXL: '2XL',
+    '2XL': '2XL',
+    '2X': '2XL',
+    XXLARGE: '2XL',
+    XXXL: '3XL',
+    XXXLARGE: '3XL',
+    '3XL': '3XL',
+    '3X': '3XL',
+    XXXXL: '4XL',
+    XXXXLARGE: '4XL',
+    '4XL': '4XL',
+    '4X': '4XL',
+    XXXXXL: '5XL',
+    XXXXXLARGE: '5XL',
+    '5XL': '5XL',
+    '5X': '5XL',
+  };
+  return lookup[compact] || HOODIE_DEFAULT_SIZE;
+}
+
+function resolveHoodiePriceCents(size) {
+  const normalized = normalizeHoodieSize(size);
+  return HOODIE_SIZE_PRICE_MAP.get(normalized) || HOODIE_DEFAULT_PRICE_CENTS;
+}
+
+function formatHoodieSizeLabel(size) {
+  const normalized = normalizeHoodieSize(size);
+  return HOODIE_SIZE_LABELS[normalized] || normalized || HOODIE_DEFAULT_SIZE;
+}
+
 function toPositiveInt(value, fallback = 1) {
   const num = Number(value);
   if (Number.isInteger(num) && num > 0) {
@@ -461,6 +539,168 @@ function createDannysWokPayRouter({ stripe, allowedOrigins = [], menuOrigin = nu
       menuOrigin: menuOrigin || null,
       allowedOrigins: normalizedOrigins,
     });
+  });
+
+  router.post('/merch/checkout', async (req, res) => {
+    if (!stripe || typeof stripe.checkout?.sessions?.create !== 'function') {
+      return res.status(503).json({ error: 'stripe_unavailable' });
+    }
+
+    const payload = req.body || {};
+    const quantity = toPositiveInt(payload.quantity, 1);
+    const currency = sanitizeCurrency(payload.currency || 'usd');
+
+    const normalizedSize = normalizeHoodieSize(payload.size);
+    const sizeLabel = formatHoodieSizeLabel(normalizedSize);
+    const hoodiePriceCents = resolveHoodiePriceCents(normalizedSize);
+
+    let shippingCents = Number.isInteger(payload.shippingCents) ? payload.shippingCents : null;
+    if (!Number.isInteger(shippingCents)) {
+      shippingCents = parseMoney(payload.shippingCents, { assumeCents: true, allowZero: true });
+    }
+    if (!Number.isInteger(shippingCents) || shippingCents < 0) {
+      shippingCents = HOODIE_DEFAULT_SHIPPING_CENTS;
+    }
+
+    const shippingInfo = (payload && typeof payload.shipping === 'object' && payload.shipping !== null)
+      ? payload.shipping
+      : {};
+
+    const shippingName = sanitizeDescription(shippingInfo.name);
+    const shippingEmail = sanitizeEmail(shippingInfo.email);
+    const shippingAddress1 = sanitizeDescription(
+      shippingInfo.address1
+        || shippingInfo.address
+        || shippingInfo.street
+        || shippingInfo.line1,
+    );
+    const shippingAddress2 = sanitizeDescription(shippingInfo.address2 || shippingInfo.line2);
+    const shippingCity = sanitizeDescription(shippingInfo.city);
+    const shippingState = sanitizeDescription(shippingInfo.state || shippingInfo.region);
+    const shippingPostal = sanitizeDescription(shippingInfo.postalCode || shippingInfo.zip || shippingInfo.postal);
+    const shippingCountryRaw = sanitizeDescription(shippingInfo.country);
+    const shippingCountry = shippingCountryRaw && shippingCountryRaw.length === 2
+      ? shippingCountryRaw.toUpperCase()
+      : 'US';
+    const shippingNotes = sanitizeDescription(shippingInfo.notes);
+
+    const images = (payload && typeof payload.images === 'object' && payload.images !== null)
+      ? payload.images
+      : {};
+    const frontImage = sanitizeDescription(images.front);
+    const backImage = sanitizeDescription(images.back);
+
+    const productName = sanitizeDescription(payload.productName) || "Danny's Wok Hoodie";
+    const description = sanitizeDescription(payload.description);
+    const clientPriceCents = Number.isInteger(payload.priceCents)
+      ? payload.priceCents
+      : parseMoney(payload.priceCents, { assumeCents: true, allowZero: true });
+
+    const productLabel = `${productName} (${sizeLabel})`.trim().slice(0, 80);
+    const lineItems = [
+      {
+        price_data: {
+          currency,
+          unit_amount: hoodiePriceCents,
+          product_data: {
+            name: productLabel || `Danny's Wok Hoodie (${sizeLabel})`,
+            description: description || undefined,
+          },
+        },
+        quantity,
+      },
+    ];
+
+    if (frontImage || backImage) {
+      const imageList = [frontImage, backImage].filter(Boolean);
+      if (imageList.length) {
+        lineItems[0].price_data.product_data.images = imageList;
+      }
+    }
+
+    if (shippingCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency,
+          unit_amount: shippingCents,
+          product_data: { name: 'Shipping & Handling' },
+        },
+        quantity: 1,
+      });
+    }
+
+    const baseOrigin = menuOrigin || normalizedOrigins[0] || 'https://www.delcotechdivision.com';
+    const baseUrl = baseOrigin.replace(/\/$/, '');
+    const defaultSuccess = `${baseUrl}/thankyou.html?merch=success&session_id={CHECKOUT_SESSION_ID}`;
+    const defaultCancel = `${baseUrl}/thankyou.html?merch=canceled`;
+    const allowedReturnOrigins = normalizedOrigins.length ? normalizedOrigins : [baseOrigin];
+    const successUrl = sanitizeReturnUrl(payload.successUrl, defaultSuccess, allowedReturnOrigins);
+    const cancelUrl = sanitizeReturnUrl(payload.cancelUrl, defaultCancel, allowedReturnOrigins);
+
+    const metadata = sanitizeMetadata({
+      flow: 'dannyswok_merch_checkout',
+      merch_product: productName,
+      merch_size: normalizedSize,
+      merch_size_label: sizeLabel,
+      merch_quantity: String(quantity),
+      merch_price_cents: String(hoodiePriceCents),
+      merch_shipping_cents: shippingCents ? String(shippingCents) : undefined,
+      merch_front_image: frontImage,
+      merch_back_image: backImage,
+      client_price_cents: Number.isInteger(clientPriceCents) ? String(clientPriceCents) : undefined,
+      shipping_name: shippingName,
+      shipping_city: shippingCity,
+      shipping_state: shippingState,
+      shipping_postal: shippingPostal,
+      shipping_notes: shippingNotes,
+    });
+
+    const paymentIntentData = {};
+    if (shippingEmail) {
+      paymentIntentData.receipt_email = shippingEmail;
+    }
+    if (shippingName && shippingAddress1 && shippingCity && shippingState && shippingPostal) {
+      paymentIntentData.shipping = {
+        name: shippingName,
+        address: {
+          line1: shippingAddress1,
+          city: shippingCity,
+          state: shippingState,
+          postal_code: shippingPostal,
+          country: shippingCountry,
+        },
+      };
+      if (shippingAddress2) {
+        paymentIntentData.shipping.address.line2 = shippingAddress2;
+      }
+    }
+
+    try {
+      const sessionParams = {
+        mode: 'payment',
+        payment_method_types: ['card', 'link'],
+        line_items: lineItems,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        allow_promotion_codes: false,
+        customer_email: shippingEmail || undefined,
+        metadata,
+      };
+
+      if (Object.keys(paymentIntentData).length) {
+        sessionParams.payment_intent_data = paymentIntentData;
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
+      res.json({ id: session.id, url: session.url });
+    } catch (error) {
+      console.error("Failed to create Danny's Wok merch checkout session", error);
+      const statusCode = error?.statusCode || error?.status || 500;
+      res.status(statusCode).json({
+        error: 'stripe_error',
+        message: error?.message || 'Unable to create checkout session',
+      });
+    }
   });
 
   router.post('/create-payment-intent', async (req, res) => {
