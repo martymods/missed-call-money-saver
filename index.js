@@ -67,6 +67,9 @@ const createGivingRouter = require('./routes/giving');
 const createDannysWokPayRouter = require('./routes/dannyswok-pay');
 const createDannysWokMenuRouter = require('./routes/dannyswok-menu');
 const createDannysWokAdminRouter = require('./routes/dannyswok-admin');
+const createDannysWokAnalyticsRouter = require('./routes/dannyswok-analytics');
+const createDannysWokOrdersRouter = require('./routes/dannyswok-orders');
+const createDannysWokStoresRouter = require('./routes/dannyswok-stores');
 const createNotificationsRouter = require('./routes/notifications');
 const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
 
@@ -877,12 +880,33 @@ app.use('/api/giving', createGivingRouter({
   openai,
 }));
 app.use('/api/notifications', createNotificationsRouter());
-app.use('/api/menu', createDannysWokMenuRouter({
+
+const dannysWokMenuRouter = createDannysWokMenuRouter({
   allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
-}));
-app.use('/api/admin', createDannysWokAdminRouter({
+});
+const dannysWokAdminRouter = createDannysWokAdminRouter({
   allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
-}));
+});
+const dannysWokAnalyticsRouter = createDannysWokAnalyticsRouter({
+  allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
+});
+const dannysWokOrdersRouter = createDannysWokOrdersRouter({
+  allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
+});
+const dannysWokStoresRouter = createDannysWokStoresRouter({
+  allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
+});
+
+app.use('/api/menu', dannysWokMenuRouter);
+app.use('/api/admin/menu', dannysWokMenuRouter);
+app.use('/api/stores', dannysWokStoresRouter);
+app.use('/api/admin/stores', dannysWokStoresRouter);
+app.use('/api/analytics', dannysWokAnalyticsRouter);
+app.use('/api/admin/analytics', dannysWokAnalyticsRouter);
+app.use('/api/orders', dannysWokOrdersRouter);
+app.use('/api/admin/orders', dannysWokOrdersRouter);
+app.use('/api/admin', dannysWokAdminRouter);
+
 app.use('/api/dannyswok', createDannysWokPayRouter({
   stripe,
   allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
