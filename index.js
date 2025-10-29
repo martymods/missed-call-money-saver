@@ -70,6 +70,7 @@ const createDannysWokAdminRouter = require('./routes/dannyswok-admin');
 const createDannysWokAnalyticsRouter = require('./routes/dannyswok-analytics');
 const createDannysWokOrdersRouter = require('./routes/dannyswok-orders');
 const createDannysWokStoresRouter = require('./routes/dannyswok-stores');
+const createDannysWokRewardsRouter = require('./routes/dannyswok-rewards');
 const createNotificationsRouter = require('./routes/notifications');
 const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
 
@@ -907,6 +908,12 @@ app.use('/api/orders', dannysWokOrdersRouter);
 app.use('/api/admin/orders', dannysWokOrdersRouter);
 app.use('/api/admin', dannysWokAdminRouter);
 
+app.use(
+  '/api/dannyswok/rewards',
+  createDannysWokRewardsRouter({
+    allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
+  }),
+);
 app.use('/api/dannyswok', createDannysWokPayRouter({
   stripe,
   allowedOrigins: DANNYSWOK_ALLOWED_ORIGINS,
