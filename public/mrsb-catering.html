@@ -277,11 +277,6 @@
       padding: 3rem 1rem 1.5rem;
     }
 
-    header img {
-      max-width: 200px;
-      width: 30vw;
-    }
-
     header h1 {
       margin-top: 1.2rem;
       font-weight: 700;
@@ -863,10 +858,6 @@
     }
 
     @media (max-width: 600px) {
-      header img {
-        width: 48vw;
-      }
-
       .card.menu-card .card-image img {
         height: 180px;
       }
@@ -920,7 +911,6 @@
   <main id="pageTop">
     <div class="container">
       <header id="menuCategories">
-        <img src="image/mrsB/mrsbscatering_logo_tran.png" alt="Mrs. B's Catering Logo" />
         <h1>Mrs. B's Catering Menu</h1>
         <section class="highlight-section" id="highlightSection" aria-label="Featured menu picks">
           <div class="highlight-header">
@@ -1162,6 +1152,8 @@
     const highlightViewport = document.querySelector('.highlight-viewport');
     const highlightPrev = document.querySelector('.highlight-prev');
     const highlightNext = document.querySelector('.highlight-next');
+    let highlightAutoScrollTimer = null;
+    let highlightAutoScrollStopped = false;
 
     let entreeModalInstance;
     let entreeContext = null;
@@ -1544,9 +1536,42 @@
       }
     };
 
+    const getHighlightMaxScroll = () => {
+      if (!highlightViewport) return 0;
+      return Math.max(0, highlightViewport.scrollWidth - highlightViewport.clientWidth);
+    };
+
+    const clearHighlightAutoScroll = () => {
+      if (highlightAutoScrollTimer) {
+        clearInterval(highlightAutoScrollTimer);
+        highlightAutoScrollTimer = null;
+      }
+    };
+
+    const stopHighlightAutoScroll = () => {
+      clearHighlightAutoScroll();
+      highlightAutoScrollStopped = true;
+    };
+
+    const ensureHighlightAutoScroll = () => {
+      if (!highlightViewport || highlightAutoScrollStopped || highlightAutoScrollTimer) return;
+      if (getHighlightMaxScroll() <= 0) return;
+
+      highlightAutoScrollTimer = setInterval(() => {
+        const maxScroll = getHighlightMaxScroll();
+        if (maxScroll <= 0) return;
+        const nearEnd = highlightViewport.scrollLeft >= (maxScroll - 4);
+        if (nearEnd) {
+          highlightViewport.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          scrollHighlights(1);
+        }
+      }, 3000);
+    };
+
     const updateHighlightNav = () => {
       if (!highlightViewport || !highlightPrev || !highlightNext) return;
-      const maxScroll = Math.max(0, highlightViewport.scrollWidth - highlightViewport.clientWidth);
+      const maxScroll = getHighlightMaxScroll();
       highlightPrev.disabled = highlightViewport.scrollLeft <= 0;
       highlightNext.disabled = highlightViewport.scrollLeft >= (maxScroll - 4);
     };
@@ -1560,6 +1585,7 @@
 
     const renderHighlights = () => {
       if (!highlightTrack) return;
+      clearHighlightAutoScroll();
       highlightTrack.innerHTML = '';
       const items = shuffleArray(flattenMenuItems()).slice(0, 10);
 
@@ -1599,7 +1625,10 @@
         button.appendChild(icon);
         button.appendChild(document.createTextNode('Add to Cart'));
 
-        const process = () => handleItemSelection(item, item.category, image, button);
+        const process = () => {
+          stopHighlightAutoScroll();
+          handleItemSelection(item, item.category, image, button);
+        };
 
         button.addEventListener('click', (event) => {
           event.preventDefault();
@@ -1626,7 +1655,10 @@
         highlightTrack.appendChild(card);
       });
 
-      requestAnimationFrame(updateHighlightNav);
+      requestAnimationFrame(() => {
+        updateHighlightNav();
+        ensureHighlightAutoScroll();
+      });
     };
 
     const initHighlightCarousel = () => {
@@ -1634,15 +1666,27 @@
 
       if (highlightPrev) {
         highlightPrev.addEventListener('click', () => {
+          stopHighlightAutoScroll();
           scrollHighlights(-1);
         });
       }
 
       if (highlightNext) {
         highlightNext.addEventListener('click', () => {
+          stopHighlightAutoScroll();
           scrollHighlights(1);
         });
       }
+
+      if (highlightTrack) {
+        ['click', 'focusin', 'keydown'].forEach((eventName) => {
+          highlightTrack.addEventListener(eventName, stopHighlightAutoScroll, { once: true });
+        });
+      }
+
+      ['pointerdown', 'touchstart', 'wheel'].forEach((eventName) => {
+        highlightViewport.addEventListener(eventName, stopHighlightAutoScroll, { once: true });
+      });
 
       highlightViewport.addEventListener('scroll', () => {
         requestAnimationFrame(updateHighlightNav);
