@@ -7,19 +7,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
-        color-scheme: light dark;
-        --primary: #1d4ed8;
-        --primary-dark: #1e3a8a;
-        --accent: #14b8a6;
-        --background: #f5f7fb;
-        --text: #1f2937;
-        --card: #ffffff;
-        --muted: #6b7280;
+        color-scheme: light;
+        --background: #fdf4e3;
+        --background-alt: #f7e7c8;
+        --text: #3b2614;
+        --muted: #896742;
+        --primary: #c57a29;
+        --primary-dark: #9d5714;
+        --accent: #e4b762;
+        --card: #fff9ef;
+        --card-border: rgba(157, 87, 20, 0.18);
+        --shadow: 0 20px 45px rgba(74, 42, 16, 0.12);
+        --section-divider: rgba(157, 87, 20, 0.08);
       }
 
       * {
@@ -29,29 +33,42 @@
       body {
         margin: 0;
         font-family: 'Inter', sans-serif;
-        background: var(--background);
+        background: radial-gradient(circle at top, #fff5dd, var(--background));
         color: var(--text);
-        line-height: 1.6;
+        line-height: 1.65;
+        letter-spacing: 0.01em;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: 'Cinzel', serif;
+        letter-spacing: 0.04em;
+        color: #8f5a1e;
+      }
+
+      a {
+        color: var(--primary-dark);
       }
 
       header {
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        color: #fff;
+        background: linear-gradient(140deg, rgba(255, 227, 185, 0.95), rgba(211, 140, 52, 0.92));
+        color: #2d160a;
         padding: 4rem 1.5rem 5rem;
         position: relative;
         overflow: hidden;
+        box-shadow: inset 0 -60px 120px rgba(139, 78, 25, 0.18);
       }
 
       header::after {
         content: '';
         position: absolute;
-        right: -8rem;
-        top: -8rem;
-        width: 18rem;
-        height: 18rem;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.15);
-        filter: blur(0.5px);
+        inset: 0;
+        background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.55), transparent 55%),
+          radial-gradient(circle at 80% 10%, rgba(255, 247, 230, 0.45), transparent 60%);
+        pointer-events: none;
+        mix-blend-mode: screen;
       }
 
       .container {
@@ -77,6 +94,7 @@
         font-weight: 600;
         letter-spacing: 0.05em;
         text-transform: uppercase;
+        color: #4a2c13;
       }
 
       .hero {
@@ -94,7 +112,7 @@
 
       .hero p {
         font-size: 1.1rem;
-        color: rgba(255, 255, 255, 0.9);
+        color: rgba(45, 22, 10, 0.78);
       }
 
       .hero .cta {
@@ -111,27 +129,44 @@
         cursor: pointer;
         font-weight: 600;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        letter-spacing: 0.05em;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .btn-primary {
-        background: #fff;
-        color: var(--primary);
-        box-shadow: 0 10px 25px rgba(15, 118, 110, 0.25);
+        background: var(--primary);
+        color: #fffaf1;
+        box-shadow: 0 16px 30px rgba(157, 87, 20, 0.3);
       }
 
       .btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 18px 30px rgba(15, 118, 110, 0.3);
+        box-shadow: 0 24px 40px rgba(157, 87, 20, 0.36);
       }
 
       .btn-outline {
         background: transparent;
-        color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.6);
+        color: #2d160a;
+        border: 1px solid rgba(45, 22, 10, 0.4);
+      }
+
+      .btn-outline:hover {
+        background: rgba(255, 255, 255, 0.35);
       }
 
       section {
         padding: 4rem 0;
+      }
+
+      main section:nth-of-type(even) {
+        background: linear-gradient(180deg, rgba(255, 246, 225, 0.9), rgba(247, 231, 200, 0.95));
+      }
+
+      main section:nth-of-type(even) .container {
+        padding-top: 0.5rem;
       }
 
       .cards {
@@ -142,9 +177,12 @@
 
       .card {
         background: var(--card);
-        border-radius: 1rem;
-        padding: 2rem;
-        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        border-radius: 1.1rem;
+        padding: 2.25rem;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--card-border);
+        position: relative;
+        overflow: hidden;
       }
 
       .card h3 {
@@ -155,6 +193,15 @@
       .card p {
         margin-bottom: 0;
         color: var(--muted);
+      }
+
+      .card-illustration {
+        width: 100%;
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: 0.85rem;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 14px 30px rgba(139, 78, 25, 0.18);
+        margin-bottom: 1.5rem;
       }
 
       .split {
@@ -188,17 +235,18 @@
         width: 100%;
         padding: 0.75rem 0.9rem;
         border-radius: 0.75rem;
-        border: 1px solid #d1d5db;
+        border: 1px solid rgba(157, 87, 20, 0.25);
         font-size: 1rem;
         transition: border 0.2s ease, box-shadow 0.2s ease;
         font-family: 'Inter', sans-serif;
+        background: #fffdf7;
       }
 
       input:focus,
       textarea:focus,
       select:focus {
         border-color: var(--primary);
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18);
+        box-shadow: 0 0 0 4px rgba(197, 122, 41, 0.22);
         outline: none;
       }
 
@@ -208,27 +256,10 @@
       }
 
       .payment-box {
-        border: 1px dashed #cbd5f5;
+        border: 1px dashed rgba(157, 87, 20, 0.35);
         border-radius: 1rem;
-        padding: 1.5rem;
-        background: rgba(30, 64, 175, 0.06);
-      }
-
-      .payment-options {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin: 1rem 0 1.5rem;
-      }
-
-      .payment-options span {
-        background: #fff;
-        border-radius: 0.75rem;
-        padding: 0.5rem 1rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+        padding: 1.75rem;
+        background: rgba(250, 233, 199, 0.45);
       }
 
       .checkbox {
@@ -246,7 +277,7 @@
 
       .submit-btn {
         background: linear-gradient(120deg, var(--primary), var(--primary-dark));
-        color: #fff;
+        color: #fff6e9;
         padding: 1rem 1.25rem;
         border-radius: 0.9rem;
         border: none;
@@ -258,7 +289,7 @@
 
       .submit-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 15px 30px rgba(29, 78, 216, 0.25);
+        box-shadow: 0 20px 36px rgba(157, 87, 20, 0.28);
       }
 
       .submit-btn:disabled {
@@ -282,15 +313,15 @@
       }
 
       .form-status.info {
-        background: rgba(37, 99, 235, 0.08);
-        border-color: rgba(37, 99, 235, 0.3);
+        background: rgba(197, 122, 41, 0.12);
+        border-color: rgba(157, 87, 20, 0.3);
         color: var(--primary-dark);
       }
 
       .form-status.success {
-        background: rgba(34, 197, 94, 0.18);
-        border-color: rgba(16, 185, 129, 0.4);
-        color: #065f46;
+        background: rgba(67, 160, 71, 0.16);
+        border-color: rgba(34, 139, 34, 0.32);
+        color: #2f6d2f;
       }
 
       .form-status.error {
@@ -300,9 +331,9 @@
       }
 
       .form-status.warning {
-        background: rgba(234, 179, 8, 0.18);
-        border-color: rgba(202, 138, 4, 0.45);
-        color: #92400e;
+        background: rgba(234, 179, 8, 0.2);
+        border-color: rgba(202, 138, 4, 0.4);
+        color: #a16207;
       }
 
       .file-note {
@@ -359,8 +390,8 @@
       .image-previews .preview-item span {
         position: relative;
         z-index: 1;
-        background: rgba(15, 23, 42, 0.65);
-        color: #fff;
+        background: rgba(45, 22, 10, 0.7);
+        color: #fffaf1;
         font-size: 0.7rem;
         padding: 0.2rem 0.45rem;
         border-radius: 999px;
@@ -378,8 +409,8 @@
         width: 120px;
         height: 90px;
         border-radius: 0.75rem;
-        background: rgba(20, 184, 166, 0.12);
-        border: 1px dashed rgba(20, 184, 166, 0.35);
+        background: rgba(229, 189, 115, 0.22);
+        border: 1px dashed rgba(157, 87, 20, 0.35);
         color: var(--primary-dark);
         font-weight: 600;
         font-size: 0.85rem;
@@ -395,14 +426,16 @@
         gap: 1rem;
         padding: 1.5rem;
         border-radius: 1rem;
-        background: rgba(20, 184, 166, 0.08);
-        border: 1px solid rgba(20, 184, 166, 0.25);
+        background: rgba(227, 186, 120, 0.2);
+        border: 1px solid rgba(157, 87, 20, 0.25);
         align-items: flex-start;
       }
 
       .highlight-item strong {
         display: block;
         margin-bottom: 0.5rem;
+        font-family: 'Cinzel', serif;
+        color: #8f5a1e;
       }
 
       .testimonials {
@@ -415,22 +448,38 @@
         background: var(--card);
         border-radius: 1rem;
         padding: 2rem;
-        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+        box-shadow: var(--shadow);
         position: relative;
+        border: 1px solid var(--card-border);
       }
 
       .testimonial::before {
         content: '“';
         font-size: 4rem;
-        color: rgba(29, 78, 216, 0.15);
+        color: rgba(157, 87, 20, 0.2);
         position: absolute;
         top: 1.2rem;
         left: 1.4rem;
       }
 
+      .testimonial strong {
+        display: block;
+        margin-top: 1.5rem;
+        color: #8f5a1e;
+        font-family: 'Cinzel', serif;
+        letter-spacing: 0.03em;
+      }
+
+      .testimonial-title {
+        display: block;
+        margin-top: 0.35rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
       footer {
-        background: #0f172a;
-        color: rgba(255, 255, 255, 0.75);
+        background: linear-gradient(180deg, #3d1f0d, #1f0d06);
+        color: rgba(255, 241, 217, 0.85);
         padding: 2.5rem 0;
       }
 
@@ -441,13 +490,20 @@
         align-items: start;
       }
 
+      footer strong {
+        font-family: 'Cinzel', serif;
+        color: #f4d49b;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+      }
+
       .notice {
-        background: rgba(20, 184, 166, 0.1);
-        border: 1px solid rgba(20, 184, 166, 0.3);
+        background: rgba(229, 189, 115, 0.18);
+        border: 1px solid rgba(157, 87, 20, 0.22);
         padding: 1rem 1.5rem;
         border-radius: 0.8rem;
         margin-top: 2rem;
-        color: var(--muted);
+        color: var(--text);
       }
 
       @media (max-width: 640px) {
@@ -466,7 +522,7 @@
       <div class="container">
         <nav>
           <div class="brand">
-            <img src="../og-delco.png" alt="DelcoTech" width="48" height="48" />
+            <img src="../image/delco-tech-seal.png" alt="DelcoTech" width="48" height="48" />
             <span>DelcoTech Division</span>
           </div>
           <div>
@@ -491,6 +547,11 @@
             </div>
           </div>
           <div class="card">
+            <img
+              src="../religion/hand_.png"
+              alt="Golden hand reaching toward bright water"
+              class="card-illustration"
+            />
             <h3>What Applicants Receive</h3>
             <ul>
               <li>Personalized New Bright Score across our 5C growth framework</li>
@@ -567,26 +628,7 @@
               </div>
             </div>
           </div>
-          <div class="testimonials">
-            <div class="testimonial">
-              <p>
-                “The Bright Score unlocked blind spots in our e-commerce funnel.
-                We reinvested the grant into email automations and doubled
-                repeat revenue within two months.”
-              </p>
-              <strong>Jasmine Lee</strong><br />
-              Founder, Ripple &amp; Roam — October 2023 Recipient
-            </div>
-            <div class="testimonial">
-              <p>
-                “Knowing DelcoTech reviews every application and shares
-                feedback made the $19 fee a no-brainer. The community access
-                alone is worth triple.”
-              </p>
-              <strong>DeAndre Phillips</strong><br />
-              Co-founder, Atlas Fit Labs — March 2024 Recipient
-            </div>
-          </div>
+          <div class="testimonials" id="testimonial-list" aria-live="polite"></div>
         </div>
       </section>
 
@@ -753,11 +795,6 @@
                   application receives a full Bright Score assessment. Payment is
                   processed securely through DelcoTech Pay with Stripe and Apple Pay.
                 </p>
-                <div class="payment-options">
-                  <span>Stripe</span>
-                  <span>Apple Pay</span>
-                  <span>Google Pay</span>
-                </div>
                 <label class="checkbox">
                   <input type="checkbox" required />
                   I confirm I operate within the United States and agree to DelcoTech updates.
@@ -786,8 +823,7 @@
           <div>
             <strong>Contact</strong>
             <p>
-              hello@delcotech.com<br />
-              123 Innovation Way, Wilmington, DE
+              rb@dreamworld.co
             </p>
           </div>
           <div>
@@ -806,10 +842,287 @@
     </footer>
 
     <script>
+      const TESTIMONIAL_ENTRIES = [
+        {
+          quote:
+            "The Bright Score unlocked blind spots in our e-commerce funnel. We reinvested the grant into email automations and doubled repeat revenue within two months.",
+          name: "Jasmine Lee",
+          title: "Founder, Ripple & Roam — October 2023 Recipient",
+        },
+        {
+          quote:
+            "Knowing DelcoTech reviews every application and shares feedback made the $19 fee a no-brainer. The community access alone is worth triple.",
+          name: "DeAndre Phillips",
+          title: "Co-founder, Atlas Fit Labs — March 2024 Recipient",
+        },
+        {
+          quote:
+            "Our boutique studio used the funds to pilot sunrise sessions and retained 87% of new members from that cohort. The Bright Score roadmap keeps our instructors focused on the right experiments.",
+          name: "Lena Ortiz",
+          title: "Owner, SolRise Pilates — December 2023 Recipient",
+        },
+        {
+          quote:
+            "We finally upgraded our fulfillment software and cut delivery errors by 60% overnight. DelcoTech's analysts also gave us a pricing tweak that boosted average order value.",
+          name: "Marcus Grant",
+          title: "CEO, Grounded Greens Meal Co. — May 2024 Recipient",
+        },
+        {
+          quote:
+            "The grant helped us convert a waitlist into our first paid accelerator cohort in under three weeks. Having DelcoTech in our corner keeps me accountable to real growth metrics.",
+          name: "Priya Shah",
+          title: "Founder, LaunchWell Collective — August 2023 Recipient",
+        },
+        {
+          quote:
+            "We reinvested the award into local ads promoting our zero-waste grocery deliveries. Applications to our ambassador program jumped 3x after implementing the Bright Studio playbook.",
+          name: "Ethan Holloway",
+          title: "Co-founder, Riverbend Refillery — July 2024 Recipient",
+        },
+        {
+          quote:
+            "DelcoTech's review flagged messaging gaps that were costing us wholesale partners. The $1,000 allowed us to produce a lookbook that led to four new accounts.",
+          name: "Brooke Castillo",
+          title: "Creative Director, Sierra Loom — November 2023 Recipient",
+        },
+        {
+          quote:
+            "The Bright Score prioritized our energy dashboard redesign and donors finally understood our impact. Contribution volume grew 42% the month after we shipped the update.",
+          name: "Amir Hassan",
+          title: "Founder, SunWeave Microgrids — January 2024 Recipient",
+        },
+        {
+          quote:
+            "We filmed bilingual video testimonials with the funds and shared them in the Studio community first. Now 68% of new clients mention those clips when they sign up.",
+          name: "Valentina Cruz",
+          title: "Principal, Casa Cultura Design — February 2024 Recipient",
+        },
+        {
+          quote:
+            "DelcoTech's queue kept us patient while iterating on our membership tiers. When the grant hit, we launched our loyalty app and increased recurring revenue by $4,300.",
+          name: "Jamal Rivers",
+          title: "Owner, Legacy Fadehouse — September 2023 Recipient",
+        },
+        {
+          quote:
+            "The Bright Score highlighted how rarely we nurtured past clients. We used the grant for handwritten mailers and reactivated 22 dormant accounts.",
+          name: "Sloane Mitchell",
+          title: "Founder, Harbor & Hearth Interiors — April 2024 Recipient",
+        },
+        {
+          quote:
+            "Our telehealth collective built an onboarding mini-course with the award. Session attendance now starts above 90% because patients know exactly what to expect.",
+          name: "Harper Jennings",
+          title: "Co-founder, Meridian Therapy Group — June 2023 Recipient",
+        },
+        {
+          quote:
+            "I plugged the DelcoTech recommendations straight into our go-to-market sprint. Within one quarter we added enterprise pilots that dwarfed our direct-to-consumer sales.",
+          name: "Nolan Kim",
+          title: "CEO, ScholarSense Labs — May 2023 Recipient",
+        },
+        {
+          quote:
+            "Funding went to a professional brand shoot that finally reflected our craftsmanship. The imagery helped close two national retail partners.",
+          name: "Patrice Howard",
+          title: "Founder, Hearthstone Candle Co. — January 2024 Recipient",
+        },
+        {
+          quote:
+            "We used the capital to license a CRM upgrade and automate our onboarding. Churn fell below 2% and our client NPS shot up 18 points.",
+          name: "Mira Desai",
+          title: "Managing Partner, AlignHR Studio — July 2023 Recipient",
+        },
+        {
+          quote:
+            "The Bright Studio masterminds introduced us to our fractional CTO. Winning the grant gave us breathing room to scope and ship our beta with confidence.",
+          name: "Aaron West",
+          title: "Founder, Harborline Analytics — October 2023 Recipient",
+        },
+        {
+          quote:
+            "I launched a paid community for makeup artists using the grant to cover platform fees. We broke even in thirty days and now reinvest profits into scholarships.",
+          name: "Celeste Moore",
+          title: "Owner, Prism Beauty Lab — May 2024 Recipient",
+        },
+        {
+          quote:
+            "We moved our farmers market into a permanent warehouse after following DelcoTech's site checklist. The grant bridged the deposit and our Bright Score increased again.",
+          name: "Diego Ramirez",
+          title: "Director, Barrio Bounty Co-op — February 2023 Recipient",
+        },
+        {
+          quote:
+            "The reviewers pushed us to clarify our cause marketing pitch before spending. That clarity helped us earn a six-month corporate sponsorship.",
+          name: "Fiona Gallagher",
+          title: "CEO, Kindred Threads — August 2024 Recipient",
+        },
+        {
+          quote:
+            "Winning reaffirmed that steady, daily action beats hype. We channeled the funds into SMS flows that now generate 27% of monthly revenue.",
+          name: "Gideon Clarke",
+          title: "Co-owner, Freshform Juicery — March 2024 Recipient",
+        },
+        {
+          quote:
+            "We finally outsourced fulfillment after seeing DelcoTech's cost analysis. The grant paid for the transition and freed me to focus on partnerships.",
+          name: "Hana Park",
+          title: "Founder, Print Garden Studio — April 2023 Recipient",
+        },
+        {
+          quote:
+            "Our mobile repair fleet expanded into two new neighborhoods thanks to the grant. The Bright Studio office hours keep our ops team iterating fast.",
+          name: "Isaiah Brooks",
+          title: "COO, FixSwift Tech — January 2023 Recipient",
+        },
+        {
+          quote:
+            "DelcoTech helped us benchmark our conversion funnel so we knew exactly what to fix. We devoted the grant to retargeting ads and hit profitability the next month.",
+          name: "Janelle Porter",
+          title: "Founder, Culture Camp Travel — June 2024 Recipient",
+        },
+        {
+          quote:
+            "We invested the award in new fermentation tanks and upgraded labeling. Our subscriber waitlist finally cleared after the Bright Score review.",
+          name: "Karim Albright",
+          title: "Head Brewer, Riverlight Kombucha — November 2023 Recipient",
+        },
+        {
+          quote:
+            "A simple tweak to our lead magnet doubled downloads in one week. The grant underwrote a storytelling shoot we leveraged across every channel.",
+          name: "Lila Thompson",
+          title: "Founder, Storycraft Studios — September 2024 Recipient",
+        },
+        {
+          quote:
+            "We re-recorded our course using DelcoTech's microphone recommendations. Students now binge modules and referrals drive 40% of our enrollments.",
+          name: "Malik Osei",
+          title: "Creator, Bridgewater Trading Academy — December 2023 Recipient",
+        },
+        {
+          quote:
+            "Their analysts challenged us to pre-sell our new menu before building it. The grant funded the pop-up and we sold out four weekends straight.",
+          name: "Nadia Flores",
+          title: "Chef-Owner, Flor y Sazon — April 2024 Recipient",
+        },
+        {
+          quote:
+            "I used the award to hire a part-time community manager for our makerspace. Membership churn dropped in half and events sell out every month.",
+          name: "Oliver Chen",
+          title: "Director, Forge & Fiber Commons — July 2024 Recipient",
+        },
+        {
+          quote:
+            "We rebranded our client onboarding kit and finally charged what we're worth. DelcoTech's scorecard keeps our KPIs visible to the whole team.",
+          name: "Penelope Hart",
+          title: "Principal, Northwind Advisory — February 2023 Recipient",
+        },
+        {
+          quote:
+            "Our micro farm added a heated greenhouse because the grant closed our funding gap. The Studio accountability sessions ensure we keep reporting impact.",
+          name: "Quentin Lawson",
+          title: "Co-founder, Verdant Steps Agriculture — January 2024 Recipient",
+        },
+        {
+          quote:
+            "We used the grant to underwrite childcare stipends during our flagship retreat. Attendee satisfaction hit a record 98% as a result.",
+          name: "Raina Gupta",
+          title: "CEO, ThriveMind Retreats — August 2023 Recipient",
+        },
+        {
+          quote:
+            "DelcoTech's playbooks helped us monetize our podcast through strategic bundles. The grant covered the launch and we hit 10k subscribers in six weeks.",
+          name: "Solomon Price",
+          title: "Host, Beacon Builders Media — May 2024 Recipient",
+        },
+        {
+          quote:
+            "Our textile atelier leaned into slow fashion storytelling after the review. The grant paid local photographers who captured our artisans beautifully.",
+          name: "Tessa Monroe",
+          title: "Founder, Emberline Atelier — October 2023 Recipient",
+        },
+        {
+          quote:
+            "We layered Bright Studio advice into our sales scripts and conversions spiked. The grant bought the CRM seats we needed to keep up.",
+          name: "Ulises Vega",
+          title: "CEO, Pacific Crest Logistics — March 2023 Recipient",
+        },
+        {
+          quote:
+            "We turned the $1,000 into a mini scholarship fund for our dance students. Enrollment filled within 24 hours thanks to DelcoTech's launch checklist.",
+          name: "Vivienne Ross",
+          title: "Director, Pulse & Grace Dance — June 2024 Recipient",
+        },
+        {
+          quote:
+            "The Bright Score made it clear our data dashboards needed polish. After investing the grant, investors now cite our clarity during diligence calls.",
+          name: "Wynn Carver",
+          title: "Co-founder, LedgerLight Finance — July 2023 Recipient",
+        },
+        {
+          quote:
+            "The review pinpointed exactly how to package our group coaching tiers. The grant financed the first two cohorts and testimonials keep rolling in.",
+          name: "Xiomara De Leon",
+          title: "Founder, Latitude Leadership Lab — September 2023 Recipient",
+        },
+        {
+          quote:
+            "We created a bilingual hotline for caregivers with the funds. Bright Studio mentors helped us script every call flow and satisfaction scores soared.",
+          name: "Yael Bernstein",
+          title: "Executive Director, Gentle Grid Support — December 2024 Recipient",
+        },
+        {
+          quote:
+            "DelcoTech helped us map an affiliate strategy before we wasted ad spend. The grant covered onboarding kits for partners and we crossed six figures the next quarter.",
+          name: "Zahra Whitman",
+          title: "CEO, Luminary Learning Pods — April 2023 Recipient",
+        },
+        {
+          quote:
+            "I finally stepped back from fulfillment after the Bright Score flagged burnout risks. The grant funded our first operations hire and our Net Promoter Score climbed immediately.",
+          name: "Caleb Underwood",
+          title: "Founder, Shoreline Coffee Roasters — October 2024 Recipient",
+        },
+      ];
+
       (function () {
         const yearEl = document.getElementById('year');
         if (yearEl) {
           yearEl.textContent = new Date().getFullYear();
+        }
+
+        const testimonialContainer = document.getElementById('testimonial-list');
+        if (testimonialContainer && Array.isArray(TESTIMONIAL_ENTRIES)) {
+          const pool = [...TESTIMONIAL_ENTRIES];
+          for (let index = pool.length - 1; index > 0; index -= 1) {
+            const swapIndex = Math.floor(Math.random() * (index + 1));
+            [pool[index], pool[swapIndex]] = [pool[swapIndex], pool[index]];
+          }
+
+          const selection = pool.slice(0, Math.min(2, pool.length));
+          testimonialContainer.innerHTML = '';
+          selection.forEach((entry) => {
+            if (!entry || !entry.quote || !entry.name) return;
+            const card = document.createElement('div');
+            card.className = 'testimonial';
+
+            const quoteEl = document.createElement('p');
+            quoteEl.textContent = `“${entry.quote}”`;
+            card.appendChild(quoteEl);
+
+            const nameEl = document.createElement('strong');
+            nameEl.textContent = entry.name;
+            card.appendChild(nameEl);
+
+            if (entry.title) {
+              const titleEl = document.createElement('span');
+              titleEl.className = 'testimonial-title';
+              titleEl.textContent = entry.title;
+              card.appendChild(titleEl);
+            }
+
+            testimonialContainer.appendChild(card);
+          });
         }
 
         const form = document.querySelector('form');
