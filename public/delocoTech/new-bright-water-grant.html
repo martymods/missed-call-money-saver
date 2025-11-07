@@ -261,6 +261,56 @@
         box-shadow: 0 15px 30px rgba(29, 78, 216, 0.25);
       }
 
+      .submit-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .form-status {
+        display: none;
+        margin-top: 1rem;
+        padding: 0.9rem 1rem;
+        border-radius: 0.75rem;
+        font-weight: 500;
+        border: 1px solid transparent;
+      }
+
+      .form-status.show {
+        display: block;
+      }
+
+      .form-status.info {
+        background: rgba(37, 99, 235, 0.08);
+        border-color: rgba(37, 99, 235, 0.3);
+        color: var(--primary-dark);
+      }
+
+      .form-status.success {
+        background: rgba(34, 197, 94, 0.18);
+        border-color: rgba(16, 185, 129, 0.4);
+        color: #065f46;
+      }
+
+      .form-status.error {
+        background: rgba(239, 68, 68, 0.18);
+        border-color: rgba(220, 38, 38, 0.45);
+        color: #b91c1c;
+      }
+
+      .form-status.warning {
+        background: rgba(234, 179, 8, 0.18);
+        border-color: rgba(202, 138, 4, 0.45);
+        color: #92400e;
+      }
+
+      .file-note {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 0.35rem;
+      }
+
       .highlights {
         display: grid;
         gap: 1rem;
@@ -361,6 +411,9 @@
             <div class="cta">
               <a class="btn btn-primary" href="#apply">Complete Application</a>
               <a class="btn btn-outline" href="#details">How it works</a>
+              <a class="btn btn-outline" href="new-bright-water-grant-submissions.html" target="_blank" rel="noopener"
+                >Review submissions</a
+              >
             </div>
           </div>
           <div class="card">
@@ -610,6 +663,11 @@
                 <label for="referral">How did you find out about the New Bright Water Grant?*</label>
                 <input id="referral" name="referral" required placeholder="Example: DelcoTech newsletter, Google Search, partner referral, etc." />
               </div>
+              <div>
+                <label for="supporting-files">Upload supporting images (optional)</label>
+                <input type="file" id="supporting-files" name="supporting-files" accept="image/*" multiple />
+                <p class="file-note">Attach up to 5 images (max 8MB each, 11MB total) that highlight your brand, product, or traction.</p>
+              </div>
               <div class="payment-box">
                 <h3>Application Fee</h3>
                 <p>
@@ -627,6 +685,7 @@
                   I confirm I operate within the United States and agree to DelcoTech updates.
                 </label>
                 <button class="submit-btn" type="submit">Submit &amp; Join the Queue</button>
+                <div class="form-status" id="application-status" role="status"></div>
                 <small>You will automatically enter the next available award queue after successful payment.</small>
               </div>
             </form>
@@ -669,15 +728,212 @@
     </footer>
 
     <script>
-      document.getElementById('year').textContent = new Date().getFullYear();
+      (function () {
+        const yearEl = document.getElementById('year');
+        if (yearEl) {
+          yearEl.textContent = new Date().getFullYear();
+        }
 
-      const form = document.querySelector('form');
-      form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        alert(
-          'Thanks for applying! You will be redirected to DelcoTech Pay to complete your $19 application fee and confirm your place in the review queue.'
-        );
-      });
+        const form = document.querySelector('form');
+        if (!form) return;
+
+        const submitBtn = form.querySelector('.submit-btn');
+        const statusBox = document.getElementById('application-status');
+        const STORAGE_KEY = 'newBrightWaterGrantCache.v1';
+
+        function showStatus(message, type = 'info') {
+          if (!statusBox) return;
+          statusBox.textContent = message;
+          statusBox.className = `form-status show ${type}`;
+        }
+
+        function clearStatus() {
+          if (!statusBox) return;
+          statusBox.textContent = '';
+          statusBox.className = 'form-status';
+        }
+
+        const fieldsToPersist = Array.from(form.elements).filter((el) => {
+          return el.name && el.type !== 'file' && el.type !== 'submit' && el.type !== 'button';
+        });
+
+        function serializeForm() {
+          const payload = {};
+          for (const field of fieldsToPersist) {
+            if (field.type === 'checkbox') {
+              payload[field.name] = field.checked;
+            } else {
+              payload[field.name] = field.value;
+            }
+          }
+          return payload;
+        }
+
+        function applyCache() {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            for (const field of fieldsToPersist) {
+              if (!(field.name in data)) continue;
+              if (field.type === 'checkbox') {
+                field.checked = Boolean(data[field.name]);
+              } else {
+                field.value = data[field.name] || '';
+              }
+            }
+          } catch (error) {
+            console.warn('Unable to restore cached application data', error);
+          }
+        }
+
+        function persistCache() {
+          try {
+            const payload = serializeForm();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+          } catch (error) {
+            console.warn('Unable to persist grant cache', error);
+          }
+        }
+
+        applyCache();
+
+        for (const field of fieldsToPersist) {
+          const eventName = field.type === 'checkbox' ? 'change' : 'input';
+          field.addEventListener(eventName, persistCache);
+        }
+
+        async function readFiles(fileList) {
+          const files = Array.from(fileList || []);
+          const maxFiles = 5;
+          const maxFileBytes = 8 * 1024 * 1024; // 8MB
+          const maxTotalBytes = 11 * 1024 * 1024; // keep payload below 15MB after base64
+          const entries = [];
+          let totalBytes = 0;
+
+          for (let index = 0; index < files.length && index < maxFiles; index += 1) {
+            const file = files[index];
+
+            if (file.size > maxFileBytes) {
+              const error = new Error('FILE_TOO_LARGE');
+              error.code = 'FILE_TOO_LARGE';
+              error.fileName = file.name;
+              throw error;
+            }
+
+            totalBytes += file.size;
+            if (totalBytes > maxTotalBytes) {
+              const error = new Error('TOTAL_TOO_LARGE');
+              error.code = 'TOTAL_TOO_LARGE';
+              throw error;
+            }
+
+            const base64 = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const result = reader.result || '';
+                const comma = result.indexOf(',');
+                resolve(comma >= 0 ? result.slice(comma + 1) : result);
+              };
+              reader.onerror = () => reject(reader.error || new Error('File load error'));
+              reader.readAsDataURL(file);
+            });
+
+            entries.push({
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              data: base64,
+            });
+          }
+
+          return entries;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const statusParam = params.get('status');
+        if (statusParam === 'success') {
+          showStatus('Payment received! Your application is locked in for the current review cycle.', 'success');
+        } else if (statusParam === 'cancel') {
+          showStatus('Application saved. Complete the secure payment to activate your review.', 'warning');
+        }
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          clearStatus();
+          if (submitBtn) {
+            submitBtn.disabled = true;
+          }
+          showStatus('Submitting your application...', 'info');
+
+          try {
+            const payload = serializeForm();
+            const fileInput = document.getElementById('supporting-files');
+            let files = [];
+            if (fileInput?.files?.length) {
+              try {
+                files = await readFiles(fileInput.files);
+              } catch (fileError) {
+                if (fileError?.code === 'FILE_TOO_LARGE') {
+                  const fileName = fileError.fileName ? ` (${fileError.fileName})` : '';
+                  showStatus(`One of your files${fileName} exceeds the 8MB limit. Please compress it and try again.`, 'error');
+                } else if (fileError?.code === 'TOTAL_TOO_LARGE') {
+                  showStatus('The combined size of your attachments exceeds the 11MB limit. Remove a file and retry.', 'error');
+                } else {
+                  showStatus('We were unable to read one of your files. Please try again.', 'error');
+                }
+                if (submitBtn) {
+                  submitBtn.disabled = false;
+                }
+                return;
+              }
+            }
+
+            const response = await fetch('/api/new-bright-water-grant/applications', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ fields: payload, files }),
+            });
+
+            const result = await response.json().catch(() => null);
+
+            if (!response.ok || !result?.ok) {
+              const message = result?.error === 'file_too_large'
+                ? 'One of your files exceeded the 8MB limit. Please compress it and try again.'
+                : result?.error === 'total_upload_too_large'
+                ? 'The combined size of your attachments is too large. Remove a file and retry.'
+                : result?.error === 'missing_field'
+                ? 'Please double-check all required fields before submitting.'
+                : 'We could not submit your application. Please try again in a few moments.';
+              showStatus(message, 'error');
+              if (submitBtn) {
+                submitBtn.disabled = false;
+              }
+              return;
+            }
+
+            persistCache();
+
+            if (result.checkoutUrl) {
+              showStatus('Redirecting to DelcoTech Pay to confirm your application...', 'success');
+              window.location.href = result.checkoutUrl;
+            } else {
+              showStatus('Application received. A secure payment link will be emailed to finalize your review.', 'warning');
+              if (submitBtn) {
+                submitBtn.disabled = false;
+              }
+            }
+          } catch (error) {
+            console.error('Grant submission failed', error);
+            showStatus('Something went wrong while submitting. Please try again shortly.', 'error');
+            if (submitBtn) {
+              submitBtn.disabled = false;
+            }
+          }
+        });
+      })();
     </script>
   </body>
 </html>
