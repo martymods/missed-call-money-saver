@@ -12,6 +12,28 @@
     />
     <style>
       :root {
+        color-scheme: light;
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --panel: #ffffff;
+        --ink: #0f172a;
+        --muted: #475569;
+        --accent: #2563eb;
+        --accent-2: #0ea5e9;
+        --success: #047857;
+        --warning: #b45309;
+        --danger: #b91c1c;
+        --border: rgba(15, 23, 42, 0.08);
+        --shadow-strong: rgba(15, 23, 42, 0.12);
+        --header-gradient: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.12));
+        --details-bg: rgba(37, 99, 235, 0.06);
+        --details-border: rgba(37, 99, 235, 0.18);
+        --attachment-bg: rgba(37, 99, 235, 0.12);
+        --attachment-border: rgba(37, 99, 235, 0.24);
+      }
+
+      body.dark {
+        color-scheme: dark;
         --bg: #050816;
         --surface: #101a3a;
         --panel: #151f45;
@@ -22,6 +44,13 @@
         --success: #34d399;
         --warning: #fbbf24;
         --danger: #f87171;
+        --border: rgba(255, 255, 255, 0.08);
+        --shadow-strong: rgba(5, 8, 22, 0.45);
+        --header-gradient: linear-gradient(135deg, rgba(90, 124, 255, 0.25), rgba(20, 184, 166, 0.25));
+        --details-bg: rgba(255, 255, 255, 0.04);
+        --details-border: rgba(255, 255, 255, 0.08);
+        --attachment-bg: rgba(90, 124, 255, 0.18);
+        --attachment-border: rgba(90, 124, 255, 0.28);
       }
 
       * {
@@ -31,17 +60,18 @@
       body {
         margin: 0;
         font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        background: radial-gradient(circle at top, rgba(20, 31, 70, 0.85), var(--bg));
+        background: var(--bg);
         color: var(--ink);
         min-height: 100vh;
+        transition: background 0.3s ease, color 0.3s ease;
       }
 
       header {
-        background: linear-gradient(135deg, rgba(90, 124, 255, 0.25), rgba(20, 184, 166, 0.25));
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: var(--header-gradient);
+        border: 1px solid var(--border);
         border-radius: 24px;
         padding: 28px;
-        box-shadow: 0 32px 80px rgba(5, 8, 22, 0.55);
+        box-shadow: 0 20px 45px var(--shadow-strong);
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -71,29 +101,58 @@
         display: flex;
         flex-wrap: wrap;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
+      }
+
+      .actions .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
       }
 
       button.refresh {
         border: none;
         border-radius: 12px;
         background: linear-gradient(135deg, var(--accent), var(--accent-2));
-        color: white;
+        color: #fff;
         font-weight: 600;
         padding: 0.7rem 1.4rem;
         cursor: pointer;
-        box-shadow: 0 18px 40px rgba(64, 94, 255, 0.4);
-        transition: transform 0.2s ease;
+        box-shadow: 0 14px 32px rgba(37, 99, 235, 0.18);
+        transition: transform 0.2s ease, opacity 0.2s ease;
       }
 
       button.refresh:disabled {
-        opacity: 0.6;
+        opacity: 0.65;
         cursor: not-allowed;
         box-shadow: none;
       }
 
       button.refresh:not(:disabled):active {
         transform: translateY(1px);
+      }
+
+      button.toggle-theme {
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--ink);
+        font-weight: 600;
+        padding: 0.68rem 1.2rem;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+      }
+
+      button.toggle-theme:hover {
+        background: rgba(37, 99, 235, 0.08);
+      }
+
+      body.dark button.toggle-theme {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--ink);
+        border-color: rgba(255, 255, 255, 0.24);
       }
 
       .status {
@@ -110,12 +169,12 @@
       .card {
         background: var(--panel);
         border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border);
         padding: 18px 20px;
         display: flex;
         flex-direction: column;
         gap: 12px;
-        box-shadow: 0 24px 60px rgba(5, 8, 22, 0.55);
+        box-shadow: 0 20px 45px var(--shadow-strong);
       }
 
       .card h2 {
@@ -138,14 +197,16 @@
       }
 
       .meta span strong {
-        color: var(--ink);
+        color: var(--muted);
         font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
       }
 
       .meta span span {
         color: var(--ink);
         font-weight: 500;
-        opacity: 0.9;
       }
 
       .pill {
@@ -154,28 +215,43 @@
         gap: 6px;
         padding: 0.4rem 0.75rem;
         border-radius: 999px;
-        background: rgba(90, 124, 255, 0.2);
-        border: 1px solid rgba(90, 124, 255, 0.35);
+        background: rgba(37, 99, 235, 0.12);
+        border: 1px solid rgba(37, 99, 235, 0.28);
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
+        color: var(--accent);
       }
 
       .pill.warning {
         background: rgba(251, 191, 36, 0.18);
-        border-color: rgba(251, 191, 36, 0.35);
+        border-color: rgba(251, 191, 36, 0.32);
+        color: var(--warning);
       }
 
       .pill.success {
         background: rgba(52, 211, 153, 0.18);
-        border-color: rgba(16, 185, 129, 0.4);
+        border-color: rgba(16, 185, 129, 0.35);
+        color: var(--success);
+      }
+
+      body.dark .pill {
+        color: var(--ink);
+      }
+
+      body.dark .pill.warning {
+        color: #fef3c7;
+      }
+
+      body.dark .pill.success {
+        color: #ecfdf5;
       }
 
       details {
-        background: rgba(255, 255, 255, 0.04);
+        background: var(--details-bg);
         border-radius: 16px;
         padding: 12px 14px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--details-border);
       }
 
       details summary {
@@ -204,8 +280,8 @@
         gap: 6px;
         padding: 0.45rem 0.75rem;
         border-radius: 12px;
-        background: rgba(90, 124, 255, 0.18);
-        border: 1px solid rgba(90, 124, 255, 0.28);
+        background: var(--attachment-bg);
+        border: 1px solid var(--attachment-border);
         color: var(--ink);
         font-size: 0.85rem;
         text-decoration: none;
@@ -218,6 +294,11 @@
       }
 
       @media (max-width: 640px) {
+        .actions {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
         .meta {
           grid-template-columns: 1fr;
         }
@@ -228,14 +309,14 @@
     <main class="wrap">
       <header>
         <h1>New Bright Water Grant Submissions</h1>
-        <p>
-          Real-time log of every application captured by DelcoTech for the New Bright Water daily grant. Data is mirrored to
-          Cloudflare R2 for safekeeping.
-        </p>
+        <p>Review the latest applications captured by DelcoTech for the New Bright Water daily grant.</p>
       </header>
 
       <section class="actions">
-        <button class="refresh" id="refresh-btn">Refresh submissions</button>
+        <div class="controls">
+          <button class="refresh" id="refresh-btn">Refresh submissions</button>
+          <button class="toggle-theme" id="toggle-theme-btn" type="button" aria-pressed="false">Switch to dark theme</button>
+        </div>
         <span class="status" id="status">Loading latest applications…</span>
       </section>
 
@@ -245,8 +326,43 @@
     <script>
       (function () {
         const refreshBtn = document.getElementById('refresh-btn');
+        const toggleThemeBtn = document.getElementById('toggle-theme-btn');
         const status = document.getElementById('status');
         const container = document.getElementById('applications');
+        const body = document.body;
+        const THEME_STORAGE_KEY = 'nbwSubmissionsTheme';
+
+        function applyTheme(theme) {
+          const isDark = theme === 'dark';
+          body.classList.toggle('dark', isDark);
+          if (toggleThemeBtn) {
+            toggleThemeBtn.textContent = isDark ? 'Switch to light theme' : 'Switch to dark theme';
+            toggleThemeBtn.setAttribute('aria-pressed', String(isDark));
+          }
+        }
+
+        let initialTheme = 'light';
+        try {
+          const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+          if (storedTheme === 'dark') {
+            initialTheme = 'dark';
+          }
+        } catch (error) {
+          console.warn('Unable to read saved theme preference', error);
+        }
+        applyTheme(initialTheme);
+
+        if (toggleThemeBtn) {
+          toggleThemeBtn.addEventListener('click', () => {
+            const nextTheme = body.classList.contains('dark') ? 'light' : 'dark';
+            applyTheme(nextTheme);
+            try {
+              localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+            } catch (error) {
+              console.warn('Unable to persist theme preference', error);
+            }
+          });
+        }
 
         function formatDate(iso) {
           if (!iso) return '—';

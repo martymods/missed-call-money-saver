@@ -311,6 +311,80 @@
         margin-top: 0.35rem;
       }
 
+      .preview-section {
+        display: none;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+      }
+
+      .preview-section.show {
+        display: flex;
+      }
+
+      .preview-section .preview-note {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .image-previews {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .image-previews .preview-item {
+        width: 120px;
+        height: 90px;
+        border-radius: 0.75rem;
+        background: #eef2ff;
+        border: 1px solid rgba(29, 78, 216, 0.15);
+        box-shadow: 0 12px 22px rgba(15, 23, 42, 0.12);
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+
+      .image-previews .preview-item img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .image-previews .preview-item span {
+        position: relative;
+        z-index: 1;
+        background: rgba(15, 23, 42, 0.65);
+        color: #fff;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.45rem;
+        border-radius: 999px;
+        margin-bottom: 0.45rem;
+        max-width: calc(100% - 1rem);
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      .image-previews .preview-extra {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 120px;
+        height: 90px;
+        border-radius: 0.75rem;
+        background: rgba(20, 184, 166, 0.12);
+        border: 1px dashed rgba(20, 184, 166, 0.35);
+        color: var(--primary-dark);
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+
       .highlights {
         display: grid;
         gap: 1rem;
@@ -667,6 +741,10 @@
                 <label for="supporting-files">Upload supporting images (optional)</label>
                 <input type="file" id="supporting-files" name="supporting-files" accept="image/*" multiple />
                 <p class="file-note">Attach up to 5 images (max 8MB each, 11MB total) that highlight your brand, product, or traction.</p>
+                <div class="preview-section" id="image-preview-section">
+                  <span class="preview-note">Preview</span>
+                  <div class="image-previews" id="image-previews" aria-live="polite" aria-label="Selected image previews"></div>
+                </div>
               </div>
               <div class="payment-box">
                 <h3>Application Fee</h3>
@@ -740,6 +818,8 @@
         const submitBtn = form.querySelector('.submit-btn');
         const statusBox = document.getElementById('application-status');
         const STORAGE_KEY = 'newBrightWaterGrantCache.v1';
+        const previewSection = document.getElementById('image-preview-section');
+        const previewContainer = document.getElementById('image-previews');
 
         function showStatus(message, type = 'info') {
           if (!statusBox) return;
@@ -801,6 +881,53 @@
         for (const field of fieldsToPersist) {
           const eventName = field.type === 'checkbox' ? 'change' : 'input';
           field.addEventListener(eventName, persistCache);
+        }
+
+        function resetPreviews() {
+          if (previewContainer) {
+            previewContainer.innerHTML = '';
+          }
+          if (previewSection) {
+            previewSection.classList.remove('show');
+          }
+        }
+
+        function updateImagePreviews(fileList) {
+          if (!previewContainer || !previewSection) return;
+          resetPreviews();
+          const files = Array.from(fileList || []).filter((file) => file.type.startsWith('image/'));
+          if (!files.length) {
+            return;
+          }
+
+          const maxPreviewCount = 5;
+          previewSection.classList.add('show');
+
+          files.slice(0, maxPreviewCount).forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'preview-item';
+
+            const label = document.createElement('span');
+            label.textContent = file.name || `Image ${index + 1}`;
+            item.appendChild(label);
+
+            const img = document.createElement('img');
+            img.alt = file.name ? `Preview of ${file.name}` : 'Preview of uploaded image';
+            const objectUrl = URL.createObjectURL(file);
+            img.src = objectUrl;
+            img.onload = () => URL.revokeObjectURL(objectUrl);
+            img.onerror = () => URL.revokeObjectURL(objectUrl);
+            item.appendChild(img);
+
+            previewContainer.appendChild(item);
+          });
+
+          if (files.length > maxPreviewCount) {
+            const extra = document.createElement('div');
+            extra.className = 'preview-extra';
+            extra.textContent = `+${files.length - maxPreviewCount} more`;
+            previewContainer.appendChild(extra);
+          }
         }
 
         async function readFiles(fileList) {
@@ -871,6 +998,7 @@
             const fileInput = document.getElementById('supporting-files');
             let files = [];
             if (fileInput?.files?.length) {
+              updateImagePreviews(fileInput.files);
               try {
                 files = await readFiles(fileInput.files);
               } catch (fileError) {
@@ -933,6 +1061,13 @@
             }
           }
         });
+
+        const fileInput = document.getElementById('supporting-files');
+        if (fileInput) {
+          fileInput.addEventListener('change', (event) => {
+            updateImagePreviews(event.target.files);
+          });
+        }
       })();
     </script>
   </body>
