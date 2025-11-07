@@ -72,6 +72,7 @@ const createDannysWokOrdersRouter = require('./routes/dannyswok-orders');
 const createDannysWokStoresRouter = require('./routes/dannyswok-stores');
 const createDannysWokRewardsRouter = require('./routes/dannyswok-rewards');
 const createNotificationsRouter = require('./routes/notifications');
+const createNewBrightWaterGrantRouter = require('./routes/delcotech-grant');
 const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
 
 const jwt = require('jsonwebtoken');
@@ -873,6 +874,11 @@ app.get('/api/food/menu', (_req,res)=> res.json({ items: MENU, taxRate: TAX_RATE
 
 app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT })); // Twilio posts form-url-encoded
 app.use(express.json({ limit: BODY_LIMIT }));
+
+app.use(
+  '/api/new-bright-water-grant',
+  createNewBrightWaterGrantRouter({ stripe, appBaseUrl: APP_BASE_URL, hasStripeSecret })
+);
 
 app.use('/api/giving', createGivingRouter({
   stripe,

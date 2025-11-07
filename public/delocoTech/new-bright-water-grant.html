@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Bright Water Daily Grant | DelcoTech</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --background: #fdf4e3;
+        --background-alt: #f7e7c8;
+        --text: #3b2614;
+        --muted: #896742;
+        --primary: #c57a29;
+        --primary-dark: #9d5714;
+        --accent: #e4b762;
+        --card: #fff9ef;
+        --card-border: rgba(157, 87, 20, 0.18);
+        --shadow: 0 20px 45px rgba(74, 42, 16, 0.12);
+        --section-divider: rgba(157, 87, 20, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background: radial-gradient(circle at top, #fff5dd, var(--background));
+        color: var(--text);
+        line-height: 1.65;
+        letter-spacing: 0.01em;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: 'Cinzel', serif;
+        letter-spacing: 0.04em;
+        color: #8f5a1e;
+      }
+
+      a {
+        color: var(--primary-dark);
+      }
+
+      header {
+        background: linear-gradient(140deg, rgba(255, 227, 185, 0.95), rgba(211, 140, 52, 0.92));
+        color: #2d160a;
+        padding: 4rem 1.5rem 5rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: inset 0 -60px 120px rgba(139, 78, 25, 0.18);
+      }
+
+      header::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.55), transparent 55%),
+          radial-gradient(circle at 80% 10%, rgba(255, 247, 230, 0.45), transparent 60%);
+        pointer-events: none;
+        mix-blend-mode: screen;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
+
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+      }
+
+      nav .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      nav .brand span {
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #4a2c13;
+      }
+
+      .hero {
+        display: grid;
+        gap: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        align-items: start;
+      }
+
+      .hero h1 {
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        margin-bottom: 1rem;
+        line-height: 1.15;
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+        color: rgba(45, 22, 10, 0.78);
+      }
+
+      .hero .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+
+      .cta .btn {
+        padding: 0.9rem 1.8rem;
+        border-radius: 0.75rem;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        letter-spacing: 0.05em;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: #fffaf1;
+        box-shadow: 0 16px 30px rgba(157, 87, 20, 0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 24px 40px rgba(157, 87, 20, 0.36);
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: #2d160a;
+        border: 1px solid rgba(45, 22, 10, 0.4);
+      }
+
+      .btn-outline:hover {
+        background: rgba(255, 255, 255, 0.35);
+      }
+
+      section {
+        padding: 4rem 0;
+      }
+
+      main section:nth-of-type(even) {
+        background: linear-gradient(180deg, rgba(255, 246, 225, 0.9), rgba(247, 231, 200, 0.95));
+      }
+
+      main section:nth-of-type(even) .container {
+        padding-top: 0.5rem;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .card {
+        background: var(--card);
+        border-radius: 1.1rem;
+        padding: 2.25rem;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--card-border);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card h3 {
+        margin-top: 0;
+        font-size: 1.3rem;
+      }
+
+      .card p {
+        margin-bottom: 0;
+        color: var(--muted);
+      }
+
+      .card-illustration {
+        width: 100%;
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: 0.85rem;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 14px 30px rgba(139, 78, 25, 0.18);
+        margin-bottom: 1.5rem;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        align-items: start;
+      }
+
+      .application-form {
+        background: var(--card);
+        border-radius: 1.25rem;
+        padding: 2.5rem;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+      }
+
+      form {
+        display: grid;
+        gap: 1.25rem;
+      }
+
+      label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.35rem;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 0.75rem 0.9rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(157, 87, 20, 0.25);
+        font-size: 1rem;
+        transition: border 0.2s ease, box-shadow 0.2s ease;
+        font-family: 'Inter', sans-serif;
+        background: #fffdf7;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(197, 122, 41, 0.22);
+        outline: none;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      .payment-box {
+        border: 1px dashed rgba(157, 87, 20, 0.35);
+        border-radius: 1rem;
+        padding: 1.75rem;
+        background: rgba(250, 233, 199, 0.45);
+      }
+
+      .checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.95rem;
+        margin: 1rem 0;
+      }
+
+      .checkbox input {
+        width: auto;
+        accent-color: var(--primary);
+      }
+
+      .submit-btn {
+        background: linear-gradient(120deg, var(--primary), var(--primary-dark));
+        color: #fff6e9;
+        padding: 1rem 1.25rem;
+        border-radius: 0.9rem;
+        border: none;
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 36px rgba(157, 87, 20, 0.28);
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .form-status {
+        display: none;
+        margin-top: 1rem;
+        padding: 0.9rem 1rem;
+        border-radius: 0.75rem;
+        font-weight: 500;
+        border: 1px solid transparent;
+      }
+
+      .form-status.show {
+        display: block;
+      }
+
+      .form-status.info {
+        background: rgba(197, 122, 41, 0.12);
+        border-color: rgba(157, 87, 20, 0.3);
+        color: var(--primary-dark);
+      }
+
+      .form-status.success {
+        background: rgba(67, 160, 71, 0.16);
+        border-color: rgba(34, 139, 34, 0.32);
+        color: #2f6d2f;
+      }
+
+      .form-status.error {
+        background: rgba(239, 68, 68, 0.18);
+        border-color: rgba(220, 38, 38, 0.45);
+        color: #b91c1c;
+      }
+
+      .form-status.warning {
+        background: rgba(234, 179, 8, 0.2);
+        border-color: rgba(202, 138, 4, 0.4);
+        color: #a16207;
+      }
+
+      .file-note {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 0.35rem;
+      }
+
+      .preview-section {
+        display: none;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+      }
+
+      .preview-section.show {
+        display: flex;
+      }
+
+      .preview-section .preview-note {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .image-previews {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .image-previews .preview-item {
+        width: 120px;
+        height: 90px;
+        border-radius: 0.75rem;
+        background: #eef2ff;
+        border: 1px solid rgba(29, 78, 216, 0.15);
+        box-shadow: 0 12px 22px rgba(15, 23, 42, 0.12);
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+
+      .image-previews .preview-item img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .image-previews .preview-item span {
+        position: relative;
+        z-index: 1;
+        background: rgba(45, 22, 10, 0.7);
+        color: #fffaf1;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.45rem;
+        border-radius: 999px;
+        margin-bottom: 0.45rem;
+        max-width: calc(100% - 1rem);
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      .image-previews .preview-extra {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 120px;
+        height: 90px;
+        border-radius: 0.75rem;
+        background: rgba(229, 189, 115, 0.22);
+        border: 1px dashed rgba(157, 87, 20, 0.35);
+        color: var(--primary-dark);
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+
+      .highlights {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .highlight-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        background: rgba(227, 186, 120, 0.2);
+        border: 1px solid rgba(157, 87, 20, 0.25);
+        align-items: flex-start;
+      }
+
+      .highlight-item strong {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-family: 'Cinzel', serif;
+        color: #8f5a1e;
+      }
+
+      .testimonials {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .testimonial {
+        background: var(--card);
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+        position: relative;
+        border: 1px solid var(--card-border);
+      }
+
+      .testimonial::before {
+        content: '“';
+        font-size: 4rem;
+        color: rgba(157, 87, 20, 0.2);
+        position: absolute;
+        top: 1.2rem;
+        left: 1.4rem;
+      }
+
+      .testimonial strong {
+        display: block;
+        margin-top: 1.5rem;
+        color: #8f5a1e;
+        font-family: 'Cinzel', serif;
+        letter-spacing: 0.03em;
+      }
+
+      .testimonial-title {
+        display: block;
+        margin-top: 0.35rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      footer {
+        background: linear-gradient(180deg, #3d1f0d, #1f0d06);
+        color: rgba(255, 241, 217, 0.85);
+        padding: 2.5rem 0;
+      }
+
+      footer .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        align-items: start;
+      }
+
+      footer strong {
+        font-family: 'Cinzel', serif;
+        color: #f4d49b;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+      }
+
+      .notice {
+        background: rgba(229, 189, 115, 0.18);
+        border: 1px solid rgba(157, 87, 20, 0.22);
+        padding: 1rem 1.5rem;
+        border-radius: 0.8rem;
+        margin-top: 2rem;
+        color: var(--text);
+      }
+
+      @media (max-width: 640px) {
+        header {
+          padding: 3rem 1.25rem 4rem;
+        }
+
+        .application-form {
+          padding: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <nav>
+          <div class="brand">
+            <img src="../image/delco-tech-seal.png" alt="DelcoTech" width="48" height="48" />
+            <span>DelcoTech Division</span>
+          </div>
+          <div>
+            <strong>New Bright Water Grant</strong>
+          </div>
+        </nav>
+        <div class="hero">
+          <div>
+            <h1>Unlock the New Bright Water Daily Grant</h1>
+            <p>
+              DelcoTech and Dreamworld Point Bank have teamed up to deliver a
+              daily $1,000 infusion to founders charting bold, resilient futures.
+              Apply once, receive tailored feedback, and stay in the queue for
+              the next available award.
+            </p>
+            <div class="cta">
+              <a class="btn btn-primary" href="#apply">Complete Application</a>
+              <a class="btn btn-outline" href="#details">How it works</a>
+              <a class="btn btn-outline" href="new-bright-water-grant-submissions.html" target="_blank" rel="noopener"
+                >Review submissions</a
+              >
+            </div>
+          </div>
+          <div class="card">
+            <img
+              src="../religion/hand_.png"
+              alt="Golden hand reaching toward bright water"
+              class="card-illustration"
+            />
+            <h3>What Applicants Receive</h3>
+            <ul>
+              <li>Personalized New Bright Score across our 5C growth framework</li>
+              <li>Actionable recommendations from DelcoTech analysts</li>
+              <li>
+                Two-month complimentary pass to the Bright Studio founder lab
+              </li>
+              <li>Priority placement in our daily grant award queue</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="details">
+        <div class="container">
+          <h2>Why Founders Choose the New Bright Water Grant</h2>
+          <div class="cards">
+            <div class="card">
+              <h3>$1,000 No-Strings Funding</h3>
+              <p>
+                Winners receive $1,000 direct from Dreamworld Point Bank to fuel
+                experiments, campaigns, or infrastructure with zero repayment
+                obligations.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Strategic Studio Session</h3>
+              <p>
+                Selected fellows partner with DelcoTech experts for a focused 60
+                minute jam to unlock hidden growth levers, valued at $1,200.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Feedback for Every Applicant</h3>
+              <p>
+                Every submission receives a New Bright Scorecard so you know
+                where to focus next, even if you are not awarded immediately.
+              </p>
+            </div>
+          </div>
+          <div class="notice">
+            <strong>Daily cadence:</strong> We review fresh applications each
+            weekday. Applicants remain in the queue for 30 days. You may refresh
+            your submission at any time to update metrics and improve your
+            standing.
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="container split">
+          <div class="highlights">
+            <div class="highlight-item">
+              <div>
+                <strong>Monthly Bonus Grant</strong>
+                Each fellow automatically becomes eligible for our $3,000
+                year-end replenishment grant designed to scale proven impact.
+              </div>
+            </div>
+            <div class="highlight-item">
+              <div>
+                <strong>Community Spotlight</strong>
+                Fellows share their story on the New Bright Water Waves podcast
+                and within the Bright Studio for lasting exposure.
+              </div>
+            </div>
+            <div class="highlight-item">
+              <div>
+                <strong>Operational Backing</strong>
+                DelcoTech handles your technical readiness with white-glove
+                checklists, templates, and automation workshops.
+              </div>
+            </div>
+          </div>
+          <div class="testimonials" id="testimonial-list" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section id="apply">
+        <div class="container split">
+          <div>
+            <h2>Ready to Apply?</h2>
+            <p>
+              Tell us about your business, your momentum, and how the $1,000 grant
+              will accelerate your progress. Our reviewers respond with your
+              New Bright Score and tailored action steps within five business days.
+            </p>
+            <ul>
+              <li>Daily reviews with a transparent queue—no ghosting.</li>
+              <li>Applicants must operate in the United States.</li>
+              <li>Multi-location operators and franchisors are welcome.</li>
+              <li>Not currently open to non-profit entities.</li>
+            </ul>
+          </div>
+          <div class="application-form">
+            <form>
+              <div>
+                <label for="first-name">First Name*</label>
+                <input type="text" id="first-name" name="first-name" required />
+              </div>
+              <div>
+                <label for="last-name">Last Name*</label>
+                <input type="text" id="last-name" name="last-name" required />
+              </div>
+              <div>
+                <label for="email">Email*</label>
+                <input type="email" id="email" name="email" required />
+              </div>
+              <div>
+                <label for="phone">Phone Number*</label>
+                <input type="tel" id="phone" name="phone" required />
+              </div>
+              <div>
+                <label for="website">Link to business website (enter "none" if not applicable)*</label>
+                <input type="text" id="website" name="website" required />
+              </div>
+              <div>
+                <label for="social">Link to largest / most active social media account*</label>
+                <input type="text" id="social" name="social" required />
+              </div>
+              <div>
+                <label for="prior">Have you applied before?*</label>
+                <select id="prior" name="prior" required>
+                  <option value="">Select</option>
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+              <div>
+                <label for="business-type">What type of business are you?*</label>
+                <select id="business-type" name="business-type" required>
+                  <option value="">Select</option>
+                  <option>Product-based</option>
+                  <option>Service-based</option>
+                  <option>SaaS / Digital Platform</option>
+                  <option>Creative / Media</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div>
+                <label for="customer-clarity">How well do you know your target customer?*</label>
+                <select id="customer-clarity" name="customer-clarity" required>
+                  <option value="">Select</option>
+                  <option>We are still experimenting</option>
+                  <option>We have a defined persona</option>
+                  <option>We have validated personas with data</option>
+                  <option>We have segmented journeys with clear KPIs</option>
+                </select>
+              </div>
+              <div>
+                <label for="brand-stage">How would you describe your brand positioning?*</label>
+                <select id="brand-stage" name="brand-stage" required>
+                  <option value="">Select</option>
+                  <option>Emerging brand</option>
+                  <option>Recognizable in our niche</option>
+                  <option>Category leader / industry benchmark</option>
+                </select>
+              </div>
+              <div>
+                <label for="online-presence">How developed is your online presence?*</label>
+                <select id="online-presence" name="online-presence" required>
+                  <option value="">Select</option>
+                  <option>Idea stage</option>
+                  <option>Basic landing page</option>
+                  <option>Full website or funnel</option>
+                  <option>Automated growth engine</option>
+                </select>
+              </div>
+              <div>
+                <label for="audience-size">Audience Size*</label>
+                <select id="audience-size" name="audience-size" required>
+                  <option value="">Select</option>
+                  <option>Under 500</option>
+                  <option>500 - 2,500</option>
+                  <option>2,500 - 10,000</option>
+                  <option>10,000+</option>
+                </select>
+              </div>
+              <div>
+                <label for="reviews">Customer Reviews*</label>
+                <select id="reviews" name="reviews" required>
+                  <option value="">Select</option>
+                  <option>No public reviews</option>
+                  <option>Fewer than 10 reviews</option>
+                  <option>10+ reviews, 4.0 - 4.4 avg</option>
+                  <option>10+ reviews, 4.5 - 5.0 avg</option>
+                </select>
+              </div>
+              <div>
+                <label for="revenue">Average Monthly Revenue*</label>
+                <select id="revenue" name="revenue" required>
+                  <option value="">Select</option>
+                  <option>Pre-revenue</option>
+                  <option>Under $5k</option>
+                  <option>$5k - $20k</option>
+                  <option>$20k - $50k</option>
+                  <option>$50k+</option>
+                </select>
+              </div>
+              <div>
+                <label for="years">Years in Business*</label>
+                <select id="years" name="years" required>
+                  <option value="">Select</option>
+                  <option>&lt; 1 year</option>
+                  <option>1 - 3 years</option>
+                  <option>3 - 5 years</option>
+                  <option>5+ years</option>
+                </select>
+              </div>
+              <div>
+                <label for="grant-use">How would you use the grant?*</label>
+                <textarea id="grant-use" name="grant-use" required placeholder="Example: Invest in a paid campaign ahead of our product launch."></textarea>
+              </div>
+              <div>
+                <label for="business-description">Describe your business*</label>
+                <textarea id="business-description" name="business-description" required placeholder="Share your target customer, problem you solve, unique approach, and your primary 12-month goals & challenges."></textarea>
+              </div>
+              <div>
+                <label for="community">How will you contribute to the Bright Studio community?*</label>
+                <textarea id="community" name="community" required placeholder="Tell us how you'll support fellow founders and amplify the program."></textarea>
+              </div>
+              <div>
+                <label for="referral">How did you find out about the New Bright Water Grant?*</label>
+                <input id="referral" name="referral" required placeholder="Example: DelcoTech newsletter, Google Search, partner referral, etc." />
+              </div>
+              <div>
+                <label for="supporting-files">Upload supporting images (optional)</label>
+                <input type="file" id="supporting-files" name="supporting-files" accept="image/*" multiple />
+                <p class="file-note">Attach up to 5 images (max 8MB each, 11MB total) that highlight your brand, product, or traction.</p>
+                <div class="preview-section" id="image-preview-section">
+                  <span class="preview-note">Preview</span>
+                  <div class="image-previews" id="image-previews" aria-live="polite" aria-label="Selected image previews"></div>
+                </div>
+              </div>
+              <div class="payment-box">
+                <h3>Application Fee</h3>
+                <p>
+                  A $19 review fee keeps the program sustainable and ensures every
+                  application receives a full Bright Score assessment. Payment is
+                  processed securely through DelcoTech Pay with Stripe and Apple Pay.
+                </p>
+                <label class="checkbox">
+                  <input type="checkbox" required />
+                  I confirm I operate within the United States and agree to DelcoTech updates.
+                </label>
+                <button class="submit-btn" type="submit">Submit &amp; Join the Queue</button>
+                <div class="form-status" id="application-status" role="status"></div>
+                <small>You will automatically enter the next available award queue after successful payment.</small>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <div class="grid">
+          <div>
+            <strong>New Bright Water Grant</strong>
+            <p>
+              Powered by DelcoTech innovation labs with funds safeguarded by
+              Dreamworld Point Bank. Designed for resilient founders building a
+              brighter future.
+            </p>
+          </div>
+          <div>
+            <strong>Contact</strong>
+            <p>
+              rb@dreamworld.co
+            </p>
+          </div>
+          <div>
+            <strong>Program Policies</strong>
+            <p>
+              Applicants receive review notes within five business days. Fees are
+              non-refundable once submitted. Selected fellows agree to share their
+              story on our channels and actively participate in Bright Studio.
+            </p>
+          </div>
+        </div>
+        <p style="margin-top: 2rem; font-size: 0.85rem; text-align: center;">
+          © <span id="year"></span> DelcoTech Division · All rights reserved.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      const TESTIMONIAL_ENTRIES = [
+        {
+          quote:
+            "The Bright Score unlocked blind spots in our e-commerce funnel. We reinvested the grant into email automations and doubled repeat revenue within two months.",
+          name: "Jasmine Lee",
+          title: "Founder, Ripple & Roam — October 2023 Recipient",
+        },
+        {
+          quote:
+            "Knowing DelcoTech reviews every application and shares feedback made the $19 fee a no-brainer. The community access alone is worth triple.",
+          name: "DeAndre Phillips",
+          title: "Co-founder, Atlas Fit Labs — March 2024 Recipient",
+        },
+        {
+          quote:
+            "Our boutique studio used the funds to pilot sunrise sessions and retained 87% of new members from that cohort. The Bright Score roadmap keeps our instructors focused on the right experiments.",
+          name: "Lena Ortiz",
+          title: "Owner, SolRise Pilates — December 2023 Recipient",
+        },
+        {
+          quote:
+            "We finally upgraded our fulfillment software and cut delivery errors by 60% overnight. DelcoTech's analysts also gave us a pricing tweak that boosted average order value.",
+          name: "Marcus Grant",
+          title: "CEO, Grounded Greens Meal Co. — May 2024 Recipient",
+        },
+        {
+          quote:
+            "The grant helped us convert a waitlist into our first paid accelerator cohort in under three weeks. Having DelcoTech in our corner keeps me accountable to real growth metrics.",
+          name: "Priya Shah",
+          title: "Founder, LaunchWell Collective — August 2023 Recipient",
+        },
+        {
+          quote:
+            "We reinvested the award into local ads promoting our zero-waste grocery deliveries. Applications to our ambassador program jumped 3x after implementing the Bright Studio playbook.",
+          name: "Ethan Holloway",
+          title: "Co-founder, Riverbend Refillery — July 2024 Recipient",
+        },
+        {
+          quote:
+            "DelcoTech's review flagged messaging gaps that were costing us wholesale partners. The $1,000 allowed us to produce a lookbook that led to four new accounts.",
+          name: "Brooke Castillo",
+          title: "Creative Director, Sierra Loom — November 2023 Recipient",
+        },
+        {
+          quote:
+            "The Bright Score prioritized our energy dashboard redesign and donors finally understood our impact. Contribution volume grew 42% the month after we shipped the update.",
+          name: "Amir Hassan",
+          title: "Founder, SunWeave Microgrids — January 2024 Recipient",
+        },
+        {
+          quote:
+            "We filmed bilingual video testimonials with the funds and shared them in the Studio community first. Now 68% of new clients mention those clips when they sign up.",
+          name: "Valentina Cruz",
+          title: "Principal, Casa Cultura Design — February 2024 Recipient",
+        },
+        {
+          quote:
+            "DelcoTech's queue kept us patient while iterating on our membership tiers. When the grant hit, we launched our loyalty app and increased recurring revenue by $4,300.",
+          name: "Jamal Rivers",
+          title: "Owner, Legacy Fadehouse — September 2023 Recipient",
+        },
+        {
+          quote:
+            "The Bright Score highlighted how rarely we nurtured past clients. We used the grant for handwritten mailers and reactivated 22 dormant accounts.",
+          name: "Sloane Mitchell",
+          title: "Founder, Harbor & Hearth Interiors — April 2024 Recipient",
+        },
+        {
+          quote:
+            "Our telehealth collective built an onboarding mini-course with the award. Session attendance now starts above 90% because patients know exactly what to expect.",
+          name: "Harper Jennings",
+          title: "Co-founder, Meridian Therapy Group — June 2023 Recipient",
+        },
+        {
+          quote:
+            "I plugged the DelcoTech recommendations straight into our go-to-market sprint. Within one quarter we added enterprise pilots that dwarfed our direct-to-consumer sales.",
+          name: "Nolan Kim",
+          title: "CEO, ScholarSense Labs — May 2023 Recipient",
+        },
+        {
+          quote:
+            "Funding went to a professional brand shoot that finally reflected our craftsmanship. The imagery helped close two national retail partners.",
+          name: "Patrice Howard",
+          title: "Founder, Hearthstone Candle Co. — January 2024 Recipient",
+        },
+        {
+          quote:
+            "We used the capital to license a CRM upgrade and automate our onboarding. Churn fell below 2% and our client NPS shot up 18 points.",
+          name: "Mira Desai",
+          title: "Managing Partner, AlignHR Studio — July 2023 Recipient",
+        },
+        {
+          quote:
+            "The Bright Studio masterminds introduced us to our fractional CTO. Winning the grant gave us breathing room to scope and ship our beta with confidence.",
+          name: "Aaron West",
+          title: "Founder, Harborline Analytics — October 2023 Recipient",
+        },
+        {
+          quote:
+            "I launched a paid community for makeup artists using the grant to cover platform fees. We broke even in thirty days and now reinvest profits into scholarships.",
+          name: "Celeste Moore",
+          title: "Owner, Prism Beauty Lab — May 2024 Recipient",
+        },
+        {
+          quote:
+            "We moved our farmers market into a permanent warehouse after following DelcoTech's site checklist. The grant bridged the deposit and our Bright Score increased again.",
+          name: "Diego Ramirez",
+          title: "Director, Barrio Bounty Co-op — February 2023 Recipient",
+        },
+        {
+          quote:
+            "The reviewers pushed us to clarify our cause marketing pitch before spending. That clarity helped us earn a six-month corporate sponsorship.",
+          name: "Fiona Gallagher",
+          title: "CEO, Kindred Threads — August 2024 Recipient",
+        },
+        {
+          quote:
+            "Winning reaffirmed that steady, daily action beats hype. We channeled the funds into SMS flows that now generate 27% of monthly revenue.",
+          name: "Gideon Clarke",
+          title: "Co-owner, Freshform Juicery — March 2024 Recipient",
+        },
+        {
+          quote:
+            "We finally outsourced fulfillment after seeing DelcoTech's cost analysis. The grant paid for the transition and freed me to focus on partnerships.",
+          name: "Hana Park",
+          title: "Founder, Print Garden Studio — April 2023 Recipient",
+        },
+        {
+          quote:
+            "Our mobile repair fleet expanded into two new neighborhoods thanks to the grant. The Bright Studio office hours keep our ops team iterating fast.",
+          name: "Isaiah Brooks",
+          title: "COO, FixSwift Tech — January 2023 Recipient",
+        },
+        {
+          quote:
+            "DelcoTech helped us benchmark our conversion funnel so we knew exactly what to fix. We devoted the grant to retargeting ads and hit profitability the next month.",
+          name: "Janelle Porter",
+          title: "Founder, Culture Camp Travel — June 2024 Recipient",
+        },
+        {
+          quote:
+            "We invested the award in new fermentation tanks and upgraded labeling. Our subscriber waitlist finally cleared after the Bright Score review.",
+          name: "Karim Albright",
+          title: "Head Brewer, Riverlight Kombucha — November 2023 Recipient",
+        },
+        {
+          quote:
+            "A simple tweak to our lead magnet doubled downloads in one week. The grant underwrote a storytelling shoot we leveraged across every channel.",
+          name: "Lila Thompson",
+          title: "Founder, Storycraft Studios — September 2024 Recipient",
+        },
+        {
+          quote:
+            "We re-recorded our course using DelcoTech's microphone recommendations. Students now binge modules and referrals drive 40% of our enrollments.",
+          name: "Malik Osei",
+          title: "Creator, Bridgewater Trading Academy — December 2023 Recipient",
+        },
+        {
+          quote:
+            "Their analysts challenged us to pre-sell our new menu before building it. The grant funded the pop-up and we sold out four weekends straight.",
+          name: "Nadia Flores",
+          title: "Chef-Owner, Flor y Sazon — April 2024 Recipient",
+        },
+        {
+          quote:
+            "I used the award to hire a part-time community manager for our makerspace. Membership churn dropped in half and events sell out every month.",
+          name: "Oliver Chen",
+          title: "Director, Forge & Fiber Commons — July 2024 Recipient",
+        },
+        {
+          quote:
+            "We rebranded our client onboarding kit and finally charged what we're worth. DelcoTech's scorecard keeps our KPIs visible to the whole team.",
+          name: "Penelope Hart",
+          title: "Principal, Northwind Advisory — February 2023 Recipient",
+        },
+        {
+          quote:
+            "Our micro farm added a heated greenhouse because the grant closed our funding gap. The Studio accountability sessions ensure we keep reporting impact.",
+          name: "Quentin Lawson",
+          title: "Co-founder, Verdant Steps Agriculture — January 2024 Recipient",
+        },
+        {
+          quote:
+            "We used the grant to underwrite childcare stipends during our flagship retreat. Attendee satisfaction hit a record 98% as a result.",
+          name: "Raina Gupta",
+          title: "CEO, ThriveMind Retreats — August 2023 Recipient",
+        },
+        {
+          quote:
+            "DelcoTech's playbooks helped us monetize our podcast through strategic bundles. The grant covered the launch and we hit 10k subscribers in six weeks.",
+          name: "Solomon Price",
+          title: "Host, Beacon Builders Media — May 2024 Recipient",
+        },
+        {
+          quote:
+            "Our textile atelier leaned into slow fashion storytelling after the review. The grant paid local photographers who captured our artisans beautifully.",
+          name: "Tessa Monroe",
+          title: "Founder, Emberline Atelier — October 2023 Recipient",
+        },
+        {
+          quote:
+            "We layered Bright Studio advice into our sales scripts and conversions spiked. The grant bought the CRM seats we needed to keep up.",
+          name: "Ulises Vega",
+          title: "CEO, Pacific Crest Logistics — March 2023 Recipient",
+        },
+        {
+          quote:
+            "We turned the $1,000 into a mini scholarship fund for our dance students. Enrollment filled within 24 hours thanks to DelcoTech's launch checklist.",
+          name: "Vivienne Ross",
+          title: "Director, Pulse & Grace Dance — June 2024 Recipient",
+        },
+        {
+          quote:
+            "The Bright Score made it clear our data dashboards needed polish. After investing the grant, investors now cite our clarity during diligence calls.",
+          name: "Wynn Carver",
+          title: "Co-founder, LedgerLight Finance — July 2023 Recipient",
+        },
+        {
+          quote:
+            "The review pinpointed exactly how to package our group coaching tiers. The grant financed the first two cohorts and testimonials keep rolling in.",
+          name: "Xiomara De Leon",
+          title: "Founder, Latitude Leadership Lab — September 2023 Recipient",
+        },
+        {
+          quote:
+            "We created a bilingual hotline for caregivers with the funds. Bright Studio mentors helped us script every call flow and satisfaction scores soared.",
+          name: "Yael Bernstein",
+          title: "Executive Director, Gentle Grid Support — December 2024 Recipient",
+        },
+        {
+          quote:
+            "DelcoTech helped us map an affiliate strategy before we wasted ad spend. The grant covered onboarding kits for partners and we crossed six figures the next quarter.",
+          name: "Zahra Whitman",
+          title: "CEO, Luminary Learning Pods — April 2023 Recipient",
+        },
+        {
+          quote:
+            "I finally stepped back from fulfillment after the Bright Score flagged burnout risks. The grant funded our first operations hire and our Net Promoter Score climbed immediately.",
+          name: "Caleb Underwood",
+          title: "Founder, Shoreline Coffee Roasters — October 2024 Recipient",
+        },
+      ];
+
+      (function () {
+        const yearEl = document.getElementById('year');
+        if (yearEl) {
+          yearEl.textContent = new Date().getFullYear();
+        }
+
+        const testimonialContainer = document.getElementById('testimonial-list');
+        if (testimonialContainer && Array.isArray(TESTIMONIAL_ENTRIES)) {
+          const pool = [...TESTIMONIAL_ENTRIES];
+          for (let index = pool.length - 1; index > 0; index -= 1) {
+            const swapIndex = Math.floor(Math.random() * (index + 1));
+            [pool[index], pool[swapIndex]] = [pool[swapIndex], pool[index]];
+          }
+
+          const selection = pool.slice(0, Math.min(2, pool.length));
+          testimonialContainer.innerHTML = '';
+          selection.forEach((entry) => {
+            if (!entry || !entry.quote || !entry.name) return;
+            const card = document.createElement('div');
+            card.className = 'testimonial';
+
+            const quoteEl = document.createElement('p');
+            quoteEl.textContent = `“${entry.quote}”`;
+            card.appendChild(quoteEl);
+
+            const nameEl = document.createElement('strong');
+            nameEl.textContent = entry.name;
+            card.appendChild(nameEl);
+
+            if (entry.title) {
+              const titleEl = document.createElement('span');
+              titleEl.className = 'testimonial-title';
+              titleEl.textContent = entry.title;
+              card.appendChild(titleEl);
+            }
+
+            testimonialContainer.appendChild(card);
+          });
+        }
+
+        const form = document.querySelector('form');
+        if (!form) return;
+
+        const submitBtn = form.querySelector('.submit-btn');
+        const statusBox = document.getElementById('application-status');
+        const STORAGE_KEY = 'newBrightWaterGrantCache.v1';
+        const previewSection = document.getElementById('image-preview-section');
+        const previewContainer = document.getElementById('image-previews');
+
+        function showStatus(message, type = 'info') {
+          if (!statusBox) return;
+          statusBox.textContent = message;
+          statusBox.className = `form-status show ${type}`;
+        }
+
+        function clearStatus() {
+          if (!statusBox) return;
+          statusBox.textContent = '';
+          statusBox.className = 'form-status';
+        }
+
+        const fieldsToPersist = Array.from(form.elements).filter((el) => {
+          return el.name && el.type !== 'file' && el.type !== 'submit' && el.type !== 'button';
+        });
+
+        function serializeForm() {
+          const payload = {};
+          for (const field of fieldsToPersist) {
+            if (field.type === 'checkbox') {
+              payload[field.name] = field.checked;
+            } else {
+              payload[field.name] = field.value;
+            }
+          }
+          return payload;
+        }
+
+        function applyCache() {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            for (const field of fieldsToPersist) {
+              if (!(field.name in data)) continue;
+              if (field.type === 'checkbox') {
+                field.checked = Boolean(data[field.name]);
+              } else {
+                field.value = data[field.name] || '';
+              }
+            }
+          } catch (error) {
+            console.warn('Unable to restore cached application data', error);
+          }
+        }
+
+        function persistCache() {
+          try {
+            const payload = serializeForm();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+          } catch (error) {
+            console.warn('Unable to persist grant cache', error);
+          }
+        }
+
+        applyCache();
+
+        for (const field of fieldsToPersist) {
+          const eventName = field.type === 'checkbox' ? 'change' : 'input';
+          field.addEventListener(eventName, persistCache);
+        }
+
+        function resetPreviews() {
+          if (previewContainer) {
+            previewContainer.innerHTML = '';
+          }
+          if (previewSection) {
+            previewSection.classList.remove('show');
+          }
+        }
+
+        function updateImagePreviews(fileList) {
+          if (!previewContainer || !previewSection) return;
+          resetPreviews();
+          const files = Array.from(fileList || []).filter((file) => file.type.startsWith('image/'));
+          if (!files.length) {
+            return;
+          }
+
+          const maxPreviewCount = 5;
+          previewSection.classList.add('show');
+
+          files.slice(0, maxPreviewCount).forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'preview-item';
+
+            const label = document.createElement('span');
+            label.textContent = file.name || `Image ${index + 1}`;
+            item.appendChild(label);
+
+            const img = document.createElement('img');
+            img.alt = file.name ? `Preview of ${file.name}` : 'Preview of uploaded image';
+            const objectUrl = URL.createObjectURL(file);
+            img.src = objectUrl;
+            img.onload = () => URL.revokeObjectURL(objectUrl);
+            img.onerror = () => URL.revokeObjectURL(objectUrl);
+            item.appendChild(img);
+
+            previewContainer.appendChild(item);
+          });
+
+          if (files.length > maxPreviewCount) {
+            const extra = document.createElement('div');
+            extra.className = 'preview-extra';
+            extra.textContent = `+${files.length - maxPreviewCount} more`;
+            previewContainer.appendChild(extra);
+          }
+        }
+
+        async function readFiles(fileList) {
+          const files = Array.from(fileList || []);
+          const maxFiles = 5;
+          const maxFileBytes = 8 * 1024 * 1024; // 8MB
+          const maxTotalBytes = 11 * 1024 * 1024; // keep payload below 15MB after base64
+          const entries = [];
+          let totalBytes = 0;
+
+          for (let index = 0; index < files.length && index < maxFiles; index += 1) {
+            const file = files[index];
+
+            if (file.size > maxFileBytes) {
+              const error = new Error('FILE_TOO_LARGE');
+              error.code = 'FILE_TOO_LARGE';
+              error.fileName = file.name;
+              throw error;
+            }
+
+            totalBytes += file.size;
+            if (totalBytes > maxTotalBytes) {
+              const error = new Error('TOTAL_TOO_LARGE');
+              error.code = 'TOTAL_TOO_LARGE';
+              throw error;
+            }
+
+            const base64 = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const result = reader.result || '';
+                const comma = result.indexOf(',');
+                resolve(comma >= 0 ? result.slice(comma + 1) : result);
+              };
+              reader.onerror = () => reject(reader.error || new Error('File load error'));
+              reader.readAsDataURL(file);
+            });
+
+            entries.push({
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              data: base64,
+            });
+          }
+
+          return entries;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const statusParam = params.get('status');
+        if (statusParam === 'success') {
+          showStatus('Payment received! Your application is locked in for the current review cycle.', 'success');
+        } else if (statusParam === 'cancel') {
+          showStatus('Application saved. Complete the secure payment to activate your review.', 'warning');
+        }
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          clearStatus();
+          if (submitBtn) {
+            submitBtn.disabled = true;
+          }
+          showStatus('Submitting your application...', 'info');
+
+          try {
+            const payload = serializeForm();
+            const fileInput = document.getElementById('supporting-files');
+            let files = [];
+            if (fileInput?.files?.length) {
+              updateImagePreviews(fileInput.files);
+              try {
+                files = await readFiles(fileInput.files);
+              } catch (fileError) {
+                if (fileError?.code === 'FILE_TOO_LARGE') {
+                  const fileName = fileError.fileName ? ` (${fileError.fileName})` : '';
+                  showStatus(`One of your files${fileName} exceeds the 8MB limit. Please compress it and try again.`, 'error');
+                } else if (fileError?.code === 'TOTAL_TOO_LARGE') {
+                  showStatus('The combined size of your attachments exceeds the 11MB limit. Remove a file and retry.', 'error');
+                } else {
+                  showStatus('We were unable to read one of your files. Please try again.', 'error');
+                }
+                if (submitBtn) {
+                  submitBtn.disabled = false;
+                }
+                return;
+              }
+            }
+
+            const response = await fetch('/api/new-bright-water-grant/applications', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ fields: payload, files }),
+            });
+
+            const result = await response.json().catch(() => null);
+
+            if (!response.ok || !result?.ok) {
+              const message = result?.error === 'file_too_large'
+                ? 'One of your files exceeded the 8MB limit. Please compress it and try again.'
+                : result?.error === 'total_upload_too_large'
+                ? 'The combined size of your attachments is too large. Remove a file and retry.'
+                : result?.error === 'missing_field'
+                ? 'Please double-check all required fields before submitting.'
+                : 'We could not submit your application. Please try again in a few moments.';
+              showStatus(message, 'error');
+              if (submitBtn) {
+                submitBtn.disabled = false;
+              }
+              return;
+            }
+
+            persistCache();
+
+            if (result.checkoutUrl) {
+              showStatus('Redirecting to DelcoTech Pay to confirm your application...', 'success');
+              window.location.href = result.checkoutUrl;
+            } else {
+              showStatus('Application received. A secure payment link will be emailed to finalize your review.', 'warning');
+              if (submitBtn) {
+                submitBtn.disabled = false;
+              }
+            }
+          } catch (error) {
+            console.error('Grant submission failed', error);
+            showStatus('Something went wrong while submitting. Please try again shortly.', 'error');
+            if (submitBtn) {
+              submitBtn.disabled = false;
+            }
+          }
+        });
+
+        const fileInput = document.getElementById('supporting-files');
+        if (fileInput) {
+          fileInput.addEventListener('change', (event) => {
+            updateImagePreviews(event.target.files);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
