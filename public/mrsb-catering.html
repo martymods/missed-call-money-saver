@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mrs. B's Catering</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-pink: #ff4db0;
+      --deep-pink: #d70f64;
+      --charcoal: #2b2b2d;
+      --soft-gray: #f9f9fb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Raleway', sans-serif;
+      background: var(--soft-gray);
+      color: var(--charcoal);
+      margin: 0;
+      padding: 0;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    .container {
+      margin: 0 auto;
+      max-width: 1200px;
+      padding: 0 1.5rem;
+      width: 100%;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      margin-left: -12px;
+      margin-right: -12px;
+    }
+
+    .col {
+      box-sizing: border-box;
+      padding: 12px;
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+
+    .col.s12 {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+
+    @media (min-width: 601px) {
+      .col.m6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+      }
+    }
+
+    @media (min-width: 993px) {
+      .col.l8 {
+        flex: 0 0 66.6667%;
+        max-width: 66.6667%;
+      }
+
+      .col.l4 {
+        flex: 0 0 33.3333%;
+        max-width: 33.3333%;
+      }
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .card-image img {
+      border-radius: 12px;
+      display: block;
+      width: 100%;
+    }
+
+    .card-content {
+      padding: 1.25rem;
+    }
+
+    .card-action {
+      border-top: 1px solid rgba(0,0,0,0.08);
+      padding: 1rem 1.25rem;
+    }
+
+    .card-title {
+      left: 24px;
+      position: absolute;
+    }
+
+    .btn {
+      align-items: center;
+      background: linear-gradient(135deg, var(--deep-pink), var(--primary-pink));
+      border: none;
+      border-radius: 999px;
+      color: #ffffff;
+      cursor: pointer;
+      display: inline-flex;
+      font-weight: 700;
+      gap: 0.4rem;
+      justify-content: center;
+      letter-spacing: 0.05em;
+      padding: 0.6rem 1.4rem;
+      text-transform: uppercase;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:hover,
+    .btn:focus {
+      box-shadow: 0 10px 25px rgba(215, 15, 100, 0.25);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .btn-large {
+      font-size: 1rem;
+      padding: 0.85rem 1.8rem;
+    }
+
+    .btn-flat {
+      background: transparent;
+      border: none;
+      border-radius: 999px;
+      color: var(--deep-pink);
+      cursor: pointer;
+      font-weight: 600;
+      padding: 0.45rem 1rem;
+      transition: background 0.2s ease;
+    }
+
+    .btn-flat:hover,
+    .btn-flat:focus {
+      background: rgba(215, 15, 100, 0.1);
+      outline: none;
+    }
+
+    .waves-effect,
+    .waves-light {
+      position: relative;
+    }
+
+    .material-icons.left {
+      margin-right: 0.4rem;
+    }
+
+    .material-icons.tiny {
+      font-size: 1rem;
+      vertical-align: middle;
+    }
+
+    .top-bar {
+      background: #ffffff;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      position: sticky;
+      top: 0;
+      width: 100%;
+      z-index: 1200;
+    }
+
+    .top-bar__inner {
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+      min-height: 58px;
+      padding: 0 1rem;
+    }
+
+    .top-bar__brand img {
+      height: 42px;
+      width: auto;
+    }
+
+    .top-bar__actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .top-bar__link {
+      align-items: center;
+      background: none;
+      border: none;
+      border-radius: 999px;
+      color: var(--deep-pink);
+      cursor: pointer;
+      display: inline-flex;
+      font-weight: 600;
+      gap: 0.35rem;
+      letter-spacing: 0.04em;
+      padding: 0.4rem 0.9rem;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .top-bar__link:hover,
+    .top-bar__link:focus {
+      background: rgba(215, 15, 100, 0.08);
+      outline: none;
+    }
+
+    .top-bar__link .material-icons {
+      font-size: 1.2rem;
+    }
+
+    .cart-count {
+      background: linear-gradient(135deg, var(--deep-pink), var(--primary-pink));
+      border-radius: 999px;
+      color: #ffffff;
+      display: inline-flex;
+      font-size: 0.75rem;
+      font-weight: 700;
+      min-width: 22px;
+      justify-content: center;
+      padding: 0.15rem 0.4rem;
+    }
+
+    .top-bar__link[aria-disabled="true"] {
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    .page-loader {
+      align-items: center;
+      background: #ffffff;
+      display: flex;
+      inset: 0;
+      justify-content: center;
+      position: fixed;
+      transition: opacity 0.6s ease;
+      z-index: 9999;
+    }
+
+    .page-loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+    }
+
+    .loader-logo {
+      max-width: 180px;
+      width: 40vw;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.85; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    header {
+      text-align: center;
+      padding: 3rem 1rem 1.5rem;
+    }
+
+    header img {
+      max-width: 200px;
+      width: 30vw;
+    }
+
+    header h1 {
+      margin-top: 1.2rem;
+      font-weight: 700;
+      color: var(--deep-pink);
+      letter-spacing: 2px;
+    }
+
+    .menu-grid {
+      display: flex;
+      flex-wrap: wrap;
+      margin-left: -12px;
+      margin-right: -12px;
+    }
+
+    .menu-grid > .col {
+      padding: 12px;
+    }
+
+    .menu-section {
+      margin-bottom: 3rem;
+    }
+
+    .menu-section h2 {
+      color: var(--deep-pink);
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin: 2rem 0 1rem;
+      position: relative;
+      text-transform: uppercase;
+    }
+
+    .menu-section h2::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -8px;
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--deep-pink), var(--primary-pink));
+      border-radius: 4px;
+    }
+
+    .card.menu-card {
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 18px 40px rgba(215, 15, 100, 0.15);
+    }
+
+    .card.menu-card .card-image {
+      position: relative;
+      padding: 12px 12px 0;
+    }
+
+    .card.menu-card .card-image img {
+      border-radius: 12px;
+      height: 220px;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .card.menu-card .card-title {
+      background: rgba(255, 77, 176, 0.9);
+      border-radius: 12px;
+      bottom: 16px !important;
+      display: inline-flex;
+      font-size: 1.2rem !important;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 0.4rem 1rem !important;
+    }
+
+    .badge-info {
+      align-items: center;
+      background: #ffffff;
+      border-radius: 100px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      color: var(--deep-pink);
+      display: inline-flex;
+      font-weight: 600;
+      gap: 6px;
+      padding: 0.3rem 0.8rem;
+      position: absolute;
+      right: 24px;
+      top: 24px;
+    }
+
+    .badge-info i {
+      font-size: 1.2rem;
+    }
+
+    .upload-area {
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid rgba(215, 15, 100, 0.3);
+      border-radius: 999px;
+      color: var(--deep-pink);
+      cursor: pointer;
+      display: inline-flex;
+      gap: 0.3rem;
+      padding: 0.2rem 0.75rem;
+      position: absolute;
+      right: 24px;
+      top: 72px;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .upload-area:hover,
+    .upload-area:focus {
+      box-shadow: 0 10px 25px rgba(215, 15, 100, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .upload-area .material-icons {
+      font-size: 1rem;
+    }
+
+    .card-content ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    .card-content li {
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .card-content .price {
+      color: var(--deep-pink);
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .card-action {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.5rem !important;
+    }
+
+    .rating-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 1.4rem;
+      color: #ffc107;
+    }
+
+    .rating-control .material-icons {
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .rating-control .material-icons:hover {
+      transform: scale(1.2);
+    }
+
+    .user-gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .user-gallery img {
+      border-radius: 8px;
+      height: 70px;
+      object-fit: cover;
+      width: 70px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+
+    .cart-panel {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+      margin-top: 3rem;
+      padding: 2rem;
+      position: sticky;
+      top: 20px;
+    }
+
+    .cart-panel h3 {
+      color: var(--deep-pink);
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      text-transform: uppercase;
+    }
+
+    .cart-empty {
+      color: rgba(0, 0, 0, 0.55);
+      font-weight: 600;
+    }
+
+    .cart-item {
+      align-items: flex-start;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .cart-item .qty-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .cart-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      max-width: 55%;
+    }
+
+    .cart-name {
+      font-weight: 600;
+    }
+
+    .cart-modifiers {
+      color: var(--deep-pink);
+      font-size: 0.78rem;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .cart-line-total {
+      color: var(--deep-pink);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .qty-btn {
+      background: linear-gradient(135deg, var(--deep-pink), var(--primary-pink));
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      height: 28px;
+      width: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .total-row {
+      border-top: 1px solid rgba(0,0,0,0.08);
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      color: var(--charcoal);
+    }
+
+    .checkout-btn {
+      background: linear-gradient(135deg, var(--deep-pink), var(--primary-pink));
+      border-radius: 100px;
+      margin-top: 1.5rem;
+    }
+
+    .sides-grid {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      margin: 1.25rem 0 0.5rem;
+    }
+
+    .side-option {
+      align-items: center;
+      background: rgba(255, 77, 176, 0.12);
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      gap: 0.6rem;
+      padding: 0.75rem 0.9rem;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .side-option:hover,
+    .side-option:focus-within {
+      background: rgba(215, 15, 100, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .side-option input[type="checkbox"] {
+      accent-color: var(--deep-pink);
+    }
+
+    .side-option span {
+      font-weight: 600;
+    }
+
+    .selection-warning {
+      color: var(--deep-pink);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 0.25rem;
+    }
+
+    .modal-footer .btn.disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .modal-title {
+      color: var(--deep-pink);
+      font-weight: 700;
+    }
+
+    .modal-subtitle {
+      margin-top: 0.4rem;
+      margin-bottom: 0;
+    }
+
+    .modal {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      left: 50%;
+      max-height: 80vh;
+      max-width: 540px;
+      opacity: 0;
+      pointer-events: none;
+      position: fixed;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.95);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      width: calc(100% - 2rem);
+      z-index: 1301;
+    }
+
+    .modal.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .modal-content {
+      overflow-y: auto;
+      padding: 1.5rem 1.75rem;
+    }
+
+    .modal-footer {
+      background: #f8f8fa;
+      border-top: 1px solid rgba(0,0,0,0.06);
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      padding: 1rem 1.5rem 1.5rem;
+    }
+
+    .modal-backdrop {
+      background: rgba(0,0,0,0.55);
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      position: fixed;
+      transition: opacity 0.3s ease;
+      z-index: 1300;
+    }
+
+    .modal-backdrop.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    .menu-tabs {
+      display: inline-flex;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .menu-tab {
+      align-items: center;
+      background: rgba(255, 77, 176, 0.12);
+      border: none;
+      border-radius: 999px;
+      color: var(--deep-pink);
+      cursor: pointer;
+      display: inline-flex;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 0.35rem 1rem;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .menu-tab:hover,
+    .menu-tab:focus {
+      background: rgba(215, 15, 100, 0.22);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .highlight-section {
+      margin: 2.5rem 0 2rem;
+    }
+
+    .highlight-header {
+      align-items: baseline;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .highlight-header h2 {
+      color: var(--deep-pink);
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    .highlight-header p {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 0.95rem;
+      margin: 0;
+    }
+
+    .highlight-carousel {
+      align-items: center;
+      display: flex;
+      gap: 1rem;
+    }
+
+    .highlight-viewport {
+      flex: 1;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
+    }
+
+    .highlight-viewport::-webkit-scrollbar {
+      display: none;
+    }
+
+    .highlight-track {
+      display: flex;
+      gap: 1rem;
+      padding: 0.25rem 0.1rem;
+    }
+
+    .highlight-card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 18px 35px rgba(215, 15, 100, 0.12);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      flex: 0 0 clamp(200px, 60vw, 260px);
+      min-width: 220px;
+      overflow: hidden;
+      scroll-snap-align: start;
+      width: clamp(200px, 60vw, 260px);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .highlight-card:hover,
+    .highlight-card:focus-within {
+      box-shadow: 0 22px 45px rgba(215, 15, 100, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .highlight-card img {
+      height: 160px;
+      object-fit: cover;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .highlight-info {
+      padding: 1rem 1.25rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .highlight-name {
+      font-weight: 700;
+    }
+
+    .highlight-price {
+      color: var(--deep-pink);
+      font-weight: 700;
+    }
+
+    .highlight-add {
+      border-radius: 0;
+      border-top: 1px solid rgba(0,0,0,0.06);
+      justify-content: center;
+      text-transform: none;
+      width: 100%;
+    }
+
+    .highlight-add .material-icons {
+      font-size: 1.2rem;
+    }
+
+    .carousel-nav {
+      align-items: center;
+      background: #ffffff;
+      border: none;
+      border-radius: 50%;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+      color: var(--deep-pink);
+      cursor: pointer;
+      display: inline-flex;
+      height: 44px;
+      justify-content: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      width: 44px;
+    }
+
+    .carousel-nav:hover,
+    .carousel-nav:focus {
+      box-shadow: 0 16px 36px rgba(215, 15, 100, 0.2);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .carousel-nav:disabled {
+      box-shadow: none;
+      cursor: default;
+      opacity: 0.35;
+      transform: none;
+    }
+
+    .add-to-cart {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .add-to-cart.added::after {
+      animation: ripple 0.6s ease;
+      border-radius: 50%;
+      content: '';
+      inset: -20%;
+      position: absolute;
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    @keyframes ripple {
+      0% { opacity: 0.9; transform: scale(0.1); }
+      100% { opacity: 0; transform: scale(1); }
+    }
+
+    @media (max-width: 992px) {
+      header {
+        padding-top: 2.5rem;
+      }
+
+      .card.menu-card .card-image img {
+        height: 200px;
+      }
+
+      .upload-area {
+        right: 16px;
+        top: 66px;
+      }
+
+      .cart-panel {
+        position: static;
+        margin-bottom: 2rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header img {
+        width: 48vw;
+      }
+
+      .card.menu-card .card-image img {
+        height: 180px;
+      }
+
+      .upload-area {
+        top: auto;
+        bottom: 16px;
+        right: 16px;
+      }
+
+      .card-action {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+      }
+
+      .highlight-carousel {
+        gap: 0.5rem;
+      }
+
+      .carousel-nav {
+        height: 36px;
+        width: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-loader" id="pageLoader">
+    <img src="image/mrsB/mrsbscatering_logo_tran.png" alt="Mrs. B's Catering Logo" class="loader-logo">
+  </div>
+
+  <nav class="top-bar">
+    <div class="top-bar__inner container">
+      <a href="#pageTop" class="top-bar__brand" aria-label="Mrs. B's Catering Home">
+        <img src="image/mrsB/mrsbscatering_logo_tran.png" alt="Mrs. B's Catering Logo small" />
+      </a>
+      <div class="top-bar__actions">
+        <button type="button" class="top-bar__link menu-jump" data-target="menuCategories">
+          <i class="material-icons" aria-hidden="true">restaurant_menu</i>
+          Menu
+        </button>
+        <button type="button" class="top-bar__link cart-jump" data-target="cartPanel" aria-disabled="true">
+          <i class="material-icons" aria-hidden="true">shopping_cart</i>
+          <span class="cart-count">0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="pageTop">
+    <div class="container">
+      <header id="menuCategories">
+        <img src="image/mrsB/mrsbscatering_logo_tran.png" alt="Mrs. B's Catering Logo" />
+        <h1>Mrs. B's Catering Menu</h1>
+        <section class="highlight-section" id="highlightSection" aria-label="Featured menu picks">
+          <div class="highlight-header">
+            <h2>Chef's Highlights</h2>
+            <p>Tap a favorite to add it straight to your cart.</p>
+          </div>
+          <div class="highlight-carousel">
+            <button type="button" class="carousel-nav highlight-prev" aria-label="View previous highlights">
+              <span class="material-icons" aria-hidden="true">chevron_left</span>
+            </button>
+            <div class="highlight-viewport">
+              <div class="highlight-track" id="highlightTrack"></div>
+            </div>
+            <button type="button" class="carousel-nav highlight-next" aria-label="View more highlights">
+              <span class="material-icons" aria-hidden="true">chevron_right</span>
+            </button>
+          </div>
+        </section>
+        <div class="menu-tabs" role="navigation" aria-label="Menu categories">
+          <button type="button" class="menu-tab" data-target="entrees">Entrées</button>
+          <button type="button" class="menu-tab" data-target="sides">Sides</button>
+          <button type="button" class="menu-tab" data-target="drinks">Drinks</button>
+          <button type="button" class="menu-tab" data-target="desserts">Desserts</button>
+        </div>
+      </header>
+
+      <div class="row">
+        <div class="col l8 s12">
+          <section id="menuContainer"></section>
+        </div>
+        <div class="col l4 s12">
+          <aside class="cart-panel" id="cartPanel" aria-live="polite">
+            <h3>Your Plate</h3>
+            <div id="cartItems"></div>
+            <div class="total-row">
+              <span>Total</span>
+              <span id="cartTotal">$0.00</span>
+            </div>
+            <a href="checkout.html" class="waves-effect waves-light btn-large checkout-btn"><i class="material-icons left">shopping_cart</i>Proceed to Checkout</a>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <template id="menuCardTemplate">
+    <div class="menu-section">
+      <h2 class="section-title"></h2>
+      <div class="row menu-grid"></div>
+    </div>
+  </template>
+
+  <template id="menuItemTemplate">
+    <div class="col s12 m6">
+      <div class="card menu-card">
+        <div class="card-image">
+          <img class="item-photo" alt="Food item image">
+          <span class="card-title item-name"></span>
+          <span class="badge-info"><i class="material-icons">schedule</i><span>Made to order</span></span>
+          <div class="upload-area" role="button" tabindex="0">
+            <i class="material-icons" aria-hidden="true">photo_camera</i>
+            <span>Share plate</span>
+          </div>
+          <input type="file" class="user-upload" accept="image/*" hidden>
+        </div>
+        <div class="card-content">
+          <p class="item-description"></p>
+          <ul>
+            <li class="price"></li>
+            <li><i class="material-icons tiny">restaurant</i> <span class="item-category"></span></li>
+          </ul>
+          <div class="user-gallery"></div>
+        </div>
+        <div class="card-action">
+          <div class="rating-control" aria-label="Rate this dish">
+            <i class="material-icons" data-value="1">star_border</i>
+            <i class="material-icons" data-value="2">star_border</i>
+            <i class="material-icons" data-value="3">star_border</i>
+            <i class="material-icons" data-value="4">star_border</i>
+            <i class="material-icons" data-value="5">star_border</i>
+            <span class="rating-count">(0)</span>
+          </div>
+          <button type="button" class="btn waves-effect waves-light add-to-cart"><i class="material-icons left">add</i>Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <div id="entreeModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="entreeModalTitle" tabindex="-1">
+    <div class="modal-content">
+      <h4 class="modal-title" id="entreeModalTitle">Pick Two Sides</h4>
+      <p class="modal-subtitle">Select two sides to complete <span class="modal-item-name"></span>.</p>
+      <div class="sides-grid" role="group" aria-label="Available sides"></div>
+      <p class="selection-warning">Choose any two sides to continue.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-flat cancel-entree">Cancel</button>
+      <button type="button" class="btn waves-effect waves-light confirm-entree disabled" aria-disabled="true">Add to Cart</button>
+    </div>
+  </div>
+  <script>
+    const defaultImage = 'image/mrsB/mrsbscatering_logo_tran.png';
+
+    const menuData = [
+      {
+        category: 'Entrées',
+        items: [
+          {
+            id: 'fried_catfish',
+            name: 'Fried Catfish Dinner',
+            price: 13.0,
+            description: 'Crispy seasoned catfish fillets served with house-made sides for a soul-soothing feast.',
+            image: 'image/mrsB/fried_catfish.png'
+          },
+          {
+            id: 'turkey_wings_over_rice',
+            name: 'Turkey Wings over Yellow Rice',
+            price: 15.0,
+            description: 'Slow-roasted turkey wings smothered in rich gravy and served over fragrant yellow rice.',
+            image: 'image/mrsB/turkey_wings_over_rice.png'
+          },
+          {
+            id: 'stuffed_salmon_over_rice',
+            name: 'Stuffed Salmon over Rice',
+            price: 17.0,
+            description: 'Tender salmon stuffed with herbs and seafood cream sauce, resting on buttery rice.',
+            image: 'image/mrsB/stuffed_salmon_over_rice.png'
+          },
+          {
+            id: 'fried_whtiting',
+            name: 'Fried Whiting Plate',
+            price: 12.0,
+            description: 'Golden fried whiting with Mrs. B’s signature blend of spices and a squeeze of lemon.',
+            image: 'image/mrsB/fried_whtiting.png'
+          },
+          {
+            id: 'fried_wingdings',
+            name: 'Fried Wingdings',
+            price: 11.0,
+            description: 'Crispy fried wings tossed in your choice of sauce, paired with classic sides.',
+            image: 'image/mrsB/fried_wingdings.png'
+          }
+        ]
+      },
+      {
+        category: 'Sides',
+        items: [
+          {
+            id: 'greens',
+            name: 'Seasoned Collard Greens',
+            price: 5.5,
+            description: 'Slow-simmered greens infused with smoked turkey and savory spices.',
+            image: 'image/mrsB/greens.png'
+          },
+          {
+            id: 'baked_mac_and_cheese',
+            name: 'Baked Mac & Cheese',
+            price: 5.5,
+            description: 'Creamy, cheesy macaroni baked until bubbling and topped with golden crust.',
+            image: 'image/mrsB/baked_mac_and_cheese.png'
+          },
+          {
+            id: 'sweet_potatoes',
+            name: 'Candied Sweet Potatoes',
+            price: 5.5,
+            description: 'Tender sweet potatoes glazed with brown sugar, butter, and warm spices.',
+            image: 'image/mrsB/sweet_potatoes.png'
+          },
+          {
+            id: 'seafood_salad',
+            name: 'Seafood Pasta Salad',
+            price: 8.0,
+            description: 'Chilled pasta tossed with shrimp, peppers, and creamy herb dressing.',
+            image: 'image/mrsB/seafood_salad.png'
+          }
+        ]
+      },
+      {
+        category: 'Drinks',
+        items: [
+          {
+            id: 'can_soda',
+            name: 'Can Soda',
+            price: 1.5,
+            description: 'Choice of Cola, Diet Cola, or Lemon-Lime.',
+            image: defaultImage
+          },
+          {
+            id: 'bottled_water',
+            name: 'Bottled Water',
+            price: 1.25,
+            description: 'Pure and refreshing bottled water.',
+            image: defaultImage
+          }
+        ]
+      },
+      {
+        category: 'Desserts',
+        items: [
+          {
+            id: 'krazie_pudding_oreo',
+            name: 'Krazie Pudding Oreo',
+            price: 6.0,
+            description: 'Layers of creamy pudding, whipped topping, and crushed Oreo cookies.',
+            image: defaultImage
+          },
+          {
+            id: 'banana_pudding_kmaidson',
+            name: 'Banana Pudding Kmaidson',
+            price: 6.0,
+            description: 'Creamy and smooth pudding with hints of vanilla and fresh banana.',
+            image: defaultImage
+          },
+          {
+            id: 'cake',
+            name: 'Seasonal Layer Cake',
+            price: 6.0,
+            description: 'Layers of moist cake with rotating seasonal flavors and fillings.',
+            image: defaultImage
+          }
+        ]
+      }
+    ];
+
+    const menuContainer = document.getElementById('menuContainer');
+    const cartItemsContainer = document.getElementById('cartItems');
+    const cartTotalEl = document.getElementById('cartTotal');
+    const navCartButton = document.querySelector('.cart-jump');
+    const navCartCount = navCartButton ? navCartButton.querySelector('.cart-count') : null;
+    const menuJumpButton = document.querySelector('.menu-jump');
+    const menuTabs = document.querySelectorAll('.menu-tab');
+    const entreeModalEl = document.getElementById('entreeModal');
+    const entreeModalName = entreeModalEl.querySelector('.modal-item-name');
+    const entreeSidesGrid = entreeModalEl.querySelector('.sides-grid');
+    const entreeConfirmBtn = entreeModalEl.querySelector('.confirm-entree');
+    const cancelEntreeBtn = entreeModalEl.querySelector('.cancel-entree');
+    const selectionWarning = entreeModalEl.querySelector('.selection-warning');
+    const highlightTrack = document.getElementById('highlightTrack');
+    const highlightViewport = document.querySelector('.highlight-viewport');
+    const highlightPrev = document.querySelector('.highlight-prev');
+    const highlightNext = document.querySelector('.highlight-next');
+
+    let entreeModalInstance;
+    let entreeContext = null;
+    let modalBackdrop = null;
+
+    const sidesOptions = menuData.find((section) => section.category === 'Sides')?.items || [];
+
+    const loadStoredData = () => {
+      const storedRatings = JSON.parse(localStorage.getItem('mrsb_ratings') || '{}');
+      const storedUploads = JSON.parse(localStorage.getItem('mrsb_uploads') || '{}');
+      const storedCart = JSON.parse(localStorage.getItem('mrsb_cart') || '[]');
+      return { storedRatings, storedUploads, storedCart };
+    };
+
+    const saveData = ({ ratings, uploads, cart }) => {
+      localStorage.setItem('mrsb_ratings', JSON.stringify(ratings));
+      localStorage.setItem('mrsb_uploads', JSON.stringify(uploads));
+      localStorage.setItem('mrsb_cart', JSON.stringify(cart));
+    };
+
+    const state = {
+      ratings: {},
+      uploads: {},
+      cart: []
+    };
+
+    const templates = {
+      section: document.getElementById('menuCardTemplate'),
+      item: document.getElementById('menuItemTemplate')
+    };
+
+    const slugify = (value) => value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    const buildCartKey = (itemId, modifiers = []) => {
+      const extras = modifiers.slice().sort().join('|');
+      return extras ? `${itemId}::${extras}` : itemId;
+    };
+
+    const formatPrice = (value) => `$${value.toFixed(2)}`;
+
+    const flattenMenuItems = () => menuData.flatMap((section) =>
+      section.items.map((item) => ({ ...item, category: section.category }))
+    );
+
+    const shuffleArray = (source) => {
+      const array = [...source];
+      for (let i = array.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    };
+
+    const smoothScrollTo = (id) => {
+      const target = document.getElementById(id);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+
+    const updateCartBadge = () => {
+      if (!navCartCount || !navCartButton) return;
+      const totalQty = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+      navCartCount.textContent = totalQty;
+      navCartButton.setAttribute('aria-disabled', totalQty > 0 ? 'false' : 'true');
+    };
+
+    const normalizeStoredCart = (cartItems) => {
+      if (!Array.isArray(cartItems)) return [];
+      return cartItems.map((item) => {
+        const modifiers = Array.isArray(item.modifiers) ? item.modifiers : (Array.isArray(item.sides) ? item.sides : []);
+        const normalizedMods = modifiers.map((mod) => String(mod));
+        return {
+          id: item.id,
+          name: item.name,
+          price: Number(item.price) || 0,
+          quantity: Number(item.quantity) || 1,
+          modifiers: normalizedMods,
+          cartKey: item.cartKey || buildCartKey(item.id, normalizedMods)
+        };
+      });
+    };
+
+    const initState = () => {
+      const { storedRatings, storedUploads, storedCart } = loadStoredData();
+      state.ratings = storedRatings;
+      state.uploads = storedUploads;
+      state.cart = normalizeStoredCart(storedCart);
+    };
+
+    const updateCartQty = (cartKey, newQty) => {
+      const itemIndex = state.cart.findIndex((item) => item.cartKey === cartKey);
+      if (itemIndex === -1) return;
+
+      if (newQty <= 0) {
+        state.cart.splice(itemIndex, 1);
+      } else {
+        state.cart[itemIndex].quantity = newQty;
+      }
+      updateCartDisplay();
+    };
+
+    const triggerFlyToCart = (imageEl) => {
+      if (!imageEl || !navCartButton) return;
+      const imageRect = imageEl.getBoundingClientRect();
+      const cartRect = navCartButton.getBoundingClientRect();
+      const clone = imageEl.cloneNode(true);
+      clone.style.position = 'fixed';
+      clone.style.left = `${imageRect.left}px`;
+      clone.style.top = `${imageRect.top}px`;
+      clone.style.width = `${imageRect.width}px`;
+      clone.style.height = `${imageRect.height}px`;
+      clone.style.borderRadius = getComputedStyle(imageEl).borderRadius || '12px';
+      clone.style.transition = 'transform 0.7s ease, opacity 0.7s ease, width 0.7s ease, height 0.7s ease';
+      clone.style.zIndex = '1200';
+      clone.style.pointerEvents = 'none';
+      document.body.appendChild(clone);
+
+      requestAnimationFrame(() => {
+        clone.style.transform = `translate(${cartRect.left - imageRect.left}px, ${cartRect.top - imageRect.top}px) scale(0.2)`;
+        clone.style.opacity = '0.2';
+        clone.style.width = '60px';
+        clone.style.height = '60px';
+      });
+
+      setTimeout(() => clone.remove(), 700);
+    };
+
+    const animateAddButton = (button) => {
+      if (!button) return;
+      button.classList.add('added');
+      setTimeout(() => button.classList.remove('added'), 500);
+    };
+
+    const addToCart = (menuItem, options = {}) => {
+      const normalizedMods = Array.isArray(options.sides) ? options.sides.slice() : [];
+      const cartKey = buildCartKey(menuItem.id, normalizedMods);
+      const existing = state.cart.find((item) => item.cartKey === cartKey);
+
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        state.cart.push({
+          id: menuItem.id,
+          name: menuItem.name,
+          price: menuItem.price,
+          quantity: 1,
+          modifiers: normalizedMods,
+          cartKey
+        });
+      }
+
+      updateCartDisplay();
+    };
+
+    const addMenuItemToCart = (menuItem, imageEl, addButton, options = {}) => {
+      addToCart(menuItem, options);
+      triggerFlyToCart(imageEl);
+      animateAddButton(addButton);
+    };
+
+    const updateRatingUI = (ratingWrapper, itemId) => {
+      const ratingData = state.ratings[itemId];
+      const ratingValue = ratingData ? Math.round((ratingData.total / ratingData.count) * 2) / 2 : 0;
+      const ratingCount = ratingData?.count || 0;
+      const stars = ratingWrapper.querySelectorAll('.material-icons');
+      stars.forEach((star) => {
+        const starValue = Number(star.dataset.value);
+        star.textContent = starValue <= Math.round(ratingValue) ? 'star' : 'star_border';
+      });
+      const countLabel = ratingWrapper.querySelector('.rating-count');
+      countLabel.textContent = ratingCount ? `${ratingValue.toFixed(1)} (${ratingCount})` : '(0)';
+    };
+
+    const bindRatingEvents = (ratingWrapper, itemId) => {
+      const stars = ratingWrapper.querySelectorAll('.material-icons');
+      stars.forEach((star) => {
+        star.addEventListener('click', () => {
+          const selectedValue = Number(star.dataset.value);
+          const current = state.ratings[itemId];
+          if (!current) {
+            state.ratings[itemId] = { total: selectedValue, count: 1 };
+          } else {
+            const newCount = current.count + 1;
+            const newTotal = current.total + selectedValue;
+            state.ratings[itemId] = { total: newTotal, count: newCount };
+          }
+          saveData({ ratings: state.ratings, uploads: state.uploads, cart: state.cart });
+          updateRatingUI(ratingWrapper, itemId);
+        });
+      });
+    };
+
+    const bindUpload = (uploadInput, gallery, itemId, trigger) => {
+      const openPicker = () => uploadInput.click();
+
+      trigger.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openPicker();
+      });
+
+      trigger.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openPicker();
+        }
+      });
+
+      uploadInput.addEventListener('change', (event) => {
+        const files = Array.from(event.target.files || []);
+        if (!files.length) return;
+        const readers = files.map((file) => new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(file);
+        }));
+
+        Promise.all(readers).then((images) => {
+          const existingUploads = state.uploads[itemId] || [];
+          state.uploads[itemId] = [...existingUploads, ...images].slice(-12);
+          saveData({ ratings: state.ratings, uploads: state.uploads, cart: state.cart });
+          renderGallery(gallery, itemId);
+          uploadInput.value = '';
+        });
+      });
+    };
+
+    const renderGallery = (gallery, itemId) => {
+      gallery.innerHTML = '';
+      const uploads = state.uploads[itemId] || [];
+      uploads.forEach((src) => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = 'Customer submitted';
+        gallery.appendChild(img);
+      });
+    };
+
+    const updateCartDisplay = () => {
+      cartItemsContainer.innerHTML = '';
+      if (!state.cart.length) {
+        const emptyMsg = document.createElement('p');
+        emptyMsg.className = 'cart-empty';
+        emptyMsg.textContent = 'Your plate is empty. Tap any dish to add it.';
+        cartItemsContainer.appendChild(emptyMsg);
+      } else {
+        state.cart.forEach((item) => {
+          const cartItemEl = document.createElement('div');
+          cartItemEl.className = 'cart-item';
+
+          const detailWrap = document.createElement('div');
+          detailWrap.className = 'cart-details';
+
+          const nameEl = document.createElement('span');
+          nameEl.className = 'cart-name';
+          nameEl.textContent = item.name;
+          detailWrap.appendChild(nameEl);
+
+          if (item.modifiers && item.modifiers.length) {
+            const modifiersEl = document.createElement('span');
+            modifiersEl.className = 'cart-modifiers';
+            modifiersEl.textContent = `Includes: ${item.modifiers.join(', ')}`;
+            detailWrap.appendChild(modifiersEl);
+          }
+
+          const qtyControls = document.createElement('div');
+          qtyControls.className = 'qty-controls';
+
+          const minusBtn = document.createElement('button');
+          minusBtn.type = 'button';
+          minusBtn.className = 'qty-btn';
+          minusBtn.innerHTML = '<i class="material-icons" aria-hidden="true">remove</i>';
+          minusBtn.addEventListener('click', () => updateCartQty(item.cartKey, item.quantity - 1));
+
+          const qtyValue = document.createElement('span');
+          qtyValue.textContent = item.quantity;
+
+          const plusBtn = document.createElement('button');
+          plusBtn.type = 'button';
+          plusBtn.className = 'qty-btn';
+          plusBtn.innerHTML = '<i class="material-icons" aria-hidden="true">add</i>';
+          plusBtn.addEventListener('click', () => updateCartQty(item.cartKey, item.quantity + 1));
+
+          qtyControls.append(minusBtn, qtyValue, plusBtn);
+
+          const lineTotal = document.createElement('span');
+          lineTotal.className = 'cart-line-total';
+          lineTotal.textContent = formatPrice(item.price * item.quantity);
+
+          cartItemEl.append(detailWrap, qtyControls, lineTotal);
+          cartItemsContainer.appendChild(cartItemEl);
+        });
+      }
+
+      const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      cartTotalEl.textContent = formatPrice(total);
+      saveData({ ratings: state.ratings, uploads: state.uploads, cart: state.cart });
+      updateCartBadge();
+    };
+
+    const buildSidesOptions = () => {
+      if (!entreeSidesGrid) return;
+      entreeSidesGrid.innerHTML = '';
+      sidesOptions.forEach((side) => {
+        const label = document.createElement('label');
+        label.className = 'side-option';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'entree_side';
+        checkbox.value = side.name;
+        const text = document.createElement('span');
+        text.textContent = side.name;
+        label.appendChild(checkbox);
+        label.appendChild(text);
+        entreeSidesGrid.appendChild(label);
+      });
+    };
+
+    const updateEntreeSelectionState = () => {
+      if (!entreeConfirmBtn || !selectionWarning) return;
+      const inputs = Array.from(entreeModalEl.querySelectorAll('input[name="entree_side"]'));
+      const selected = inputs.filter((input) => input.checked);
+      const count = selected.length;
+
+      entreeConfirmBtn.classList.toggle('disabled', count !== 2);
+      entreeConfirmBtn.setAttribute('aria-disabled', count !== 2 ? 'true' : 'false');
+      selectionWarning.style.visibility = count === 2 ? 'hidden' : 'visible';
+
+      inputs.forEach((input) => {
+        if (!input.checked) {
+          input.disabled = count >= 2;
+        } else {
+          input.disabled = false;
+        }
+      });
+    };
+
+    const resetEntreeModal = () => {
+      if (!entreeModalEl) return;
+      const inputs = entreeModalEl.querySelectorAll('input[name="entree_side"]');
+      inputs.forEach((input) => {
+        input.checked = false;
+        input.disabled = false;
+      });
+      updateEntreeSelectionState();
+    };
+
+    const ensureModalBackdrop = () => {
+      if (!modalBackdrop) {
+        modalBackdrop = document.createElement('div');
+        modalBackdrop.className = 'modal-backdrop';
+        modalBackdrop.addEventListener('click', () => {
+          if (entreeModalInstance) {
+            entreeModalInstance.close();
+          }
+        });
+        document.body.appendChild(modalBackdrop);
+      }
+    };
+
+    const openEntreeModal = (itemData, imageEl, addBtn) => {
+      if (!entreeModalInstance) return;
+      entreeContext = { item: itemData, imageEl, addBtn };
+      entreeModalName.textContent = itemData.name;
+      resetEntreeModal();
+      entreeModalInstance.open();
+    };
+
+    const handleItemSelection = (menuItem, category, imageEl, triggerEl) => {
+      if (category === 'Entrées') {
+        openEntreeModal(menuItem, imageEl, triggerEl);
+      } else {
+        addMenuItemToCart(menuItem, imageEl, triggerEl);
+      }
+    };
+
+    const updateHighlightNav = () => {
+      if (!highlightViewport || !highlightPrev || !highlightNext) return;
+      const maxScroll = Math.max(0, highlightViewport.scrollWidth - highlightViewport.clientWidth);
+      highlightPrev.disabled = highlightViewport.scrollLeft <= 0;
+      highlightNext.disabled = highlightViewport.scrollLeft >= (maxScroll - 4);
+    };
+
+    const scrollHighlights = (direction) => {
+      if (!highlightViewport) return;
+      const amount = highlightViewport.clientWidth * 0.9;
+      highlightViewport.scrollBy({ left: direction * amount, behavior: 'smooth' });
+      requestAnimationFrame(updateHighlightNav);
+    };
+
+    const renderHighlights = () => {
+      if (!highlightTrack) return;
+      highlightTrack.innerHTML = '';
+      const items = shuffleArray(flattenMenuItems()).slice(0, 10);
+
+      items.forEach((item) => {
+        const card = document.createElement('article');
+        card.className = 'highlight-card';
+
+        const image = document.createElement('img');
+        image.className = 'highlight-image';
+        image.src = item.image || defaultImage;
+        image.alt = item.name;
+        image.onerror = () => {
+          image.src = defaultImage;
+        };
+        image.tabIndex = 0;
+        image.setAttribute('role', 'button');
+        image.setAttribute('aria-label', `Add ${item.name} to cart`);
+
+        const info = document.createElement('div');
+        info.className = 'highlight-info';
+        const name = document.createElement('span');
+        name.className = 'highlight-name';
+        name.textContent = item.name;
+        const price = document.createElement('span');
+        price.className = 'highlight-price';
+        price.textContent = formatPrice(item.price);
+        info.appendChild(name);
+        info.appendChild(price);
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn highlight-add add-to-cart';
+        const icon = document.createElement('i');
+        icon.className = 'material-icons';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = 'add';
+        button.appendChild(icon);
+        button.appendChild(document.createTextNode('Add to Cart'));
+
+        const process = () => handleItemSelection(item, item.category, image, button);
+
+        button.addEventListener('click', (event) => {
+          event.preventDefault();
+          process();
+        });
+
+        image.addEventListener('click', process);
+        image.addEventListener('keypress', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            process();
+          }
+        });
+
+        card.addEventListener('click', (event) => {
+          if (event.target.closest('button')) return;
+          process();
+        });
+
+        card.appendChild(image);
+        card.appendChild(info);
+        card.appendChild(button);
+
+        highlightTrack.appendChild(card);
+      });
+
+      requestAnimationFrame(updateHighlightNav);
+    };
+
+    const initHighlightCarousel = () => {
+      if (!highlightViewport) return;
+
+      if (highlightPrev) {
+        highlightPrev.addEventListener('click', () => {
+          scrollHighlights(-1);
+        });
+      }
+
+      if (highlightNext) {
+        highlightNext.addEventListener('click', () => {
+          scrollHighlights(1);
+        });
+      }
+
+      highlightViewport.addEventListener('scroll', () => {
+        requestAnimationFrame(updateHighlightNav);
+      });
+
+      window.addEventListener('resize', updateHighlightNav);
+      updateHighlightNav();
+    };
+
+    const initializeMenuTabs = () => {
+      menuTabs.forEach((tab) => {
+        const targetSlug = slugify(tab.textContent);
+        tab.dataset.target = targetSlug;
+      });
+    };
+
+    const renderMenu = () => {
+      menuContainer.innerHTML = '';
+      menuData.forEach((sectionData) => {
+        const sectionFragment = templates.section.content.cloneNode(true);
+        const section = sectionFragment.querySelector('.menu-section');
+        const slug = slugify(sectionData.category);
+        section.id = slug;
+        section.querySelector('.section-title').textContent = sectionData.category;
+        const grid = section.querySelector('.menu-grid');
+
+        sectionData.items.forEach((itemData) => {
+          const itemFragment = templates.item.content.cloneNode(true);
+          const imgEl = itemFragment.querySelector('.item-photo');
+          imgEl.src = itemData.image || defaultImage;
+          imgEl.onerror = () => {
+            imgEl.src = defaultImage;
+          };
+          imgEl.alt = itemData.name;
+
+          itemFragment.querySelector('.item-name').textContent = itemData.name;
+          itemFragment.querySelector('.item-description').textContent = itemData.description;
+          itemFragment.querySelector('.price').textContent = formatPrice(itemData.price);
+          itemFragment.querySelector('.item-category').textContent = sectionData.category;
+
+          const ratingWrapper = itemFragment.querySelector('.rating-control');
+          ratingWrapper.querySelector('.rating-count').textContent = '(0)';
+          bindRatingEvents(ratingWrapper, itemData.id);
+          updateRatingUI(ratingWrapper, itemData.id);
+
+          const uploadTrigger = itemFragment.querySelector('.upload-area');
+          const uploadInput = itemFragment.querySelector('.user-upload');
+          const gallery = itemFragment.querySelector('.user-gallery');
+          renderGallery(gallery, itemData.id);
+          bindUpload(uploadInput, gallery, itemData.id, uploadTrigger);
+
+          const addBtn = itemFragment.querySelector('.add-to-cart');
+          const processSelection = () => handleItemSelection(itemData, sectionData.category, imgEl, addBtn);
+
+          addBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            processSelection();
+          });
+
+          imgEl.addEventListener('click', processSelection);
+
+          grid.appendChild(itemFragment);
+        });
+
+        menuContainer.appendChild(sectionFragment);
+      });
+    };
+
+    const initModal = () => {
+      if (!entreeModalEl || !entreeConfirmBtn || !entreeSidesGrid) return;
+
+      ensureModalBackdrop();
+      entreeModalEl.setAttribute('aria-hidden', 'true');
+
+      const closeModal = () => {
+        entreeModalEl.classList.remove('open');
+        entreeModalEl.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+        if (modalBackdrop) {
+          modalBackdrop.classList.remove('visible');
+        }
+        entreeContext = null;
+        resetEntreeModal();
+      };
+
+      const openModal = () => {
+        ensureModalBackdrop();
+        entreeModalEl.classList.add('open');
+        entreeModalEl.setAttribute('aria-hidden', 'false');
+        if (modalBackdrop) {
+          modalBackdrop.classList.add('visible');
+        }
+        document.body.classList.add('modal-open');
+        setTimeout(() => {
+          const focusTarget = entreeModalEl.querySelector('input[name="entree_side"]');
+          (focusTarget || entreeConfirmBtn).focus();
+        }, 50);
+      };
+
+      entreeModalInstance = {
+        open: openModal,
+        close: closeModal
+      };
+
+      entreeSidesGrid.addEventListener('change', (event) => {
+        if (event.target && event.target.name === 'entree_side') {
+          updateEntreeSelectionState();
+        }
+      });
+
+      entreeConfirmBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (!entreeContext) return;
+        const selectedSides = Array.from(entreeModalEl.querySelectorAll('input[name="entree_side"]:checked')).map((input) => input.value);
+        if (selectedSides.length !== 2) return;
+        addMenuItemToCart(entreeContext.item, entreeContext.imageEl, entreeContext.addBtn, { sides: selectedSides });
+        closeModal();
+      });
+
+      if (cancelEntreeBtn) {
+        cancelEntreeBtn.addEventListener('click', (event) => {
+          event.preventDefault();
+          closeModal();
+        });
+      }
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && entreeModalEl.classList.contains('open')) {
+          closeModal();
+        }
+      });
+    };
+
+    const initNav = () => {
+      if (menuJumpButton) {
+        menuJumpButton.addEventListener('click', () => {
+          const targetId = menuJumpButton.dataset.target;
+          smoothScrollTo(targetId);
+        });
+      }
+
+      if (navCartButton) {
+        navCartButton.addEventListener('click', () => {
+          if (navCartButton.getAttribute('aria-disabled') === 'true') return;
+          const targetId = navCartButton.dataset.target;
+          smoothScrollTo(targetId);
+        });
+      }
+
+      menuTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          smoothScrollTo(tab.dataset.target);
+        });
+      });
+    };
+
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('pageLoader');
+      setTimeout(() => loader.classList.add('hidden'), 2000);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initState();
+      buildSidesOptions();
+      resetEntreeModal();
+      initModal();
+      renderHighlights();
+      initHighlightCarousel();
+      renderMenu();
+      initializeMenuTabs();
+      updateCartDisplay();
+      initNav();
+    });
+  </script>
+</body>
+</html>
