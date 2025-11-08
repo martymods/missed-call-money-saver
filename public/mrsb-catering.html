@@ -1023,14 +1023,16 @@
             name: 'Fried Catfish Dinner',
             price: 13.0,
             description: 'Crispy seasoned catfish fillets served with house-made sides for a soul-soothing feast.',
-            image: 'image/mrsB/fried_catfish.png'
+            image: 'image/mrsB/fried_catfish.png',
+            animatedImage: 'image/mrsB/fried_catfish.gif'
           },
           {
             id: 'turkey_wings_over_rice',
             name: 'Turkey Wings over Yellow Rice',
             price: 15.0,
             description: 'Slow-roasted turkey wings smothered in rich gravy and served over fragrant yellow rice.',
-            image: 'image/mrsB/turkey_wings_over_rice.png'
+            image: 'image/mrsB/turkey_wings_over_rice.png',
+            animatedImage: 'image/mrsB/turkey_winng_0.gif'
           },
           {
             id: 'stuffed_salmon_over_rice',
@@ -1051,7 +1053,8 @@
             name: 'Fried Wingdings',
             price: 11.0,
             description: 'Crispy fried wings tossed in your choice of sauce, paired with classic sides.',
-            image: 'image/mrsB/fried_wingdings.png'
+            image: 'image/mrsB/fried_wingdings.png',
+            animatedImage: 'image/mrsB/fried_wingdings.gif'
           }
         ]
       },
@@ -1063,14 +1066,16 @@
             name: 'Seasoned Collard Greens',
             price: 5.5,
             description: 'Slow-simmered greens infused with smoked turkey and savory spices.',
-            image: 'image/mrsB/greens.png'
+            image: 'image/mrsB/greens.png',
+            animatedImage: 'image/mrsB/greens.gif'
           },
           {
             id: 'baked_mac_and_cheese',
             name: 'Baked Mac & Cheese',
             price: 5.5,
             description: 'Creamy, cheesy macaroni baked until bubbling and topped with golden crust.',
-            image: 'image/mrsB/baked_mac_and_cheese.png'
+            image: 'image/mrsB/baked_mac_and_cheese.png',
+            animatedImage: 'image/mrsB/baked_mac_and_cheese.gif'
           },
           {
             id: 'sweet_potatoes',
@@ -1198,6 +1203,36 @@
     };
 
     const formatPrice = (value) => `$${value.toFixed(2)}`;
+
+    const applyAnimatedPreview = (imageEl, staticSrc, animatedSrc) => {
+      if (!imageEl || !animatedSrc) return;
+
+      let swapped = false;
+      let timerId = null;
+
+      const revertOnError = () => {
+        imageEl.removeEventListener('error', revertOnError);
+        imageEl.src = staticSrc;
+      };
+
+      const swapToAnimated = () => {
+        if (swapped) return;
+        swapped = true;
+        imageEl.addEventListener('error', revertOnError, { once: true });
+        imageEl.src = animatedSrc;
+      };
+
+      const startTimer = () => {
+        if (swapped || timerId) return;
+        timerId = setTimeout(swapToAnimated, 2000);
+      };
+
+      if (imageEl.complete) {
+        startTimer();
+      } else {
+        imageEl.addEventListener('load', startTimer, { once: true });
+      }
+    };
 
     const flattenMenuItems = () => menuData.flatMap((section) =>
       section.items.map((item) => ({ ...item, category: section.category }))
@@ -1595,11 +1630,13 @@
 
         const image = document.createElement('img');
         image.className = 'highlight-image';
-        image.src = item.image || defaultImage;
+        const staticImageSrc = item.image || defaultImage;
+        image.src = staticImageSrc;
         image.alt = item.name;
-        image.onerror = () => {
+        image.addEventListener('error', () => {
           image.src = defaultImage;
-        };
+        }, { once: true });
+        applyAnimatedPreview(image, staticImageSrc, item.animatedImage);
         image.tabIndex = 0;
         image.setAttribute('role', 'button');
         image.setAttribute('aria-label', `Add ${item.name} to cart`);
@@ -1716,11 +1753,13 @@
         sectionData.items.forEach((itemData) => {
           const itemFragment = templates.item.content.cloneNode(true);
           const imgEl = itemFragment.querySelector('.item-photo');
-          imgEl.src = itemData.image || defaultImage;
-          imgEl.onerror = () => {
+          const staticImageSrc = itemData.image || defaultImage;
+          imgEl.src = staticImageSrc;
+          imgEl.addEventListener('error', () => {
             imgEl.src = defaultImage;
-          };
+          }, { once: true });
           imgEl.alt = itemData.name;
+          applyAnimatedPreview(imgEl, staticImageSrc, itemData.animatedImage);
 
           itemFragment.querySelector('.item-name').textContent = itemData.name;
           itemFragment.querySelector('.item-description').textContent = itemData.description;
