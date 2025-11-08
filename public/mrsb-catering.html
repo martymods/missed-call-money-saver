@@ -369,8 +369,12 @@
       top: 24px;
     }
 
-    .badge-info i {
+    .badge-info .badge-icon {
       font-size: 1.2rem;
+    }
+
+    .badge-info .badge-text {
+      font-size: 0.85rem;
     }
 
     .upload-area {
@@ -420,11 +424,6 @@
       color: var(--deep-pink);
       margin-right: 0.35rem;
       vertical-align: middle;
-    }
-
-    .card-content .item-time-row {
-      color: rgba(0, 0, 0, 0.6);
-      font-weight: 600;
     }
 
     .card-content .price {
@@ -1020,7 +1019,7 @@
       <div class="card menu-card">
         <div class="card-image">
           <img class="item-photo" alt="Food item image">
-          <span class="badge-info"><i class="material-icons">schedule</i><span>Made to order</span></span>
+          <span class="badge-info" aria-live="polite"><i class="material-icons badge-icon" aria-hidden="true">schedule</i><span class="badge-text">Made to order</span></span>
         </div>
         <div class="card-content">
           <div class="item-header">
@@ -1036,8 +1035,7 @@
           <p class="item-description"></p>
           <ul>
             <li class="price"></li>
-            <li class="item-time-row"><i class="material-icons tiny" aria-hidden="true">schedule</i> <span class="item-time"></span></li>
-            <li><i class="material-icons tiny">restaurant</i> <span class="item-category"></span></li>
+            <li><i class="material-icons tiny" aria-hidden="true">restaurant</i> <span class="item-category"></span></li>
           </ul>
           <div class="user-gallery"></div>
         </div>
@@ -1166,6 +1164,10 @@
             name: 'Seafood Pasta Salad',
             price: 8.0,
             time: 'Ready in 10 minutes',
+            badge: {
+              icon: 'ac_unit',
+              text: 'Chilled'
+            },
             description: 'Chilled pasta tossed with shrimp, peppers, and creamy herb dressing.',
             image: 'image/mrsB/seafood_salad.png'
           }
@@ -1226,6 +1228,10 @@
             name: 'Seasonal Layer Cake',
             price: 6.0,
             time: 'Ready in 15 minutes',
+            badge: {
+              icon: 'cake',
+              text: 'Baked today'
+            },
             description: 'Layers of moist cake with rotating seasonal flavors and fillings.',
             image: defaultImage
           }
@@ -1389,6 +1395,26 @@
     };
 
     const formatPrice = (value) => `$${value.toFixed(2)}`;
+
+    const resolveBadgeDetails = (item) => {
+      if (!item) return null;
+      const badge = item.badge || null;
+      if (badge && badge.text) {
+        return {
+          icon: badge.icon || 'info',
+          text: badge.text
+        };
+      }
+
+      if (item.time) {
+        return {
+          icon: 'schedule',
+          text: item.time
+        };
+      }
+
+      return null;
+    };
 
     const attachImageFallback = (imgEl) => {
       const handleError = () => {
@@ -2117,16 +2143,21 @@
           itemFragment.querySelector('.item-name').textContent = itemData.name;
           itemFragment.querySelector('.item-description').textContent = itemData.description;
           itemFragment.querySelector('.price').textContent = formatPrice(itemData.price);
-          const timeEl = itemFragment.querySelector('.item-time');
-          const timeWrapper = timeEl ? timeEl.closest('li') : null;
-          if (timeEl) {
-            if (itemData.time) {
-              timeEl.textContent = itemData.time;
-              if (timeWrapper) {
-                timeWrapper.style.display = '';
+          const badgeEl = itemFragment.querySelector('.badge-info');
+          if (badgeEl) {
+            const iconEl = badgeEl.querySelector('.badge-icon');
+            const textEl = badgeEl.querySelector('.badge-text');
+            const badgeDetails = resolveBadgeDetails(itemData);
+            if (badgeDetails) {
+              if (iconEl) {
+                iconEl.textContent = badgeDetails.icon;
               }
-            } else if (timeWrapper) {
-              timeWrapper.style.display = 'none';
+              if (textEl) {
+                textEl.textContent = badgeDetails.text;
+              }
+              badgeEl.style.display = '';
+            } else {
+              badgeEl.style.display = 'none';
             }
           }
           itemFragment.querySelector('.item-category').textContent = sectionData.category;
