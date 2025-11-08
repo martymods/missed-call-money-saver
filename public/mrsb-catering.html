@@ -369,8 +369,12 @@
       top: 24px;
     }
 
-    .badge-info i {
+    .badge-info .badge-icon {
       font-size: 1.2rem;
+    }
+
+    .badge-info .badge-text {
+      font-size: 0.85rem;
     }
 
     .upload-area {
@@ -414,6 +418,12 @@
     .card-content li {
       font-size: 0.95rem;
       line-height: 1.6;
+    }
+
+    .card-content li .material-icons {
+      color: var(--deep-pink);
+      margin-right: 0.35rem;
+      vertical-align: middle;
     }
 
     .card-content .price {
@@ -557,7 +567,14 @@
       margin: 1.25rem 0 0.5rem;
     }
 
-    .side-option {
+    .drink-options {
+      display: grid;
+      gap: 0.75rem;
+      margin: 1.25rem 0 0.5rem;
+    }
+
+    .side-option,
+    .drink-option {
       align-items: center;
       background: rgba(255, 77, 176, 0.12);
       border-radius: 12px;
@@ -569,7 +586,9 @@
     }
 
     .side-option:hover,
-    .side-option:focus-within {
+    .side-option:focus-within,
+    .drink-option:hover,
+    .drink-option:focus-within {
       background: rgba(215, 15, 100, 0.18);
       transform: translateY(-1px);
     }
@@ -578,7 +597,15 @@
       accent-color: var(--deep-pink);
     }
 
+    .drink-option input[type="radio"] {
+      accent-color: var(--deep-pink);
+    }
+
     .side-option span {
+      font-weight: 600;
+    }
+
+    .drink-option span {
       font-weight: 600;
     }
 
@@ -587,6 +614,14 @@
       font-size: 0.85rem;
       font-weight: 600;
       margin-top: 0.25rem;
+    }
+
+    .drink-warning {
+      color: var(--deep-pink);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 0.25rem;
+      visibility: visible;
     }
 
     .modal-footer .btn.disabled {
@@ -984,7 +1019,7 @@
       <div class="card menu-card">
         <div class="card-image">
           <img class="item-photo" alt="Food item image">
-          <span class="badge-info"><i class="material-icons">schedule</i><span>Made to order</span></span>
+          <span class="badge-info" aria-live="polite"><i class="material-icons badge-icon" aria-hidden="true">schedule</i><span class="badge-text">Made to order</span></span>
         </div>
         <div class="card-content">
           <div class="item-header">
@@ -1000,7 +1035,7 @@
           <p class="item-description"></p>
           <ul>
             <li class="price"></li>
-            <li><i class="material-icons tiny">restaurant</i> <span class="item-category"></span></li>
+            <li><i class="material-icons tiny" aria-hidden="true">restaurant</i> <span class="item-category"></span></li>
           </ul>
           <div class="user-gallery"></div>
         </div>
@@ -1031,6 +1066,18 @@
       <button type="button" class="btn waves-effect waves-light confirm-entree disabled" aria-disabled="true">Add to Cart</button>
     </div>
   </div>
+  <div id="drinkModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="drinkModalTitle" tabindex="-1">
+    <div class="modal-content">
+      <h4 class="modal-title" id="drinkModalTitle">Pick Your Soda</h4>
+      <p class="modal-subtitle">Choose one flavor to add to <span class="drink-modal-item-name"></span>.</p>
+      <div class="drink-options" role="radiogroup" aria-label="Can soda selections"></div>
+      <p class="drink-warning">Select a soda to continue.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-flat cancel-drink">Cancel</button>
+      <button type="button" class="btn waves-effect waves-light confirm-drink disabled" aria-disabled="true">Add to Cart</button>
+    </div>
+  </div>
   <script>
     const defaultImage = 'image/mrsB/mrsbscatering_logo_tran.png';
 
@@ -1042,6 +1089,7 @@
             id: 'fried_catfish',
             name: 'Fried Catfish Dinner',
             price: 13.0,
+            time: 'Ready in 30 minutes',
             description: 'Crispy seasoned catfish fillets served with house-made sides for a soul-soothing feast.',
             image: 'image/mrsB/fried_catfish.png',
             animatedImage: 'image/mrsB/fried_catfish.gif'
@@ -1050,6 +1098,7 @@
             id: 'turkey_wings_over_rice',
             name: 'Turkey Wings over Yellow Rice',
             price: 15.0,
+            time: 'Ready in 45 minutes',
             description: 'Slow-roasted turkey wings smothered in rich gravy and served over fragrant yellow rice.',
             image: 'image/mrsB/turkey_wings_over_rice.png',
             animatedImage: 'image/mrsB/turkey_winng_0.gif'
@@ -1058,6 +1107,7 @@
             id: 'stuffed_salmon_over_rice',
             name: 'Stuffed Salmon over Rice',
             price: 17.0,
+            time: 'Ready in 35 minutes',
             description: 'Tender salmon stuffed with herbs and seafood cream sauce, resting on buttery rice.',
             image: 'image/mrsB/stuffed_salmon_over_rice.png'
           },
@@ -1065,6 +1115,7 @@
             id: 'fried_whtiting',
             name: 'Fried Whiting Plate',
             price: 12.0,
+            time: 'Ready in 25 minutes',
             description: 'Golden fried whiting with Mrs. B’s signature blend of spices and a squeeze of lemon.',
             image: 'image/mrsB/fried_whtiting.png'
           },
@@ -1072,6 +1123,7 @@
             id: 'fried_wingdings',
             name: 'Fried Wingdings',
             price: 11.0,
+            time: 'Ready in 25 minutes',
             description: 'Crispy fried wings tossed in your choice of sauce, paired with classic sides.',
             image: 'image/mrsB/fried_wingdings.png',
             animatedImage: 'image/mrsB/fried_wingdings.gif'
@@ -1085,6 +1137,7 @@
             id: 'greens',
             name: 'Seasoned Collard Greens',
             price: 5.5,
+            time: 'Ready in 15 minutes',
             description: 'Slow-simmered greens infused with smoked turkey and savory spices.',
             image: 'image/mrsB/greens.png',
             animatedImage: 'image/mrsB/greens.gif'
@@ -1093,6 +1146,7 @@
             id: 'baked_mac_and_cheese',
             name: 'Baked Mac & Cheese',
             price: 5.5,
+            time: 'Ready in 25 minutes',
             description: 'Creamy, cheesy macaroni baked until bubbling and topped with golden crust.',
             image: 'image/mrsB/baked_mac_and_cheese.png',
             animatedImage: 'image/mrsB/baked_mac_and_cheese.gif'
@@ -1101,6 +1155,7 @@
             id: 'sweet_potatoes',
             name: 'Candied Sweet Potatoes',
             price: 5.5,
+            time: 'Ready in 20 minutes',
             description: 'Tender sweet potatoes glazed with brown sugar, butter, and warm spices.',
             image: 'image/mrsB/sweet_potatoes.png'
           },
@@ -1108,6 +1163,11 @@
             id: 'seafood_salad',
             name: 'Seafood Pasta Salad',
             price: 8.0,
+            time: 'Ready in 10 minutes',
+            badge: {
+              icon: 'ac_unit',
+              text: 'Chilled'
+            },
             description: 'Chilled pasta tossed with shrimp, peppers, and creamy herb dressing.',
             image: 'image/mrsB/seafood_salad.png'
           }
@@ -1120,15 +1180,27 @@
             id: 'can_soda',
             name: 'Can Soda',
             price: 1.5,
-            description: 'Choice of Cola, Diet Cola, or Lemon-Lime.',
-            image: defaultImage
+            time: 'Ready in 2 minutes',
+            description: 'Choose from Pepsi, Diet Pepsi, or Starry served ice cold.',
+            image: defaultImage,
+            imageOptions: [
+              'image/mrsB/canSoda.png',
+              'image/mrsB/canSoda0.PNG',
+              'image/mrsB/canSoda1.PNG'
+            ],
+            variants: [
+              { id: 'canSoda', label: 'Pepsi' },
+              { id: 'canSoda0', label: 'Diet Pepsi' },
+              { id: 'canSoda1', label: 'Starry' }
+            ]
           },
           {
             id: 'bottled_water',
             name: 'Bottled Water',
             price: 1.25,
+            time: 'Ready in 1 minute',
             description: 'Pure and refreshing bottled water.',
-            image: defaultImage
+            image: 'image/mrsB/bottleWater.PNG'
           }
         ]
       },
@@ -1139,6 +1211,7 @@
             id: 'krazie_pudding_oreo',
             name: 'Krazie Pudding Oreo',
             price: 6.0,
+            time: 'Ready in 10 minutes',
             description: 'Layers of creamy pudding, whipped topping, and crushed Oreo cookies.',
             image: defaultImage
           },
@@ -1146,6 +1219,7 @@
             id: 'banana_pudding_kmaidson',
             name: 'Banana Pudding Kmaidson',
             price: 6.0,
+            time: 'Ready in 10 minutes',
             description: 'Creamy and smooth pudding with hints of vanilla and fresh banana.',
             image: defaultImage
           },
@@ -1153,12 +1227,91 @@
             id: 'cake',
             name: 'Seasonal Layer Cake',
             price: 6.0,
+            time: 'Ready in 15 minutes',
+            badge: {
+              icon: 'cake',
+              text: 'Baked today'
+            },
             description: 'Layers of moist cake with rotating seasonal flavors and fillings.',
             image: defaultImage
           }
         ]
       }
     ];
+
+    const applyDynamicAssets = () => {
+      menuData.forEach((section) => {
+        section.items.forEach((item) => {
+          if (Array.isArray(item.imageOptions) && item.imageOptions.length) {
+            const randomIndex = Math.floor(Math.random() * item.imageOptions.length);
+            item.image = item.imageOptions[randomIndex];
+          }
+        });
+      });
+    };
+
+    const initDrinkModal = () => {
+      if (!drinkModalEl || !drinkConfirmBtn || !drinkOptionsGrid) return;
+
+      ensureModalBackdrop();
+      drinkModalEl.setAttribute('aria-hidden', 'true');
+
+      const closeModal = () => {
+        drinkModalEl.classList.remove('open');
+        drinkModalEl.setAttribute('aria-hidden', 'true');
+        drinkContext = null;
+        resetDrinkModal();
+        hideModalBackdropIfNone();
+      };
+
+      const openModal = () => {
+        showModalBackdrop();
+        drinkModalEl.classList.add('open');
+        drinkModalEl.setAttribute('aria-hidden', 'false');
+        setTimeout(() => {
+          const focusTarget = drinkModalEl.querySelector('input[name="drink_option"]');
+          (focusTarget || drinkConfirmBtn).focus();
+        }, 50);
+      };
+
+      drinkModalInstance = {
+        open: openModal,
+        close: closeModal
+      };
+
+      drinkOptionsGrid.addEventListener('change', (event) => {
+        if (event.target && event.target.name === 'drink_option') {
+          updateDrinkSelectionState();
+        }
+      });
+
+      drinkConfirmBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (!drinkContext) return;
+        const selectedInput = drinkModalEl.querySelector('input[name="drink_option"]:checked');
+        if (!selectedInput) return;
+        const variantLabel = selectedInput.dataset.label || selectedInput.value;
+        addMenuItemToCart(drinkContext.item, drinkContext.imageEl, drinkContext.addBtn, { variant: variantLabel });
+        closeModal();
+      });
+
+      if (drinkCancelBtn) {
+        drinkCancelBtn.addEventListener('click', (event) => {
+          event.preventDefault();
+          closeModal();
+        });
+      }
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && drinkModalEl.classList.contains('open')) {
+          closeModal();
+        }
+      });
+
+      resetDrinkModal();
+    };
+
+    applyDynamicAssets();
 
     const menuContainer = document.getElementById('menuContainer');
     const cartItemsContainer = document.getElementById('cartItems');
@@ -1173,6 +1326,12 @@
     const entreeConfirmBtn = entreeModalEl.querySelector('.confirm-entree');
     const cancelEntreeBtn = entreeModalEl.querySelector('.cancel-entree');
     const selectionWarning = entreeModalEl.querySelector('.selection-warning');
+    const drinkModalEl = document.getElementById('drinkModal');
+    const drinkModalName = drinkModalEl ? drinkModalEl.querySelector('.drink-modal-item-name') : null;
+    const drinkOptionsGrid = drinkModalEl ? drinkModalEl.querySelector('.drink-options') : null;
+    const drinkConfirmBtn = drinkModalEl ? drinkModalEl.querySelector('.confirm-drink') : null;
+    const drinkCancelBtn = drinkModalEl ? drinkModalEl.querySelector('.cancel-drink') : null;
+    const drinkWarning = drinkModalEl ? drinkModalEl.querySelector('.drink-warning') : null;
     const highlightTrack = document.getElementById('highlightTrack');
     const highlightViewport = document.querySelector('.highlight-viewport');
     const highlightPrev = document.querySelector('.highlight-prev');
@@ -1182,6 +1341,8 @@
 
     let entreeModalInstance;
     let entreeContext = null;
+    let drinkModalInstance;
+    let drinkContext = null;
     let modalBackdrop = null;
 
     const sidesOptions = menuData.find((section) => section.category === 'Sides')?.items || [];
@@ -1222,7 +1383,38 @@
       return extras ? `${itemId}::${extras}` : itemId;
     };
 
+    const extractModifiers = (options = {}) => {
+      const modifiers = [];
+      if (Array.isArray(options.sides) && options.sides.length) {
+        modifiers.push(...options.sides.map((side) => String(side)));
+      }
+      if (options.variant) {
+        modifiers.push(String(options.variant));
+      }
+      return modifiers;
+    };
+
     const formatPrice = (value) => `$${value.toFixed(2)}`;
+
+    const resolveBadgeDetails = (item) => {
+      if (!item) return null;
+      const badge = item.badge || null;
+      if (badge && badge.text) {
+        return {
+          icon: badge.icon || 'info',
+          text: badge.text
+        };
+      }
+
+      if (item.time) {
+        return {
+          icon: 'schedule',
+          text: item.time
+        };
+      }
+
+      return null;
+    };
 
     const attachImageFallback = (imgEl) => {
       const handleError = () => {
@@ -1358,14 +1550,28 @@
       if (!Array.isArray(cartItems)) return [];
       return cartItems.map((item) => {
         const modifiers = Array.isArray(item.modifiers) ? item.modifiers : (Array.isArray(item.sides) ? item.sides : []);
-        const normalizedMods = modifiers.map((mod) => String(mod));
+        let displayModifiers = modifiers.map((mod) => String(mod));
+        let variant = typeof item.variant === 'string' && item.variant.trim() ? item.variant.trim() : null;
+        if (!variant) {
+          const sourceItem = flattenMenuItems().find((entry) => entry.id === item.id);
+          if (sourceItem?.variants?.length) {
+            const variantLabels = sourceItem.variants.map((opt) => opt.label);
+            const variantIndex = displayModifiers.findIndex((mod) => variantLabels.includes(mod));
+            if (variantIndex !== -1) {
+              variant = displayModifiers[variantIndex];
+              displayModifiers = displayModifiers.filter((_, idx) => idx !== variantIndex);
+            }
+          }
+        }
+        const keyModifiers = variant ? [...displayModifiers, variant] : [...displayModifiers];
         return {
           id: item.id,
           name: item.name,
           price: Number(item.price) || 0,
           quantity: Number(item.quantity) || 1,
-          modifiers: normalizedMods,
-          cartKey: item.cartKey || buildCartKey(item.id, normalizedMods)
+          modifiers: displayModifiers,
+          cartKey: item.cartKey || buildCartKey(item.id, keyModifiers),
+          variant
         };
       });
     };
@@ -1422,7 +1628,9 @@
     };
 
     const addToCart = (menuItem, options = {}) => {
-      const normalizedMods = Array.isArray(options.sides) ? options.sides.slice() : [];
+      const variantLabel = options.variant ? String(options.variant) : null;
+      const normalizedMods = extractModifiers(options);
+      const sideModifiers = Array.isArray(options.sides) ? options.sides.map((side) => String(side)) : [];
       const cartKey = buildCartKey(menuItem.id, normalizedMods);
       const existing = state.cart.find((item) => item.cartKey === cartKey);
 
@@ -1434,8 +1642,9 @@
           name: menuItem.name,
           price: menuItem.price,
           quantity: 1,
-          modifiers: normalizedMods,
-          cartKey
+          modifiers: sideModifiers,
+          cartKey,
+          variant: variantLabel
         });
       }
 
@@ -1543,7 +1752,8 @@
 
           const nameEl = document.createElement('span');
           nameEl.className = 'cart-name';
-          nameEl.textContent = item.name;
+          const displayName = item.variant ? `${item.name} - ${item.variant}` : item.name;
+          nameEl.textContent = displayName;
           detailWrap.appendChild(nameEl);
 
           if (item.modifiers && item.modifiers.length) {
@@ -1635,17 +1845,84 @@
       updateEntreeSelectionState();
     };
 
+    const isAnyModalOpen = () => {
+      const entreeOpen = entreeModalEl && entreeModalEl.classList.contains('open');
+      const drinkOpen = drinkModalEl && drinkModalEl.classList.contains('open');
+      return Boolean(entreeOpen || drinkOpen);
+    };
+
+    const showModalBackdrop = () => {
+      ensureModalBackdrop();
+      if (modalBackdrop) {
+        modalBackdrop.classList.add('visible');
+      }
+      document.body.classList.add('modal-open');
+    };
+
+    const hideModalBackdropIfNone = () => {
+      if (isAnyModalOpen()) return;
+      if (modalBackdrop) {
+        modalBackdrop.classList.remove('visible');
+      }
+      document.body.classList.remove('modal-open');
+    };
+
     const ensureModalBackdrop = () => {
       if (!modalBackdrop) {
         modalBackdrop = document.createElement('div');
         modalBackdrop.className = 'modal-backdrop';
         modalBackdrop.addEventListener('click', () => {
-          if (entreeModalInstance) {
+          if (entreeModalInstance && entreeModalEl?.classList.contains('open')) {
             entreeModalInstance.close();
+          }
+          if (drinkModalInstance && drinkModalEl?.classList.contains('open')) {
+            drinkModalInstance.close();
           }
         });
         document.body.appendChild(modalBackdrop);
       }
+    };
+
+    const updateDrinkSelectionState = () => {
+      if (!drinkConfirmBtn || !drinkModalEl) return;
+      const selected = drinkModalEl.querySelector('input[name="drink_option"]:checked');
+      const hasSelection = Boolean(selected);
+      drinkConfirmBtn.classList.toggle('disabled', !hasSelection);
+      drinkConfirmBtn.setAttribute('aria-disabled', hasSelection ? 'false' : 'true');
+      if (drinkWarning) {
+        drinkWarning.style.visibility = hasSelection ? 'hidden' : 'visible';
+      }
+    };
+
+    const buildDrinkOptions = (variants = []) => {
+      if (!drinkOptionsGrid) return;
+      drinkOptionsGrid.innerHTML = '';
+      variants.forEach((variant, index) => {
+        const label = document.createElement('label');
+        label.className = 'drink-option';
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'drink_option';
+        const variantId = variant.id || `option-${index + 1}`;
+        const variantLabel = variant.label || variant.name || variantId;
+        input.value = variantId;
+        input.dataset.label = variantLabel;
+        const text = document.createElement('span');
+        text.textContent = variantLabel;
+        label.appendChild(input);
+        label.appendChild(text);
+        drinkOptionsGrid.appendChild(label);
+      });
+      updateDrinkSelectionState();
+    };
+
+    const resetDrinkModal = () => {
+      if (!drinkModalEl) return;
+      const inputs = drinkModalEl.querySelectorAll('input[name="drink_option"]');
+      inputs.forEach((input) => {
+        input.checked = false;
+      });
+      updateDrinkSelectionState();
     };
 
     const openEntreeModal = (itemData, imageEl, addBtn) => {
@@ -1656,9 +1933,22 @@
       entreeModalInstance.open();
     };
 
+    const openDrinkModal = (itemData, imageEl, addBtn) => {
+      if (!drinkModalInstance) return;
+      drinkContext = { item: itemData, imageEl, addBtn };
+      if (drinkModalName) {
+        drinkModalName.textContent = itemData.name;
+      }
+      buildDrinkOptions(itemData.variants || []);
+      resetDrinkModal();
+      drinkModalInstance.open();
+    };
+
     const handleItemSelection = (menuItem, category, imageEl, triggerEl) => {
       if (category === 'Entrées') {
         openEntreeModal(menuItem, imageEl, triggerEl);
+      } else if (menuItem?.variants?.length) {
+        openDrinkModal(menuItem, imageEl, triggerEl);
       } else {
         addMenuItemToCart(menuItem, imageEl, triggerEl);
       }
@@ -1853,6 +2143,23 @@
           itemFragment.querySelector('.item-name').textContent = itemData.name;
           itemFragment.querySelector('.item-description').textContent = itemData.description;
           itemFragment.querySelector('.price').textContent = formatPrice(itemData.price);
+          const badgeEl = itemFragment.querySelector('.badge-info');
+          if (badgeEl) {
+            const iconEl = badgeEl.querySelector('.badge-icon');
+            const textEl = badgeEl.querySelector('.badge-text');
+            const badgeDetails = resolveBadgeDetails(itemData);
+            if (badgeDetails) {
+              if (iconEl) {
+                iconEl.textContent = badgeDetails.icon;
+              }
+              if (textEl) {
+                textEl.textContent = badgeDetails.text;
+              }
+              badgeEl.style.display = '';
+            } else {
+              badgeEl.style.display = 'none';
+            }
+          }
           itemFragment.querySelector('.item-category').textContent = sectionData.category;
 
           const ratingWrapper = itemFragment.querySelector('.rating-control');
@@ -1883,7 +2190,7 @@
       });
     };
 
-    const initModal = () => {
+    const initEntreeModal = () => {
       if (!entreeModalEl || !entreeConfirmBtn || !entreeSidesGrid) return;
 
       ensureModalBackdrop();
@@ -1892,22 +2199,15 @@
       const closeModal = () => {
         entreeModalEl.classList.remove('open');
         entreeModalEl.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('modal-open');
-        if (modalBackdrop) {
-          modalBackdrop.classList.remove('visible');
-        }
         entreeContext = null;
         resetEntreeModal();
+        hideModalBackdropIfNone();
       };
 
       const openModal = () => {
-        ensureModalBackdrop();
+        showModalBackdrop();
         entreeModalEl.classList.add('open');
         entreeModalEl.setAttribute('aria-hidden', 'false');
-        if (modalBackdrop) {
-          modalBackdrop.classList.add('visible');
-        }
-        document.body.classList.add('modal-open');
         setTimeout(() => {
           const focusTarget = entreeModalEl.querySelector('input[name="entree_side"]');
           (focusTarget || entreeConfirmBtn).focus();
@@ -1946,6 +2246,8 @@
           closeModal();
         }
       });
+
+      resetEntreeModal();
     };
 
     const initNav = () => {
@@ -1978,15 +2280,15 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       initState();
-      buildSidesOptions();
-      resetEntreeModal();
-      initModal();
-      renderHighlights();
-      initHighlightCarousel();
-      renderMenu();
       initializeMenuTabs();
-      updateCartDisplay();
+      renderMenu();
+      buildSidesOptions();
+      initEntreeModal();
+      initDrinkModal();
+      initHighlightCarousel();
+      renderHighlights();
       initNav();
+      updateCartDisplay();
     });
   </script>
 </body>
