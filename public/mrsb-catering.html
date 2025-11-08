@@ -728,6 +728,199 @@
       outline: none;
     }
 
+    .doordash-reviews {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.08);
+      margin-top: 2.5rem;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .doordash-reviews::before {
+      background: linear-gradient(135deg, rgba(215, 15, 100, 0.08), rgba(255, 77, 176, 0.12));
+      border-radius: 16px;
+      content: "";
+      inset: 0;
+      position: absolute;
+      z-index: -1;
+    }
+
+    .doordash-reviews__header {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .doordash-reviews__title {
+      margin: 0;
+    }
+
+    .doordash-reviews__meta {
+      color: rgba(43, 43, 45, 0.7);
+      font-weight: 600;
+      margin-top: 0.35rem;
+    }
+
+    .doordash-reviews__cta {
+      align-items: center;
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .doordash-reviews__cta a {
+      align-items: center;
+      border-radius: 999px;
+      color: var(--deep-pink);
+      display: inline-flex;
+      font-weight: 700;
+      gap: 0.35rem;
+      padding: 0.45rem 0.9rem;
+      transition: background 0.2s ease;
+    }
+
+    .doordash-reviews__cta a:hover,
+    .doordash-reviews__cta a:focus {
+      background: rgba(215, 15, 100, 0.08);
+      outline: none;
+    }
+
+    .doordash-rating {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.75rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .doordash-rating__dial {
+      align-items: center;
+      background: radial-gradient(circle at center, #ffffff 0%, #fdf1f8 100%);
+      border: 2px solid rgba(215, 15, 100, 0.08);
+      border-radius: 50%;
+      box-shadow: 0 12px 25px rgba(215, 15, 100, 0.15);
+      color: var(--deep-pink);
+      display: flex;
+      flex-direction: column;
+      font-weight: 700;
+      height: 120px;
+      justify-content: center;
+      width: 120px;
+    }
+
+    .doordash-rating__dial span {
+      line-height: 1.1;
+    }
+
+    .doordash-rating__dial .score {
+      font-size: 2.75rem;
+    }
+
+    .doordash-rating__details {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .doordash-rating__details .stars {
+      color: #e8c500;
+      display: inline-flex;
+      gap: 0.15rem;
+    }
+
+    .doordash-reviews__list {
+      display: grid;
+      gap: 1.25rem;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+
+    .review-card {
+      background: #ffffff;
+      border: 1px solid rgba(43, 43, 45, 0.08);
+      border-radius: 14px;
+      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      padding: 1.25rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .review-card:hover,
+    .review-card:focus-within {
+      box-shadow: 0 18px 36px rgba(0, 0, 0, 0.1);
+      transform: translateY(-4px);
+    }
+
+    .review-card__header {
+      align-items: center;
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .review-card__avatar {
+      align-items: center;
+      background: rgba(215, 15, 100, 0.1);
+      border-radius: 50%;
+      color: var(--deep-pink);
+      display: inline-flex;
+      font-weight: 700;
+      height: 42px;
+      justify-content: center;
+      text-transform: uppercase;
+      width: 42px;
+    }
+
+    .review-card__name {
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .review-card__meta {
+      color: rgba(43, 43, 45, 0.6);
+      font-size: 0.85rem;
+      margin-top: 0.15rem;
+    }
+
+    .review-card__rating {
+      color: #e8c500;
+      display: inline-flex;
+      gap: 0.1rem;
+    }
+
+    .review-card__body {
+      color: rgba(43, 43, 45, 0.85);
+      font-size: 0.95rem;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .doordash-reviews {
+        padding: 1.5rem;
+      }
+
+      .doordash-rating {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .doordash-reviews__list {
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(260px, 1fr);
+        overflow-x: auto;
+        padding-bottom: 0.75rem;
+      }
+
+      .doordash-reviews__list::after {
+        content: "";
+        display: block;
+        width: 1px;
+      }
+    }
+
     .highlight-section {
       margin: 2.5rem 0 2rem;
     }
@@ -978,6 +1171,127 @@
             <button type="button" class="carousel-nav highlight-next" aria-label="View more highlights">
               <span class="material-icons" aria-hidden="true">chevron_right</span>
             </button>
+          </div>
+        </section>
+        <section class="doordash-reviews" aria-labelledby="doordashReviewsTitle">
+          <div class="doordash-reviews__header">
+            <div>
+              <h2 id="doordashReviewsTitle" class="doordash-reviews__title">DoorDash Reviews</h2>
+              <p class="doordash-reviews__meta">50+ ratings • 10+ public reviews</p>
+            </div>
+            <div class="doordash-reviews__cta">
+              <button type="button" class="btn-flat" aria-label="Add a review on DoorDash">
+                <i class="material-icons" aria-hidden="true">rate_review</i>
+                Add Review
+              </button>
+              <a href="https://www.doordash.com/reviews/store/35300953/" target="_blank" rel="noopener noreferrer">
+                See All
+                <i class="material-icons" aria-hidden="true">north_east</i>
+              </a>
+            </div>
+          </div>
+          <div class="doordash-rating">
+            <div class="doordash-rating__dial" aria-hidden="true">
+              <span class="score">4.4</span>
+              <span>of 5</span>
+            </div>
+            <div class="doordash-rating__details">
+              <div class="stars" aria-label="Overall rating 4.4 out of 5 stars">
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star_half</i>
+              </div>
+              <p class="doordash-reviews__meta">Loved by DoorDash diners this month</p>
+            </div>
+          </div>
+          <div class="doordash-reviews__list" role="list">
+            <article class="review-card" role="listitem">
+              <div class="review-card__header">
+                <span class="review-card__avatar" aria-hidden="true">B</span>
+                <div>
+                  <p class="review-card__name">Ben H</p>
+                  <p class="review-card__meta">3 contributions • DoorDash order • 10/21/25</p>
+                </div>
+              </div>
+              <div class="review-card__rating" aria-label="Rated 5 out of 5 stars">
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+              </div>
+              <p class="review-card__body">My second time ordering and it was amazing! The stuffed salmon and wing dings were both sooo flavorful! The baked mac and blueberry cornbread were so delicious! I can't wait to try more! The owner is so nice too and always has amazing deals.</p>
+            </article>
+            <article class="review-card" role="listitem">
+              <div class="review-card__header">
+                <span class="review-card__avatar" aria-hidden="true">J</span>
+                <div>
+                  <p class="review-card__name">Jay T</p>
+                  <p class="review-card__meta">2 contributions • DoorDash order • 10/22/25</p>
+                </div>
+              </div>
+              <div class="review-card__rating" aria-label="Rated 4 out of 5 stars">
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star_half</i>
+              </div>
+              <p class="review-card__body">The fish was so good—large portions and super fresh. We loved the rice and sides too! Only knocked a star because we received potato salad instead of seafood salad, but everything still tasted great.</p>
+            </article>
+            <article class="review-card" role="listitem">
+              <div class="review-card__header">
+                <span class="review-card__avatar" aria-hidden="true">P</span>
+                <div>
+                  <p class="review-card__name">Patrice H</p>
+                  <p class="review-card__meta">3 contributions • DoorDash order • 10/23/25</p>
+                </div>
+              </div>
+              <div class="review-card__rating" aria-label="Rated 4 out of 5 stars">
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star_half</i>
+              </div>
+              <p class="review-card__body">Second time ordering and the food was amazing again. The string beans and cabbage were perfect! I only docked a star because my salmon was a little overdone, but it was still delicious.</p>
+            </article>
+            <article class="review-card" role="listitem">
+              <div class="review-card__header">
+                <span class="review-card__avatar" aria-hidden="true">D</span>
+                <div>
+                  <p class="review-card__name">Dominique B</p>
+                  <p class="review-card__meta">4 contributions • DoorDash review • 09/25/25</p>
+                </div>
+              </div>
+              <div class="review-card__rating" aria-label="Rated 4 out of 5 stars">
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star_half</i>
+              </div>
+              <p class="review-card__body">I've been a fan since the Race Street days! Portions felt a little smaller this time but the turkey wings were tender and tasty. Yams are super sweet, so be ready for dessert-level goodness.</p>
+            </article>
+            <article class="review-card" role="listitem">
+              <div class="review-card__header">
+                <span class="review-card__avatar" aria-hidden="true">A</span>
+                <div>
+                  <p class="review-card__name">Angela N</p>
+                  <p class="review-card__meta">1 contribution • DoorDash order • 10/15/25</p>
+                </div>
+              </div>
+              <div class="review-card__rating" aria-label="Rated 5 out of 5 stars">
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+                <i class="material-icons" aria-hidden="true">star</i>
+              </div>
+              <p class="review-card__body">So glad I trusted the reviews! The hot chili wings with mac and sweet potatoes were incredible, and the fried catfish with greens and yellow rice was a hit with the whole family. We'll definitely be back.</p>
+            </article>
           </div>
         </section>
         <div class="menu-tabs" role="navigation" aria-label="Menu categories">
