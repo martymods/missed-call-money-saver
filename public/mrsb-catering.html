@@ -454,6 +454,9 @@
       background: #ffffff;
       border-radius: 16px;
       box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
       margin-top: 3rem;
       padding: 2rem;
       position: sticky;
@@ -525,18 +528,26 @@
 
     .total-row {
       border-top: 1px solid rgba(0,0,0,0.08);
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
       display: flex;
       justify-content: space-between;
       font-weight: 700;
       color: var(--charcoal);
+      padding-top: 1.5rem;
+    }
+
+    .cart-panel #cartItems {
+      flex: 1 1 auto;
     }
 
     .checkout-btn {
+      align-items: center;
       background: linear-gradient(135deg, var(--deep-pink), var(--primary-pink));
       border-radius: 100px;
-      margin-top: 1.5rem;
+      display: inline-flex;
+      justify-content: center;
+      margin-top: 0;
+      min-height: 52px;
+      width: 100%;
     }
 
     .sides-grid {
@@ -858,31 +869,14 @@
     }
 
     @media (max-width: 600px) {
-      .card.menu-card .card-image {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.6rem;
-        padding: 12px 12px 0;
-      }
-
       .card.menu-card .card-image img {
         height: 180px;
-        margin: 0;
-      }
-
-      .card.menu-card .card-title {
-        position: static;
-        bottom: auto !important;
-        left: auto;
-        margin: 0.2rem 0 0;
-        align-self: flex-start;
       }
 
       .upload-area {
-        position: static;
-        align-self: flex-start;
-        margin: 0;
+        top: auto;
+        bottom: 16px;
+        right: 16px;
       }
 
       .card-action {
@@ -1851,35 +1845,6 @@
           itemFragment.querySelector('.item-description').textContent = itemData.description;
           itemFragment.querySelector('.price').textContent = formatPrice(itemData.price);
           itemFragment.querySelector('.item-category').textContent = sectionData.category;
-
-          const badgeLabel = itemFragment.querySelector('.badge-info span:last-child');
-          const badgeIcon = itemFragment.querySelector('.badge-info i');
-          if (badgeLabel) {
-            let statusText = 'Made to order';
-            let iconText = 'schedule';
-
-            switch (sectionData.category) {
-              case 'Entrées':
-                statusText = '39 minutes';
-                break;
-              case 'Sides':
-                statusText = '5 minutes';
-                break;
-              case 'Drinks':
-                statusText = 'Ready now';
-                iconText = 'flash_on';
-                break;
-              case 'Desserts':
-              default:
-                statusText = 'Made to order';
-                break;
-            }
-
-            badgeLabel.textContent = statusText;
-            if (badgeIcon) {
-              badgeIcon.textContent = iconText;
-            }
-          }
 
           const ratingWrapper = itemFragment.querySelector('.rating-control');
           ratingWrapper.querySelector('.rating-count').textContent = '(0)';
