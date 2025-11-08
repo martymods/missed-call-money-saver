@@ -858,14 +858,31 @@
     }
 
     @media (max-width: 600px) {
+      .card.menu-card .card-image {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 12px 12px 0;
+      }
+
       .card.menu-card .card-image img {
         height: 180px;
+        margin: 0;
+      }
+
+      .card.menu-card .card-title {
+        position: static;
+        bottom: auto !important;
+        left: auto;
+        margin: 0.2rem 0 0;
+        align-self: flex-start;
       }
 
       .upload-area {
-        top: auto;
-        bottom: 16px;
-        right: 16px;
+        position: static;
+        align-self: flex-start;
+        margin: 0;
       }
 
       .card-action {
@@ -1834,6 +1851,35 @@
           itemFragment.querySelector('.item-description').textContent = itemData.description;
           itemFragment.querySelector('.price').textContent = formatPrice(itemData.price);
           itemFragment.querySelector('.item-category').textContent = sectionData.category;
+
+          const badgeLabel = itemFragment.querySelector('.badge-info span:last-child');
+          const badgeIcon = itemFragment.querySelector('.badge-info i');
+          if (badgeLabel) {
+            let statusText = 'Made to order';
+            let iconText = 'schedule';
+
+            switch (sectionData.category) {
+              case 'Entrées':
+                statusText = '39 minutes';
+                break;
+              case 'Sides':
+                statusText = '5 minutes';
+                break;
+              case 'Drinks':
+                statusText = 'Ready now';
+                iconText = 'flash_on';
+                break;
+              case 'Desserts':
+              default:
+                statusText = 'Made to order';
+                break;
+            }
+
+            badgeLabel.textContent = statusText;
+            if (badgeIcon) {
+              badgeIcon.textContent = iconText;
+            }
+          }
 
           const ratingWrapper = itemFragment.querySelector('.rating-control');
           ratingWrapper.querySelector('.rating-count').textContent = '(0)';
