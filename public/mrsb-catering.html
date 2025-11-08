@@ -1204,33 +1204,106 @@
 
     const formatPrice = (value) => `$${value.toFixed(2)}`;
 
-    const applyAnimatedPreview = (imageEl, staticSrc, animatedSrc) => {
+    const attachImageFallback = (imgEl) => {
+      const handleError = () => {
+        imgEl.removeEventListener('error', handleError);
+        imgEl.src = defaultImage;
+      };
+
+      imgEl.addEventListener('error', handleError, { once: true });
+      return handleError;
+    };
+
+    const buildAnimatedSources = (staticSrc, animatedHint) => {
+      const sources = [];
+      const seen = new Set();
+
+      const addSource = (value) => {
+        if (!value) return;
+        if (seen.has(value)) return;
+        seen.add(value);
+        sources.push(value);
+      };
+
+      addSource(animatedHint);
+
+      if (staticSrc) {
+        const sanitizedStatic = staticSrc.split('?')[0];
+        const extensionPattern = /\.(png|jpe?g|webp|avif)$/i;
+        if (extensionPattern.test(sanitizedStatic)) {
+          addSource(sanitizedStatic.replace(extensionPattern, '.gif'));
+        }
+
+        const lastSlash = sanitizedStatic.lastIndexOf('/');
+        const baseDir = lastSlash >= 0 ? sanitizedStatic.slice(0, lastSlash + 1) : '';
+        const fileName = lastSlash >= 0 ? sanitizedStatic.slice(lastSlash + 1) : sanitizedStatic;
+        const baseName = fileName.replace(/\.[^/.]+$/, '');
+
+        if (baseName) {
+          addSource(`${baseDir}${baseName}.gif`);
+          addSource(`${baseDir}${baseName}_animated.gif`);
+          addSource(`${baseDir}${baseName}-animated.gif`);
+          addSource(`${baseDir}${baseName}_0.gif`);
+          addSource(`${baseDir}${baseName}-0.gif`);
+          addSource(`image/mrsB/${baseName}.gif`);
+          addSource(`${baseName}.gif`);
+        }
+      }
+
+      return sources;
+    };
+
+    const applyAnimatedPreview = (imageEl, staticSrc, animatedSrc, initialErrorHandler) => {
       if (!imageEl || !animatedSrc) return;
 
-      let swapped = false;
+      const candidates = buildAnimatedSources(staticSrc, animatedSrc);
+      if (!candidates.length) return;
+
       let timerId = null;
 
-      const revertOnError = () => {
-        imageEl.removeEventListener('error', revertOnError);
-        imageEl.src = staticSrc;
+      const restoreInitialHandler = () => {
+        if (initialErrorHandler) {
+          imageEl.addEventListener('error', initialErrorHandler, { once: true });
+        }
       };
 
-      const swapToAnimated = () => {
-        if (swapped) return;
-        swapped = true;
-        imageEl.addEventListener('error', revertOnError, { once: true });
-        imageEl.src = animatedSrc;
+      const attemptSwap = (index) => {
+        if (index >= candidates.length) {
+          restoreInitialHandler();
+          imageEl.src = staticSrc;
+          return;
+        }
+
+        const candidate = candidates[index];
+
+        const handleSwapError = () => {
+          imageEl.removeEventListener('load', handleSwapLoad);
+          attemptSwap(index + 1);
+        };
+
+        const handleSwapLoad = () => {
+          imageEl.removeEventListener('error', handleSwapError);
+        };
+
+        imageEl.addEventListener('error', handleSwapError, { once: true });
+        imageEl.addEventListener('load', handleSwapLoad, { once: true });
+        imageEl.src = candidate;
       };
 
-      const startTimer = () => {
-        if (swapped || timerId) return;
-        timerId = setTimeout(swapToAnimated, 2000);
+      const beginSwap = () => {
+        if (timerId) return;
+        timerId = setTimeout(() => {
+          if (initialErrorHandler) {
+            imageEl.removeEventListener('error', initialErrorHandler);
+          }
+          attemptSwap(0);
+        }, 2000);
       };
 
-      if (imageEl.complete) {
-        startTimer();
+      if (imageEl.complete && imageEl.naturalWidth > 0) {
+        beginSwap();
       } else {
-        imageEl.addEventListener('load', startTimer, { once: true });
+        imageEl.addEventListener('load', beginSwap, { once: true });
       }
     };
 
@@ -1633,10 +1706,8 @@
         const staticImageSrc = item.image || defaultImage;
         image.src = staticImageSrc;
         image.alt = item.name;
-        image.addEventListener('error', () => {
-          image.src = defaultImage;
-        }, { once: true });
-        applyAnimatedPreview(image, staticImageSrc, item.animatedImage);
+        const highlightErrorHandler = attachImageFallback(image);
+        applyAnimatedPreview(image, staticImageSrc, item.animatedImage, highlightErrorHandler);
         image.tabIndex = 0;
         image.setAttribute('role', 'button');
         image.setAttribute('aria-label', `Add ${item.name} to cart`);
@@ -1755,11 +1826,9 @@
           const imgEl = itemFragment.querySelector('.item-photo');
           const staticImageSrc = itemData.image || defaultImage;
           imgEl.src = staticImageSrc;
-          imgEl.addEventListener('error', () => {
-            imgEl.src = defaultImage;
-          }, { once: true });
+          const itemErrorHandler = attachImageFallback(imgEl);
           imgEl.alt = itemData.name;
-          applyAnimatedPreview(imgEl, staticImageSrc, itemData.animatedImage);
+          applyAnimatedPreview(imgEl, staticImageSrc, itemData.animatedImage, itemErrorHandler);
 
           itemFragment.querySelector('.item-name').textContent = itemData.name;
           itemFragment.querySelector('.item-description').textContent = itemData.description;
