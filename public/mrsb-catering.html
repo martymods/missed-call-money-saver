@@ -10,8 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link
     rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha512-mbLyon7FHheexM2WiwxupCSvJzpuG1HsfrNcrediOYM/qfNwCuWHa3gwxM/H2ymlk/wEYBLETymFcp2hWsyaw=="
+    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   >
   <style>
@@ -767,14 +767,25 @@
       justify-content: center;
     }
 
-    .total-row {
+    .total-breakdown {
       border-top: 1px solid rgba(0,0,0,0.08);
       margin-top: 1.5rem;
       padding-top: 1.5rem;
+      display: grid;
+      gap: 0.6rem;
+    }
+
+    .total-row {
       display: flex;
       justify-content: space-between;
-      font-weight: 700;
+      align-items: baseline;
+      font-weight: 600;
       color: var(--charcoal);
+    }
+
+    .total-row--grand {
+      font-size: 1.1rem;
+      font-weight: 700;
     }
 
     .checkout-btn {
@@ -785,6 +796,95 @@
       width: 100%;
       margin-top: 1.5rem;
       padding: 0.85rem 1.4rem;
+    }
+
+    .tip-section {
+      margin-top: 1.5rem;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .tip-section[hidden] {
+      display: none;
+    }
+
+    .tip-section h4 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .tip-note {
+      margin: 0;
+      font-size: 0.85rem;
+      color: rgba(0, 0, 0, 0.65);
+      font-weight: 600;
+    }
+
+    .tip-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .tip-button {
+      background: rgba(215, 15, 100, 0.12);
+      border: none;
+      border-radius: 999px;
+      color: var(--deep-pink);
+      cursor: pointer;
+      font-weight: 600;
+      padding: 0.45rem 0.95rem;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .tip-button:hover,
+    .tip-button:focus {
+      background: rgba(215, 15, 100, 0.22);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .tip-button.is-active {
+      background: linear-gradient(135deg, var(--deep-pink), var(--primary-pink));
+      color: #ffffff;
+      box-shadow: 0 10px 20px rgba(215, 15, 100, 0.18);
+    }
+
+    .custom-tip-container {
+      display: grid;
+      gap: 0.4rem;
+    }
+
+    .custom-tip-container[hidden] {
+      display: none;
+    }
+
+    .custom-tip-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.7);
+    }
+
+    .custom-tip-input {
+      display: flex;
+      align-items: center;
+      border: 1px solid rgba(215, 15, 100, 0.3);
+      border-radius: 999px;
+      padding: 0.35rem 0.65rem;
+      gap: 0.35rem;
+    }
+
+    .custom-tip-input span {
+      font-weight: 700;
+      color: var(--deep-pink);
+    }
+
+    .custom-tip-input input {
+      border: none;
+      font: inherit;
+      width: 100%;
+      background: transparent;
+      outline: none;
     }
 
     .sides-grid {
@@ -1843,7 +1943,7 @@
                 <select id="scheduleSelect" aria-describedby="fulfilmentStatus"></select>
               </div>
               <div class="delivery-fields" id="deliveryFields" hidden>
-                <p class="delivery-note">Delivery is available within 10 miles of 24 S Springfield Rd, Clifton Heights, PA.</p>
+                <p class="delivery-note">Delivery is available within 50 miles of 24 S Springfield Rd, Clifton Heights, PA.</p>
                 <div class="field-group">
                   <label for="deliveryName">Full name</label>
                   <input type="text" id="deliveryName" name="deliveryName" autocomplete="name" placeholder="Your name">
@@ -1882,21 +1982,49 @@
                     <i class="material-icons" aria-hidden="true">my_location</i>
                     Use my location
                   </button>
-                  <button type="button" class="btn-flat" id="calculateDeliveryBtn">
-                    <i class="material-icons" aria-hidden="true">map</i>
-                    Calculate delivery distance
-                  </button>
                 </div>
                 <div class="delivery-map-wrapper" id="deliveryMapWrapper" hidden>
                   <div id="deliveryMap" aria-label="Delivery map showing the route"></div>
                   <p class="delivery-distance-summary" id="deliverySummary"></p>
                 </div>
               </div>
+              <div class="tip-section" id="tipSection" hidden>
+                <h4>Tip your driver</h4>
+                <p class="tip-note">100% of tips go directly to your delivery driver.</p>
+                <div class="tip-buttons" role="group" aria-label="Choose a delivery tip">
+                  <button type="button" class="tip-button" data-tip="0">No tip</button>
+                  <button type="button" class="tip-button" data-tip="0.15">15%</button>
+                  <button type="button" class="tip-button" data-tip="0.2">20%</button>
+                  <button type="button" class="tip-button" data-tip="0.25">25%</button>
+                  <button type="button" class="tip-button" data-tip="custom">Custom</button>
+                </div>
+                <div class="custom-tip-container" id="customTipContainer" hidden>
+                  <label for="customTipInput" class="custom-tip-label">Enter custom tip amount</label>
+                  <div class="custom-tip-input">
+                    <span aria-hidden="true">$</span>
+                    <input type="number" id="customTipInput" name="customTipInput" min="0" step="0.01" inputmode="decimal" value="0">
+                  </div>
+                </div>
+              </div>
             </section>
             <div id="cartItems"></div>
-            <div class="total-row">
-              <span>Total</span>
-              <span id="cartTotal">$0.00</span>
+            <div class="total-breakdown">
+              <div class="total-row">
+                <span>Subtotal</span>
+                <span id="cartSubtotal">$0.00</span>
+              </div>
+              <div class="total-row" id="deliveryFeeRow" hidden>
+                <span>Delivery fee</span>
+                <span id="deliveryFeeAmount">$0.00</span>
+              </div>
+              <div class="total-row" id="tipRow" hidden>
+                <span>Tip</span>
+                <span id="tipAmount">$0.00</span>
+              </div>
+              <div class="total-row total-row--grand">
+                <span>Total</span>
+                <span id="cartTotal">$0.00</span>
+              </div>
             </div>
             <a href="checkout.html" class="waves-effect waves-light btn-large checkout-btn"><i class="material-icons left">shopping_cart</i>Proceed to Checkout</a>
           </aside>
@@ -1977,8 +2105,8 @@
     </div>
   </div>
   <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha512-vuL0AklHtO4Zwzp1KimG++HjMATkUMlzUxr87hc7Z9eczsQnUnxE27XGr0C+MEY0S8NxV+UEi3x2hFifOLn1Pg=="
+    src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j7kGStG3hY57dCtmw2SleqU9MELyTq8HXbRMwY8="
     crossorigin=""
   ></script>
   <script>
@@ -2009,14 +2137,19 @@
       6: null,
     };
 
-    const DELIVERY_DISTANCE_LIMIT_MILES = 10;
+    const DELIVERY_DISTANCE_LIMIT_MILES = 50;
     const DELIVERY_FEE_BRACKETS = [
-      { max: 0.7, amount: 3 },
-      { max: 2, amount: 5 },
-      { max: 4, amount: 7.99 },
-      { max: 6, amount: 11.99 },
-      { max: 8, amount: 17.99 },
-      { max: 10, amount: 25.99 },
+      { max: 1, amount: 3 },
+      { max: 2.5, amount: 4.5 },
+      { max: 4, amount: 6.5 },
+      { max: 5.5, amount: 8.5 },
+      { max: 7, amount: 10.5 },
+      { max: 10, amount: 15 },
+      { max: 15, amount: 30 },
+      { max: 20, amount: 45 },
+      { max: 30, amount: 100 },
+      { max: 40, amount: 150 },
+      { max: 50, amount: 200 },
     ];
 
     const menuData = [
@@ -2279,7 +2412,15 @@
     const deliveryMapContainer = document.getElementById('deliveryMap');
     const deliverySummaryEl = document.getElementById('deliverySummary');
     const useLocationBtn = document.getElementById('useLocationBtn');
-    const calculateDeliveryBtn = document.getElementById('calculateDeliveryBtn');
+    const tipSectionEl = document.getElementById('tipSection');
+    const tipButtons = tipSectionEl ? Array.from(tipSectionEl.querySelectorAll('.tip-button')) : [];
+    const customTipContainer = document.getElementById('customTipContainer');
+    const customTipInput = document.getElementById('customTipInput');
+    const cartSubtotalEl = document.getElementById('cartSubtotal');
+    const deliveryFeeRow = document.getElementById('deliveryFeeRow');
+    const deliveryFeeAmountEl = document.getElementById('deliveryFeeAmount');
+    const tipRow = document.getElementById('tipRow');
+    const tipAmountEl = document.getElementById('tipAmount');
     const entreeModalEl = document.getElementById('entreeModal');
     const entreeModalName = entreeModalEl.querySelector('.modal-item-name');
     const entreeSidesGrid = entreeModalEl.querySelector('.sides-grid');
@@ -2362,6 +2503,12 @@
         fee: 0,
         withinRange: false,
         needsLocation: true,
+      },
+      tip: {
+        type: 'none',
+        percentage: 0,
+        customAmount: 0,
+        amount: 0,
       }
     };
 
@@ -2372,6 +2519,7 @@
     let deliveryRouteLine = null;
     let deliveryMapReady = false;
     let pendingGeocodeController = null;
+    let addressGeocodeTimeout = null;
     const geocodeCache = new Map();
 
     const templates = {
@@ -2402,7 +2550,916 @@
       return modifiers;
     };
 
-    const formatPrice = (value) => `$${value.toFixed(2)}`;
+    const roundToCents = (value) => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return 0;
+      return Math.round(numeric * 100) / 100;
+    };
+
+    const formatPrice = (value) => {
+      const amount = Number.isFinite(value) ? value : 0;
+      return `$${amount.toFixed(2)}`;
+    };
+
+    const getCartSubtotal = () => roundToCents(
+      state.cart.reduce((sum, item) => {
+        const price = Number(item.price) || 0;
+        const quantity = Number(item.quantity) || 0;
+        return sum + (price * quantity);
+      }, 0)
+    );
+
+    const updateCustomTipLabel = () => {
+      if (!tipButtons.length) return;
+      const customButton = tipButtons.find((button) => button.dataset.tip === 'custom');
+      if (!customButton) return;
+      const amount = roundToCents(fulfilmentState.tip.customAmount || 0);
+      customButton.textContent = amount > 0 ? `Custom (${formatPrice(amount)})` : 'Custom';
+    };
+
+    const updateCartTotals = () => {
+      if (!cartTotalEl || !cartSubtotalEl) return;
+      const subtotal = getCartSubtotal();
+      cartSubtotalEl.textContent = formatPrice(subtotal);
+
+      const isDelivery = fulfilmentState.mode === 'delivery';
+      const quote = fulfilmentState.deliveryQuote || {};
+
+      let deliveryFee = 0;
+      if (deliveryFeeRow) {
+        deliveryFeeRow.hidden = !isDelivery;
+      }
+      if (isDelivery && deliveryFeeAmountEl) {
+        if (!quote.needsLocation && quote.withinRange && Number.isFinite(quote.fee)) {
+          deliveryFee = roundToCents(quote.fee);
+          deliveryFeeAmountEl.textContent = formatPrice(deliveryFee);
+        } else {
+          deliveryFeeAmountEl.textContent = '—';
+        }
+      } else if (deliveryFeeAmountEl) {
+        deliveryFeeAmountEl.textContent = formatPrice(0);
+      }
+
+      let tipAmount = 0;
+      const hasSubtotal = subtotal > 0;
+      if (isDelivery && hasSubtotal) {
+        if (fulfilmentState.tip.type === 'percentage' && Number.isFinite(fulfilmentState.tip.percentage)) {
+          tipAmount = roundToCents(subtotal * fulfilmentState.tip.percentage);
+        } else if (fulfilmentState.tip.type === 'custom') {
+          tipAmount = roundToCents(fulfilmentState.tip.customAmount || 0);
+        }
+      } else {
+        fulfilmentState.tip.amount = 0;
+      }
+
+      tipAmount = Math.max(0, tipAmount);
+      fulfilmentState.tip.amount = tipAmount;
+
+      if (tipRow) {
+        tipRow.hidden = !isDelivery;
+      }
+      if (tipAmountEl) {
+        tipAmountEl.textContent = formatPrice(tipAmount);
+      }
+
+      const total = roundToCents(subtotal + deliveryFee + tipAmount);
+      cartTotalEl.textContent = formatPrice(total);
+    };
+
+    const applyTipStateToUI = () => {
+      if (!tipSectionEl) return;
+      const isDelivery = fulfilmentState.mode === 'delivery';
+      tipSectionEl.hidden = !isDelivery;
+      updateCustomTipLabel();
+
+      tipButtons.forEach((button) => {
+        if (!isDelivery) {
+          button.classList.remove('is-active');
+          button.setAttribute('aria-pressed', 'false');
+          return;
+        }
+        const value = button.dataset.tip;
+        let isActive = false;
+        if (value === 'custom') {
+          isActive = fulfilmentState.tip.type === 'custom';
+        } else if (value === '0') {
+          isActive = fulfilmentState.tip.type === 'none';
+        } else {
+          const numeric = Number(value);
+          isActive = fulfilmentState.tip.type === 'percentage' && Number.isFinite(numeric)
+            && Math.abs(numeric - fulfilmentState.tip.percentage) < 0.0001;
+        }
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+
+      if (customTipContainer) {
+        const showCustom = isDelivery && fulfilmentState.tip.type === 'custom';
+        customTipContainer.hidden = !showCustom;
+      }
+
+      if (customTipInput && (document.activeElement !== customTipInput)) {
+        const amount = roundToCents(fulfilmentState.tip.customAmount || 0);
+        customTipInput.value = amount.toFixed(2);
+      }
+    };
+
+    const setTipSelection = (type, value = 0) => {
+      if (type === 'percentage') {
+        const percentage = Number(value) || 0;
+        fulfilmentState.tip.type = percentage > 0 ? 'percentage' : 'none';
+        fulfilmentState.tip.percentage = percentage > 0 ? percentage : 0;
+      } else if (type === 'custom') {
+        const amount = Math.max(0, roundToCents(value));
+        fulfilmentState.tip.type = 'custom';
+        fulfilmentState.tip.customAmount = amount;
+      } else {
+        fulfilmentState.tip.type = 'none';
+        fulfilmentState.tip.percentage = 0;
+        fulfilmentState.tip.customAmount = 0;
+      }
+      persistFulfilmentState();
+      applyTipStateToUI();
+      updateCartTotals();
+    };
+
+    const initTipControls = () => {
+      if (!tipSectionEl) return;
+
+      tipButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          if (fulfilmentState.mode !== 'delivery') return;
+          const value = button.dataset.tip;
+          if (value === 'custom') {
+            setTipSelection('custom', fulfilmentState.tip.customAmount || 0);
+            if (customTipInput) {
+              customTipInput.focus();
+              customTipInput.select();
+            }
+          } else {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric) || numeric <= 0) {
+              setTipSelection('none', 0);
+            } else {
+              setTipSelection('percentage', numeric);
+            }
+          }
+        });
+      });
+
+      if (customTipInput) {
+        const syncCustomTipAmount = (formatOnComplete = false) => {
+          const value = customTipInput.value;
+          const amount = Math.max(0, roundToCents(value));
+          fulfilmentState.tip.customAmount = amount;
+          if (formatOnComplete) {
+            customTipInput.value = amount.toFixed(2);
+          }
+          if (fulfilmentState.tip.type !== 'custom') {
+            fulfilmentState.tip.type = 'custom';
+          }
+          updateCustomTipLabel();
+          applyTipStateToUI();
+          persistFulfilmentState();
+          updateCartTotals();
+        };
+
+        customTipInput.addEventListener('input', () => syncCustomTipAmount(false));
+        customTipInput.addEventListener('blur', () => syncCustomTipAmount(true));
+        customTipInput.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            syncCustomTipAmount(true);
+          }
+        });
+      }
+
+      applyTipStateToUI();
+    };
+
+    const getHoursByMode = (mode) => (mode === 'delivery' ? deliveryHoursByDay : pickupHoursByDay);
+
+    const getEasternNow = () => {
+      const localeString = new Date().toLocaleString('en-US', { timeZone: easternTimeZone });
+      return new Date(localeString);
+    };
+
+    const minutesToDate = (baseDate, minutes) => {
+      const startOfDay = new Date(baseDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      return new Date(startOfDay.getTime() + (minutes * 60000));
+    };
+
+    const roundToInterval = (date, intervalMinutes) => {
+      const millis = intervalMinutes * 60000;
+      return new Date(Math.ceil(date.getTime() / millis) * millis);
+    };
+
+    const generateScheduleSlots = (mode) => {
+      const hoursMap = getHoursByMode(mode);
+      const now = getEasternNow();
+      const slots = [];
+      for (let offset = 0; offset < 10; offset += 1) {
+        const candidate = new Date(now);
+        candidate.setDate(now.getDate() + offset);
+        const day = candidate.getDay();
+        const window = hoursMap[day];
+        if (!window) continue;
+        const windowStart = minutesToDate(candidate, window.open);
+        const windowEnd = minutesToDate(candidate, window.close);
+        const lastPossibleStart = new Date(windowEnd.getTime() - scheduleSlotIntervalMinutes * 60000);
+        let slotStart = windowStart;
+        if (offset === 0) {
+          const earliest = new Date(now.getTime() + scheduleLeadTimeMinutes * 60000);
+          if (earliest > slotStart) {
+            slotStart = roundToInterval(earliest, scheduleSlotIntervalMinutes);
+          }
+        }
+        if (slotStart > lastPossibleStart) continue;
+        while (slotStart <= lastPossibleStart) {
+          const slotEnd = new Date(slotStart.getTime() + scheduleSlotIntervalMinutes * 60000);
+          if (slotEnd > windowEnd) break;
+          const label = slotStart.toLocaleString('en-US', {
+            timeZone: easternTimeZone,
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          });
+          slots.push({ value: slotStart.toISOString(), label: `${label} ET` });
+          slotStart = new Date(slotStart.getTime() + scheduleSlotIntervalMinutes * 60000);
+        }
+      }
+      return slots;
+    };
+
+    const determineServiceStatus = (mode) => {
+      const now = getEasternNow();
+      const hoursMap = getHoursByMode(mode);
+      const today = now.getDay();
+      const currentMinutes = now.getHours() * minutesPerHour + now.getMinutes();
+      const todaysHours = hoursMap[today];
+      let isOpen = false;
+      let closesAt = null;
+
+      if (todaysHours && currentMinutes >= todaysHours.open && currentMinutes < todaysHours.close) {
+        isOpen = true;
+        closesAt = minutesToDate(now, todaysHours.close);
+      }
+
+      let nextOpen = null;
+      for (let offset = 0; offset < 14; offset += 1) {
+        const candidate = new Date(now);
+        candidate.setDate(now.getDate() + offset);
+        const day = candidate.getDay();
+        const window = hoursMap[day];
+        if (!window) continue;
+        const start = minutesToDate(candidate, window.open);
+        const end = minutesToDate(candidate, window.close);
+        if (offset === 0 && end <= now) {
+          continue;
+        }
+        if (offset === 0 && now < start) {
+          nextOpen = start;
+          break;
+        }
+        if (offset === 0 && isOpen) {
+          nextOpen = now;
+          break;
+        }
+        if (offset > 0) {
+          nextOpen = start;
+          break;
+        }
+      }
+
+      return { isOpen, closesAt, nextOpen };
+    };
+
+    const determineDeliveryFee = (distanceMiles) => {
+      if (!Number.isFinite(distanceMiles)) return 0;
+      for (const bracket of DELIVERY_FEE_BRACKETS) {
+        if (distanceMiles <= bracket.max) {
+          return bracket.amount;
+        }
+      }
+      return DELIVERY_FEE_BRACKETS[DELIVERY_FEE_BRACKETS.length - 1].amount;
+    };
+
+    const calculateDistanceMiles = (lat1, lon1, lat2, lon2) => {
+      if (!Number.isFinite(lat1) || !Number.isFinite(lon1) || !Number.isFinite(lat2) || !Number.isFinite(lon2)) {
+        return null;
+      }
+      const toRadians = (value) => (value * Math.PI) / 180;
+      const earthRadiusMiles = 3958.8;
+      const deltaLat = toRadians(lat2 - lat1);
+      const deltaLon = toRadians(lon2 - lon1);
+      const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(deltaLon / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return earthRadiusMiles * c;
+    };
+
+    const persistFulfilmentState = () => {
+      localStorage.setItem('mrsb_fulfilment', JSON.stringify(fulfilmentState));
+    };
+
+    const fetchCoordinatesForQuery = async (query) => {
+      if (!query) return null;
+      const trimmed = query.trim();
+      if (!trimmed) return null;
+      if (geocodeCache.has(trimmed)) {
+        return geocodeCache.get(trimmed);
+      }
+      try {
+        const url = new URL('https://nominatim.openstreetmap.org/search');
+        url.searchParams.set('format', 'jsonv2');
+        url.searchParams.set('limit', '1');
+        url.searchParams.set('addressdetails', '1');
+        url.searchParams.set('q', trimmed);
+        const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
+        if (!response.ok) {
+          return null;
+        }
+        const data = await response.json();
+        if (!Array.isArray(data) || !data.length) {
+          return null;
+        }
+        const match = data[0];
+        const lat = Number(match.lat);
+        const lng = Number(match.lon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          return null;
+        }
+        const result = { lat, lng, displayName: match.display_name || trimmed };
+        geocodeCache.set(trimmed, result);
+        return result;
+      } catch (error) {
+        return null;
+      }
+    };
+
+    const fetchAddressForCoordinates = async (lat, lng) => {
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return null;
+      }
+      if (pendingGeocodeController) {
+        pendingGeocodeController.abort();
+      }
+      const controller = new AbortController();
+      pendingGeocodeController = controller;
+      try {
+        const url = new URL('https://nominatim.openstreetmap.org/reverse');
+        url.searchParams.set('format', 'jsonv2');
+        url.searchParams.set('lat', lat);
+        url.searchParams.set('lon', lng);
+        url.searchParams.set('addressdetails', '1');
+        const response = await fetch(url.toString(), {
+          headers: { Accept: 'application/json' },
+          signal: controller.signal
+        });
+        if (!response.ok) {
+          return null;
+        }
+        const data = await response.json();
+        const address = data?.address || {};
+        const street = [address.house_number, address.road || address.pedestrian || address.neighbourhood]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        const city = address.city || address.town || address.village || address.hamlet || '';
+        const zip = address.postcode || '';
+        return { address1: street, city, zip };
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return null;
+        }
+        return null;
+      } finally {
+        if (pendingGeocodeController === controller) {
+          pendingGeocodeController = null;
+        }
+      }
+    };
+
+    const ensureStoreCoordinates = async () => {
+      if (Number.isFinite(fulfilmentState.store.lat) && Number.isFinite(fulfilmentState.store.lng)) {
+        return fulfilmentState.store;
+      }
+      const result = await fetchCoordinatesForQuery(storeAddress);
+      if (result) {
+        fulfilmentState.store.lat = result.lat;
+        fulfilmentState.store.lng = result.lng;
+        persistFulfilmentState();
+        updateDeliveryMap();
+        refreshDeliveryQuote();
+        updateDeliverySummary();
+      }
+      return fulfilmentState.store;
+    };
+
+    const ensureDeliveryMap = () => {
+      if (!deliveryMapContainer || typeof L === 'undefined') {
+        return null;
+      }
+      if (deliveryMapInstance) {
+        return deliveryMapInstance;
+      }
+      deliveryMapInstance = L.map(deliveryMapContainer, {
+        zoomControl: false,
+        scrollWheelZoom: false,
+        attributionControl: false
+      });
+      const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      });
+      tileLayer.addTo(deliveryMapInstance);
+      deliveryMapReady = true;
+      deliveryMapInstance.on('click', (event) => {
+        const { lat, lng } = event.latlng || {};
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        setDeliveryLocation({ lat, lng, source: 'map' });
+      });
+      return deliveryMapInstance;
+    };
+
+    const refreshDeliveryQuote = () => {
+      const storeLat = fulfilmentState.store.lat;
+      const storeLng = fulfilmentState.store.lng;
+      const userLat = fulfilmentState.delivery.lat;
+      const userLng = fulfilmentState.delivery.lng;
+      if (!Number.isFinite(storeLat) || !Number.isFinite(storeLng)) {
+        fulfilmentState.deliveryQuote.distanceMiles = null;
+        fulfilmentState.deliveryQuote.fee = 0;
+        fulfilmentState.deliveryQuote.withinRange = false;
+        fulfilmentState.deliveryQuote.needsLocation = true;
+        return fulfilmentState.deliveryQuote;
+      }
+      if (!Number.isFinite(userLat) || !Number.isFinite(userLng)) {
+        fulfilmentState.deliveryQuote.distanceMiles = null;
+        fulfilmentState.deliveryQuote.fee = 0;
+        fulfilmentState.deliveryQuote.withinRange = true;
+        fulfilmentState.deliveryQuote.needsLocation = true;
+        return fulfilmentState.deliveryQuote;
+      }
+      const distance = calculateDistanceMiles(storeLat, storeLng, userLat, userLng);
+      fulfilmentState.deliveryQuote.distanceMiles = distance;
+      fulfilmentState.deliveryQuote.needsLocation = false;
+      if (!Number.isFinite(distance) || distance > DELIVERY_DISTANCE_LIMIT_MILES) {
+        fulfilmentState.deliveryQuote.fee = 0;
+        fulfilmentState.deliveryQuote.withinRange = false;
+      } else {
+        fulfilmentState.deliveryQuote.fee = determineDeliveryFee(distance);
+        fulfilmentState.deliveryQuote.withinRange = true;
+      }
+      updateCartTotals();
+      return fulfilmentState.deliveryQuote;
+    };
+
+    const updateDeliverySummary = () => {
+      if (!deliverySummaryEl) return;
+      deliverySummaryEl.classList.remove('is-success', 'is-warning', 'is-error');
+      if (!Number.isFinite(fulfilmentState.store.lat) || !Number.isFinite(fulfilmentState.store.lng)) {
+        deliverySummaryEl.textContent = 'Loading store location…';
+        deliverySummaryEl.classList.add('is-warning');
+        return;
+      }
+      const quote = refreshDeliveryQuote();
+      if (quote.needsLocation) {
+        deliverySummaryEl.textContent = 'Share your address or use your location to calculate delivery distance.';
+        deliverySummaryEl.classList.add('is-warning');
+        return;
+      }
+      if (!quote.withinRange) {
+        const distanceText = Number.isFinite(quote.distanceMiles)
+          ? `${quote.distanceMiles.toFixed(2)} miles away`
+          : 'outside our delivery range';
+        deliverySummaryEl.textContent = `Delivery is available within ${DELIVERY_DISTANCE_LIMIT_MILES} miles. You're ${distanceText}.`;
+        deliverySummaryEl.classList.add('is-error');
+        return;
+      }
+      const distanceText = Number.isFinite(quote.distanceMiles)
+        ? `${quote.distanceMiles.toFixed(2)} miles`
+        : 'within range';
+      deliverySummaryEl.textContent = `Approximately ${distanceText} from the store. Estimated delivery fee ${formatPrice(quote.fee)}.`;
+      deliverySummaryEl.classList.add('is-success');
+    };
+
+    const updateDeliveryMap = () => {
+      if (!deliveryMapWrapper || fulfilmentState.mode !== 'delivery') {
+        return;
+      }
+      const map = ensureDeliveryMap();
+      if (!map) return;
+      const storeLat = fulfilmentState.store.lat;
+      const storeLng = fulfilmentState.store.lng;
+      const userLat = fulfilmentState.delivery.lat;
+      const userLng = fulfilmentState.delivery.lng;
+      const hasStore = Number.isFinite(storeLat) && Number.isFinite(storeLng);
+      const hasUser = Number.isFinite(userLat) && Number.isFinite(userLng);
+
+      if (hasStore) {
+        const storeLatLng = [storeLat, storeLng];
+        if (!deliveryStoreMarker) {
+          deliveryStoreMarker = L.marker(storeLatLng, { title: "Mrs. B's Catering" }).addTo(map);
+        } else {
+          deliveryStoreMarker.setLatLng(storeLatLng);
+        }
+      }
+
+      if (hasUser) {
+        const userLatLng = [userLat, userLng];
+        if (!deliveryUserMarker) {
+          deliveryUserMarker = L.marker(userLatLng, { draggable: true, title: 'Delivery address' }).addTo(map);
+          deliveryUserMarker.on('dragend', () => {
+            const latLng = deliveryUserMarker.getLatLng();
+            setDeliveryLocation({ lat: latLng.lat, lng: latLng.lng, source: 'pin' });
+          });
+        } else {
+          deliveryUserMarker.setLatLng(userLatLng);
+        }
+      }
+
+      if (deliveryStoreMarker && deliveryUserMarker) {
+        const storeLatLng = deliveryStoreMarker.getLatLng();
+        const userLatLng = deliveryUserMarker.getLatLng();
+        if (!deliveryRouteLine) {
+          deliveryRouteLine = L.polyline([storeLatLng, userLatLng], {
+            color: '#d70f64',
+            weight: 3,
+            dashArray: '6 6'
+          }).addTo(map);
+        } else {
+          deliveryRouteLine.setLatLngs([storeLatLng, userLatLng]);
+        }
+        const bounds = L.latLngBounds([storeLatLng, userLatLng]);
+        map.fitBounds(bounds, { padding: [24, 32] });
+        deliveryMapWrapper.hidden = false;
+      } else {
+        if (deliveryRouteLine) {
+          map.removeLayer(deliveryRouteLine);
+          deliveryRouteLine = null;
+        }
+        if (deliveryStoreMarker) {
+          map.setView(deliveryStoreMarker.getLatLng(), 13);
+        }
+        deliveryMapWrapper.hidden = !hasUser;
+      }
+
+      if (deliveryMapReady) {
+        setTimeout(() => map.invalidateSize(), 200);
+      }
+    };
+
+    const updateDeliveryFieldsState = () => {
+      if (!deliveryFieldsEl) return;
+      const isDelivery = fulfilmentState.mode === 'delivery';
+      deliveryFieldsEl.hidden = !isDelivery;
+      if (isDelivery) {
+        ensureStoreCoordinates();
+        updateDeliveryMap();
+        if (!Number.isFinite(fulfilmentState.delivery.lat) || !Number.isFinite(fulfilmentState.delivery.lng)) {
+          scheduleDeliveryAddressGeocode(true);
+        }
+      } else if (deliveryMapWrapper) {
+        deliveryMapWrapper.hidden = true;
+      }
+      updateDeliverySummary();
+    };
+
+    const updateFulfilmentButtons = () => {
+      fulfilmentSwitchButtons.forEach((button) => {
+        const mode = button.dataset.fulfilmentMode;
+        const isActive = mode === fulfilmentState.mode;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+    };
+
+    const updateScheduleControls = () => {
+      if (!scheduleSelect || !scheduleContainer) return;
+      currentScheduleOptions = generateScheduleSlots(fulfilmentState.mode);
+      scheduleSelect.innerHTML = '';
+      currentScheduleOptions.forEach((slot) => {
+        const option = document.createElement('option');
+        option.value = slot.value;
+        option.textContent = slot.label;
+        scheduleSelect.appendChild(option);
+      });
+
+      let scheduleValueChanged = false;
+      if (currentScheduleOptions.length) {
+        scheduleSelect.disabled = false;
+        if (!fulfilmentState.scheduleValue || !currentScheduleOptions.some((slot) => slot.value === fulfilmentState.scheduleValue)) {
+          fulfilmentState.scheduleValue = currentScheduleOptions[0].value;
+          scheduleValueChanged = true;
+        }
+        scheduleSelect.value = fulfilmentState.scheduleValue;
+      } else {
+        fulfilmentState.scheduleValue = null;
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'No upcoming times available';
+        scheduleSelect.appendChild(placeholder);
+        scheduleSelect.value = '';
+        scheduleSelect.disabled = true;
+        scheduleValueChanged = true;
+      }
+
+      const status = determineServiceStatus(fulfilmentState.mode);
+      const asapRadio = fulfilmentTimeOptions.find((input) => input.value === 'asap');
+      let scheduleTypeChanged = false;
+      if (asapRadio) {
+        asapRadio.disabled = !status.isOpen;
+        if (!status.isOpen && fulfilmentState.scheduleType !== 'schedule') {
+          fulfilmentState.scheduleType = 'schedule';
+          scheduleTypeChanged = true;
+        }
+      }
+
+      fulfilmentTimeOptions.forEach((input) => {
+        input.checked = input.value === fulfilmentState.scheduleType;
+      });
+
+      scheduleContainer.hidden = fulfilmentState.scheduleType !== 'schedule';
+
+      if (scheduleTypeChanged || scheduleValueChanged) {
+        persistFulfilmentState();
+      }
+    };
+
+    const updateFulfilmentStatusDisplay = () => {
+      if (!fulfilmentStatusEl) return;
+      const status = determineServiceStatus(fulfilmentState.mode);
+      fulfilmentStatusEl.classList.toggle('is-closed', !status.isOpen);
+      const serviceLabel = fulfilmentState.mode === 'delivery' ? 'delivery' : 'pickup';
+      if (status.isOpen) {
+        const closeText = status.closesAt
+          ? status.closesAt.toLocaleString('en-US', { timeZone: easternTimeZone, hour: 'numeric', minute: '2-digit' })
+          : '';
+        if (closeText) {
+          fulfilmentStatusEl.textContent = `We're open for ${serviceLabel} until ${closeText} ET. Order now or schedule ahead.`;
+        } else {
+          fulfilmentStatusEl.textContent = `We're open for ${serviceLabel}!`;
+        }
+      } else if (currentScheduleOptions.length) {
+        fulfilmentStatusEl.textContent = `We're currently closed for ${serviceLabel}. Schedule your order for ${currentScheduleOptions[0].label}.`;
+      } else {
+        fulfilmentStatusEl.textContent = `We're not accepting ${serviceLabel} orders at the moment. Check back soon.`;
+      }
+    };
+
+    const updateFulfilmentUI = () => {
+      updateFulfilmentButtons();
+      updateScheduleControls();
+      updateFulfilmentStatusDisplay();
+      updateDeliveryFieldsState();
+      applyTipStateToUI();
+      updateCartTotals();
+      if (fulfilmentState.mode === 'delivery') {
+        ensureStoreCoordinates();
+      }
+    };
+
+    const applyFulfilmentStateToInputs = () => {
+      if (deliveryNameInput) deliveryNameInput.value = fulfilmentState.delivery.name || '';
+      if (deliveryPhoneInput) deliveryPhoneInput.value = fulfilmentState.delivery.phone || '';
+      if (deliveryAddressInput) deliveryAddressInput.value = fulfilmentState.delivery.address1 || '';
+      if (deliveryCityInput) deliveryCityInput.value = fulfilmentState.delivery.city || '';
+      if (deliveryZipInput) deliveryZipInput.value = fulfilmentState.delivery.zip || '';
+      if (deliveryDropoffSelect) deliveryDropoffSelect.value = fulfilmentState.delivery.dropoff || 'door';
+      if (deliveryInstructionsInput) deliveryInstructionsInput.value = fulfilmentState.delivery.instructions || '';
+      if (scheduleSelect && fulfilmentState.scheduleValue && currentScheduleOptions.some((slot) => slot.value === fulfilmentState.scheduleValue)) {
+        scheduleSelect.value = fulfilmentState.scheduleValue;
+      }
+      fulfilmentTimeOptions.forEach((input) => {
+        input.checked = input.value === fulfilmentState.scheduleType;
+      });
+    };
+
+    const setFulfilmentMode = (mode) => {
+      const normalized = mode === 'delivery' ? 'delivery' : 'pickup';
+      if (fulfilmentState.mode === normalized) return;
+      if (normalized !== 'delivery' && addressGeocodeTimeout) {
+        clearTimeout(addressGeocodeTimeout);
+        addressGeocodeTimeout = null;
+      }
+      fulfilmentState.mode = normalized;
+      updateFulfilmentUI();
+      persistFulfilmentState();
+    };
+
+    const setDeliveryLocation = ({ lat, lng, source = 'manual', accuracy = null }) => {
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      fulfilmentState.delivery.lat = lat;
+      fulfilmentState.delivery.lng = lng;
+      fulfilmentState.delivery.source = source;
+      fulfilmentState.delivery.accuracy = Number.isFinite(accuracy) ? accuracy : null;
+      refreshDeliveryQuote();
+      updateDeliverySummary();
+      updateDeliveryMap();
+      persistFulfilmentState();
+      if (source !== 'manual') {
+        fetchAddressForCoordinates(lat, lng)
+          .then((address) => {
+            if (!address) return;
+            if (deliveryAddressInput && (!deliveryAddressInput.value || source !== 'address')) {
+              deliveryAddressInput.value = address.address1 || deliveryAddressInput.value;
+              fulfilmentState.delivery.address1 = deliveryAddressInput.value;
+            }
+            if (deliveryCityInput && (!deliveryCityInput.value || source !== 'address')) {
+              deliveryCityInput.value = address.city || deliveryCityInput.value;
+              fulfilmentState.delivery.city = deliveryCityInput.value;
+            }
+            if (deliveryZipInput && (!deliveryZipInput.value || source !== 'address')) {
+              deliveryZipInput.value = address.zip || deliveryZipInput.value;
+              fulfilmentState.delivery.zip = deliveryZipInput.value;
+            }
+            persistFulfilmentState();
+          })
+          .catch(() => {});
+      }
+    };
+
+    const shouldAttemptAddressGeocode = () => {
+      const line1 = deliveryAddressInput?.value?.trim();
+      const city = deliveryCityInput?.value?.trim();
+      const zip = deliveryZipInput?.value?.trim();
+      return Boolean(line1 && (city || zip));
+    };
+
+    const scheduleDeliveryAddressGeocode = (immediate = false) => {
+      if (addressGeocodeTimeout) {
+        clearTimeout(addressGeocodeTimeout);
+        addressGeocodeTimeout = null;
+      }
+
+      if (fulfilmentState.mode !== 'delivery') {
+        return;
+      }
+
+      if (!shouldAttemptAddressGeocode()) {
+        fulfilmentState.delivery.lat = null;
+        fulfilmentState.delivery.lng = null;
+        fulfilmentState.deliveryQuote.distanceMiles = null;
+        fulfilmentState.deliveryQuote.fee = 0;
+        fulfilmentState.deliveryQuote.withinRange = false;
+        fulfilmentState.deliveryQuote.needsLocation = true;
+        updateDeliveryMap();
+        updateDeliverySummary();
+        updateCartTotals();
+        persistFulfilmentState();
+        return;
+      }
+
+      const triggerGeocode = () => {
+        addressGeocodeTimeout = null;
+        handleDeliveryAddressGeocode();
+      };
+
+      if (immediate) {
+        triggerGeocode();
+      } else {
+        addressGeocodeTimeout = setTimeout(triggerGeocode, 700);
+      }
+    };
+
+    const handleDeliveryAddressGeocode = async () => {
+      const line1 = deliveryAddressInput?.value?.trim();
+      const city = deliveryCityInput?.value?.trim();
+      const zip = deliveryZipInput?.value?.trim();
+      const pieces = [line1, city || 'Clifton Heights', zip, 'PA'];
+      const query = pieces.filter(Boolean).join(', ');
+      const result = await fetchCoordinatesForQuery(query);
+      if (!result) {
+        fulfilmentState.deliveryQuote.needsLocation = true;
+        if (deliverySummaryEl) {
+          deliverySummaryEl.classList.remove('is-success', 'is-warning');
+          deliverySummaryEl.classList.add('is-error');
+          deliverySummaryEl.textContent = 'We could not find that address. Please check and try again.';
+        }
+        updateCartTotals();
+        return;
+      }
+      fulfilmentState.delivery.address1 = line1 || '';
+      fulfilmentState.delivery.city = city || '';
+      fulfilmentState.delivery.zip = zip || '';
+      setDeliveryLocation({ lat: result.lat, lng: result.lng, source: 'address' });
+      updateDeliveryFieldsState();
+      persistFulfilmentState();
+    };
+
+    const handleUseLocation = () => {
+      if (!navigator?.geolocation) {
+        if (deliverySummaryEl) {
+          deliverySummaryEl.classList.remove('is-success');
+          deliverySummaryEl.classList.add('is-warning');
+          deliverySummaryEl.textContent = 'Location services are not supported in this browser.';
+        }
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setDeliveryLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            source: 'geolocation'
+          });
+          updateDeliveryFieldsState();
+        },
+        () => {
+          if (deliverySummaryEl) {
+            deliverySummaryEl.classList.remove('is-success');
+            deliverySummaryEl.classList.add('is-error');
+            deliverySummaryEl.textContent = 'We could not access your location. Please enter your address instead.';
+          }
+        },
+        { enableHighAccuracy: true, maximumAge: 60000 }
+      );
+    };
+
+    const initFulfilment = () => {
+      updateFulfilmentUI();
+      applyFulfilmentStateToInputs();
+
+      fulfilmentSwitchButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const mode = button.dataset.fulfilmentMode;
+          setFulfilmentMode(mode);
+        });
+      });
+
+      fulfilmentTimeOptions.forEach((input) => {
+        input.addEventListener('change', () => {
+          if (!input.checked) return;
+          fulfilmentState.scheduleType = input.value === 'schedule' ? 'schedule' : 'asap';
+          persistFulfilmentState();
+          updateFulfilmentUI();
+        });
+      });
+
+      if (scheduleSelect) {
+        scheduleSelect.addEventListener('change', () => {
+          fulfilmentState.scheduleValue = scheduleSelect.value || null;
+          persistFulfilmentState();
+        });
+      }
+
+      const bindDeliveryInput = (input, key, options = {}) => {
+        if (!input) return;
+        const { onInput, onBlur } = options;
+        input.addEventListener('input', () => {
+          fulfilmentState.delivery[key] = input.value;
+          persistFulfilmentState();
+          if (typeof onInput === 'function') {
+            onInput();
+          }
+        });
+        if (typeof onBlur === 'function') {
+          input.addEventListener('blur', () => {
+            fulfilmentState.delivery[key] = input.value;
+            persistFulfilmentState();
+            onBlur();
+          });
+        }
+      };
+
+      bindDeliveryInput(deliveryNameInput, 'name');
+      bindDeliveryInput(deliveryPhoneInput, 'phone');
+      bindDeliveryInput(deliveryAddressInput, 'address1', {
+        onInput: () => scheduleDeliveryAddressGeocode(false),
+        onBlur: () => scheduleDeliveryAddressGeocode(true)
+      });
+      bindDeliveryInput(deliveryCityInput, 'city', {
+        onInput: () => scheduleDeliveryAddressGeocode(false),
+        onBlur: () => scheduleDeliveryAddressGeocode(true)
+      });
+      bindDeliveryInput(deliveryZipInput, 'zip', {
+        onInput: () => scheduleDeliveryAddressGeocode(false),
+        onBlur: () => scheduleDeliveryAddressGeocode(true)
+      });
+      bindDeliveryInput(deliveryInstructionsInput, 'instructions');
+
+      if (deliveryDropoffSelect) {
+        deliveryDropoffSelect.addEventListener('change', () => {
+          fulfilmentState.delivery.dropoff = deliveryDropoffSelect.value;
+          persistFulfilmentState();
+        });
+      }
+
+      if (useLocationBtn) {
+        useLocationBtn.addEventListener('click', (event) => {
+          event.preventDefault();
+          handleUseLocation();
+        });
+      }
+
+      if (fulfilmentState.mode === 'delivery') {
+        ensureStoreCoordinates();
+      }
+    };
 
     const getHoursByMode = (mode) => (mode === 'delivery' ? deliveryHoursByDay : pickupHoursByDay);
 
@@ -3259,6 +4316,15 @@
         if (storedFulfilment.deliveryQuote) {
           fulfilmentState.deliveryQuote = { ...fulfilmentState.deliveryQuote, ...storedFulfilment.deliveryQuote };
         }
+        if (storedFulfilment.tip) {
+          fulfilmentState.tip = { ...fulfilmentState.tip, ...storedFulfilment.tip };
+        }
+        if (!['none', 'percentage', 'custom'].includes(fulfilmentState.tip.type)) {
+          fulfilmentState.tip.type = 'none';
+        }
+        fulfilmentState.tip.percentage = Number(fulfilmentState.tip.percentage) || 0;
+        fulfilmentState.tip.customAmount = Math.max(0, roundToCents(fulfilmentState.tip.customAmount || 0));
+        fulfilmentState.tip.amount = Math.max(0, roundToCents(fulfilmentState.tip.amount || 0));
       }
     };
 
@@ -3471,10 +4537,9 @@
         });
       }
 
-      const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      cartTotalEl.textContent = formatPrice(total);
       saveData({ ratings: state.ratings, uploads: state.uploads, cart: state.cart });
       updateCartBadge();
+      updateCartTotals();
     };
 
     const buildSidesOptions = () => {
@@ -4065,6 +5130,7 @@
       initHighlightCarousel();
       renderHighlights();
       initNav();
+      initTipControls();
       initFulfilment();
       updateCartDisplay();
     });
