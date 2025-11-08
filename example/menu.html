@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Danny's Wok</title>
+  <link rel="icon" type="image/png" href="images/favi.png">
+  <meta property="og:image" content="images/link_image.png">
+  <meta name="twitter:image" content="images/link_image.png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="menu-loading-screen" class="menu-loading-screen" role="status" aria-live="polite">
+    <div class="noodle-loader" aria-hidden="true">
+      <div class="steam" id="cloudOne"></div>
+      <div class="steam" id="cloudTwo"></div>
+      <div class="steam" id="cloudThree"></div>
+      <div class="steam" id="cloudFour"></div>
+      <div id="noodleBallOne"></div>
+      <div id="noodleBallTwo"></div>
+      <div id="chopstickOne">
+        <div class="insideStick"></div>
+      </div>
+      <div id="chopstickTwo">
+        <div class="insideStick"></div>
+      </div>
+      <div class="bowl"></div>
+    </div>
+    <img src="images/logos4.png" alt="Danny's Wok signature wordmark" class="menu-loading-screen__logo">
+    <span class="visually-hidden">Loading the Danny's Wok menu…</span>
+  </div>
+  <header class="menu-header">
+    <div class="menu-header__left">
+      <a href="index.html#store-selector" class="site-logo" aria-label="Back to the Danny's Wok store selector">
+        <img src="images/logos_icon.png" alt="Danny's Wok chef mascot" class="site-logo__icon">
+        <img src="images/logos_font.png" alt="Danny's Wok wordmark" class="site-logo__wordmark">
+      </a>
+    </div>
+    <div class="menu-header__right">
+      <div
+        class="menu-header__selected-store menu-header__selected-store--empty"
+        id="selected-store-display"
+        aria-live="polite"
+        role="button"
+        tabindex="0"
+        aria-pressed="false"
+        aria-label="Toggle between pickup and delivery fulfilment"
+      >
+        <span class="menu-header__selected-store-label">
+          <img
+            src="images/delivery_.png"
+            alt=""
+            class="menu-header__fulfilment-icon"
+            hidden
+            aria-hidden="true"
+          >
+          <span class="menu-header__selected-store-label-text">Pickup from</span>
+        </span>
+        <span class="menu-header__selected-store-value" id="selected-store-address">Select a store for pickup</span>
+      </div>
+      <nav>
+        <a href="#our_menu">Menu</a>
+        <div class="cart-actions">
+          <a href="#cart" class="cart-link">Cart <span id="cart-count" class="cart-count">0</span></a>
+          <a href="#cart" id="cart-icon-button" class="cart-icon-button" aria-label="View your cart">
+            <img src="images/chinese-food-boxes2.png" alt="Chinese takeout boxes cart" class="cart-icon-image">
+            <span class="shimmer-layer" aria-hidden="true"></span>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+  <section class="hero" aria-label="Browse the Danny's Wok menu">
+    <div class="quick-reorder" id="quick-reorder" aria-hidden="true" hidden>
+      <div class="quick-reorder__header">
+        <h2 class="quick-reorder__title">Quick reorder</h2>
+        <p class="quick-reorder__subtitle">Jump back into your recent favorites.</p>
+      </div>
+      <div class="quick-reorder__list" role="list"></div>
+    </div>
+    <div class="hero-heading">
+      <h1>Slide through the menu</h1>
+      <p>Tap any dish to add it to your cart instantly.</p>
+    </div>
+    <div class="hero-carousel" id="hero-carousel">
+      <div class="hero-track" id="hero-track" aria-hidden="false"></div>
+    </div>
+  </section>
+  <main>
+    <section id="our_menu" class="pt-5 pb-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="page_title text-center mb-4">
+              <h1>our menu</h1>
+              <div class="single_line"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <ul class="nav nav-tabs menu_tab mb-4" id="menuTab" role="tablist">
+            <!-- Tabs will be injected here -->
+          </ul>
+        </div>
+        <div class="row">
+          <div class="tab-content col-lg-12" id="menuTabContent">
+            <!-- Tab panes will be injected here -->
+          </div>
+          <a href="#our_menu" class="menu_btn btn btn-danger">view more</a>
+        </div>
+      </div>
+    </section>
+    <section id="cart">
+      <div id="checkout-panel" class="checkout-panel hidden" aria-hidden="true">
+        <div class="checkout-header">
+          <h3>Review &amp; confirm</h3>
+          <button id="close-checkout" class="close-checkout" aria-label="Close checkout">×</button>
+        </div>
+        <fieldset class="fulfilment-options">
+          <legend>How would you like to get your order?</legend>
+          <label>
+            <input type="radio" name="fulfilment" value="pickup" id="fulfilment-pickup" checked>
+            Pickup (default)
+          </label>
+          <label>
+            <input type="radio" name="fulfilment" value="delivery" id="fulfilment-delivery">
+            Delivery
+          </label>
+        </fieldset>
+        <div id="pickup-time-wrapper" class="fulfilment-time-wrapper">
+          <fieldset class="pickup-time-options">
+            <legend>Pickup time</legend>
+            <label>
+              <input type="radio" name="pickup-time" value="standard" id="pickup-time-standard" checked>
+              Standard (10 – 15 mins)
+            </label>
+            <label>
+              <input type="radio" name="pickup-time" value="schedule" id="pickup-time-schedule">
+              Schedule ahead
+            </label>
+          </fieldset>
+          <div
+            id="pickup-time-lock-message"
+            class="pickup-time-lock-message"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></div>
+        </div>
+        <div id="delivery-fields" class="delivery-fields hidden">
+          <div class="field">
+            <label for="delivery-name">Name</label>
+            <input type="text" id="delivery-name" name="delivery-name" autocomplete="name" placeholder="Full name">
+          </div>
+          <div class="field">
+            <label for="delivery-phone">Phone number</label>
+            <input type="tel" id="delivery-phone" name="delivery-phone" autocomplete="tel" placeholder="(555) 555-5555">
+          </div>
+          <div class="delivery-map-container hidden" id="delivery-map-container">
+            <div class="delivery-map" id="delivery-map" aria-label="Delivery map showing store and dropoff locations"></div>
+            <p id="delivery-distance-summary" class="delivery-distance-summary"></p>
+          </div>
+          <div class="field">
+            <label for="delivery-address">Address</label>
+            <input type="text" id="delivery-address" name="delivery-address" autocomplete="street-address" placeholder="Street address">
+          </div>
+          <div class="field half">
+            <div>
+              <label for="delivery-city">City</label>
+              <input type="text" id="delivery-city" name="delivery-city" autocomplete="address-level2" placeholder="City">
+            </div>
+            <div>
+              <label for="delivery-zip">ZIP</label>
+              <input type="text" id="delivery-zip" name="delivery-zip" autocomplete="postal-code" placeholder="ZIP code">
+            </div>
+          </div>
+          <fieldset class="dropoff-options">
+            <legend>Drop-off preference</legend>
+            <label>
+              <input type="radio" name="dropoff" value="door" id="dropoff-door" checked>
+              Leave it at the door
+            </label>
+            <label>
+              <input type="radio" name="dropoff" value="hand" id="dropoff-hand">
+              Hand it to me
+            </label>
+            <div class="dropoff-instructions">
+              <label for="dropoff-notes">Drop-off instructions (optional)</label>
+              <textarea id="dropoff-notes" name="dropoff-notes" rows="2" placeholder="Add a note for your driver."></textarea>
+            </div>
+          </fieldset>
+          <fieldset class="delivery-time-options">
+            <legend>Delivery time</legend>
+            <label>
+              <input type="radio" name="delivery-time" value="express" id="delivery-time-express">
+              Express (ETA 15 mins) +$3.00
+            </label>
+            <label>
+              <input type="radio" name="delivery-time" value="standard" id="delivery-time-standard" checked>
+              Standard (35 – 50 mins)
+            </label>
+            <label>
+              <input type="radio" name="delivery-time" value="schedule" id="delivery-time-schedule">
+              Schedule ahead
+            </label>
+          </fieldset>
+        </div>
+        <div id="schedule-container" class="schedule-container hidden" aria-hidden="true">
+          <p class="schedule-helper">Choose a date and time, then save to confirm.</p>
+          <div id="calendar"></div>
+          <div class="schedule-controls">
+            <label for="schedule-time">Select a time</label>
+            <input type="time" id="schedule-time" name="schedule-time">
+            <button type="button" id="save-schedule" class="schedule-save">Save selection</button>
+          </div>
+          <p id="schedule-summary" class="schedule-summary" role="status" aria-live="polite"></p>
+        </div>
+        <div id="checkout-items" class="checkout-items"></div>
+        <section class="tip-section" aria-label="Choose gratuity">
+          <h4>Tip your driver</h4>
+          <p class="tip-note">100% of gratuity goes to our delivery drivers.</p>
+          <div class="tip-buttons" role="group" aria-label="Tip options">
+            <button type="button" class="tip-button" data-tip="0.15">15%</button>
+            <button type="button" class="tip-button" data-tip="0.2">20%</button>
+            <button type="button" class="tip-button" data-tip="1">100%</button>
+            <button type="button" class="tip-button" data-tip="custom">Custom ($0.00)</button>
+          </div>
+          <div id="custom-tip-container" class="custom-tip-container hidden" aria-hidden="true">
+            <label for="custom-tip-input" class="custom-tip-label">Enter custom tip amount</label>
+            <div class="custom-tip-input-wrapper">
+              <span class="currency-symbol" aria-hidden="true">$</span>
+              <input type="number" id="custom-tip-input" name="custom-tip" min="0" step="0.01" inputmode="decimal" value="0">
+            </div>
+            <p class="custom-tip-help">Leave at $0.00 to skip tipping or enter any amount you prefer.</p>
+          </div>
+          <div class="tip-summary">
+            <span>Tip amount</span>
+            <strong id="tip-amount">$0.00</strong>
+          </div>
+        </section>
+        <div class="checkout-total-row">
+          <span>Subtotal</span>
+          <strong id="checkout-subtotal-amount">$0.00</strong>
+        </div>
+        <div class="checkout-total-row" id="fees-tax-row">
+          <span>Fees &amp; Estimated Tax</span>
+          <strong id="fees-tax-amount">$0.00</strong>
+        </div>
+        <div class="checkout-total-row hidden" id="delivery-distance-row">
+          <span>Delivery fee</span>
+          <strong id="delivery-distance-amount">$0.00</strong>
+        </div>
+        <div class="checkout-total-row hidden" id="express-fee-row">
+          <span>Express delivery fee</span>
+          <strong id="express-fee-amount">$3.00</strong>
+        </div>
+        <div class="checkout-total-row" id="tip-total-row">
+          <span>Tip</span>
+          <strong id="checkout-tip-amount">$0.00</strong>
+        </div>
+        <div class="checkout-total-row grand-total">
+          <span>Total</span>
+          <strong id="checkout-total-amount">$0.00</strong>
+        </div>
+        <button id="place-order" class="place-order-btn" type="button">
+          <span class="button-text">Place order</span>
+        </button>
+      </div>
+    </section>
+  </main>
+  <div
+    id="payment-modal"
+    class="payment-modal hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="payment-modal-title"
+    aria-hidden="true"
+  >
+    <div class="payment-modal__dialog">
+      <button type="button" id="close-payment-modal" class="payment-modal__close" aria-label="Close payment dialog">
+        &times;
+      </button>
+      <h2 id="payment-modal-title">Complete your payment</h2>
+      <p class="payment-modal__amount">
+        Amount due: <strong id="payment-amount">$0.00</strong>
+      </p>
+      <div id="payment-order-summary" class="payment-order-summary"></div>
+      <form id="payment-form" class="payment-form" autocomplete="on">
+        <button id="apple-pay-checkout" type="button" class="apple-pay-checkout-btn">
+          <span class="apple-pay-checkout-btn__logo" aria-hidden="true"></span>
+          <span class="apple-pay-checkout-btn__text">Pay with Apple Pay</span>
+        </button>
+        <div id="payment-request-button-wrapper" class="payment-request-button-wrapper hidden" aria-hidden="true"></div>
+        <p id="wallet-hint" class="wallet-hint hidden" aria-hidden="true">
+          Use Apple Pay or Google Pay for a faster checkout.
+        </p>
+        <div id="stripe-card-element" class="stripe-card-element" role="group" aria-label="Card payment fields"></div>
+        <button id="confirm-payment" type="button" class="confirm-payment-btn">
+          <span class="button-text">Confirm &amp; pay</span>
+        </button>
+        <p id="payment-status" class="payment-status" role="alert" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+  <script src="https://js.stripe.com/v3"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="analytics-client.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
