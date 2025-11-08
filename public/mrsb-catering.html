@@ -1180,7 +1180,7 @@
             id: 'can_soda',
             name: 'Can Soda',
             price: 1.5,
-            time: 'Ready in 2 minutes',
+            time: 'Ready now',
             description: 'Choose from Pepsi, Diet Pepsi, or Starry served ice cold.',
             image: defaultImage,
             imageOptions: [
@@ -1198,7 +1198,10 @@
             id: 'bottled_water',
             name: 'Bottled Water',
             price: 1.25,
-            time: 'Ready in 1 minute',
+            badge: {
+              icon: 'ac_unit',
+              text: 'Ice cold'
+            },
             description: 'Pure and refreshing bottled water.',
             image: 'image/mrsB/bottleWater.PNG'
           }
