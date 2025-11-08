@@ -869,20 +869,66 @@
     }
 
     @media (max-width: 600px) {
+      .menu-grid > .col {
+        padding: 8px;
+      }
+
+      .card.menu-card {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "media"
+          "content"
+          "actions";
+        row-gap: 0.35rem;
+      }
+
+      .card.menu-card .card-image {
+        grid-area: media;
+        padding: 12px 12px 0;
+      }
+
       .card.menu-card .card-image img {
-        height: 180px;
+        border-radius: 14px;
+        height: 190px;
+        width: 100%;
+      }
+
+      .card.menu-card .card-title {
+        bottom: 24px !important;
+        left: 24px;
+        font-size: 1.1rem !important;
+        position: absolute;
       }
 
       .upload-area {
-        top: auto;
-        bottom: 16px;
-        right: 16px;
+        bottom: 24px;
+        position: absolute;
+        right: 24px;
       }
 
-      .card-action {
-        flex-direction: column;
-        gap: 0.75rem;
-        align-items: flex-start;
+      .card.menu-card .card-content {
+        grid-area: content;
+        padding: 0 12px 0.5rem;
+      }
+
+      .card.menu-card .card-action {
+        align-items: center;
+        flex-direction: row;
+        gap: 0.5rem;
+        grid-area: actions;
+        justify-content: space-between;
+        padding: 0 12px 1.25rem !important;
+      }
+
+      .card.menu-card .card-action .rating-control {
+        gap: 0.4rem;
+      }
+
+      .card.menu-card .card-action .add-to-cart {
+        flex: 1;
+        justify-content: center;
+        min-width: 0;
       }
 
       .highlight-carousel {
@@ -1035,7 +1081,11 @@
             price: 13.0,
             description: 'Crispy seasoned catfish fillets served with house-made sides for a soul-soothing feast.',
             image: 'image/mrsB/fried_catfish.png',
-            animatedImage: 'image/mrsB/fried_catfish.gif'
+            animatedImage: 'image/mrsB/fried_catfish.gif',
+            prep: {
+              text: '45 min',
+              icon: 'schedule'
+            }
           },
           {
             id: 'turkey_wings_over_rice',
@@ -1043,21 +1093,33 @@
             price: 15.0,
             description: 'Slow-roasted turkey wings smothered in rich gravy and served over fragrant yellow rice.',
             image: 'image/mrsB/turkey_wings_over_rice.png',
-            animatedImage: 'image/mrsB/turkey_winng_0.gif'
+            animatedImage: 'image/mrsB/turkey_winng_0.gif',
+            prep: {
+              text: '55 min',
+              icon: 'schedule'
+            }
           },
           {
             id: 'stuffed_salmon_over_rice',
             name: 'Stuffed Salmon over Rice',
             price: 17.0,
             description: 'Tender salmon stuffed with herbs and seafood cream sauce, resting on buttery rice.',
-            image: 'image/mrsB/stuffed_salmon_over_rice.png'
+            image: 'image/mrsB/stuffed_salmon_over_rice.png',
+            prep: {
+              text: '50 min',
+              icon: 'schedule'
+            }
           },
           {
             id: 'fried_whtiting',
             name: 'Fried Whiting Plate',
             price: 12.0,
             description: 'Golden fried whiting with Mrs. B’s signature blend of spices and a squeeze of lemon.',
-            image: 'image/mrsB/fried_whtiting.png'
+            image: 'image/mrsB/fried_whtiting.png',
+            prep: {
+              text: '30 min',
+              icon: 'schedule'
+            }
           },
           {
             id: 'fried_wingdings',
@@ -1065,7 +1127,11 @@
             price: 11.0,
             description: 'Crispy fried wings tossed in your choice of sauce, paired with classic sides.',
             image: 'image/mrsB/fried_wingdings.png',
-            animatedImage: 'image/mrsB/fried_wingdings.gif'
+            animatedImage: 'image/mrsB/fried_wingdings.gif',
+            prep: {
+              text: '25 min',
+              icon: 'schedule'
+            }
           }
         ]
       },
@@ -1078,7 +1144,11 @@
             price: 5.5,
             description: 'Slow-simmered greens infused with smoked turkey and savory spices.',
             image: 'image/mrsB/greens.png',
-            animatedImage: 'image/mrsB/greens.gif'
+            animatedImage: 'image/mrsB/greens.gif',
+            prep: {
+              text: '20 min',
+              icon: 'restaurant'
+            }
           },
           {
             id: 'baked_mac_and_cheese',
@@ -1086,21 +1156,33 @@
             price: 5.5,
             description: 'Creamy, cheesy macaroni baked until bubbling and topped with golden crust.',
             image: 'image/mrsB/baked_mac_and_cheese.png',
-            animatedImage: 'image/mrsB/baked_mac_and_cheese.gif'
+            animatedImage: 'image/mrsB/baked_mac_and_cheese.gif',
+            prep: {
+              text: '18 min',
+              icon: 'restaurant'
+            }
           },
           {
             id: 'sweet_potatoes',
             name: 'Candied Sweet Potatoes',
             price: 5.5,
             description: 'Tender sweet potatoes glazed with brown sugar, butter, and warm spices.',
-            image: 'image/mrsB/sweet_potatoes.png'
+            image: 'image/mrsB/sweet_potatoes.png',
+            prep: {
+              text: '22 min',
+              icon: 'restaurant'
+            }
           },
           {
             id: 'seafood_salad',
             name: 'Seafood Pasta Salad',
             price: 8.0,
             description: 'Chilled pasta tossed with shrimp, peppers, and creamy herb dressing.',
-            image: 'image/mrsB/seafood_salad.png'
+            image: 'image/mrsB/seafood_salad.png',
+            prep: {
+              text: 'Chilled',
+              icon: 'ac_unit'
+            }
           }
         ]
       },
@@ -1118,6 +1200,10 @@
               'image/mrsB/canSoda0.PNG',
               'image/mrsB/canSoda1.PNG'
             ],
+            prep: {
+              text: 'Ready now',
+              icon: 'flash_on'
+            },
             selection: {
               type: 'soda',
               title: 'Pick Your Soda',
@@ -1137,7 +1223,11 @@
             name: 'Bottled Water',
             price: 1.25,
             description: 'Pure and refreshing bottled water.',
-            image: 'image/mrsB/bottleWater.PNG'
+            image: 'image/mrsB/bottleWater.PNG',
+            prep: {
+              text: 'Ice cold',
+              icon: 'opacity'
+            }
           }
         ]
       },
@@ -1149,21 +1239,33 @@
             name: 'Krazie Pudding Oreo',
             price: 6.0,
             description: 'Layers of creamy pudding, whipped topping, and crushed Oreo cookies.',
-            image: defaultImage
+            image: defaultImage,
+            prep: {
+              text: 'Chilled treat',
+              icon: 'icecream'
+            }
           },
           {
             id: 'banana_pudding_kmaidson',
             name: 'Banana Pudding Kmaidson',
             price: 6.0,
             description: 'Creamy and smooth pudding with hints of vanilla and fresh banana.',
-            image: defaultImage
+            image: defaultImage,
+            prep: {
+              text: 'Chilled treat',
+              icon: 'icecream'
+            }
           },
           {
             id: 'cake',
             name: 'Seasonal Layer Cake',
             price: 6.0,
             description: 'Layers of moist cake with rotating seasonal flavors and fillings.',
-            image: defaultImage
+            image: defaultImage,
+            prep: {
+              text: 'Baked today',
+              icon: 'cake'
+            }
           }
         ]
       }
@@ -1221,6 +1323,13 @@
     const templates = {
       section: document.getElementById('menuCardTemplate'),
       item: document.getElementById('menuItemTemplate')
+    };
+
+    const categoryPrepDefaults = {
+      'Entrées': { text: 'Made to order', icon: 'schedule' },
+      Sides: { text: 'Fresh in 15', icon: 'restaurant' },
+      Drinks: { text: 'Ready now', icon: 'flash_on' },
+      Desserts: { text: 'Chilled & ready', icon: 'icecream' }
     };
 
     const slugify = (value) => value
@@ -2010,6 +2119,16 @@
           itemFragment.querySelector('.item-description').textContent = itemData.description;
           itemFragment.querySelector('.price').textContent = formatPrice(itemData.price);
           itemFragment.querySelector('.item-category').textContent = sectionData.category;
+
+          const badgeLabel = itemFragment.querySelector('.badge-info span:last-child');
+          const badgeIcon = itemFragment.querySelector('.badge-info i');
+          const prepDetails = itemData.prep || categoryPrepDefaults[sectionData.category] || categoryPrepDefaults['Entrées'];
+          if (badgeLabel) {
+            badgeLabel.textContent = prepDetails.text;
+          }
+          if (badgeIcon) {
+            badgeIcon.textContent = prepDetails.icon;
+          }
 
           const ratingWrapper = itemFragment.querySelector('.rating-control');
           ratingWrapper.querySelector('.rating-count').textContent = '(0)';
