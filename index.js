@@ -74,6 +74,7 @@ const createDannysWokRewardsRouter = require('./routes/dannyswok-rewards');
 const createNotificationsRouter = require('./routes/notifications');
 const createNewBrightWaterGrantRouter = require('./routes/delcotech-grant');
 const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
+const createKgKitchenRouter = require('./routes/kg-kitchen');
 
 const jwt = require('jsonwebtoken');
 
@@ -3483,3 +3484,4 @@ app.listen(PORT, async () => {
     console.log(r?.ok ? 'Calendly webhook subscribed.' : 'Calendly webhook not subscribed (optional).');
   }
 });
+
