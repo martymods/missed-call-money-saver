@@ -1255,8 +1255,17 @@ app.get('/health', (_, res) => res.json({ ok: true }));
 // Front-end config (safe to expose PUBLISHABLE IDs only)
 // ---------------------------------------------------------------------
 app.get('/config', (_, res) => {
+  // Determine which Stripe publishable key to expose. Prefer the dedicated
+  // KG_STRIPE_PK (used by the KG Grill Kitchen front-end) and fall back to
+  // STRIPE_PUBLISHABLE_KEY for legacy consumers. Both will be included in
+  // the response for compatibility. If neither is set, an empty string
+  // will be returned.
+  const stripePk = process.env.KG_STRIPE_PK
+    || process.env.STRIPE_PUBLISHABLE_KEY
+    || '';
   res.json({
-    stripePk: process.env.STRIPE_PUBLISHABLE_KEY || '',
+    stripePublishableKey: stripePk,
+    stripePk,
     paypalClientId: process.env.PAYPAL_CLIENT_ID || '',
     paypalPlanId: process.env.PAYPAL_PLAN_ID || '',
     demoAccount: shouldBootstrapDemo ? {
