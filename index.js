@@ -1169,6 +1169,19 @@ app.use('/dental', express.static(path.join(__dirname, 'public', 'dental'), {
 // mount the API
 app.use('/api/eligibility', require('./routes/eligibility'));
 
+// env-driven config for KG Grill Kitchen
+const KG_ALLOWED_ORIGINS = (process.env.KG_ALLOWED_ORIGINS || '')
+  .split(',').map(s => s.trim()).filter(Boolean);
+
+// Prefer dedicated env for KG; fall back to your global publishable if present
+const KG_STRIPE_PK = process.env.KG_STRIPE_PK || process.env.STRIPE_PUBLISHABLE_KEY || '';
+
+app.use('/kg', createKgKitchenRouter({
+  stripePk: KG_STRIPE_PK,
+  allowedOrigins: KG_ALLOWED_ORIGINS,
+}));
+
+
 const BUSINESS = process.env.BUSINESS_NAME || 'Our Team';
 const CAL_LINK = process.env.CALENDLY_SCHEDULING_LINK || '#';
 const REVIEW_LINK = process.env.REVIEW_LINK || '';
@@ -3484,4 +3497,5 @@ app.listen(PORT, async () => {
     console.log(r?.ok ? 'Calendly webhook subscribed.' : 'Calendly webhook not subscribed (optional).');
   }
 });
+
 
