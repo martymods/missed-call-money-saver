@@ -1176,10 +1176,26 @@ const KG_ALLOWED_ORIGINS = (process.env.KG_ALLOWED_ORIGINS || '')
 // Prefer dedicated env for KG; fall back to your global publishable if present
 const KG_STRIPE_PK = process.env.KG_STRIPE_PK || process.env.STRIPE_PUBLISHABLE_KEY || '';
 
-app.use('/kg', createKgKitchenRouter({
+// Initialize the KG router once so we can reuse it for root aliases. This router
+// exposes /config, /analytics, /create-payment-intent and /telegram-notify.
+const kgRouter = createKgKitchenRouter({
   stripePk: KG_STRIPE_PK,
   allowedOrigins: KG_ALLOWED_ORIGINS,
-}));
+});
+
+// Mount at /kg for normal requests. Calls like /kg/config, /kg/analytics, etc.
+// will hit the appropriate handlers with CORS headers.
+app.use('/kg', kgRouter);
+
+// Mirror selected KG endpoints at the root of the backend. Some clients may
+// call /config, /analytics, /create-payment-intent or /telegram-notify on the
+// base domain instead of /kg/... because their API base omits the /kg
+// prefix. These aliases allow those requests to function and still apply
+// the same CORS policies. Only the specific paths are forwarded.
+app.use('/config', kgRouter);
+app.use('/analytics', kgRouter);
+app.use('/create-payment-intent', kgRouter);
+app.use('/telegram-notify', kgRouter);
 
 
 const BUSINESS = process.env.BUSINESS_NAME || 'Our Team';
@@ -3497,5 +3513,3 @@ app.listen(PORT, async () => {
     console.log(r?.ok ? 'Calendly webhook subscribed.' : 'Calendly webhook not subscribed (optional).');
   }
 });
-
-
