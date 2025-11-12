@@ -68,28 +68,44 @@ module.exports = function createKgKitchenRouter(opts = {}) {
   });
 
   // POST /kg/telegram-notify
-  router.post('/telegram-notify', express.json(), async (req, res) => {
-    try {
-      const token = process.env.TELEGRAM_BOT_TOKEN;
-      const chatId = process.env.TELEGRAM_CHAT_ID;
-      if (!token || !chatId) return res.status(200).json({ ok: true, skipped: true });
+router.post('/telegram-notify', express.json(), async (req, res) => {
+  try {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    if (!token || !chatId) return res.status(200).json({ ok: true, skipped: true });
 
-      const { event = 'paid', amount = 0, name = '', phone = '' } = req.body || {};
-      const dollars = (Number(amount) / 100).toFixed(2);
-      const text = `🍽️ KG Grill Kitchen\nEvent: ${event}\nAmount: $${dollars}\nName: ${name}\nPhone: ${phone}`;
+    const { event = 'paid', amount = 0, name = '', phone = '', address = {}, cart = [] } = req.body || {};
+    const dollars = (Number(amount) / 100).toFixed(2);
 
-      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text })
-      });
+    const itemsStr = (cart || [])
+      .map(i => `${i.quantity}× ${i.name} ($${(Number(i.unitPrice) / 100).toFixed(2)})`)
+      .join('\n');
 
-      return res.json({ ok: true });
-    } catch (e) {
-      console.warn('telegram error', e);
-      return res.status(200).json({ ok: false });
-    }
-  });
+    const addr = `${address?.line1 || ''} ${address?.city || ''} ${address?.postal_code || ''}`.trim();
+
+    const text = [
+      '🍽️ KG Grill Kitchen',
+      `Event: ${event}`,
+      `Amount: $${dollars}`,
+      `Name: ${name || 'N/A'}`,
+      `Phone: ${phone || 'N/A'}`,
+      addr ? `Address: ${addr}` : 'Address: N/A',
+      'Items:',
+      itemsStr || '—'
+    ].join('\n');
+
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text })
+    });
+
+    return res.json({ ok: true });
+  } catch (e) {
+    console.warn('telegram error', e);
+    return res.status(200).json({ ok: false });
+  }
+});
 
   // POST /kg/analytics  (lightweight; store or just log)
   router.post('/analytics', express.json(), async (req, res) => {
