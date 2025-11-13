@@ -32,6 +32,7 @@ module.exports = function createKgKitchenRouter(opts = {}) {
   });
 
   // POST /kg/create-payment-intent  -> returns { clientSecret }
+  // POST /kg/create-payment-intent  -> returns { clientSecret }
   router.post('/create-payment-intent', express.json(), async (req, res) => {
     try {
       if (!stripe) return res.status(500).json({ error: 'Stripe not configured' });
@@ -67,8 +68,78 @@ module.exports = function createKgKitchenRouter(opts = {}) {
     }
   });
 
+  // POST /kg/create-checkout-session -> Stripe Checkout (Apple Pay / wallets)
+  router.post('/create-checkout-session', express.json(), async (req, res) => {
+    try {
+      if (!stripe) return res.status(500).json({ error: 'Stripe not configured' });
+
+      const {
+        cart,
+        fulfilment,
+        tipCents,
+        successUrl,
+        cancelUrl
+      } = req.body || {};
+
+      if (!Array.isArray(cart) || cart.length === 0) {
+        return res.status(400).json({ error: 'Cart is empty' });
+      }
+
+      // Build line items from the cart (amounts are already in cents)
+      const line_items = cart.map(item => ({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: item.name,
+            metadata: {
+              id: item.id || '',
+              sauce: item.sauce || '',
+              freeSide: item.freeSide || ''
+            },
+          },
+          unit_amount: item.unitPrice, // cents
+        },
+        quantity: item.quantity,
+      }));
+
+      // Add a separate line for tip (if any)
+      if (tipCents && tipCents > 0) {
+        line_items.push({
+          price_data: {
+            currency: 'usd',
+            product_data: { name: 'Driver tip' },
+            unit_amount: tipCents,
+          },
+          quantity: 1,
+        });
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'], // Apple Pay/Google Pay included under "card"
+        line_items,
+        allow_promotion_codes: false,
+        metadata: {
+          fulfilment: fulfilment || 'pickup',
+        },
+        success_url:
+          successUrl ||
+          'https://kggrillkitchen.onrender.com/thank-you.html?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url:
+          cancelUrl ||
+          'https://kggrillkitchen.onrender.com/?checkout=canceled',
+      });
+
+      return res.json({ url: session.url });
+    } catch (err) {
+      console.error('Error creating Checkout Session', err);
+      return res.status(500).json({ error: 'Failed to create Checkout Session' });
+    }
+  });
+
   // POST /kg/telegram-notify
-router.post('/telegram-notify', express.json(), async (req, res) => {
+  router.post('/telegram-notify', express.json(), async (req, res) => {
+
   try {
     const token = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
