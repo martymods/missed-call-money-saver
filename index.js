@@ -76,6 +76,7 @@ const createNewBrightWaterGrantRouter = require('./routes/delcotech-grant');
 const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
 const createKgKitchenRouter = require('./routes/kg-kitchen');
 
+
 const jwt = require('jsonwebtoken');
 
 // DoorDash Drive credentials (create in the Developer Portal)
@@ -871,6 +872,80 @@ app.use((_, res, next) => {
 });
 
 app.get('/api/food/menu', (_req,res)=> res.json({ items: MENU, taxRate: TAX_RATE }));
+
+// Stripe Checkout webhook – must use raw body for signature check
+app.post('/kg/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET; // from Stripe Dashboard
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.error('⚠️  Webhook signature verification failed.', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  try {
+    // Successful paid checkout
+    if (event.type === 'checkout.session.completed') {
+      const session     = event.data.object;
+      const name        = session.customer_details?.name || '';
+      const phone       = session.customer_details?.phone || '';
+      const addr        = session.customer_details?.address;
+      const amountTotal = session.amount_total || 0; // cents
+
+      const addressLine = addr
+        ? `${addr.line1 || ''} ${addr.city || ''} ${addr.postal_code || ''}`.trim()
+        : '';
+
+      const lines = [];
+      lines.push('✅ NEW PAID ORDER (Stripe Checkout)');
+      if (name)        lines.push(`👤 Name: ${name}`);
+      if (phone)       lines.push(`📞 Phone: ${phone}`);
+      if (addressLine) lines.push(`📍 Address: ${addressLine}`);
+      lines.push(`💵 TOTAL CHARGED: $${(amountTotal / 100).toFixed(2)}`);
+
+      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: lines.join('\n'),
+          parse_mode: 'HTML',
+        }),
+      });
+    }
+
+    // Payment failed (async or immediate)
+    if (
+      event.type === 'checkout.session.async_payment_failed' ||
+      event.type === 'payment_intent.payment_failed'
+    ) {
+      const payObj = event.data.object;
+      const amount = payObj.amount || payObj.amount_received || 0;
+
+      const lines = [];
+      lines.push('❌ PAYMENT FAILED (Stripe Checkout)');
+      lines.push(`💵 Attempted amount: $${(amount / 100).toFixed(2)}`);
+
+      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: lines.join('\n'),
+          parse_mode: 'HTML',
+        }),
+      });
+    }
+
+    res.json({ received: true });
+  } catch (err) {
+    console.error('Webhook handling error', err);
+    res.status(500).end();
+  }
+});
 
 
 app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT })); // Twilio posts form-url-encoded
