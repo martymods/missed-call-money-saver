@@ -2,6 +2,23 @@
 const express = require('express');
 const fetch = require('node-fetch');
 
+// Telegram config + label maps
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
+
+const SIDE_LABELS = {
+  jollof_rice: 'Jollof Rice',
+  mac_cheese: 'Mac & Cheese',
+  potato_wedges: 'Potato Wedges',
+};
+
+const SAUCE_LABELS = {
+  none: 'No sauce',
+  mild: 'Mild',
+  hot: 'Hot',
+};
+
+
 module.exports = function createKgKitchenRouter(opts = {}) {
   const router = express.Router();
 
@@ -137,46 +154,108 @@ module.exports = function createKgKitchenRouter(opts = {}) {
     }
   });
 
-  // POST /kg/telegram-notify
-  router.post('/telegram-notify', express.json(), async (req, res) => {
-
+// POST /kg/telegram-notify
+router.post('/telegram-notify', express.json(), async (req, res) => {
   try {
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_CHAT_ID;
-    if (!token || !chatId) return res.status(200).json({ ok: true, skipped: true });
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+      return res.status(200).json({ ok: true, skipped: true });
+    }
 
-    const { event = 'paid', amount = 0, name = '', phone = '', address = {}, cart = [] } = req.body || {};
-    const dollars = (Number(amount) / 100).toFixed(2);
+    const {
+      name,
+      phone,
+      address,
+      notes,
+      items,
+      subtotal,
+      deliveryFee,
+      fees,
+      tip,
+      total,
+      cart, // fallback if old payload is still used
+    } = req.body || {};
 
-    const itemsStr = (cart || [])
-      .map(i => `${i.quantity}× ${i.name} ($${(Number(i.unitPrice) / 100).toFixed(2)})`)
-      .join('\n');
+    const lines = [];
 
-    const addr = `${address?.line1 || ''} ${address?.city || ''} ${address?.postal_code || ''}`.trim();
+    lines.push('🔥 NEW KG GRILL KITCHEN ORDER 🔥');
+    if (name)   lines.push(`👤 Name: ${name}`);
+    if (phone)  lines.push(`📞 Phone: ${phone}`);
 
-    const text = [
-      '🍽️ KG Grill Kitchen',
-      `Event: ${event}`,
-      `Amount: $${dollars}`,
-      `Name: ${name || 'N/A'}`,
-      `Phone: ${phone || 'N/A'}`,
-      addr ? `Address: ${addr}` : 'Address: N/A',
-      'Items:',
-      itemsStr || '—'
-    ].join('\n');
+    // handle address as string or object
+    let addrText = '';
+    if (typeof address === 'string') {
+      addrText = address.trim();
+    } else if (address && (address.line1 || address.city || address.postal_code)) {
+      addrText = `${address.line1 || ''} ${address.city || ''} ${address.postal_code || ''}`.trim();
+    }
+    if (addrText) {
+      lines.push(`📍 Address: ${addrText}`);
+    }
 
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    if (notes) {
+      lines.push(`📝 Notes: ${notes}`);
+    }
+
+    // Choose list of items: prefer `items`, fall back to `cart`
+    const list = Array.isArray(items) && items.length ? items : (cart || []);
+
+    if (Array.isArray(list) && list.length) {
+      lines.push('');
+      lines.push('🍽 Items:');
+
+      list.forEach((item) => {
+        if (!item) return;
+
+        const qty  = item.quantity || 1;
+        const main = item.name || item.id || 'Item';
+
+        const sideKey  = item.freeSide || null;
+        const sauceKey = item.sauce || null;
+
+        const sideLabel  = sideKey  && SIDE_LABELS[sideKey]   ? SIDE_LABELS[sideKey]   : null;
+        const sauceLabel = sauceKey && SAUCE_LABELS[sauceKey] ? SAUCE_LABELS[sauceKey] : null;
+
+        const parts = [`• ${qty}× ${main}`];
+
+        if (sideLabel) {
+          parts.push(`Free side: ${sideLabel}`);
+        }
+
+        if (sauceLabel) {
+          parts.push(`Sauce: ${sauceLabel}`);
+        }
+
+        lines.push(parts.join(' | '));
+      });
+    }
+
+    lines.push('');
+    lines.push('💵 Totals:');
+    if (typeof subtotal === 'number')    lines.push(`Subtotal: $${(subtotal / 100).toFixed(2)}`);
+    if (typeof deliveryFee === 'number') lines.push(`Delivery: $${(deliveryFee / 100).toFixed(2)}`);
+    if (typeof fees === 'number')        lines.push(`Fees & tax: $${(fees / 100).toFixed(2)}`);
+    if (typeof tip === 'number')         lines.push(`Tip: $${(tip / 100).toFixed(2)}`);
+    if (typeof total === 'number')       lines.push(`TOTAL PAID: $${(total / 100).toFixed(2)}`);
+
+    const text = lines.join('\n');
+
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text })
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text,
+        parse_mode: 'HTML',
+      }),
     });
 
-    return res.json({ ok: true });
-  } catch (e) {
-    console.warn('telegram error', e);
-    return res.status(200).json({ ok: false });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Telegram notify failed', err);
+    res.status(500).json({ ok: false });
   }
 });
+
 
   // POST /kg/analytics  (lightweight; store or just log)
   router.post('/analytics', express.json(), async (req, res) => {
