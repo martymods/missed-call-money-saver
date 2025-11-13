@@ -170,9 +170,10 @@ router.post('/telegram-notify', express.json(), async (req, res) => {
       subtotal,
       deliveryFee,
       fees,
-      tip,
+      tip,     // we accept it, but intentionally do NOT print it
       total,
-      cart, // fallback if old payload is still used
+      amount,  // fallback total if `total` is not provided
+      cart,    // fallback if old payload is still used
     } = req.body || {};
 
     const lines = [];
@@ -209,6 +210,23 @@ router.post('/telegram-notify', express.json(), async (req, res) => {
         const qty  = item.quantity || 1;
         const main = item.name || item.id || 'Item';
 
+        // Figure out price in cents
+        let unitCents = 0;
+        if (typeof item.unitPrice === 'number') {
+          unitCents = item.unitPrice;
+        } else if (typeof item.price === 'number') {
+          unitCents = Math.round(item.price * 100);
+        }
+
+        let unitLabel = '';
+        let totalLabel = '';
+        if (unitCents > 0) {
+          const unit = unitCents / 100;
+          const rowTotal = unit * qty;
+          unitLabel = `$${unit.toFixed(2)} each`;
+          totalLabel = `$${rowTotal.toFixed(2)}`;
+        }
+
         const sideKey  = item.freeSide || null;
         const sauceKey = item.sauce || null;
 
@@ -216,6 +234,11 @@ router.post('/telegram-notify', express.json(), async (req, res) => {
         const sauceLabel = sauceKey && SAUCE_LABELS[sauceKey] ? SAUCE_LABELS[sauceKey] : null;
 
         const parts = [`• ${qty}× ${main}`];
+
+        if (unitLabel && totalLabel) {
+          parts.push(unitLabel);
+          parts.push(totalLabel);
+        }
 
         if (sideLabel) {
           parts.push(`Free side: ${sideLabel}`);
@@ -233,9 +256,18 @@ router.post('/telegram-notify', express.json(), async (req, res) => {
     lines.push('💵 Totals:');
     if (typeof subtotal === 'number')    lines.push(`Subtotal: $${(subtotal / 100).toFixed(2)}`);
     if (typeof deliveryFee === 'number') lines.push(`Delivery: $${(deliveryFee / 100).toFixed(2)}`);
-    if (typeof fees === 'number')        lines.push(`Fees & tax: $${(fees / 100).toFixed(2)}`);
-    if (typeof tip === 'number')         lines.push(`Tip: $${(tip / 100).toFixed(2)}`);
-    if (typeof total === 'number')       lines.push(`TOTAL PAID: $${(total / 100).toFixed(2)}`);
+    if (typeof fees === 'number')        lines.push(`Service & tax: $${(fees / 100).toFixed(2)}`);
+    // IMPORTANT: we intentionally DO NOT print the tip value to keep it private
+    // if (typeof tip === 'number')      lines.push(`Tip: $${(tip / 100).toFixed(2)}`);
+
+    // Prefer explicit `total`, fall back to `amount`
+    const totalCents = typeof total === 'number'
+      ? total
+      : (typeof amount === 'number' ? amount : null);
+
+    if (typeof totalCents === 'number') {
+      lines.push(`TOTAL CHARGED: $${(totalCents / 100).toFixed(2)}`);
+    }
 
     const text = lines.join('\n');
 
@@ -255,6 +287,7 @@ router.post('/telegram-notify', express.json(), async (req, res) => {
     res.status(500).json({ ok: false });
   }
 });
+
 
 
   // POST /kg/analytics  (lightweight; store or just log)
