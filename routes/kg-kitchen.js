@@ -113,13 +113,17 @@ module.exports = function createKgKitchenRouter(opts = {}) {
     try {
       if (!stripe) return res.status(500).json({ error: 'Stripe not configured' });
 
-      const {
-        cart,
-        fulfilment,
-        tipCents,
-        successUrl,
-        cancelUrl
-      } = req.body || {};
+    const {
+      cart,
+      fulfilment,
+      tipCents,
+      successUrl,
+      cancelUrl,
+      name,
+      phone,
+      address
+    } = req.body || {};
+
 
       if (!Array.isArray(cart) || cart.length === 0) {
         return res.status(400).json({ error: 'Cart is empty' });
@@ -159,9 +163,12 @@ module.exports = function createKgKitchenRouter(opts = {}) {
         payment_method_types: ['card'], // Apple Pay/Google Pay included under "card"
         line_items,
         allow_promotion_codes: false,
-        metadata: {
-          fulfilment: fulfilment || 'pickup',
-        },
+  metadata: {
+    fulfilment: fulfilment || 'pickup',
+    name: name || '',
+    phone: phone || '',
+    address_line1: (address && address.line1) || '',
+  },
         success_url:
           successUrl ||
           'https://kggrillkitchen.onrender.com/thank-you.html?session_id={CHECKOUT_SESSION_ID}',
@@ -182,6 +189,16 @@ module.exports = function createKgKitchenRouter(opts = {}) {
       lines.push('*KG Grill – Checkout opened 🟡*');
       lines.push(`Total: *$${grandTotal.toFixed(2)}*`);
       if (fulfilment) lines.push(`Type: ${fulfilment}`);
+
+      if (name) {
+        lines.push(`👤 Name: ${name}`);
+      }
+      if (phone) {
+        lines.push(`📞 Phone: ${phone}`);
+      }
+      if (address && address.line1) {
+        lines.push(`📍 Address: ${address.line1}`);
+      }
 
       if (Array.isArray(cart) && cart.length) {
         lines.push('');
