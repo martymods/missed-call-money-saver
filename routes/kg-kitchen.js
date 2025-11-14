@@ -343,7 +343,7 @@ router.post('/telegram-notify', express.json(), async (req, res) => {
 
 // Stripe webhook for Checkout success / failure
 router.post(
-  '/webhook',
+  '/stripe-webhook',
   express.raw({ type: 'application/json' }),
   async (req, res) => {
     const sig = req.headers['stripe-signature'];
