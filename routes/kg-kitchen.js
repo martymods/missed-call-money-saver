@@ -419,14 +419,53 @@ router.post(
 );
 
 
-  // POST /kg/analytics  (lightweight; store or just log)
+  // POST /kg/analytics  (richer logging of user session details)
   router.post('/analytics', express.json(), async (req, res) => {
     try {
-      // TODO: persist if desired
-      console.log('kg-analytics', { path: req.body?.path, event: req.body?.event });
-    } catch(_) {}
+      const {
+        event = 'unknown',
+        data = {},
+        timestamp,
+        path: clientPath
+      } = req.body || {};
+
+      // Basic request context
+      const ua      = req.headers['user-agent'] || '';
+      const referer = req.headers['referer'] || req.headers['referrer'] || '';
+      const ip =
+        (req.headers['x-forwarded-for'] || '')
+          .split(',')[0]
+          .trim() ||
+        req.socket?.remoteAddress ||
+        req.ip;
+
+      const logPayload = {
+        event,                           // e.g. "page_view"
+        clientPath: clientPath || null,  // path from the browser
+        timestamp,                       // ms since epoch from client
+        data,                            // any extra data sent by the client
+        request: {
+          method: req.method,
+          url: req.originalUrl,
+        },
+        context: {
+          ip,
+          userAgent: ua,
+          referer,
+        },
+      };
+
+      console.log('kg-analytics', logPayload);
+
+      // TODO: here you could persist to a DB or logging service
+      // e.g. await analyticsCollection.insertOne(logPayload);
+    } catch (err) {
+      console.error('kg-analytics error', err);
+    }
+
     res.json({ ok: true });
   });
 
   return router;
 };
+
