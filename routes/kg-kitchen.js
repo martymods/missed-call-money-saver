@@ -6,6 +6,29 @@ const fetch = require('node-fetch');
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
 
+// Simple helper to send messages to Telegram
+async function notifyTelegram(text) {
+  try {
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+      console.log('[KG Telegram disabled]', text);
+      return;
+    }
+
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text,
+        parse_mode: 'Markdown',
+      }),
+    });
+  } catch (err) {
+    console.error('[KG Telegram] sendMessage failed:', err.message);
+  }
+}
+
+
 const SIDE_LABELS = {
   jollof_rice: 'Jollof Rice',
   mac_cheese: 'Mac & Cheese',
@@ -146,6 +169,36 @@ module.exports = function createKgKitchenRouter(opts = {}) {
           cancelUrl ||
           'https://kggrillkitchen.onrender.com/?checkout=canceled',
       });
+
+            // --- Telegram ping when Checkout page is opened ---
+      const cartTotalCents = (cart || []).reduce(
+        (sum, item) => sum + (item.unitPrice || 0) * (item.quantity || 1),
+        0
+      );
+      const tip = tipCents || 0;
+      const grandTotal = (cartTotalCents + tip) / 100;
+
+      const lines = [];
+      lines.push('*KG Grill – Checkout opened 🟡*');
+      lines.push(`Total: *$${grandTotal.toFixed(2)}*`);
+      if (fulfilment) lines.push(`Type: ${fulfilment}`);
+
+      if (Array.isArray(cart) && cart.length) {
+        lines.push('');
+        lines.push('*Items:*');
+        for (const item of cart) {
+          const price = ((item.unitPrice || 0) / 100).toFixed(2);
+          const qty   = item.quantity || 1;
+          lines.push(`• ${item.name || 'Item'} x${qty} – $${price}`);
+        }
+      }
+
+      lines.push('');
+      lines.push(`Checkout session: \`${session.id}\``);
+
+      notifyTelegram(lines.join('\n')).catch(() => {});
+      // --- end Telegram ping ---
+
 
       return res.json({ url: session.url });
     } catch (err) {
@@ -288,6 +341,82 @@ router.post('/telegram-notify', express.json(), async (req, res) => {
   }
 });
 
+// Stripe webhook for Checkout success / failure
+router.post(
+  '/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    try {
+      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_KG; // set this in env
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err) {
+      console.error('[KG Stripe webhook] signature error:', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object;
+          const total = (session.amount_total || 0) / 100;
+
+          let text = '*KG Grill – Payment SUCCESS ✅*\n';
+          text += `Total: *$${total.toFixed(2)}*\n`;
+          text += `Session: \`${session.id}\`\n`;
+
+          if (session.customer_details?.email) {
+            text += `Email: ${session.customer_details.email}\n`;
+          }
+          if (session.customer_details?.name) {
+            text += `Name: ${session.customer_details.name}\n`;
+          }
+
+          await notifyTelegram(text);
+          break;
+        }
+
+        case 'payment_intent.payment_failed': {
+          const intent = event.data.object;
+          const total = (intent.amount || 0) / 100;
+          const reason =
+            intent.last_payment_error?.message || 'Unknown reason';
+
+          let text = '*KG Grill – Payment FAILED ❌*\n';
+          text += `Amount: *$${total.toFixed(2)}*\n`;
+          text += `Reason: ${reason}\n`;
+          text += `PaymentIntent: \`${intent.id}\``;
+
+          await notifyTelegram(text);
+          break;
+        }
+
+        case 'checkout.session.expired': {
+          const session = event.data.object;
+          const total = (session.amount_total || 0) / 100;
+
+          let text = '*KG Grill – Checkout EXPIRED ⏹️*\n';
+          text += `Total: *$${total.toFixed(2)}*\n`;
+          text += `Session: \`${session.id}\``;
+
+          await notifyTelegram(text);
+          break;
+        }
+
+        default:
+          // ignore other events
+          break;
+      }
+
+      res.json({ received: true });
+    } catch (err) {
+      console.error('[KG Stripe webhook] handler error:', err);
+      res.status(500).send('Webhook handler error');
+    }
+  }
+);
 
 
   // POST /kg/analytics  (lightweight; store or just log)
