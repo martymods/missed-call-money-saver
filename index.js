@@ -888,23 +888,30 @@ app.post('/kg/stripe-webhook', express.raw({ type: 'application/json' }), async 
 
   try {
     // Successful paid checkout
-    if (event.type === 'checkout.session.completed') {
-      const session     = event.data.object;
-      const name        = session.customer_details?.name || '';
-      const phone       = session.customer_details?.phone || '';
-      const addr        = session.customer_details?.address;
-      const amountTotal = session.amount_total || 0; // cents
+if (event.type === 'checkout.session.completed') {
+  const session     = event.data.object;
+  const name        = session.customer_details?.name || '';
+  const phone       = session.customer_details?.phone || '';
+  const addr        = session.customer_details?.address;
+  const amountTotal = session.amount_total || 0; // cents
 
-      const addressLine = addr
-        ? `${addr.line1 || ''} ${addr.city || ''} ${addr.postal_code || ''}`.trim()
-        : '';
+  const addressLine = addr
+    ? `${addr.line1 || ''} ${addr.city || ''} ${addr.postal_code || ''}`.trim()
+    : '';
 
-      const lines = [];
-      lines.push('✅ NEW PAID ORDER (Stripe Checkout)');
-      if (name)        lines.push(`👤 Name: ${name}`);
-      if (phone)       lines.push(`📞 Phone: ${phone}`);
-      if (addressLine) lines.push(`📍 Address: ${addressLine}`);
-      lines.push(`💵 TOTAL CHARGED: $${(amountTotal / 100).toFixed(2)}`);
+  const paymentMethod =
+    Array.isArray(session.payment_method_types) &&
+    session.payment_method_types.length
+      ? session.payment_method_types[0]
+      : 'unknown';
+
+  const lines = [];
+  lines.push('✅ NEW PAID ORDER (Stripe Checkout)');
+  if (name)        lines.push(`👤 Name: ${name}`);
+  if (phone)       lines.push(`📞 Phone: ${phone}`);
+  if (addressLine) lines.push(`📍 Address: ${addressLine}`);
+  lines.push(`💵 TOTAL CHARGED: $${(amountTotal / 100).toFixed(2)}`);
+  lines.push(`💳 Method: ${paymentMethod}`); // will show "card" or "cashapp"
 
       await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
