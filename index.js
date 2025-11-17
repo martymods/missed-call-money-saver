@@ -899,11 +899,23 @@ if (event.type === 'checkout.session.completed') {
     ? `${addr.line1 || ''} ${addr.city || ''} ${addr.postal_code || ''}`.trim()
     : '';
 
-  const paymentMethod =
+  const paymentMethodRaw =
     Array.isArray(session.payment_method_types) &&
     session.payment_method_types.length
       ? session.payment_method_types[0]
       : 'unknown';
+
+  const paymentMethodMap = {
+    card:             'Card / Apple Pay / Google Pay',
+    cashapp:          'Cash App Pay',
+    klarna:           'Klarna',
+    afterpay_clearpay:'Afterpay / Clearpay',
+    zip:              'Zip',
+    amazon_pay:       'Amazon Pay',
+  };
+
+  const paymentMethodLabel =
+    paymentMethodMap[paymentMethodRaw] || paymentMethodRaw;
 
   const lines = [];
   lines.push('✅ NEW PAID ORDER (Stripe Checkout)');
@@ -911,7 +923,7 @@ if (event.type === 'checkout.session.completed') {
   if (phone)       lines.push(`📞 Phone: ${phone}`);
   if (addressLine) lines.push(`📍 Address: ${addressLine}`);
   lines.push(`💵 TOTAL CHARGED: $${(amountTotal / 100).toFixed(2)}`);
-  lines.push(`💳 Method: ${paymentMethod}`); // will show "card" or "cashapp"
+  lines.push(`💳 Method: ${paymentMethodLabel}`); // will show "card" or "cashapp"
 
       await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
