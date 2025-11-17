@@ -887,31 +887,74 @@ app.post('/kg/stripe-webhook', express.raw({ type: 'application/json' }), async 
   }
 
   try {
-    // Successful paid checkout
-if (event.type === 'checkout.session.completed') {
-  const session     = event.data.object;
-  const name        = session.customer_details?.name || '';
-  const phone       = session.customer_details?.phone || '';
-  const addr        = session.customer_details?.address;
-  const amountTotal = session.amount_total || 0; // cents
+// Successful paid checkout (Checkout session OR raw PaymentIntent)
+if (
+  event.type === 'checkout.session.completed' ||
+  event.type === 'payment_intent.succeeded'
+) {
+  let name = '';
+  let phone = '';
+  let addr = null;
+  let amountTotal = 0; // cents
+  let paymentMethodRaw = 'unknown';
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+
+    // Prefer customer_details, fall back to metadata
+    name =
+      session.customer_details?.name ||
+      session.metadata?.name ||
+      '';
+    phone =
+      session.customer_details?.phone ||
+      session.metadata?.phone ||
+      '';
+    addr = session.customer_details?.address || null;
+    amountTotal = session.amount_total || 0;
+
+    paymentMethodRaw =
+      Array.isArray(session.payment_method_types) &&
+      session.payment_method_types.length
+        ? session.payment_method_types[0]
+        : 'card';
+  } else if (event.type === 'payment_intent.succeeded') {
+    const intent = event.data.object;
+
+    // You already store these in metadata when creating the session
+    name = intent.metadata?.name || '';
+    phone = intent.metadata?.phone || '';
+
+    // Try shipping address or billing address
+    addr =
+      intent.shipping?.address ||
+      (intent.charges &&
+        intent.charges.data &&
+        intent.charges.data[0] &&
+        intent.charges.data[0].billing_details &&
+        intent.charges.data[0].billing_details.address) ||
+      null;
+
+    amountTotal = intent.amount_received || intent.amount || 0;
+
+    paymentMethodRaw =
+      Array.isArray(intent.payment_method_types) &&
+      intent.payment_method_types.length
+        ? intent.payment_method_types[0]
+        : 'card';
+  }
 
   const addressLine = addr
     ? `${addr.line1 || ''} ${addr.city || ''} ${addr.postal_code || ''}`.trim()
     : '';
 
-  const paymentMethodRaw =
-    Array.isArray(session.payment_method_types) &&
-    session.payment_method_types.length
-      ? session.payment_method_types[0]
-      : 'unknown';
-
   const paymentMethodMap = {
-    card:             'Card / Apple Pay / Google Pay',
-    cashapp:          'Cash App Pay',
-    klarna:           'Klarna',
-    afterpay_clearpay:'Afterpay / Clearpay',
-    zip:              'Zip',
-    amazon_pay:       'Amazon Pay',
+    card:              'Card / Apple Pay / Google Pay',
+    cashapp:           'Cash App Pay',
+    klarna:            'Klarna',
+    afterpay_clearpay: 'Afterpay / Clearpay',
+    zip:               'Zip',
+    amazon_pay:        'Amazon Pay',
   };
 
   const paymentMethodLabel =
@@ -923,18 +966,22 @@ if (event.type === 'checkout.session.completed') {
   if (phone)       lines.push(`📞 Phone: ${phone}`);
   if (addressLine) lines.push(`📍 Address: ${addressLine}`);
   lines.push(`💵 TOTAL CHARGED: $${(amountTotal / 100).toFixed(2)}`);
-  lines.push(`💳 Method: ${paymentMethodLabel}`); // will show "card" or "cashapp"
+  lines.push(`💳 Method: ${paymentMethodLabel}`);
 
-      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: process.env.TELEGRAM_CHAT_ID,
-          text: lines.join('\n'),
-          parse_mode: 'HTML',
-        }),
-      });
+  await fetch(
+    `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: process.env.TELEGRAM_CHAT_ID,
+        text: lines.join('\n'),
+        parse_mode: 'HTML',
+      }),
     }
+  );
+}
+
 
     // Payment failed (async or immediate)
     if (
