@@ -160,7 +160,7 @@ module.exports = function createKgKitchenRouter(opts = {}) {
 
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
-        payment_method_types: ['card'], // Apple Pay/Google Pay included under "card"
+        payment_method_types: ['card', 'cashapp'], // add Cash App Pay
         line_items,
         allow_promotion_codes: false,
   metadata: {
@@ -485,4 +485,3 @@ router.post(
 
   return router;
 };
-
