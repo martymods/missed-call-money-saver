@@ -158,24 +158,33 @@ module.exports = function createKgKitchenRouter(opts = {}) {
         });
       }
 
-      const session = await stripe.checkout.sessions.create({
-        mode: 'payment',
-        payment_method_types: ['card', 'cashapp'], // add Cash App Pay
-        line_items,
-        allow_promotion_codes: false,
+const session = await stripe.checkout.sessions.create({
+  mode: 'payment',
+  payment_method_types: [
+    'card',
+    'cashapp',
+    'klarna',
+    'afterpay_clearpay',
+    'zip',
+    'amazon_pay',
+    // 'amazon_pay', // optional
+  ],
+  line_items,
+  allow_promotion_codes: false,
   metadata: {
     fulfilment: fulfilment || 'pickup',
     name: name || '',
     phone: phone || '',
     address_line1: (address && address.line1) || '',
   },
-        success_url:
-          successUrl ||
-          'https://kggrillkitchen.onrender.com/thank-you.html?session_id={CHECKOUT_SESSION_ID}',
-        cancel_url:
-          cancelUrl ||
-          'https://kggrillkitchen.onrender.com/?checkout=canceled',
-      });
+  success_url:
+    successUrl ||
+    'https://kggrillkitchen.onrender.com/thank-you.html?session_id={CHECKOUT_SESSION_ID}',
+  cancel_url:
+    cancelUrl ||
+    'https://kggrillkitchen.onrender.com/?checkout=canceled',
+});
+
 
             // --- Telegram ping when Checkout page is opened ---
       const cartTotalCents = (cart || []).reduce(
