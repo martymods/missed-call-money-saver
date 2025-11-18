@@ -6,6 +6,102 @@ const fetch = require('node-fetch');
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
 
+// 🔥 Grill Points R2 storage
+const R2_POINTS_URL = process.env.KG_R2_POINTS_URL || '';
+
+function getClientIp(req) {
+  return (
+    (req.headers['x-forwarded-for'] || '')
+      .split(',')[0]
+      .trim() ||
+    req.socket?.remoteAddress ||
+    req.ip
+  );
+}
+
+async function loadAllGrillPoints() {
+  if (!R2_POINTS_URL) return {};
+  try {
+    const resp = await fetch(R2_POINTS_URL, { method: 'GET' });
+    if (!resp.ok) {
+      console.warn('[KG GrillPoints] R2 GET failed:', resp.status);
+      return {};
+    }
+    const json = await resp.json();
+    return json && typeof json === 'object' ? json : {};
+  } catch (err) {
+    console.error('[KG GrillPoints] loadAllGrillPoints error:', err);
+    return {};
+  }
+}
+
+async function saveAllGrillPoints(all) {
+  if (!R2_POINTS_URL) return false;
+  try {
+    await fetch(R2_POINTS_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(all, null, 2),
+    });
+    return true;
+  } catch (err) {
+    console.error('[KG GrillPoints] saveAllGrillPoints error:', err);
+    return false;
+  }
+}
+
+function ensurePointsRecord(all, ip) {
+  const key = ip || 'unknown';
+  if (!all[key]) {
+    all[key] = {
+      ip: key,
+      points: 0,
+      lifetime: 0,
+      history: [],
+    };
+  }
+  const rec = all[key];
+  rec.ip = key;
+  rec.points = Number(rec.points || 0);
+  rec.lifetime = Number(rec.lifetime || 0);
+  if (!Array.isArray(rec.history)) rec.history = [];
+  return rec;
+}
+
+async function addPointsForIp(ip, delta, event = 'purchase', meta = {}) {
+  if (!R2_POINTS_URL || !ip || !delta) return;
+  const all = await loadAllGrillPoints();
+  const rec = ensurePointsRecord(all, ip);
+  const n = Number(delta) || 0;
+  rec.points += n;
+  rec.lifetime += n;
+  rec.history.push({
+    ts: Date.now(),
+    event,
+    delta: n,
+    points: rec.points,
+    lifetime: rec.lifetime,
+    meta,
+  });
+  await saveAllGrillPoints(all);
+}
+
+async function setPointsForIp(ip, points, lifetime, event = 'frontend_update') {
+  if (!R2_POINTS_URL || !ip) return;
+  const all = await loadAllGrillPoints();
+  const rec = ensurePointsRecord(all, ip);
+  rec.points = Number(points || 0);
+  rec.lifetime = Number(lifetime || rec.points);
+  rec.history.push({
+    ts: Date.now(),
+    event,
+    delta: null,
+    points: rec.points,
+    lifetime: rec.lifetime,
+  });
+  await saveAllGrillPoints(all);
+}
+
 // Simple helper to send messages to Telegram
 async function notifyTelegram(text) {
   try {
@@ -69,6 +165,59 @@ module.exports = function createKgKitchenRouter(opts = {}) {
   // GET /kg/config  -> publishable key for frontend fallback
   router.get('/config', (_req, res) => {
     return res.json({ publishableKey: STRIPE_PUBLISHABLE || '' });
+  });
+
+  
+  // GET /kg/grill-points  -> points for this IP (backed by R2 JSON)
+  router.get('/grill-points', async (req, res) => {
+    try {
+      const ip = getClientIp(req);
+      if (!R2_POINTS_URL) {
+        return res.json({ ip, points: 0, lifetime: 0, source: 'local-only' });
+      }
+      const all = await loadAllGrillPoints();
+      const rec = ensurePointsRecord(all, ip);
+      return res.json({
+        ip,
+        points: rec.points || 0,
+        lifetime: rec.lifetime || rec.points || 0,
+        source: 'r2',
+      });
+    } catch (err) {
+      console.error('[KG GrillPoints] GET /grill-points failed', err);
+      res.status(500).json({ error: 'Failed to load Grill Points' });
+    }
+  });
+
+  // POST /kg/grill-points  -> update points for this IP
+  router.post('/grill-points', express.json(), async (req, res) => {
+    try {
+      const ip = getClientIp(req);
+      const { points, lifetime, delta, event = 'frontend_update', meta = {} } = req.body || {};
+
+      if (!R2_POINTS_URL) {
+        return res.json({ ok: true, ip, stored: false });
+      }
+
+      if (typeof delta === 'number') {
+        await addPointsForIp(ip, delta, event, meta);
+      } else if (typeof points === 'number' || typeof lifetime === 'number') {
+        await setPointsForIp(ip, points, lifetime, event);
+      }
+
+      const all = await loadAllGrillPoints();
+      const rec = ensurePointsRecord(all, ip);
+
+      return res.json({
+        ok: true,
+        ip,
+        points: rec.points,
+        lifetime: rec.lifetime,
+      });
+    } catch (err) {
+      console.error('[KG GrillPoints] POST /grill-points failed', err);
+      res.status(500).json({ error: 'Failed to save Grill Points' });
+    }
   });
 
   // POST /kg/create-payment-intent  -> returns { clientSecret }
@@ -348,7 +497,32 @@ router.post('/telegram-notify', express.json(), async (req, res) => {
       lines.push(`TOTAL CHARGED: $${(totalCents / 100).toFixed(2)}`);
     }
 
+    // 🎁 Bonus Grill Points for completed order (per IP)
+    try {
+      if (R2_POINTS_URL) {
+        const ip = getClientIp(req);
+        const dollars = typeof totalCents === 'number' ? totalCents / 100 : 0;
+        const bonus = Math.round(dollars * 5); // e.g. 5 Grill Points per $1 spent
+
+        if (ip && bonus > 0) {
+          await addPointsForIp(ip, bonus, 'order', {
+            subtotal,
+            deliveryFee,
+            fees,
+            total: totalCents,
+            items: (list || []).map((item) => ({
+              id: item.id || item.name,
+              quantity: item.quantity || 1,
+            })),
+          });
+        }
+      }
+    } catch (err) {
+      console.error('[KG GrillPoints] failed to award order points', err);
+    }
+
     const text = lines.join('\n');
+
 
     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
