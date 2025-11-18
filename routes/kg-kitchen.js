@@ -10,12 +10,12 @@ const TELEGRAM_CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
 const R2_POINTS_URL = process.env.KG_R2_POINTS_URL || '';
 
 // In-memory Grill Points cache, keyed by IP.
-// We keep this as truth, and R2 (if configured) is just a mirror.
+// This is the truth. R2 (if configured) is just a mirror.
 const grillPointsState = {
   byIp: {},            // { [ip]: { ip, points, lifetime, history[] } }
   lastLoadedFromR2: 0, // timestamp when we last synced from R2
+  r2Writable: true,    // once a PUT fails, we stop trying to use R2
 };
-
 
 function getClientIp(req) {
   return (
@@ -31,7 +31,9 @@ async function loadAllGrillPoints() {
   // Always start from in-memory state
   const state = grillPointsState;
 
-  if (!R2_POINTS_URL) {
+  // If we have no R2 URL or we already know it's not writable,
+  // just trust memory and do NOT fetch from R2 (prevents overwrites).
+  if (!R2_POINTS_URL || !state.r2Writable) {
     return state;
   }
 
@@ -39,13 +41,14 @@ async function loadAllGrillPoints() {
     const resp = await fetch(R2_POINTS_URL, { method: 'GET' });
     if (!resp.ok) {
       console.warn('[KG GrillPoints] R2 GET failed:', resp.status);
+      // Do NOT overwrite local state when GET fails.
       return state;
     }
 
     const json = await resp.json().catch(() => ({}));
 
     if (json && typeof json === 'object') {
-      // Support either { byIp: { ... } } or old-style { "1.2.3.4": {...} }
+      // Support either { byIp: { ... } } or old-style { "1.2.3.4": { ... } }
       if (json.byIp && typeof json.byIp === 'object') {
         state.byIp = json.byIp;
       } else {
@@ -55,13 +58,18 @@ async function loadAllGrillPoints() {
     }
   } catch (err) {
     console.error('[KG GrillPoints] loadAllGrillPoints error:', err);
+    // Again, do NOT touch local state on error.
   }
 
   return state;
 }
 
 async function saveAllGrillPoints() {
-  if (!R2_POINTS_URL) return false;
+  // If there is no R2 URL or we already know it is not writable,
+  // pretend saving failed and stay memory-only.
+  if (!R2_POINTS_URL || !grillPointsState.r2Writable) {
+    return false;
+  }
 
   try {
     const body = JSON.stringify(
@@ -79,12 +87,16 @@ async function saveAllGrillPoints() {
     if (!resp.ok) {
       const text = await resp.text().catch(() => '');
       console.error('[KG GrillPoints] R2 PUT failed:', resp.status, text);
+      // Mark R2 as not writable so we stop trying and stop reading from it.
+      grillPointsState.r2Writable = false;
       return false;
     }
 
     return true;
   } catch (err) {
     console.error('[KG GrillPoints] saveAllGrillPoints error:', err);
+    // Also mark R2 as not writable on network/other errors.
+    grillPointsState.r2Writable = false;
     return false;
   }
 }
@@ -158,27 +170,6 @@ async function setPointsForIp(ip, points, lifetime, event = 'frontend_update') {
 
   const stored = await saveAllGrillPoints();
   return { rec, stored };
-}
-
-
-
-async function setPointsForIp(ip, points, lifetime, event = 'frontend_update') {
-  if (!ip) return null;
-  const all = await loadAllGrillPoints();
-  const rec = ensurePointsRecord(all, ip);
-
-  rec.points = Number(points || 0);
-  rec.lifetime = Number(lifetime ?? rec.points);
-  rec.history.push({
-    ts: Date.now(),
-    event,
-    delta: null,
-    points: rec.points,
-    lifetime: rec.lifetime,
-  });
-
-  await saveAllGrillPoints(all);
-  return rec;
 }
 
 
