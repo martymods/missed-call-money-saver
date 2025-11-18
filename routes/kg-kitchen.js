@@ -27,6 +27,115 @@ function getClientIp(req) {
   );
 }
 
+// In-memory kitchen "line" orders for staff screen
+const liveOrders = [];   // active orders
+const orderHistory = []; // completed / canceled
+let orderSeq = 1;
+
+function createKitchenOrderFromPayload(payload = {}, extra = {}) {
+  const {
+    name = '',
+    phone = '',
+    address,
+    notes = '',
+    items,
+    subtotal,
+    deliveryFee,
+    fees,
+    total,
+    amount,
+    fulfilment,
+    cart,
+  } = payload;
+
+  const list =
+    Array.isArray(items) && items.length
+      ? items
+      : Array.isArray(cart)
+      ? cart
+      : [];
+
+  const totalCents =
+    typeof total === 'number'
+      ? total
+      : typeof amount === 'number'
+      ? amount
+      : null;
+
+  const id = `KG-${Date.now()}-${orderSeq++}`;
+
+  const order = {
+    id,
+    status: 'needs_action',
+    type: (fulfilment || extra.fulfilment || 'pickup').toLowerCase(),
+    isScheduled: !!extra.isScheduled,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    name,
+    phone,
+    address:
+      typeof address === 'string'
+        ? address
+        : address && address.line1
+        ? address.line1
+        : '',
+    notes: notes || '',
+    items: list.map((i) => ({
+      id: i.id || i.name || 'item',
+      name: i.name || i.id || 'Item',
+      quantity: i.quantity || 1,
+      freeSide: i.freeSide || null,
+      sauce: i.sauce || null,
+    })),
+    totals: {
+      subtotal: typeof subtotal === 'number' ? subtotal : null,
+      deliveryFee: typeof deliveryFee === 'number' ? deliveryFee : null,
+      fees: typeof fees === 'number' ? fees : null,
+      total: totalCents,
+    },
+    source: extra.source || 'online',
+  };
+
+  liveOrders.unshift(order);
+  return order;
+}
+
+function updateKitchenOrderStatus(orderId, newStatus) {
+  const normalize = (s) => String(s || '').toLowerCase();
+  const status = normalize(newStatus);
+  const from = liveOrders.find((o) => o.id === orderId);
+  const inHistory = orderHistory.find((o) => o.id === orderId);
+  const order = from || inHistory;
+
+  if (!order) return null;
+
+  order.status = status;
+  order.updatedAt = Date.now();
+
+  const isTerminal = status === 'completed' || status === 'canceled';
+
+  if (isTerminal && from) {
+    // move from live to history
+    const idx = liveOrders.findIndex((o) => o.id === orderId);
+    if (idx >= 0) {
+      liveOrders.splice(idx, 1);
+      orderHistory.unshift(order);
+    }
+  }
+
+  return order;
+}
+
+function getAllKitchenOrders(includeHistory = false) {
+  const result = [...liveOrders];
+  if (includeHistory) {
+    result.push(...orderHistory);
+  }
+  // newest first
+  return result.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
+
+
 async function loadAllGrillPoints() {
   // Always start from in-memory state
   const state = grillPointsState;
@@ -257,6 +366,68 @@ router.get('/grill-points', async (req, res) => {
     res.status(500).json({ error: 'Failed to load Grill Points' });
   }
 });
+
+// POST /kg/line-order
+// For customers standing in line / in-store (pay at cashier, no Stripe charge)
+router.post('/line-order', express.json(), async (req, res) => {
+  try {
+    const payload = req.body || {};
+
+    const order = createKitchenOrderFromPayload(payload, {
+      source: 'inline',
+      fulfilment: 'inline',
+    });
+
+    // Build a Telegram notification similar to /telegram-notify
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+      const { name, phone, notes } = payload;
+
+      const lines = [];
+      lines.push('🔥 NEW IN-LINE KG GRILL ORDER (PAY AT CASHIER) 🔥');
+      lines.push('');
+      if (name)  lines.push(`👤 Name: ${name}`);
+      if (phone) lines.push(`📞 Phone: ${phone}`);
+
+      lines.push(`🚪 Type: In-line / in-store (pay at cashier)`);
+
+      if (notes) {
+        lines.push('');
+        lines.push(`📝 Notes: ${notes}`);
+      }
+
+      if (order.items && order.items.length) {
+        lines.push('');
+        lines.push('🍽 Items:');
+        order.items.forEach((item) => {
+          const qty = item.quantity || 1;
+          const main = item.name || item.id || 'Item';
+          const side = item.freeSide ? ` | Side: ${item.freeSide}` : '';
+          const sauce = item.sauce ? ` | Sauce: ${item.sauce}` : '';
+          lines.push(`• ${qty}× ${main}${side}${sauce}`);
+        });
+      }
+
+      const totalCents = order.totals.total;
+      if (typeof totalCents === 'number') {
+        lines.push('');
+        lines.push(`💵 Total (to collect in person): $${(totalCents / 100).toFixed(2)}`);
+      }
+
+      const text = lines.join('\n');
+      try {
+        await notifyTelegram(text);
+      } catch (err) {
+        console.error('Inline order Telegram failure', err);
+      }
+    }
+
+    res.json({ ok: true, order });
+  } catch (err) {
+    console.error('kg line-order error', err);
+    res.status(500).json({ ok: false, error: 'line_order_failed' });
+  }
+});
+
 
 // POST /kg/grill-points  -> update points for this IP
 router.post('/grill-points', express.json(), async (req, res) => {
@@ -604,6 +775,17 @@ router.post('/telegram-notify', express.json(), async (req, res) => {
       }),
     });
 
+        // Also register this order for the kitchen line board
+    try {
+      createKitchenOrderFromPayload(req.body, {
+        source: 'online_paid',
+        fulfilment,
+      });
+    } catch (e) {
+      console.error('kg line-board create order failed', e);
+    }
+
+
     res.json({ ok: true });
   } catch (err) {
     console.error('Telegram notify failed', err);
@@ -735,6 +917,46 @@ router.post(
 
     res.json({ ok: true });
   });
+
+  // GET /kg/line-orders
+// Kitchen board pulls all orders (optionally including history)
+router.get('/line-orders', (req, res) => {
+  try {
+    const includeHistory =
+      req.query.includeHistory === '1' ||
+      req.query.includeHistory === 'true';
+
+    const orders = getAllKitchenOrders(includeHistory);
+    res.json({ ok: true, orders });
+  } catch (err) {
+    console.error('kg line-orders error', err);
+    res.status(500).json({ ok: false, error: 'line_orders_failed' });
+  }
+});
+
+// POST /kg/line-orders/:id/status
+// Update an order (start, ready, complete, cancel, etc.)
+router.post('/line-orders/:id/status', express.json(), (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body || {};
+
+    if (!id || !status) {
+      return res.status(400).json({ ok: false, error: 'missing_params' });
+    }
+
+    const updated = updateKitchenOrderStatus(id, status);
+    if (!updated) {
+      return res.status(404).json({ ok: false, error: 'order_not_found' });
+    }
+
+    res.json({ ok: true, order: updated });
+  } catch (err) {
+    console.error('kg line-orders status error', err);
+    res.status(500).json({ ok: false, error: 'update_failed' });
+  }
+});
+
 
   return router;
 };
