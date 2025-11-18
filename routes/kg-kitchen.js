@@ -9,6 +9,14 @@ const TELEGRAM_CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
 // 🔥 Grill Points R2 storage
 const R2_POINTS_URL = process.env.KG_R2_POINTS_URL || '';
 
+// In-memory Grill Points cache, keyed by IP.
+// We keep this as truth, and R2 (if configured) is just a mirror.
+const grillPointsState = {
+  byIp: {},            // { [ip]: { ip, points, lifetime, history[] } }
+  lastLoadedFromR2: 0, // timestamp when we last synced from R2
+};
+
+
 function getClientIp(req) {
   return (
     (req.headers['x-forwarded-for'] || '')
@@ -20,38 +28,57 @@ function getClientIp(req) {
 }
 
 async function loadAllGrillPoints() {
-  if (!R2_POINTS_URL) return {};
+  // Always start from in-memory state
+  const state = grillPointsState;
+
+  if (!R2_POINTS_URL) {
+    return state;
+  }
+
   try {
     const resp = await fetch(R2_POINTS_URL, { method: 'GET' });
     if (!resp.ok) {
       console.warn('[KG GrillPoints] R2 GET failed:', resp.status);
-      return {};
+      return state;
     }
-    const json = await resp.json();
-    return json && typeof json === 'object' ? json : {};
+
+    const json = await resp.json().catch(() => ({}));
+
+    if (json && typeof json === 'object') {
+      // Support either { byIp: { ... } } or old-style { "1.2.3.4": {...} }
+      if (json.byIp && typeof json.byIp === 'object') {
+        state.byIp = json.byIp;
+      } else {
+        state.byIp = json;
+      }
+      state.lastLoadedFromR2 = Date.now();
+    }
   } catch (err) {
     console.error('[KG GrillPoints] loadAllGrillPoints error:', err);
-    return {};
   }
+
+  return state;
 }
 
-async function saveAllGrillPoints(all) {
+async function saveAllGrillPoints() {
   if (!R2_POINTS_URL) return false;
+
   try {
+    const body = JSON.stringify(
+      { byIp: grillPointsState.byIp },
+      null,
+      2
+    );
+
     const resp = await fetch(R2_POINTS_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(all, null, 2),
+      body,
     });
 
     if (!resp.ok) {
       const text = await resp.text().catch(() => '');
-      console.error(
-        '[KG GrillPoints] R2 PUT failed:',
-        resp.status,
-        resp.statusText,
-        text.slice(0, 200)
-      );
+      console.error('[KG GrillPoints] R2 PUT failed:', resp.status, text);
       return false;
     }
 
@@ -63,16 +90,19 @@ async function saveAllGrillPoints(all) {
 }
 
 function ensurePointsRecord(all, ip) {
+  if (!all.byIp) all.byIp = {};
   const key = ip || 'unknown';
-  if (!all[key]) {
-    all[key] = {
+
+  if (!all.byIp[key]) {
+    all.byIp[key] = {
       ip: key,
       points: 0,
       lifetime: 0,
       history: [],
     };
   }
-  const rec = all[key];
+
+  const rec = all.byIp[key];
   rec.ip = key;
   rec.points = Number(rec.points || 0);
   rec.lifetime = Number(rec.lifetime || 0);
@@ -81,13 +111,17 @@ function ensurePointsRecord(all, ip) {
 }
 
 async function addPointsForIp(ip, delta, event = 'purchase', meta = {}) {
-  if (!ip || !delta) return null;
+  const n = Number(delta) || 0;
+  if (!ip || !n) {
+    return { rec: null, stored: false };
+  }
+
   const all = await loadAllGrillPoints();
   const rec = ensurePointsRecord(all, ip);
-  const n = Number(delta) || 0;
 
   rec.points += n;
-  rec.lifetime += n;
+  if (n > 0) rec.lifetime += n;
+
   rec.history.push({
     ts: Date.now(),
     event,
@@ -97,9 +131,35 @@ async function addPointsForIp(ip, delta, event = 'purchase', meta = {}) {
     meta,
   });
 
-  await saveAllGrillPoints(all);
-  return rec;
+  const stored = await saveAllGrillPoints();
+  return { rec, stored };
 }
+
+async function setPointsForIp(ip, points, lifetime, event = 'frontend_update') {
+  if (!ip) return { rec: null, stored: false };
+
+  const all = await loadAllGrillPoints();
+  const rec = ensurePointsRecord(all, ip);
+
+  if (typeof points === 'number') {
+    rec.points = points;
+  }
+  if (typeof lifetime === 'number') {
+    rec.lifetime = lifetime;
+  }
+
+  rec.history.push({
+    ts: Date.now(),
+    event,
+    delta: null,
+    points: rec.points,
+    lifetime: rec.lifetime,
+  });
+
+  const stored = await saveAllGrillPoints();
+  return { rec, stored };
+}
+
 
 
 async function setPointsForIp(ip, points, lifetime, event = 'frontend_update') {
@@ -188,59 +248,55 @@ module.exports = function createKgKitchenRouter(opts = {}) {
   });
 
   
-  // GET /kg/grill-points  -> points for this IP (backed by R2 JSON)
-  router.get('/grill-points', async (req, res) => {
-    try {
-      const ip = getClientIp(req);
-      if (!R2_POINTS_URL) {
-        return res.json({ ip, points: 0, lifetime: 0, source: 'local-only' });
-      }
-      const all = await loadAllGrillPoints();
-      const rec = ensurePointsRecord(all, ip);
-      return res.json({
-        ip,
-        points: rec.points || 0,
-        lifetime: rec.lifetime || rec.points || 0,
-        source: 'r2',
-      });
-    } catch (err) {
-      console.error('[KG GrillPoints] GET /grill-points failed', err);
-      res.status(500).json({ error: 'Failed to load Grill Points' });
+// GET /kg/grill-points  -> current points for this IP
+router.get('/grill-points', async (req, res) => {
+  try {
+    const ip = getClientIp(req);
+    const all = await loadAllGrillPoints();
+    const rec = ensurePointsRecord(all, ip);
+
+    return res.json({
+      ip,
+      points: rec.points,
+      lifetime: rec.lifetime,
+      source: R2_POINTS_URL ? 'r2-or-memory' : 'memory-only',
+    });
+  } catch (err) {
+    console.error('[KG GrillPoints] GET /grill-points failed', err);
+    res.status(500).json({ error: 'Failed to load Grill Points' });
+  }
+});
+
+// POST /kg/grill-points  -> update points for this IP
+router.post('/grill-points', express.json(), async (req, res) => {
+  try {
+    const ip = getClientIp(req);
+    const { points, lifetime, delta, event = 'frontend_update', meta = {} } = req.body || {};
+
+    let result;
+    if (typeof delta === 'number') {
+      result = await addPointsForIp(ip, delta, event, meta);
+    } else {
+      result = await setPointsForIp(ip, points, lifetime, event);
     }
-  });
 
-  // POST /kg/grill-points  -> update points for this IP
-  router.post('/grill-points', express.json(), async (req, res) => {
-    try {
-      const ip = getClientIp(req);
-      const { points, lifetime, delta, event = 'frontend_update', meta = {} } = req.body || {};
-
-      let rec = null;
-
-      if (typeof delta === 'number') {
-        rec = await addPointsForIp(ip, delta, event, meta);
-      } else if (typeof points === 'number' || typeof lifetime === 'number') {
-        rec = await setPointsForIp(ip, points, lifetime, event);
-      }
-
-      // Fallback: if helpers returned null, read current state from R2
-      if (!rec) {
-        const all = await loadAllGrillPoints();
-        rec = ensurePointsRecord(all, ip);
-      }
-
-      return res.json({
-        ok: true,
-        ip,
-        points: rec.points,
-        lifetime: rec.lifetime,
-        stored: Boolean(R2_POINTS_URL),
-      });
-    } catch (err) {
-      console.error('[KG GrillPoints] POST /grill-points failed', err);
-      res.status(500).json({ error: 'Failed to save Grill Points' });
+    const { rec, stored } = result || {};
+    if (!rec) {
+      return res.status(400).json({ ok: false, error: 'Invalid payload' });
     }
-  });
+
+    return res.json({
+      ok: true,
+      ip,
+      points: rec.points,
+      lifetime: rec.lifetime,
+      stored,
+    });
+  } catch (err) {
+    console.error('[KG GrillPoints] POST /grill-points failed', err);
+    res.status(500).json({ error: 'Failed to save Grill Points' });
+  }
+});
 
 
   // POST /kg/create-payment-intent  -> returns { clientSecret }
