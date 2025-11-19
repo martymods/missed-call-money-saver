@@ -3643,6 +3643,16 @@ app.get('/simulate/missed-call', async (req, res) => {
   res.json({ ok: true });
 });
 
+const { hydrateOrdersFromMongo } = require('./kg-kitchen');
+
+(async () => {
+  await hydrateOrdersFromMongo();
+  app.listen(PORT, () => {
+    console.log('KG Kitchen listening on', PORT);
+  });
+})();
+
+
 // Boot
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
