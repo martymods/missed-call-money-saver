@@ -587,7 +587,12 @@ const session = await stripe.checkout.sessions.create({
       const lines = [];
       lines.push('*KG Grill – Checkout opened 🟡*');
       lines.push(`Total: *$${grandTotal.toFixed(2)}*`);
-      if (fulfilment) lines.push(`Type: ${fulfilment}`);
+      if (fulfilment === 'inline') {
+  lines.push('🏁 Type: IN-LINE / IN-STORE (PAY AT CASHIER)');
+} else {
+  lines.push(`Type: ${fulfilment}`);
+}
+
 
       if (name) {
         lines.push(`👤 Name: ${name}`);
