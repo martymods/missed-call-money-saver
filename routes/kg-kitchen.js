@@ -103,19 +103,46 @@ function createKitchenOrderFromPayload(payload = {}, extra = {}) {
 function updateKitchenOrderStatus(orderId, newStatus) {
   const normalize = (s) => String(s || '').toLowerCase();
   const status = normalize(newStatus);
+
   const from = liveOrders.find((o) => o.id === orderId);
   const inHistory = orderHistory.find((o) => o.id === orderId);
   const order = from || inHistory;
 
   if (!order) return null;
 
+  const now = Date.now();
+
+  // Make sure timing structures exist (for older orders)
+  if (!order.statusDurations) {
+    order.statusDurations = {
+      needs_action_ms: 0,
+      in_progress_ms: 0,
+      ready_ms: 0,
+    };
+  }
+
+  // Close out the time spent in the previous status
+  const prevStatus = normalize(order.status || 'needs_action');
+  const startedAt = order.statusStartedAt || order.createdAt || now;
+  const delta = Math.max(0, now - startedAt);
+
+  if (prevStatus === 'needs_action') {
+    order.statusDurations.needs_action_ms += delta;
+  } else if (prevStatus === 'in_progress') {
+    order.statusDurations.in_progress_ms += delta;
+  } else if (prevStatus === 'ready') {
+    order.statusDurations.ready_ms += delta;
+  }
+
+  // Switch to the new status
   order.status = status;
-  order.updatedAt = Date.now();
+  order.statusStartedAt = now;
+  order.updatedAt = now;
 
   const isTerminal = status === 'completed' || status === 'canceled';
 
+  // When the order is completed/canceled, move from live → history
   if (isTerminal && from) {
-    // move from live to history
     const idx = liveOrders.findIndex((o) => o.id === orderId);
     if (idx >= 0) {
       liveOrders.splice(idx, 1);
@@ -125,6 +152,7 @@ function updateKitchenOrderStatus(orderId, newStatus) {
 
   return order;
 }
+
 
 function getAllKitchenOrders(includeHistory = false) {
   const result = [...liveOrders];
