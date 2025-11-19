@@ -2,6 +2,34 @@
 const express = require('express');
 const fetch = require('node-fetch');
 
+// MongoDB persistence for line orders
+const { MongoClient } = require('mongodb');
+
+const mongoUri = process.env.MONGODB_URI || null;
+let mongoClient = null;
+let mongoDb = null;
+let ordersCollection = null;
+
+async function initMongo() {
+  if (!mongoUri || ordersCollection) return;
+  mongoClient = new MongoClient(mongoUri, {
+    maxPoolSize: 5,
+  });
+  await mongoClient.connect();
+  mongoDb = mongoClient.db();               // uses the DB in the URI
+  ordersCollection = mongoDb.collection('kg_orders');
+}
+
+// simple helper to safely use the collection
+async function getOrdersCollection() {
+  if (!mongoUri) return null;               // no DB configured
+  if (!ordersCollection) {
+    await initMongo();
+  }
+  return ordersCollection;
+}
+
+
 // Telegram config + label maps
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
@@ -64,7 +92,7 @@ function createKitchenOrderFromPayload(payload = {}, extra = {}) {
 
   const id = `KG-${Date.now()}-${orderSeq++}`;
 
-  const now = Date.now();
+const now = Date.now();
 
 const order = {
   id,
@@ -72,17 +100,15 @@ const order = {
   type: (fulfilment || extra.fulfilment || 'pickup').toLowerCase(),
   isScheduled: !!extra.isScheduled,
 
-  // core timestamps
   createdAt: now,
   updatedAt: now,
 
-  // ⏱ track how long the order spends in each phase
+  // timing buckets for line.html
   statusDurations: {
     needs_action_ms: 0,
     in_progress_ms: 0,
     ready_ms: 0,
   },
-  // when the *current* status started
   statusStartedAt: now,
 
   name,
@@ -110,9 +136,28 @@ const order = {
   source: extra.source || 'online',
 };
 
+// keep your existing in-memory flow
 liveOrders.unshift(order);
+
+// NEW: persist to Mongo if configured
+(async () => {
+  try {
+    const col = await getOrdersCollection();
+    if (col) {
+      await col.updateOne(
+        { id: order.id },
+        { $set: order },
+        { upsert: true }
+      );
+    }
+  } catch (err) {
+    console.error('Failed to persist order to Mongo', err);
+  }
+})();
+
 return order;
 }
+
 
 
 function updateKitchenOrderStatus(orderId, newStatus) {
@@ -127,7 +172,7 @@ function updateKitchenOrderStatus(orderId, newStatus) {
 
   const now = Date.now();
 
-  // Make sure timing structures exist (for older orders)
+  // Make sure timing structures exist (for older orders that didn't have them yet)
   if (!order.statusDurations) {
     order.statusDurations = {
       needs_action_ms: 0,
@@ -136,11 +181,11 @@ function updateKitchenOrderStatus(orderId, newStatus) {
     };
   }
 
-  // Close out the time spent in the previous status
   const prevStatus = normalize(order.status || 'needs_action');
   const startedAt = order.statusStartedAt || order.createdAt || now;
   const delta = Math.max(0, now - startedAt);
 
+  // Add the time spent in the previous status into the correct bucket
   if (prevStatus === 'needs_action') {
     order.statusDurations.needs_action_ms += delta;
   } else if (prevStatus === 'in_progress') {
@@ -149,14 +194,14 @@ function updateKitchenOrderStatus(orderId, newStatus) {
     order.statusDurations.ready_ms += delta;
   }
 
-  // Switch to the new status
+  // Switch to the new status and reset the status timer
   order.status = status;
   order.statusStartedAt = now;
   order.updatedAt = now;
 
   const isTerminal = status === 'completed' || status === 'canceled';
 
-  // When the order is completed/canceled, move from live → history
+  // When the order is done, move from live → history
   if (isTerminal && from) {
     const idx = liveOrders.findIndex((o) => o.id === orderId);
     if (idx >= 0) {
@@ -164,6 +209,22 @@ function updateKitchenOrderStatus(orderId, newStatus) {
       orderHistory.unshift(order);
     }
   }
+
+  // 🔁 Persist the updated order to Mongo (if MONGODB_URI is configured)
+  (async () => {
+    try {
+      const col = await getOrdersCollection();
+      if (col && order) {
+        await col.updateOne(
+          { id: order.id },
+          { $set: order },
+          { upsert: true }
+        );
+      }
+    } catch (err) {
+      console.error('Failed to persist order status to Mongo', err);
+    }
+  })();
 
   return order;
 }
@@ -174,9 +235,39 @@ function getAllKitchenOrders(includeHistory = false) {
   if (includeHistory) {
     result.push(...orderHistory);
   }
-  // newest first
   return result.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
+
+// NEW: re-hydrate liveOrders + orderHistory from Mongo (optional)
+async function hydrateOrdersFromMongo() {
+  try {
+    const col = await getOrdersCollection();
+    if (!col) return;
+
+    const docs = await col
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    // reset in-memory state
+    liveOrders.length = 0;
+    orderHistory.length = 0;
+
+    for (const o of docs) {
+      const status = String(o.status || '').toLowerCase();
+      const isTerminal = status === 'completed' || status === 'canceled';
+
+      if (isTerminal) {
+        orderHistory.push(o);
+      } else {
+        liveOrders.push(o);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to hydrate orders from Mongo', err);
+  }
+}
+
 
 
 async function loadAllGrillPoints() {
