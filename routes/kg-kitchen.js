@@ -64,41 +64,56 @@ function createKitchenOrderFromPayload(payload = {}, extra = {}) {
 
   const id = `KG-${Date.now()}-${orderSeq++}`;
 
-  const order = {
-    id,
-    status: 'needs_action',
-    type: (fulfilment || extra.fulfilment || 'pickup').toLowerCase(),
-    isScheduled: !!extra.isScheduled,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    name,
-    phone,
-    address:
-      typeof address === 'string'
-        ? address
-        : address && address.line1
-        ? address.line1
-        : '',
-    notes: notes || '',
-    items: list.map((i) => ({
-      id: i.id || i.name || 'item',
-      name: i.name || i.id || 'Item',
-      quantity: i.quantity || 1,
-      freeSide: i.freeSide || null,
-      sauce: i.sauce || null,
-    })),
-    totals: {
-      subtotal: typeof subtotal === 'number' ? subtotal : null,
-      deliveryFee: typeof deliveryFee === 'number' ? deliveryFee : null,
-      fees: typeof fees === 'number' ? fees : null,
-      total: totalCents,
-    },
-    source: extra.source || 'online',
-  };
+  const now = Date.now();
 
-  liveOrders.unshift(order);
-  return order;
+const order = {
+  id,
+  status: 'needs_action',
+  type: (fulfilment || extra.fulfilment || 'pickup').toLowerCase(),
+  isScheduled: !!extra.isScheduled,
+
+  // core timestamps
+  createdAt: now,
+  updatedAt: now,
+
+  // ⏱ track how long the order spends in each phase
+  statusDurations: {
+    needs_action_ms: 0,
+    in_progress_ms: 0,
+    ready_ms: 0,
+  },
+  // when the *current* status started
+  statusStartedAt: now,
+
+  name,
+  phone,
+  address:
+    typeof address === 'string'
+      ? address
+      : address && address.line1
+      ? address.line1
+      : '',
+  notes: notes || '',
+  items: list.map((i) => ({
+    id: i.id || i.name || 'item',
+    name: i.name || i.id || 'Item',
+    quantity: i.quantity || 1,
+    freeSide: i.freeSide || null,
+    sauce: i.sauce || null,
+  })),
+  totals: {
+    subtotal: typeof subtotal === 'number' ? subtotal : null,
+    deliveryFee: typeof deliveryFee === 'number' ? deliveryFee : null,
+    fees: typeof fees === 'number' ? fees : null,
+    total: totalCents,
+  },
+  source: extra.source || 'online',
+};
+
+liveOrders.unshift(order);
+return order;
 }
+
 
 function updateKitchenOrderStatus(orderId, newStatus) {
   const normalize = (s) => String(s || '').toLowerCase();
