@@ -75,6 +75,7 @@ const createNotificationsRouter = require('./routes/notifications');
 const createNewBrightWaterGrantRouter = require('./routes/delcotech-grant');
 const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
 const createKgKitchenRouter = require('./routes/kg-kitchen');
+const createCreditRepairRouter = require('./routes/credit-repair');
 
 
 const jwt = require('jsonwebtoken');
@@ -1075,6 +1076,10 @@ app.use('/api/audit', createAuditRouter());
 app.use('/api/design', createDesignRouter());
 app.use('/api/teams', createTeamRouter());
 app.use('/api/warehouse', createWarehouseRouter());
+app.use('/api/credit-repair', createCreditRepairRouter({
+  stripe,
+  appBaseUrl: APP_BASE_URL,
+}));
 
 app.use('/static/tts', express.static(TTS_CACHE_DIR, {
   setHeaders: (res) => {
