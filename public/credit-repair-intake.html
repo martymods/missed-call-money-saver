@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Secure credit repair enrollment</title>
+  <style>
+    :root{
+      --bg:#050914; --panel:#0d1326; --card:#0f172e; --ink:#e9edff; --muted:#9fb0d8;
+      --brand:#6dd1ff; --brand2:#5a7cff; --ok:#2dd186; --warn:#ffb020; --danger:#ff6b6b;
+      --edge:rgba(255,255,255,.12);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Inter",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial}
+    a{color:#bcd7ff;text-decoration:none}
+    h1,h2,h3{margin:0 0 8px}
+    .wrap{max-width:1080px;margin:auto;padding:20px 16px}
+    .grid{display:grid;grid-template-columns:1fr;gap:14px}
+    .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:16px;box-shadow:0 16px 50px rgba(0,0,0,.35)}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--edge);background:rgba(255,255,255,.04);font-size:12px;font-weight:800;color:#dfe6ff}
+    .hero{background:linear-gradient(180deg,rgba(109,209,255,.12),rgba(90,124,255,.16));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
+    .hero:after{content:"";position:absolute;inset:auto -120px -140px auto;width:360px;height:360px;background:radial-gradient(circle at 30% 30%,rgba(109,209,255,.25),transparent 70%);filter:blur(40px);opacity:.7}
+    .badge-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+    label{font-size:14px;color:var(--ink);display:block;margin-bottom:6px;font-weight:700}
+    input,textarea,select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--edge);background:rgba(255,255,255,.04);color:var(--ink);font:15px/1.4 inherit}
+    textarea{min-height:110px;resize:vertical}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(180deg,var(--brand),var(--brand2));color:#050914;font-weight:900;cursor:pointer;text-align:center}
+    .btn.ghost{background:transparent;color:var(--ink)}
+    .btn.full{width:100%}
+    .muted{color:var(--muted);font-size:14px}
+    .list{padding-left:18px;color:var(--muted)}
+    .status{padding:10px;border-radius:12px;border:1px solid var(--edge);background:rgba(255,255,255,.04);margin-bottom:10px;display:flex;gap:10px;align-items:flex-start}
+    .status.ok{border-color:rgba(45,209,134,.3);background:rgba(45,209,134,.08)}
+    .status.warn{border-color:rgba(255,176,32,.45);background:rgba(255,176,32,.08)}
+    .status.danger{border-color:rgba(255,107,107,.45);background:rgba(255,107,107,.08)}
+    .two-col{display:grid;grid-template-columns:1fr;gap:10px}
+    .small{font-size:12px;color:var(--muted)}
+    @media (min-width:900px){
+      .grid{grid-template-columns:1.1fr .9fr}
+      .two-col{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="pill">Secure credit repair enrollment</div>
+      <h1>Identity-verified intake with upfront $900 enrollment</h1>
+      <p class="muted" style="max-width:760px">We help you review your credit reports, identify potential errors, and submit disputes to the credit bureaus where appropriate. We also provide budgeting and debt-management coaching to help you build stronger credit over time. We do not guarantee any specific results, credit score changes, or removal of accurate negative information. Results vary based on your individual situation and the responses of creditors and credit bureaus.</p>
+      <div class="badge-row">
+        <span class="pill">Stripe Identity — government-grade verification</span>
+        <span class="pill">Hybrid intake: Stripe ID + secure SSN vault</span>
+        <span class="pill">$900 upfront • 2–6 months of care</span>
+        <span class="pill">Encrypted storage — we never see ID images directly</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>1) Your details + SSN (Hybrid option C)</h3>
+        <p class="muted">Use Stripe Identity for ID + selfie. Enter your SSN directly into our encrypted vault. We pair the SSN with the Stripe <code>verification_session_id</code> so admins see both safely.</p>
+
+        <div class="two-col">
+          <div>
+            <label for="fullName">Full legal name</label>
+            <input id="fullName" autocomplete="name" placeholder="Alex Example" required />
+          </div>
+          <div>
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="email" placeholder="alex@example.com" required />
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div>
+            <label for="phone">Mobile phone</label>
+            <input id="phone" type="tel" autocomplete="tel" placeholder="(555) 123-4567" required />
+          </div>
+          <div>
+            <label for="dob">Date of birth</label>
+            <input id="dob" type="date" autocomplete="bday" />
+          </div>
+        </div>
+
+        <div>
+          <label for="address">Current mailing address</label>
+          <input id="address" autocomplete="street-address" placeholder="123 Market St, Philadelphia, PA 19106" />
+        </div>
+
+        <div class="two-col">
+          <div>
+            <label for="ssn">Social Security Number (SSN)</label>
+            <input id="ssn" type="text" inputmode="numeric" pattern="[0-9]{3}-?[0-9]{2}-?[0-9]{4}" placeholder="123-45-6789" />
+            <div class="small">Stored encrypted alongside your Stripe verification session ID.</div>
+          </div>
+          <div>
+            <label for="goals">Primary goal</label>
+            <select id="goals">
+              <option value="">Select one</option>
+              <option>Remove inaccurate tradelines</option>
+              <option>Prepare for a mortgage</option>
+              <option>Lower utilization / budgeting</option>
+              <option>Identity theft recovery</option>
+              <option>General score improvement</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="notes">Notes we should know (credit bureaus, disputes, recent denials)</label>
+          <textarea id="notes" placeholder="List bureaus to focus on, known errors, and any urgent timelines."></textarea>
+        </div>
+
+        <div class="status warn" id="consentBox">
+          <div style="font-weight:900">Consent required</div>
+          <div>
+            <label style="font-weight:600"><input type="checkbox" id="consent" /> I acknowledge the disclosures above and understand that accurate negative items may remain. I authorize the team to store my SSN with my Stripe verification session ID.</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>2) Identity verification (Stripe Identity)</h3>
+        <p class="muted">Government-grade document + selfie verification. Stripe handles ID photo uploads; we only receive the verification token.</p>
+        <div class="status" id="verificationStatus">Stripe Identity not started yet.</div>
+        <button class="btn full" id="verifyBtn">Start Stripe Identity</button>
+        <p class="small" style="margin-top:8px">Stripe detects tampering, keeps images encrypted, and lets us link the verified token to your SSN.</p>
+
+        <h3 style="margin-top:18px">3) $900 enrollment payment</h3>
+        <div class="status" id="paymentStatus">Payment not started.</div>
+        <button class="btn full" id="payBtn">Pay $900 upfront via Stripe</button>
+        <p class="small" style="margin-top:8px">Covers report review, dispute drafting, bureau submissions, and coaching for the next 2–6 months.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>Finalize enrollment</h3>
+      <p class="muted">Once your ID is verified and payment is complete, submit this secure intake so we can begin pulling reports and preparing bureau disputes.</p>
+      <div class="two-col">
+        <div>
+          <label for="verificationId">Stripe verification session ID</label>
+          <input id="verificationId" placeholder="Set automatically after verification" />
+          <div class="small">We save this instead of raw ID images.</div>
+        </div>
+        <div>
+          <label for="checkoutId">Stripe checkout session ID</label>
+          <input id="checkoutId" placeholder="Set automatically after payment" />
+          <div class="small">Used to confirm the $900 enrollment fee.</div>
+        </div>
+      </div>
+      <button class="btn" id="submitBtn" style="margin-top:12px">Submit secure enrollment</button>
+      <div class="status" id="submitStatus" style="margin-top:10px;display:none"></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>Why Stripe Identity + SSN vault?</h3>
+      <ul class="list">
+        <li><b>Government-grade security:</b> Stripe handles ID uploads, fraud checks, and tamper detection.</li>
+        <li><b>We never see raw images unless explicitly requested:</b> Only the verification token is stored with your SSN.</li>
+        <li><b>MRZ + ID data stays encrypted:</b> Stripe dashboard provides what admins need without exposing files.</li>
+        <li><b>Legal SSN handling:</b> TIN verification keeps SSNs compliant while we prepare disputes.</li>
+        <li><b>Hybrid control:</b> You own SSN risk; Stripe owns ID images, aligning with Option C for credit repair.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    (function(){
+      const API_BASE = window.DELCO_BACKEND_BASE || '';
+      let stripe = null;
+      let verificationSessionId = new URLSearchParams(location.search).get('verification_session_id') || '';
+      let checkoutSessionId = new URLSearchParams(location.search).get('checkout_session_id') || '';
+
+      const verificationStatus = document.getElementById('verificationStatus');
+      const paymentStatus = document.getElementById('paymentStatus');
+      const verificationIdInput = document.getElementById('verificationId');
+      const checkoutIdInput = document.getElementById('checkoutId');
+      const submitStatus = document.getElementById('submitStatus');
+
+      function setStatus(el, text, tone){
+        el.textContent = text;
+        el.className = 'status' + (tone ? ` ${tone}` : '');
+      }
+
+      function syncFields(){
+        if (verificationSessionId) verificationIdInput.value = verificationSessionId;
+        if (checkoutSessionId) checkoutIdInput.value = checkoutSessionId;
+      }
+
+      async function loadConfig(){
+        try {
+          const cfg = await fetch(`${API_BASE}/config`).then(r => r.json());
+          if (cfg?.stripePk){
+            stripe = Stripe(cfg.stripePk);
+          }
+        } catch (err) {
+          console.error('config load error', err);
+        }
+      }
+
+      async function refreshPaymentStatus(){
+        if (!checkoutSessionId) return;
+        try {
+          const data = await fetch(`${API_BASE}/api/credit-repair/checkout-session?session_id=${encodeURIComponent(checkoutSessionId)}`).then(r=>r.json());
+          if (data?.payment_status === 'paid' || data?.payment_status === 'no_payment_required'){
+            setStatus(paymentStatus, 'Payment received and logged.', 'ok');
+          } else if (data?.payment_status) {
+            setStatus(paymentStatus, `Payment status: ${data.payment_status}`, 'warn');
+          }
+        } catch (err){
+          console.error('status lookup failed', err);
+        }
+      }
+
+      document.getElementById('verifyBtn').addEventListener('click', async () => {
+        setStatus(verificationStatus, 'Starting Stripe Identity session…', 'warn');
+        const payload = {
+          fullName: document.getElementById('fullName').value,
+          email: document.getElementById('email').value,
+          phone: document.getElementById('phone').value,
+        };
+        try {
+          const session = await fetch(`${API_BASE}/api/credit-repair/start-verification`, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify(payload),
+          }).then(r=>r.json());
+
+          if (session?.id){
+            verificationSessionId = session.id;
+            syncFields();
+          }
+          if (session?.url){
+            window.location.href = session.url;
+          } else {
+            setStatus(verificationStatus, 'Could not start verification. Please retry.', 'danger');
+          }
+        } catch (err){
+          console.error(err);
+          setStatus(verificationStatus, 'Verification failed to start.', 'danger');
+        }
+      });
+
+      document.getElementById('payBtn').addEventListener('click', async () => {
+        setStatus(paymentStatus, 'Creating checkout session…', 'warn');
+        const payload = {
+          fullName: document.getElementById('fullName').value,
+          email: document.getElementById('email').value,
+          phone: document.getElementById('phone').value,
+          verificationSessionId,
+        };
+        try {
+          const session = await fetch(`${API_BASE}/api/credit-repair/checkout-session`, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify(payload),
+          }).then(r=>r.json());
+
+          if (session?.id){
+            checkoutSessionId = session.id;
+            syncFields();
+          }
+
+          if (session?.id && stripe){
+            await stripe.redirectToCheckout({ sessionId: session.id });
+          } else if (session?.url){
+            window.location.href = session.url;
+          } else {
+            setStatus(paymentStatus, 'Could not start checkout. Please retry.', 'danger');
+          }
+        } catch (err){
+          console.error(err);
+          setStatus(paymentStatus, 'Checkout failed to start.', 'danger');
+        }
+      });
+
+      document.getElementById('submitBtn').addEventListener('click', async () => {
+        submitStatus.style.display = 'block';
+        setStatus(submitStatus, 'Submitting your encrypted intake…', 'warn');
+        const consentBox = document.getElementById('consent');
+        if (!consentBox.checked){
+          setStatus(submitStatus, 'Please acknowledge the consent to continue.', 'danger');
+          return;
+        }
+        const payload = {
+          fullName: document.getElementById('fullName').value,
+          email: document.getElementById('email').value,
+          phone: document.getElementById('phone').value,
+          dob: document.getElementById('dob').value,
+          address: document.getElementById('address').value,
+          ssn: document.getElementById('ssn').value,
+          goals: document.getElementById('goals').value,
+          notes: document.getElementById('notes').value,
+          verificationSessionId,
+          checkoutSessionId,
+          consentAcknowledgement: consentBox.checked,
+        };
+
+        try {
+          const resp = await fetch(`${API_BASE}/api/credit-repair/intake`, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify(payload),
+          }).then(r=>r.json());
+          if (resp?.ok){
+            setStatus(submitStatus, 'Enrollment received. We will begin bureau work and reach out shortly.', 'ok');
+          } else {
+            setStatus(submitStatus, 'Could not save your enrollment. Please retry or contact support.', 'danger');
+          }
+        } catch (err){
+          console.error(err);
+          setStatus(submitStatus, 'Server error while saving your enrollment.', 'danger');
+        }
+      });
+
+      syncFields();
+      loadConfig();
+      refreshPaymentStatus();
+      if (verificationSessionId){
+        setStatus(verificationStatus, 'Stripe Identity session captured.', 'ok');
+      }
+    })();
+  </script>
+</body>
+</html>
