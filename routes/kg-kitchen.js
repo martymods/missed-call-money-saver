@@ -369,6 +369,17 @@ const SAUCE_LABELS = {
 module.exports = function createKgKitchenRouter(opts = {}) {
   const router = express.Router();
 
+    // Global store ordering status (shared across all devices)
+  const DEFAULT_STORE_CLOSED_MESSAGE =
+    'Sorry, we are currently closed. Please check back when we are open.';
+
+  let storeStatus = {
+    closed: false,
+    message: DEFAULT_STORE_CLOSED_MESSAGE,
+    updatedAt: Date.now(),
+  };
+
+
   const allowed = (process.env.KG_ALLOWED_ORIGINS || '')
     .split(',').map(s => s.trim()).filter(Boolean);
 
@@ -390,10 +401,52 @@ module.exports = function createKgKitchenRouter(opts = {}) {
   const STRIPE_PUBLISHABLE = process.env.KG_STRIPE_PK || process.env.STRIPE_PUBLISHABLE_KEY || opts.stripePk || '';
   const stripe = STRIPE_SECRET ? require('stripe')(STRIPE_SECRET) : null;
 
-  // GET /kg/config  -> publishable key for frontend fallback
-  router.get('/config', (_req, res) => {
-    return res.json({ publishableKey: STRIPE_PUBLISHABLE || '' });
+  //
+  // Store ordering status (pause / resume) – global across all devices
+  //
+
+  function getStoreStatusJson() {
+    return {
+      closed: !!storeStatus.closed,
+      message: storeStatus.message || DEFAULT_STORE_CLOSED_MESSAGE,
+      updatedAt: storeStatus.updatedAt || Date.now(),
+    };
+  }
+
+  // GET /kg/store-status  (and legacy /kg/ordering-status)
+  router.get('/store-status', (_req, res) => {
+    return res.json(getStoreStatusJson());
   });
+
+  router.get('/ordering-status', (_req, res) => {
+    // legacy alias so older frontends still work
+    return res.json(getStoreStatusJson());
+  });
+
+  // POST /kg/store-status  (and /kg/ordering-status)
+  const storeStatusHandler = (req, res) => {
+    try {
+      const { closed, message } = req.body || {};
+      const next = {
+        closed: Boolean(closed),
+        message:
+          (typeof message === 'string' && message.trim()) ||
+          DEFAULT_STORE_CLOSED_MESSAGE,
+        updatedAt: Date.now(),
+      };
+
+      storeStatus = next;
+
+      return res.json(getStoreStatusJson());
+    } catch (err) {
+      console.error('kg store-status error', err);
+      return res.status(500).json({ error: 'store_status_update_failed' });
+    }
+  };
+
+  router.post('/store-status', express.json(), storeStatusHandler);
+  router.post('/ordering-status', express.json(), storeStatusHandler);
+
 
     // --- store open / closed status (for QR + line board) ---
   router.get('/store-status', (req, res) => {
