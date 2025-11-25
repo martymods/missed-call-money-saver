@@ -31,6 +31,11 @@ function getClientIp(req) {
 const liveOrders = [];   // active orders
 const orderHistory = []; // completed / canceled
 let orderSeq = 1;
+let storeStatus = {
+  closed: false,
+  message: 'Sorry, we are currently closed. Please check back when we are open.',
+};
+
 
 function createKitchenOrderFromPayload(payload = {}, extra = {}) {
   const {
@@ -389,6 +394,29 @@ module.exports = function createKgKitchenRouter(opts = {}) {
   router.get('/config', (_req, res) => {
     return res.json({ publishableKey: STRIPE_PUBLISHABLE || '' });
   });
+
+    // --- store open / closed status (for QR + line board) ---
+  router.get('/store-status', (req, res) => {
+    res.json(storeStatus);
+  });
+
+  router.post('/store-status', express.json(), (req, res) => {
+    const { closed, message } = req.body || {};
+
+    if (typeof closed !== 'undefined') {
+      storeStatus.closed = !!closed;
+    }
+
+    if (typeof message === 'string') {
+      const trimmed = message.trim();
+      if (trimmed) {
+        storeStatus.message = trimmed;
+      }
+    }
+
+    res.json(storeStatus);
+  });
+
 
   
 // GET /kg/grill-points  -> current points for this IP
