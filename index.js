@@ -76,6 +76,7 @@ const createNewBrightWaterGrantRouter = require('./routes/delcotech-grant');
 const { bootstrapDemoData, shouldBootstrapDemo, DEMO_DEFAULTS } = require('./lib/bootstrapDemo');
 const createKgKitchenRouter = require('./routes/kg-kitchen');
 const createCreditRepairRouter = require('./routes/credit-repair');
+const createHiringRouter = require('./routes/hiring');
 
 
 const jwt = require('jsonwebtoken');
@@ -1077,6 +1078,10 @@ app.use('/api/design', createDesignRouter());
 app.use('/api/teams', createTeamRouter());
 app.use('/api/warehouse', createWarehouseRouter());
 app.use('/api/credit-repair', createCreditRepairRouter({
+  stripe,
+  appBaseUrl: APP_BASE_URL,
+}));
+app.use('/api/hiring', createHiringRouter({
   stripe,
   appBaseUrl: APP_BASE_URL,
 }));
