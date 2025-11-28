@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Join our crew — cooks & delivery drivers</title>
   <style>
     :root{
@@ -14,16 +14,18 @@
     body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Inter",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial}
     a{color:#bcd7ff;text-decoration:none}
     h1,h2,h3{margin:0 0 8px}
-    .wrap{max-width:1080px;margin:auto;padding:20px 16px}
+    .wrap{max-width:1120px;margin:auto;padding:20px 16px 40px}
     .grid{display:grid;grid-template-columns:1fr;gap:14px}
     .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:16px;box-shadow:0 16px 50px rgba(0,0,0,.35)}
     .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--edge);background:rgba(255,255,255,.04);font-size:12px;font-weight:800;color:#dfe6ff}
     .hero{background:linear-gradient(180deg,rgba(109,209,255,.12),rgba(90,124,255,.16));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
     .hero:after{content:"";position:absolute;inset:auto -120px -140px auto;width:360px;height:360px;background:radial-gradient(circle at 30% 30%,rgba(109,209,255,.25),transparent 70%);filter:blur(40px);opacity:.7}
+    .hero-inner{display:grid;grid-template-columns:1fr;gap:16px;align-items:center;position:relative;z-index:1}
     .badge-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
     label{font-size:14px;color:var(--ink);display:block;margin-bottom:6px;font-weight:700}
-    input,textarea,select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--edge);background:rgba(255,255,255,.04);color:var(--ink);font:15px/1.4 inherit}
+    input,textarea,select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--edge);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));color:var(--ink);font:15px/1.4 inherit;appearance:none}
     textarea{min-height:110px;resize:vertical}
+    select option{background:var(--panel);color:var(--ink)}
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(180deg,var(--brand),var(--brand2));color:#050914;font-weight:900;cursor:pointer;text-align:center}
     .btn.ghost{background:transparent;color:var(--ink)}
     .btn.full{width:100%}
@@ -37,159 +39,147 @@
     .small{font-size:12px;color:var(--muted)}
     .pill-row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
     .note-box{border:1px dashed var(--edge);border-radius:12px;padding:10px;color:var(--muted);margin-top:8px}
+    .lang-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+    .lang-label{font-weight:700;font-size:14px;color:var(--muted)}
+    .slider{position:relative;overflow:hidden;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);min-height:220px}
+    .slides{position:relative;height:100%}
+    .slide{opacity:0;transition:opacity .7s ease;position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+    .slide.active{opacity:1;position:relative}
+    .slide img{width:100%;height:100%;object-fit:cover;display:block}
+    .slider .tag{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.45);border-radius:10px;padding:6px 10px;font-weight:700;font-size:12px;color:#fff;border:1px solid rgba(255,255,255,.2)}
+    .stepper{margin-top:6px}
+    .step-list{list-style:none;display:flex;flex-wrap:wrap;gap:10px;padding:0;margin:0}
+    .step-item{position:relative;flex:1;min-width:120px;padding:12px 12px;border-radius:10px;border:1px solid var(--edge);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));color:var(--muted);font-weight:700}
+    .step-item .badge{position:absolute;right:10px;top:10px;font-size:12px;font-weight:800;padding:4px 8px;border-radius:999px;border:1px solid var(--edge);background:rgba(255,255,255,.08);color:var(--ink)}
+    .step-item.current{background:linear-gradient(180deg,var(--brand),var(--brand2));color:#050914;border-color:rgba(255,255,255,.2)}
+    .step-item.current .badge{background:rgba(0,0,0,.12);color:#050914}
+    .step-item.done{border-color:rgba(45,209,134,.5);color:var(--ok);background:rgba(45,209,134,.08)}
+    .step-item.done .badge{background:rgba(45,209,134,.2);color:var(--ok);border-color:rgba(45,209,134,.4)}
+    .step-item:not(.current):not(.done){opacity:.85}
     @media (min-width:900px){
       .grid{grid-template-columns:1.05fr .95fr}
       .two-col{grid-template-columns:1fr 1fr}
+      .hero-inner{grid-template-columns:1.05fr .95fr}
     }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <div class="lang-bar">
+      <span class="lang-label" data-i18n="langPrompt">Pick your language</span>
+      <div class="pill-row" id="flagRowTop"></div>
+    </div>
     <div class="hero">
-      <div class="pill">Now hiring</div>
-      <h1>Join our cooks & delivery driver crew</h1>
-      <p class="muted" style="max-width:820px">
-        We are scaling fast and need motivated teammates for kitchens, grill lines, and delivery runs. We provide the car when
-        you need one, pay on time, and keep shifts steady. Stripe Identity (social ID) keeps onboarding quick and secure.
-      </p>
-      <div class="badge-row">
-        <span class="pill">Stripe Identity (document + selfie)</span>
-        <span class="pill">Car provided options</span>
-        <span class="pill">Grill cooks • Kitchen line • Delivery</span>
-        <span class="pill">Daily/weekly pay friendly</span>
+      <div class="hero-inner">
+        <div>
+          <div class="pill" data-i18n="pillNow">Now hiring</div>
+          <h1 data-i18n="heroTitle">Join our cooks & delivery driver crew</h1>
+          <p class="muted" style="max-width:820px" data-i18n="heroLead">
+            We are scaling fast and need motivated teammates for kitchens, grill lines, and delivery runs. We provide the car when
+            you need one, pay on time, and keep shifts steady. Stripe Identity (social ID) keeps onboarding quick and secure.
+          </p>
+          <div class="badge-row" id="badgeRow"></div>
+          <div class="stepper">
+            <ul class="step-list" id="stepList">
+              <li class="step-item current" data-step="1"><span class="badge">1</span><span data-i18n="step1">Share your details</span></li>
+              <li class="step-item" data-step="2"><span class="badge">2</span><span data-i18n="step2">Verify ID with Stripe</span></li>
+              <li class="step-item" data-step="3"><span class="badge">3</span><span data-i18n="step3">Submit & schedule</span></li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="slider" id="cookSlider">
+            <div class="tag" data-i18n="cookSliderTag">Our cooks in action</div>
+            <div class="slides"></div>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="grid">
       <div class="card">
-        <h3>1) Apply for open roles</h3>
-        <p class="muted">Tell us how to reach you, pick your role, and start the Stripe Identity check. We move fast and welcome everyone with a strong work ethic.</p>
+        <h3 data-i18n="applyTitle">1) Apply for open roles</h3>
+        <p class="muted" data-i18n="applyLead">Tell us how to reach you, pick your role, and start the Stripe Identity check. We move fast and welcome everyone with a strong work ethic.</p>
+
+        <div class="slider" id="driverSlider" style="margin:10px 0 6px">
+          <div class="tag" data-i18n="driverSliderTag">Delivery team on the road</div>
+          <div class="slides"></div>
+        </div>
 
         <div class="two-col">
           <div>
-            <label for="fullName">Full name</label>
+            <label for="fullName" data-i18n="labelFullName">Full name</label>
             <input id="fullName" autocomplete="name" placeholder="Alex Example" required />
           </div>
           <div>
-            <label for="email">Email</label>
+            <label for="email" data-i18n="labelEmail">Email</label>
             <input id="email" type="email" autocomplete="email" placeholder="alex@example.com" />
           </div>
         </div>
 
         <div class="two-col">
           <div>
-            <label for="phone">Mobile phone</label>
+            <label for="phone" data-i18n="labelPhone">Mobile phone</label>
             <input id="phone" type="tel" autocomplete="tel" placeholder="(555) 123-4567" required />
           </div>
           <div>
-            <label for="role">Role focus</label>
-            <select id="role">
-              <option value="">Choose one</option>
-              <option value="cook">Cook / grill / kitchen</option>
-              <option value="driver_no_car">Delivery driver (need a car provided)</option>
-              <option value="driver_with_car">Delivery driver (have own car)</option>
-              <option value="evening_shift">Evening support (4–10pm)</option>
-            </select>
+            <label for="role" data-i18n="labelRole">Role focus</label>
+            <select id="role"></select>
           </div>
         </div>
 
         <div class="two-col">
           <div>
-            <label for="shift">Shift preference</label>
-            <select id="shift">
-              <option value="">Select</option>
-              <option>4pm–8pm</option>
-              <option>4pm–10pm</option>
-              <option>Weekends only</option>
-              <option>Flexible</option>
-            </select>
+            <label for="shift" data-i18n="labelShift">Shift preference</label>
+            <select id="shift"></select>
           </div>
           <div>
-            <label for="locationFocus">Neighborhood focus</label>
+            <label for="locationFocus" data-i18n="labelLocation">Neighborhood focus</label>
             <input id="locationFocus" placeholder="Example: West Philly, North Philly, 69th St" />
           </div>
         </div>
 
         <div class="two-col">
           <div>
-            <label for="sourcingChannel">How you found us</label>
-            <select id="sourcingChannel">
-              <option value="">Select</option>
-              <option>Friend referral</option>
-              <option>WhatsApp / Telegram</option>
-              <option>Flyer or poster</option>
-              <option>Instagram or Facebook</option>
-              <option>Other</option>
-            </select>
+            <label for="sourcingChannel" data-i18n="labelFound">How you found us</label>
+            <select id="sourcingChannel"></select>
           </div>
           <div>
-            <label for="vehicleNeeds">Vehicle needs</label>
-            <select id="vehicleNeeds">
-              <option value="">Select</option>
-              <option value="true">Need a vehicle provided</option>
-              <option value="false">Have my own vehicle</option>
-            </select>
+            <label for="vehicleNeeds" data-i18n="labelVehicle">Vehicle needs</label>
+            <select id="vehicleNeeds"></select>
           </div>
         </div>
 
         <div>
-          <label for="notes">Notes (languages, kitchen style, timing)</label>
+          <label for="notes" data-i18n="labelNotes">Notes (languages, kitchen style, timing)</label>
           <textarea id="notes" placeholder="Example: Liberian grill experience, speaks Spanish/French, ready this week"></textarea>
         </div>
 
         <div class="status" id="verificationStatus">Stripe Identity not started yet.</div>
         <div class="pill-row">
-          <button class="btn" id="verifyBtn">Start Stripe Identity check</button>
-          <button class="btn ghost" id="refreshStatus">Refresh status</button>
+          <button class="btn" id="verifyBtn" data-i18n="btnVerify">Start Stripe Identity check</button>
+          <button class="btn ghost" id="refreshStatus" data-i18n="btnRefresh">Refresh status</button>
         </div>
-        <div class="note-box">Stripe hosts the ID upload and selfie. We only receive the verification session ID so your documents stay safe.</div>
+        <div class="note-box" data-i18n="noteBox">Stripe hosts the ID upload and selfie. We only receive the verification session ID so your documents stay safe.</div>
 
-        <h3 style="margin-top:16px">Finalize application</h3>
+        <h3 style="margin-top:16px" data-i18n="finalizeTitle">Finalize application</h3>
         <div class="two-col">
           <div>
-            <label for="verificationId">Stripe verification session ID</label>
+            <label for="verificationId" data-i18n="labelVerificationId">Stripe verification session ID</label>
             <input id="verificationId" placeholder="Auto-filled after verification" />
-            <div class="small">Paste the ID if you already completed the check.</div>
+            <div class="small" data-i18n="hintVerification">Paste the ID if you already completed the check.</div>
           </div>
         </div>
-        <button class="btn full" id="submitBtn" style="margin-top:12px">Submit application</button>
+        <button class="btn full" id="submitBtn" style="margin-top:12px" data-i18n="btnSubmit">Submit application</button>
         <div class="status" id="submitStatus" style="margin-top:10px;display:none"></div>
       </div>
 
       <div class="card">
-        <h3>2) Why you’ll like working with us</h3>
-        <ul class="list">
-          <li><b>On-time pay:</b> steady shifts with daily/weekly options.</li>
-          <li><b>Car provided when needed:</b> deliver more and keep tips.</li>
-          <li><b>Growth path:</b> grill training, shift leads, and bonus blocks.</li>
-          <li><b>Friendly team:</b> calm kitchens, clear schedules, and respectful managers.</li>
-          <li><b>Social ID security:</b> Stripe handles the document + selfie so you move quickly and safely.</li>
-        </ul>
+        <h3 data-i18n="whyTitle">Why you’ll like working with us</h3>
+        <ul class="list" id="reasonList"></ul>
 
-        <h3 style="margin-top:12px">3) Locations & shifts</h3>
-        <ul class="list">
-          <li><b>Metro focus:</b> Philadelphia area with routes in West, North, and Center City.</li>
-          <li><b>Shifts:</b> 4pm–8pm, 4pm–10pm, and flexible weekend blocks.</li>
-          <li><b>Roles open:</b> grill cooks, line cooks, delivery drivers (with or without a car), and evening support.</li>
-        </ul>
-
-        <h3 style="margin-top:12px">4) Pick your language</h3>
-        <p class="muted">Tap a flag to read this invite in Spanish for your country.</p>
-        <div class="pill-row" id="flagRow">
-          <button class="pill" data-lang="mx">🇲🇽 México</button>
-          <button class="pill" data-lang="hn">🇭🇳 Honduras</button>
-          <button class="pill" data-lang="do">🇩🇴 República Dominicana</button>
-          <button class="pill" data-lang="gt">🇬🇹 Guatemala</button>
-          <button class="pill" data-lang="sv">🇸🇻 El Salvador</button>
-        </div>
-        <div class="status" id="langCard">
-          <div id="langContent">
-            <strong>Mensaje en español:</strong>
-            <div class="small" id="langBody">
-              Únete a nuestro equipo. Pagos puntuales, turnos claros, y opción de coche para entregas. Completas Stripe Identity (documento + selfie) para comenzar rápido y seguro. Buscamos cocineros de parrilla, línea de cocina y conductores de reparto para turnos de tarde (4–8pm o 4–10pm) en Filadelfia. Crecemos rápido y necesitamos tu talento.
-            </div>
-          </div>
-        </div>
+        <h3 style="margin-top:12px" data-i18n="locationTitle">Locations & shifts</h3>
+        <ul class="list" id="locationList"></ul>
       </div>
     </div>
   </div>
@@ -200,31 +190,366 @@
       const API_BASE = '';
       let stripe = null;
       let verificationSessionId = new URLSearchParams(location.search).get('verification_session_id') || '';
+      let currentLang = 'us';
+      let sliderTimers = [];
 
       const verificationStatus = document.getElementById('verificationStatus');
       const verificationIdInput = document.getElementById('verificationId');
       const submitStatus = document.getElementById('submitStatus');
-      const langCard = document.getElementById('langCard');
-      const langBody = document.getElementById('langBody');
-      const flagRow = document.getElementById('flagRow');
+      const badgeRow = document.getElementById('badgeRow');
+      const flagRowTop = document.getElementById('flagRowTop');
+      const reasonList = document.getElementById('reasonList');
+      const locationList = document.getElementById('locationList');
+      const stepList = document.getElementById('stepList');
 
-      const langCopy = {
-        mx: 'Únete a nuestro equipo en Filadelfia. Pagos puntuales, coche disponible para entregas, y turnos de tarde (4–8pm o 4–10pm). Completas Stripe Identity (documento + selfie) y empezamos rápido. Necesitamos cocineros de parrilla, línea de cocina y conductores de reparto.',
-        hn: 'Trabajo estable en Filadelfia con pagos puntuales. Ofrecemos coche para entregas cuando lo necesites y turnos de tarde. Verificación rápida con Stripe Identity (documento + selfie). Buscamos cocineros y repartidores listos para crecer con nosotros.',
-        do: 'Buscamos cocineros y repartidores en Filadelfia. Pagos seguros cada semana o al día, coche disponible para entregas, y turnos claros. Completa Stripe Identity y comienza rápido.',
-        gt: 'Únete a un equipo amigable con coche disponible para repartir. Pagos puntuales, turnos 4–8pm o 4–10pm, y verificación rápida con Stripe Identity. Necesitamos tu experiencia en cocina o entrega.',
-        sv: 'Crecemos rápido y necesitamos cocineros y repartidores. Pagos a tiempo, coche para entregas si lo necesitas, y turnos de tarde. Stripe Identity nos ayuda a validar tu documento y selfie para empezar de inmediato.',
+      const translations = {
+        us: {
+          flag:'🇺🇸', label:'English',
+          langPrompt:'Pick your language',
+          pillNow:'Now hiring',
+          heroTitle:'Join our cooks & delivery driver crew',
+          heroLead:'We are scaling fast and need motivated teammates for kitchens, grill lines, and delivery runs. We provide the car when you need one, pay on time, and keep shifts steady. Stripe Identity (social ID) keeps onboarding quick and secure.',
+          badges:[
+            'Stripe Identity (document + selfie)',
+            'Car provided options',
+            'Grill cooks • Kitchen line • Delivery',
+            'Daily/weekly pay friendly'
+          ],
+          step1:'Share your details',
+          step2:'Verify ID with Stripe',
+          step3:'Submit & schedule',
+          cookSliderTag:'Our cooks in action',
+          driverSliderTag:'Delivery team on the road',
+          applyTitle:'1) Apply for open roles',
+          applyLead:'Tell us how to reach you, pick your role, and start the Stripe Identity check. We move fast and welcome everyone with a strong work ethic.',
+          labelFullName:'Full name',
+          labelEmail:'Email',
+          labelPhone:'Mobile phone',
+          labelRole:'Role focus',
+          labelShift:'Shift preference',
+          labelLocation:'Neighborhood focus',
+          labelFound:'How you found us',
+          labelVehicle:'Vehicle needs',
+          labelNotes:'Notes (languages, kitchen style, timing)',
+          labelVerificationId:'Stripe verification session ID',
+          hintVerification:'Paste the ID if you already completed the check.',
+          btnVerify:'Start Stripe Identity check',
+          btnRefresh:'Refresh status',
+          btnSubmit:'Submit application',
+          noteBox:'Stripe hosts the ID upload and selfie. We only receive the verification session ID so your documents stay safe.',
+          finalizeTitle:'Finalize application',
+          whyTitle:"Why you'll like working with us",
+          locationTitle:'Locations & shifts',
+          reasons:[
+            {bold:'On-time pay:', text:'steady shifts with daily/weekly options.'},
+            {bold:'Car provided when needed:', text:'deliver more and keep tips.'},
+            {bold:'Growth path:', text:'grill training, shift leads, and bonus blocks.'},
+            {bold:'Friendly team:', text:'calm kitchens, clear schedules, and respectful managers.'},
+            {bold:'Social ID security:', text:'Stripe handles the document + selfie so you move quickly and safely.'}
+          ],
+          locations:[
+            {bold:'Metro focus:', text:'Philadelphia area with routes in West, North, and Center City.'},
+            {bold:'Shifts:', text:'4pm–8pm, 4pm–10pm, and flexible weekend blocks.'},
+            {bold:'Roles open:', text:'grill cooks, line cooks, delivery drivers (with or without a car), and evening support.'}
+          ],
+          placeholders:{
+            fullName:'Alex Example', email:'alex@example.com', phone:'(555) 123-4567',
+            location:'Example: West Philly, North Philly, 69th St', notes:'Example: Grill experience, bilingual, ready this week', verification:'Auto-filled after verification'
+          },
+          selects:{
+            rolePlaceholder:'Choose one',
+            role:[
+              {value:'cook', label:'Cook / grill / kitchen'},
+              {value:'driver_no_car', label:'Delivery driver (need a car provided)'},
+              {value:'driver_with_car', label:'Delivery driver (have own car)'},
+              {value:'evening_shift', label:'Evening support (4–10pm)'}
+            ],
+            shiftPlaceholder:'Select',
+            shift:['4pm–8pm','4pm–10pm','Weekends only','Flexible'],
+            foundPlaceholder:'Select',
+            found:['Friend referral','WhatsApp / Telegram','Flyer or poster','Instagram or Facebook','Other'],
+            vehiclePlaceholder:'Select',
+            vehicle:[{value:'true', label:'Need a vehicle provided'},{value:'false', label:'Have my own vehicle'}]
+          },
+          status:{
+            identityNotStarted:'Stripe Identity not started yet.',
+            missingNamePhone:'Please add your name and phone before verification.',
+            redirecting:'Redirecting to Stripe Identity…',
+            startFailed:'Could not start verification. Try again.',
+            noSession:'No verification session detected yet.',
+            statusPrefix:'Stripe Identity status:',
+            statusError:'Unable to retrieve verification status.',
+            statusRefreshError:'Could not refresh verification status.',
+            submitMissing:'Name, phone, and role are required.',
+            submitOk:'Application received. We will reach out after verification review.',
+            submitError:'Could not submit application. Try again.',
+            submitFailed:'Application failed to send.',
+            verificationWarn:'Please start verification to speed up scheduling.'
+          }
+        },
       };
 
-      function setStatus(el, text, tone){
+      const esBase = {
+        langPrompt:'Elige tu idioma',
+        heroTitle:'Únete a nuestro equipo de cocineros y repartidores',
+        heroLead:'Estamos creciendo rápido y buscamos compañeros motivados para cocina, parrilla y entregas. Te damos carro cuando lo necesites, pagamos a tiempo y mantenemos turnos estables. Stripe Identity (ID social) hace que el proceso sea rápido y seguro.',
+        badges:[
+          'Stripe Identity (documento + selfie)',
+          'Opción de carro incluido',
+          'Parrilla • Línea de cocina • Reparto',
+          'Pagos diarios/semanales'
+        ],
+        step1:'Comparte tus datos',
+        step2:'Verifica tu ID con Stripe',
+        step3:'Envía y agenda',
+        cookSliderTag:'Nuestra cocina en acción',
+        driverSliderTag:'Equipo de reparto en ruta',
+        applyTitle:'1) Aplica a los roles abiertos',
+        applyLead:'Cuéntanos cómo contactarte, elige tu rol y comienza la verificación Stripe Identity. Nos movemos rápido y recibimos a todos con buena actitud de trabajo.',
+        labelFullName:'Nombre completo',
+        labelEmail:'Correo electrónico',
+        labelPhone:'Teléfono celular',
+        labelRole:'Rol deseado',
+        labelShift:'Turno preferido',
+        labelLocation:'Zona donde quieres trabajar',
+        labelFound:'¿Cómo nos encontraste?',
+        labelVehicle:'Necesidad de vehículo',
+        labelNotes:'Notas (idiomas, estilo de cocina, horario)',
+        labelVerificationId:'ID de sesión de verificación de Stripe',
+        hintVerification:'Pega el ID si ya completaste la verificación.',
+        btnVerify:'Iniciar verificación con Stripe',
+        btnRefresh:'Actualizar estado',
+        btnSubmit:'Enviar solicitud',
+        noteBox:'Stripe maneja la carga del documento y selfie. Solo recibimos el ID de la sesión para mantener tus documentos seguros.',
+        finalizeTitle:'Finaliza tu solicitud',
+        whyTitle:'Por qué te gustará trabajar con nosotros',
+        locationTitle:'Lugares y turnos',
+        reasons:[
+          {bold:'Pagos puntuales:', text:'turnos estables con opción diaria o semanal.'},
+          {bold:'Carro cuando lo necesites:', text:'reparte más y conserva las propinas.'},
+          {bold:'Crecimiento:', text:'entrenamiento en parrilla, liderazgo de turno y bonos.'},
+          {bold:'Ambiente amable:', text:'cocinas tranquilas, horarios claros y jefes respetuosos.'},
+          {bold:'Seguridad de ID social:', text:'Stripe maneja documento + selfie para empezar rápido y seguro.'}
+        ],
+        locations:[
+          {bold:'Área:', text:'Filadelfia con rutas en West, North y Center City.'},
+          {bold:'Turnos:', text:'4pm–8pm, 4pm–10pm y bloques flexibles de fin de semana.'},
+          {bold:'Roles abiertos:', text:'parrilla, línea de cocina, repartidores (con o sin carro) y apoyo nocturno.'}
+        ],
+        placeholders:{
+          fullName:'Ejemplo: Ana Pérez', email:'ana@ejemplo.com', phone:'(267) 555-1234',
+          location:'Ejemplo: West Philly, North Philly, 69th St', notes:'Ejemplo: Experiencia en parrilla, bilingüe, listo esta semana', verification:'Se llena automáticamente tras verificar'
+        },
+        selects:{
+          rolePlaceholder:'Elige uno',
+          role:[
+            {value:'cook', label:'Cocinero / parrilla / cocina'},
+            {value:'driver_no_car', label:'Repartidor (necesito carro)'},
+            {value:'driver_with_car', label:'Repartidor (tengo mi carro)'},
+            {value:'evening_shift', label:'Apoyo nocturno (4–10pm)'}
+          ],
+          shiftPlaceholder:'Seleccionar',
+          shift:['4pm–8pm','4pm–10pm','Solo fines de semana','Flexible'],
+          foundPlaceholder:'Seleccionar',
+          found:['Referencia de amigo','WhatsApp / Telegram','Volante o cartel','Instagram o Facebook','Otro'],
+          vehiclePlaceholder:'Seleccionar',
+          vehicle:[{value:'true', label:'Necesito carro incluido'},{value:'false', label:'Tengo mi propio carro'}]
+        },
+        status:{
+          identityNotStarted:'Stripe Identity aún no iniciado.',
+          missingNamePhone:'Agrega tu nombre y teléfono antes de verificar.',
+          redirecting:'Redirigiendo a Stripe Identity…',
+          startFailed:'No pudimos iniciar la verificación. Intenta de nuevo.',
+          noSession:'Aún no hay sesión de verificación.',
+          statusPrefix:'Estado de Stripe Identity:',
+          statusError:'No pudimos obtener el estado de verificación.',
+          statusRefreshError:'Error al actualizar el estado de verificación.',
+          submitMissing:'Nombre, teléfono y rol son obligatorios.',
+          submitOk:'Solicitud recibida. Te contactaremos después de revisar la verificación.',
+          submitError:'No pudimos enviar la solicitud. Inténtalo de nuevo.',
+          submitFailed:'La solicitud no se pudo enviar.',
+          verificationWarn:'Inicia la verificación para agilizar la programación.'
+        }
+      };
+
+      translations.eu = {...translations.us, flag:'🇪🇺', label:'English (EU)'};
+
+      const spanishVariants = {
+        mx: {...esBase, flag:'🇲🇽', label:'México'},
+        hn: {...esBase, flag:'🇭🇳', label:'Honduras'},
+        do: {...esBase, flag:'🇩🇴', label:'República Dominicana'},
+        gt: {...esBase, flag:'🇬🇹', label:'Guatemala'},
+        sv: {...esBase, flag:'🇸🇻', label:'El Salvador'}
+      };
+
+      Object.assign(translations, spanishVariants);
+
+      const imageSets = {
+        cook:[
+          '/image/cook_street_0.jpg','/image/cook_street_1.png','/image/cook_street_2.jpg','/image/cook_street_3.png',
+          '/image/cook_street_4.png','/image/cook_street_5.png','/image/cook_street_6.png','/image/cook_street_7.png','/image/cook_street_8.jpg'
+        ],
+        driver:['/image/delivery_driver_0.png','/image/delivery_driver_1.png','/image/delivery_driver_2.png','/image/delivery_driver_3.png']
+      };
+
+      function renderBadges(copy){
+        badgeRow.innerHTML = '';
+        copy.badges.forEach(text => {
+          const span = document.createElement('span');
+          span.className = 'pill';
+          span.textContent = text;
+          badgeRow.appendChild(span);
+        });
+      }
+
+      function renderList(target, items){
+        target.innerHTML = '';
+        items.forEach(item => {
+          const li = document.createElement('li');
+          const bold = document.createElement('b');
+          bold.textContent = item.bold + ' ';
+          li.appendChild(bold);
+          li.append(item.text);
+          target.appendChild(li);
+        });
+      }
+
+      function populateSelect(selectEl, placeholder, options){
+        selectEl.innerHTML = '';
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = placeholder;
+        selectEl.appendChild(defaultOpt);
+        options.forEach(opt => {
+          const optionEl = document.createElement('option');
+          if (typeof opt === 'string'){
+            optionEl.textContent = opt;
+            optionEl.value = opt;
+          } else {
+            optionEl.value = opt.value;
+            optionEl.textContent = opt.label;
+          }
+          selectEl.appendChild(optionEl);
+        });
+      }
+
+      function setStatus(el, key, tone){
+        const text = translations[currentLang]?.status?.[key] || key;
         el.textContent = text;
         el.className = 'status' + (tone ? ` ${tone}` : '');
       }
 
-      function updateLang(lang){
-        const text = langCopy[lang] || langCopy.mx;
-        langBody.textContent = text;
-        langCard.className = 'status ok';
+      function updateStepState(step, state){
+        const item = stepList.querySelector(`[data-step="${step}"]`);
+        if (!item) return;
+        item.classList.remove('current','done');
+        if (state === 'current') item.classList.add('current');
+        if (state === 'done') item.classList.add('done');
+      }
+
+      function renderLanguageButtons(){
+        flagRowTop.innerHTML = '';
+        Object.entries(translations).forEach(([key,val]) => {
+          const btn = document.createElement('button');
+          btn.className = 'pill';
+          btn.dataset.lang = key;
+          btn.textContent = `${val.flag} ${val.label}`;
+          if (key === currentLang) btn.style.borderColor = 'rgba(109,209,255,.7)';
+          flagRowTop.appendChild(btn);
+        });
+      }
+
+      function applyPlaceholders(copy){
+        document.getElementById('fullName').placeholder = copy.placeholders.fullName;
+        document.getElementById('email').placeholder = copy.placeholders.email;
+        document.getElementById('phone').placeholder = copy.placeholders.phone;
+        document.getElementById('locationFocus').placeholder = copy.placeholders.location;
+        document.getElementById('notes').placeholder = copy.placeholders.notes;
+        document.getElementById('verificationId').placeholder = copy.placeholders.verification;
+      }
+
+      function applySelects(copy){
+        populateSelect(document.getElementById('role'), copy.selects.rolePlaceholder, copy.selects.role);
+        populateSelect(document.getElementById('shift'), copy.selects.shiftPlaceholder, copy.selects.shift);
+        populateSelect(document.getElementById('sourcingChannel'), copy.selects.foundPlaceholder, copy.selects.found);
+        populateSelect(document.getElementById('vehicleNeeds'), copy.selects.vehiclePlaceholder, copy.selects.vehicle);
+      }
+
+      function updateStaticText(copy){
+        document.documentElement.lang = currentLang === 'us' ? 'en' : 'es';
+        document.querySelector('[data-i18n="langPrompt"]').textContent = copy.langPrompt || translations.us.langPrompt;
+        document.querySelector('[data-i18n="pillNow"]').textContent = copy.pillNow;
+        document.querySelector('[data-i18n="heroTitle"]').textContent = copy.heroTitle;
+        document.querySelector('[data-i18n="heroLead"]').textContent = copy.heroLead;
+        document.querySelector('[data-i18n="step1"]').textContent = copy.step1;
+        document.querySelector('[data-i18n="step2"]').textContent = copy.step2;
+        document.querySelector('[data-i18n="step3"]').textContent = copy.step3;
+        document.querySelector('[data-i18n="cookSliderTag"]').textContent = copy.cookSliderTag;
+        document.querySelector('[data-i18n="driverSliderTag"]').textContent = copy.driverSliderTag;
+        document.querySelector('[data-i18n="applyTitle"]').textContent = copy.applyTitle;
+        document.querySelector('[data-i18n="applyLead"]').textContent = copy.applyLead;
+        document.querySelector('[data-i18n="labelFullName"]').textContent = copy.labelFullName;
+        document.querySelector('[data-i18n="labelEmail"]').textContent = copy.labelEmail;
+        document.querySelector('[data-i18n="labelPhone"]').textContent = copy.labelPhone;
+        document.querySelector('[data-i18n="labelRole"]').textContent = copy.labelRole;
+        document.querySelector('[data-i18n="labelShift"]').textContent = copy.labelShift;
+        document.querySelector('[data-i18n="labelLocation"]').textContent = copy.labelLocation;
+        document.querySelector('[data-i18n="labelFound"]').textContent = copy.labelFound;
+        document.querySelector('[data-i18n="labelVehicle"]').textContent = copy.labelVehicle;
+        document.querySelector('[data-i18n="labelNotes"]').textContent = copy.labelNotes;
+        document.querySelector('[data-i18n="noteBox"]').textContent = copy.noteBox;
+        document.querySelector('[data-i18n="finalizeTitle"]').textContent = copy.finalizeTitle;
+        document.querySelector('[data-i18n="labelVerificationId"]').textContent = copy.labelVerificationId;
+        document.querySelector('[data-i18n="hintVerification"]').textContent = copy.hintVerification;
+        document.querySelector('[data-i18n="btnVerify"]').textContent = copy.btnVerify;
+        document.querySelector('[data-i18n="btnRefresh"]').textContent = copy.btnRefresh;
+        document.querySelector('[data-i18n="btnSubmit"]').textContent = copy.btnSubmit;
+        document.querySelector('[data-i18n="whyTitle"]').textContent = copy.whyTitle;
+        document.querySelector('[data-i18n="locationTitle"]').textContent = copy.locationTitle;
+        document.querySelector('[data-i18n="langPrompt"]').textContent = copy.langPrompt || translations.us.langPrompt;
+      }
+
+      function updateLanguage(lang){
+        if (!translations[lang]) lang = 'us';
+        currentLang = lang;
+        const copy = translations[lang];
+        renderLanguageButtons();
+        renderBadges(copy);
+        applyPlaceholders(copy);
+        applySelects(copy);
+        renderList(reasonList, copy.reasons);
+        renderList(locationList, copy.locations);
+        updateStaticText(copy);
+        setStatus(verificationStatus, 'identityNotStarted');
+      }
+
+      function startSlider(id, images){
+        const slider = document.getElementById(id);
+        if (!slider) return;
+        const container = slider.querySelector('.slides');
+        container.innerHTML = '';
+        images.forEach((src, idx) => {
+          const slide = document.createElement('div');
+          slide.className = 'slide' + (idx === 0 ? ' active' : '');
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = 'slide';
+          slide.appendChild(img);
+          container.appendChild(slide);
+        });
+        const slides = Array.from(container.children);
+        let i = 0;
+        const timer = setInterval(() => {
+          slides[i].classList.remove('active');
+          i = (i + 1) % slides.length;
+          slides[i].classList.add('active');
+        }, 3200);
+        sliderTimers.push(timer);
+      }
+
+      function clearSliders(){
+        sliderTimers.forEach(t => clearInterval(t));
+        sliderTimers = [];
       }
 
       function syncFields(){
@@ -248,7 +573,7 @@
         const phone = document.getElementById('phone').value.trim();
 
         if (!fullName || !phone){
-          setStatus(verificationStatus, 'Please add your name and phone before verification.', 'warn');
+          setStatus(verificationStatus, 'missingNamePhone', 'warn');
           return;
         }
 
@@ -260,33 +585,43 @@
           }).then(r => r.json());
 
           if (res?.url){
-            setStatus(verificationStatus, 'Redirecting to Stripe Identity…', 'ok');
+            setStatus(verificationStatus, 'redirecting', 'ok');
+            updateStepState(1, 'done');
+            updateStepState(2, 'current');
             window.location.href = res.url;
           } else {
-            setStatus(verificationStatus, 'Could not start verification. Try again.', 'danger');
+            setStatus(verificationStatus, 'startFailed', 'danger');
           }
         } catch (err) {
           console.error('verification error', err);
-          setStatus(verificationStatus, 'Verification failed. Please retry.', 'danger');
+          setStatus(verificationStatus, 'startFailed', 'danger');
         }
       }
 
       async function refreshVerification(){
         if (!verificationSessionId) {
-          setStatus(verificationStatus, 'No verification session detected yet.', 'warn');
+          verificationSessionId = verificationIdInput.value.trim();
+        }
+        if (!verificationSessionId) {
+          setStatus(verificationStatus, 'noSession', 'warn');
           return;
         }
         try {
           const res = await fetch(`/api/hiring/verification-session?id=${encodeURIComponent(verificationSessionId)}`).then(r => r.json());
           if (res?.status){
             let tone = res.status === 'verified' ? 'ok' : res.status === 'requires_input' ? 'warn' : '';
-            setStatus(verificationStatus, `Stripe Identity status: ${res.status.replace(/_/g,' ')}`, tone);
+            setStatus(verificationStatus, `${translations[currentLang].status.statusPrefix} ${res.status.replace(/_/g,' ')}`);
+            if (res.status === 'verified'){
+              updateStepState(1, 'done');
+              updateStepState(2, 'done');
+              updateStepState(3, 'current');
+            }
           } else {
-            setStatus(verificationStatus, 'Unable to retrieve verification status.', 'warn');
+            setStatus(verificationStatus, 'statusError', 'warn');
           }
         } catch (err) {
           console.error('status error', err);
-          setStatus(verificationStatus, 'Could not refresh verification status.', 'danger');
+          setStatus(verificationStatus, 'statusRefreshError', 'danger');
         }
       }
 
@@ -305,7 +640,7 @@
         };
 
         if (!payload.fullName || !payload.phone || !payload.role){
-          setStatus(submitStatus, 'Name, phone, and role are required.', 'warn');
+          setStatus(submitStatus, 'submitMissing', 'warn');
           submitStatus.style.display = '';
           return;
         }
@@ -318,14 +653,17 @@
           }).then(r => r.json());
 
           if (res?.ok){
-            setStatus(submitStatus, 'Application received. We will reach out after verification review.', 'ok');
+            setStatus(submitStatus, 'submitOk', 'ok');
+            updateStepState(1, 'done');
+            updateStepState(2, payload.verificationSessionId ? 'done' : 'current');
+            if (payload.verificationSessionId) updateStepState(3, 'done');
           } else {
-            setStatus(submitStatus, 'Could not submit application. Try again.', 'danger');
+            setStatus(submitStatus, 'submitError', 'danger');
           }
           submitStatus.style.display = '';
         } catch (err) {
           console.error('apply error', err);
-          setStatus(submitStatus, 'Application failed to send.', 'danger');
+          setStatus(submitStatus, 'submitFailed', 'danger');
           submitStatus.style.display = '';
         }
       }
@@ -333,16 +671,21 @@
       document.getElementById('verifyBtn').onclick = (e)=>{ e.preventDefault(); startVerification(); };
       document.getElementById('refreshStatus').onclick = (e)=>{ e.preventDefault(); refreshVerification(); };
       document.getElementById('submitBtn').onclick = (e)=>{ e.preventDefault(); submitApplication(); };
-      flagRow.onclick = (e)=>{
+      flagRowTop.onclick = (e)=>{
         const btn = e.target.closest('[data-lang]');
         if (!btn) return;
-        updateLang(btn.dataset.lang);
+        updateLanguage(btn.dataset.lang);
+        clearSliders();
+        startSlider('cookSlider', imageSets.cook);
+        startSlider('driverSlider', imageSets.driver);
       };
 
       loadConfig();
+      startSlider('cookSlider', imageSets.cook);
+      startSlider('driverSlider', imageSets.driver);
+      updateLanguage('us');
       syncFields();
       if (verificationSessionId) refreshVerification();
-      updateLang('mx');
     })();
   </script>
 </body>
