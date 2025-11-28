@@ -21,9 +21,8 @@
     .hero{background:linear-gradient(180deg,rgba(109,209,255,.12),rgba(90,124,255,.16));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
     .hero:after{content:"";position:absolute;inset:auto -120px -140px auto;width:360px;height:360px;background:radial-gradient(circle at 30% 30%,rgba(109,209,255,.25),transparent 70%);filter:blur(40px);opacity:.7}
     .hero-inner{display:grid;grid-template-columns:1fr;gap:16px;align-items:center;position:relative;z-index:1}
-    .badge-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
     label{font-size:14px;color:var(--ink);display:block;margin-bottom:6px;font-weight:700}
-    input,textarea,select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--edge);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));color:var(--ink);font:15px/1.4 inherit;appearance:none}
+    input,textarea,select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(180deg,rgba(16,24,46,.9),rgba(12,18,34,.92));color:var(--ink);font:15px/1.4 inherit;appearance:none;box-shadow:0 0 0 1px rgba(255,255,255,.04)}
     textarea{min-height:110px;resize:vertical}
     select option{background:var(--panel);color:var(--ink)}
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(180deg,var(--brand),var(--brand2));color:#050914;font-weight:900;cursor:pointer;text-align:center}
@@ -41,16 +40,16 @@
     .note-box{border:1px dashed var(--edge);border-radius:12px;padding:10px;color:var(--muted);margin-top:8px}
     .lang-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
     .lang-label{font-weight:700;font-size:14px;color:var(--muted)}
-    .slider{position:relative;overflow:hidden;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);min-height:220px}
+    .slider{position:relative;overflow:hidden;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);height:260px;min-height:260px}
     .slides{position:relative;height:100%}
     .slide{opacity:0;transition:opacity .7s ease;position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
     .slide.active{opacity:1;position:relative}
     .slide img{width:100%;height:100%;object-fit:cover;display:block}
     .slider .tag{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.45);border-radius:10px;padding:6px 10px;font-weight:700;font-size:12px;color:#fff;border:1px solid rgba(255,255,255,.2)}
-    .stepper{margin-top:6px}
-    .step-list{list-style:none;display:flex;flex-wrap:wrap;gap:10px;padding:0;margin:0}
-    .step-item{position:relative;flex:1;min-width:120px;padding:12px 12px;border-radius:10px;border:1px solid var(--edge);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));color:var(--muted);font-weight:700}
-    .step-item .badge{position:absolute;right:10px;top:10px;font-size:12px;font-weight:800;padding:4px 8px;border-radius:999px;border:1px solid var(--edge);background:rgba(255,255,255,.08);color:var(--ink)}
+    .stepper{margin-top:2px}
+    .step-list{list-style:none;display:flex;flex-wrap:wrap;gap:6px;padding:0;margin:0}
+    .step-item{position:relative;flex:1;min-width:95px;padding:9px 10px;border-radius:10px;border:1px solid var(--edge);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));color:var(--muted);font-weight:700;font-size:13px}
+    .step-item .badge{position:absolute;right:8px;top:8px;font-size:11px;font-weight:800;padding:3px 7px;border-radius:999px;border:1px solid var(--edge);background:rgba(255,255,255,.08);color:var(--ink)}
     .step-item.current{background:linear-gradient(180deg,var(--brand),var(--brand2));color:#050914;border-color:rgba(255,255,255,.2)}
     .step-item.current .badge{background:rgba(0,0,0,.12);color:#050914}
     .step-item.done{border-color:rgba(45,209,134,.5);color:var(--ok);background:rgba(45,209,134,.08)}
@@ -78,7 +77,6 @@
             We are scaling fast and need motivated teammates for kitchens, grill lines, and delivery runs. We provide the car when
             you need one, pay on time, and keep shifts steady. Stripe Identity (social ID) keeps onboarding quick and secure.
           </p>
-          <div class="badge-row" id="badgeRow"></div>
           <div class="stepper">
             <ul class="step-list" id="stepList">
               <li class="step-item current" data-step="1"><span class="badge">1</span><span data-i18n="step1">Share your details</span></li>
@@ -100,11 +98,6 @@
       <div class="card">
         <h3 data-i18n="applyTitle">1) Apply for open roles</h3>
         <p class="muted" data-i18n="applyLead">Tell us how to reach you, pick your role, and start the Stripe Identity check. We move fast and welcome everyone with a strong work ethic.</p>
-
-        <div class="slider" id="driverSlider" style="margin:10px 0 6px">
-          <div class="tag" data-i18n="driverSliderTag">Delivery team on the road</div>
-          <div class="slides"></div>
-        </div>
 
         <div class="two-col">
           <div>
@@ -178,6 +171,11 @@
         <h3 data-i18n="whyTitle">Why you’ll like working with us</h3>
         <ul class="list" id="reasonList"></ul>
 
+        <div class="slider" id="driverSlider" style="margin:12px 0 8px">
+          <div class="tag" data-i18n="driverSliderTag">Delivery team on the road</div>
+          <div class="slides"></div>
+        </div>
+
         <h3 style="margin-top:12px" data-i18n="locationTitle">Locations & shifts</h3>
         <ul class="list" id="locationList"></ul>
       </div>
@@ -196,7 +194,6 @@
       const verificationStatus = document.getElementById('verificationStatus');
       const verificationIdInput = document.getElementById('verificationId');
       const submitStatus = document.getElementById('submitStatus');
-      const badgeRow = document.getElementById('badgeRow');
       const flagRowTop = document.getElementById('flagRowTop');
       const reasonList = document.getElementById('reasonList');
       const locationList = document.getElementById('locationList');
@@ -209,12 +206,6 @@
           pillNow:'Now hiring',
           heroTitle:'Join our cooks & delivery driver crew',
           heroLead:'We are scaling fast and need motivated teammates for kitchens, grill lines, and delivery runs. We provide the car when you need one, pay on time, and keep shifts steady. Stripe Identity (social ID) keeps onboarding quick and secure.',
-          badges:[
-            'Stripe Identity (document + selfie)',
-            'Car provided options',
-            'Grill cooks • Kitchen line • Delivery',
-            'Daily/weekly pay friendly'
-          ],
           step1:'Share your details',
           step2:'Verify ID with Stripe',
           step3:'Submit & schedule',
@@ -293,12 +284,6 @@
         langPrompt:'Elige tu idioma',
         heroTitle:'Únete a nuestro equipo de cocineros y repartidores',
         heroLead:'Estamos creciendo rápido y buscamos compañeros motivados para cocina, parrilla y entregas. Te damos carro cuando lo necesites, pagamos a tiempo y mantenemos turnos estables. Stripe Identity (ID social) hace que el proceso sea rápido y seguro.',
-        badges:[
-          'Stripe Identity (documento + selfie)',
-          'Opción de carro incluido',
-          'Parrilla • Línea de cocina • Reparto',
-          'Pagos diarios/semanales'
-        ],
         step1:'Comparte tus datos',
         step2:'Verifica tu ID con Stripe',
         step3:'Envía y agenda',
@@ -391,16 +376,6 @@
         ],
         driver:['/image/delivery_driver_0.png','/image/delivery_driver_1.png','/image/delivery_driver_2.png','/image/delivery_driver_3.png']
       };
-
-      function renderBadges(copy){
-        badgeRow.innerHTML = '';
-        copy.badges.forEach(text => {
-          const span = document.createElement('span');
-          span.className = 'pill';
-          span.textContent = text;
-          badgeRow.appendChild(span);
-        });
-      }
 
       function renderList(target, items){
         target.innerHTML = '';
@@ -514,7 +489,6 @@
         currentLang = lang;
         const copy = translations[lang];
         renderLanguageButtons();
-        renderBadges(copy);
         applyPlaceholders(copy);
         applySelects(copy);
         renderList(reasonList, copy.reasons);
