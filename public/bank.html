@@ -9,6 +9,7 @@
   <meta
     http-equiv="Content-Security-Policy"
     content="
+      default-src 'self';
       connect-src 'self'
         https://*.s.unit.sh
         https://*.unit.co
@@ -25,6 +26,16 @@
         https://*.vouched.id
         https://*.s.unit.sh
         https://*.unit.co;
+      script-src-elem 'self'
+        https://*.zdassets.com
+        https://*.zendesk.com
+        https://cdn.plaid.com
+        https://js.verygoodvault.com
+        https://*.vouched.id
+        https://*.s.unit.sh
+        https://*.unit.co;
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: https://*;
       frame-src 'self'
         https://*.zendesk.com
         https://cdn.plaid.com
@@ -33,6 +44,7 @@
     "
   >
   <script async src="https://ui.s.unit.sh/release/latest/components-extended.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
   <style>
     :root {
       --bg: #060915;
@@ -81,12 +93,13 @@
       .h1 { font-size: 42px; }
     }
   </style>
+  <script defer src="/js/bank.js"></script>
 </head>
 <body>
   <div class="top">
     <div class="nav">
       <a href="/" class="brand">
-        <img src="/image/delco-tech-seal.png" alt="Delco Tech Division" onerror="this.style.display='none'">
+        <img src="/image/delco-tech-seal.png" alt="Delco Tech Division">
         <span>Delco Tech Division</span>
       </a>
       <div class="pill">Sandbox banking · Debit cards & finance</div>
@@ -97,16 +110,16 @@
     <div class="grid">
       <div class="card">
         <div class="h1">Banking & debit cards, built into Delco Tech.</div>
-        <p class="muted">Enroll customers with our own branding. This page loads Unit's web components in sandbox with a theme that matches our palette.</p>
+        <p class="muted">Invite customers to enroll directly in our custom-branded banking experience. The form below provisions their account, card, and profile in Unit.</p>
         <div class="tagline">
-          <span class="pill">Ready-to-Launch switched to Custom</span>
-          <span class="pill">JWT-enabled · OTP code 000001 in sandbox</span>
+          <span class="pill">Custom enrollment powered by Unit</span>
+          <span class="pill">JWT + OTP (000001) in sandbox</span>
           <span class="pill">Cards, deposits, and payments</span>
         </div>
         <div class="panel">
           <strong>JWT token in use</strong>
           <div class="token" id="jwtDisplay">demo.jwt.token</div>
-          <div class="note">Pass ?token=&lt;your JWT&gt; in the URL to preview a real user.</div>
+          <div class="note">Pass <code>?token=&lt;your JWT&gt;</code> in the URL to load a real customer. Use unique phone numbers per application.</div>
         </div>
         <div class="badge-row">
           <span class="pill">CSP ready</span>
@@ -116,19 +129,19 @@
       </div>
 
       <div class="card steps">
-        <h3 style="margin:0 0 6px">How this page works</h3>
-        <div class="step"><div class="dot">1</div><div><b>Script loads Unit components.</b> Sandbox bundle from ui.s.unit.sh is async.</div></div>
-        <div class="step"><div class="dot">2</div><div><b>JWT is pulled from the URL.</b> Default is demo.jwt.token so you can click through immediately.</div></div>
-        <div class="step"><div class="dot">3</div><div><b>Theming applied.</b> Buttons and cards reuse our gradients and typography.</div></div>
-        <div class="step"><div class="dot">4</div><div><b>Ready for production.</b> Swap the script src to ui.unit.co and provide live JWTs.</div></div>
+        <h3 style="margin:0 0 6px">Enrollment steps</h3>
+        <div class="step"><div class="dot">1</div><div><b>Authenticate.</b> Your app issues a JWT for the user; add it to the URL or replace <code>demo.jwt.token</code>.</div></div>
+        <div class="step"><div class="dot">2</div><div><b>User applies.</b> The embedded Unit flow collects KYC/KYB details and lets them pick debit options.</div></div>
+        <div class="step"><div class="dot">3</div><div><b>Provisioned instantly.</b> Approved users see their Delco Tech account, card art, and balances.</div></div>
+        <div class="step"><div class="dot">4</div><div><b>Manage access.</b> Invite additional users and roles by serving JWTs from your backend endpoint.</div></div>
       </div>
     </div>
 
     <div class="card" style="margin-top:16px">
       <div class="panel" style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
         <div>
-          <div style="font-weight:800">Embedded banking experience</div>
-          <div class="note">Uses Unit's <code>unit-elements-white-label-app</code> component in sandbox.</div>
+          <div style="font-weight:800">Embedded enrollment experience</div>
+          <div class="note">Unit's <code>unit-elements-white-label-app</code> runs below with Delco Tech theming.</div>
         </div>
         <button class="btn ghost" type="button" id="clearUnitStorage">Clear Unit storage</button>
       </div>
@@ -136,45 +149,5 @@
       <div class="note" style="margin-top:10px">Tip: localStorage keys <code>unitCustomerToken</code> and <code>unitVerifiedCustomerToken</code> are cleared via the button above.</div>
     </div>
   </main>
-
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token') || 'demo.jwt.token';
-    const unitRoot = document.getElementById('unit-app');
-    const jwtDisplay = document.getElementById('jwtDisplay');
-    jwtDisplay.textContent = token;
-
-    const theme = {
-      global: {
-        colors: { primary: '#5a7cff', secondary: '#2a4de2', success: '#17d499' },
-        buttons: {
-          primary: {
-            default: { borderRadius: '10px', fontWeight: '800' },
-            hover: { boxShadow: '0 10px 30px rgba(58, 84, 255, 0.32)' }
-          }
-        }
-      },
-      elementsCard: {
-        designs: [
-          {
-            name: 'default',
-            url: 'https://ui.dev.unit.sh/resources/outlay.png',
-            fontColor: '#f5f7ff'
-          }
-        ]
-      }
-    };
-
-    const unitApp = document.createElement('unit-elements-white-label-app');
-    unitApp.setAttribute('jwt-token', token);
-    unitApp.setAttribute('settings-json', JSON.stringify(theme));
-    unitRoot.append(unitApp);
-
-    document.getElementById('clearUnitStorage').addEventListener('click', () => {
-      localStorage.removeItem('unitCustomerToken');
-      localStorage.removeItem('unitVerifiedCustomerToken');
-      alert('Cleared Unit localStorage keys.');
-    });
-  </script>
 </body>
 </html>
