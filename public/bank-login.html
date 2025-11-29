@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Delco Tech Division — Bank Access</title>
+  <meta name="description" content="Secure Delco Tech Division banking login and enrollment gateway.">
+  <link rel="icon" type="image/png" href="/favicon-32.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/bank-login.css">
+</head>
+<body>
+  <div class="sass-container flex items-center justify-center p-4">
+    <div class="sass-form-container w-full max-w-md">
+      <div class="sass-header relative z-10">
+        <div class="flex justify-between items-center mb-4">
+          <div class="sass-logo text-2xl font-bold flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path>
+              <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"></path>
+            </svg>
+            Delco Tech Division Bank
+          </div>
+          <div class="sass-secure-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            Official Banking Access
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold mb-2" id="authTitle">Welcome Back</h1>
+            <p class="text-sm opacity-80" id="authSubtitle">Access your Delco Tech Division accounts securely.</p>
+          </div>
+          <div class="sass-mode-toggle" role="tablist" aria-label="Bank portal modes">
+            <button type="button" class="auth-mode active" data-mode="login">Login</button>
+            <button type="button" class="auth-mode" data-mode="register">Register</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <form id="sassLoginForm" class="space-y-4">
+          <div class="sass-form-group signup-only">
+            <label for="sassFullName" class="sass-label block text-sm font-medium text-gray-700 mb-1">Full name</label>
+            <input type="text" id="sassFullName" class="sass-input w-full pl-3 pr-4 py-3 rounded-lg" placeholder="First Last">
+          </div>
+
+          <div class="sass-form-group">
+            <label for="sassLoginId" class="sass-label block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <div class="sass-input-with-icon relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M2.94 6.342a2 2 0 01.589-.414l6-3a2 2 0 011.942 0l6 3A2 2 0 0118 8.118V12a2 2 0 01-2 2h-1v-5.382l-5 2.5-5-2.5V14H4a2 2 0 01-2-2V8.118a2 2 0 01.94-1.776z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <input type="email" id="sassLoginId" class="sass-input w-full pl-10 pr-4 py-3 rounded-lg" placeholder="you@delcotechdivision.com" required>
+            </div>
+          </div>
+
+          <div class="sass-form-group signup-only">
+            <label for="sassPhone" class="sass-label block text-sm font-medium text-gray-700 mb-1">Mobile number</label>
+            <input type="tel" id="sassPhone" class="sass-input w-full pl-3 pr-4 py-3 rounded-lg" placeholder="+1 555 123 4567">
+            <p class="sass-text-small mt-1">We use this for enrollment OTP and Unit onboarding.</p>
+          </div>
+
+          <div class="sass-form-group">
+            <div class="flex justify-between items-center mb-1">
+              <label for="sassLoginPassword" class="sass-label block text-sm font-medium text-gray-700">Password</label>
+              <a href="/support" class="sass-forgot-link text-xs text-blue-700 hover:text-blue-800 font-medium">Forgot Password?</a>
+            </div>
+            <div class="sass-input-with-icon relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <input type="password" id="sassLoginPassword" class="sass-input w-full pl-10 pr-4 py-3 rounded-lg" placeholder="••••••••" required>
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button type="button" id="sassTogglePassword" class="text-gray-400 hover:text-gray-600 focus:outline-none" aria-label="Toggle password visibility">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sass-form-group mb-3">
+            <div class="flex items-center justify-between">
+              <label class="sass-checkbox-container flex items-center">
+                <input type="checkbox" id="sassRememberMe" class="sass-checkbox mr-2">
+                <span class="text-sm text-gray-600">Remember this device</span>
+              </label>
+
+              <div class="flex items-center">
+                <span class="text-sm text-gray-600 mr-2">2FA</span>
+                <label class="sass-toggle">
+                  <input type="checkbox" id="sassTwoFactorToggle">
+                  <span class="sass-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div id="sassOtpSection" class="sass-otp-section">
+            <div class="p-4 bg-blue-50 rounded-lg mb-4">
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-blue-800">Two-Factor Authentication</h3>
+                  <div class="mt-1 text-sm text-blue-700">
+                    <p>Enter the 6-digit code sent to your registered mobile device.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <label class="sass-label block text-sm font-medium text-gray-700 mb-1">One-Time Password (OTP)</label>
+            <div class="sass-otp-container">
+              <input type="text" class="sass-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+              <input type="text" class="sass-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+              <input type="text" class="sass-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+              <input type="text" class="sass-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+              <input type="text" class="sass-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+              <input type="text" class="sass-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+            </div>
+            <div class="text-right mt-2">
+              <button type="button" class="text-sm text-blue-700 hover:text-blue-800 font-medium">Resend Code</button>
+            </div>
+          </div>
+
+          <div class="signup-only">
+            <label for="sassTerms" class="flex items-start gap-2 text-sm text-gray-600">
+              <input type="checkbox" id="sassTerms" class="sass-checkbox mt-1">
+              <span>I agree to Delco Tech Division's Electronic Disclosures and Banking Terms.</span>
+            </label>
+          </div>
+
+          <div class="mt-6">
+            <button type="submit" class="sass-button w-full py-3 rounded-lg text-white font-medium sass-pulse" id="submitButton">Secure Login</button>
+          </div>
+
+          <div id="sassAlert" class="sass-alert hidden" role="status"></div>
+
+          <div class="sass-security-features mt-6">
+            <div class="flex items-center justify-center mb-4">
+              <div class="h-px bg-gray-200 flex-1"></div>
+              <span class="px-4 text-sm text-gray-500 font-medium">Security Features</span>
+              <div class="h-px bg-gray-200 flex-1"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 text-center">
+              <div class="sass-security-feature">
+                <div class="flex justify-center mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                  </svg>
+                </div>
+                <p class="text-xs text-gray-600">256-bit Encryption</p>
+              </div>
+              <div class="sass-security-feature">
+                <div class="flex justify-center mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                  </svg>
+                </div>
+                <p class="text-xs text-gray-600">Fraud Protection</p>
+              </div>
+              <div class="sass-security-feature">
+                <div class="flex justify-center mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path>
+                  </svg>
+                </div>
+                <p class="text-xs text-gray-600">Biometric Auth</p>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <div class="sass-footer mt-6 text-center">
+          <p class="text-sm text-gray-500">Need to onboard? <a href="/bank.html" class="text-blue-700 hover:text-blue-800 font-medium">Start banking enrollment</a></p>
+          <div class="mt-4 flex justify-center space-x-4">
+            <a href="/privacy" class="text-xs text-gray-500 hover:text-gray-700">Privacy Policy</a>
+            <a href="/terms" class="text-xs text-gray-500 hover:text-gray-700">Terms of Service</a>
+            <a href="/support" class="text-xs text-gray-500 hover:text-gray-700">Help Center</a>
+          </div>
+          <div class="mt-4 flex justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-800" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="ml-1 text-xs text-gray-500">Bank-grade security</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/js/bank-login.js" defer></script>
+</body>
+</html>
