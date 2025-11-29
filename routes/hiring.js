@@ -94,6 +94,51 @@ function createHiringRouter({ stripe, appBaseUrl }) {
     }
   });
 
+  router.get('/applicants', async (req, res) => {
+    try {
+      const includeStripe = String(req.query?.includeStripe || req.query?.include_stripe || '').toLowerCase() === 'true';
+      const limit = Math.min(500, Math.max(1, Number(req.query?.limit) || 200));
+
+      const col = await getCollection('hiring_applicants');
+      let cursor = col.find({});
+      if (cursor.sort) cursor = cursor.sort({ submittedAt: -1 });
+      if (cursor.limit) cursor = cursor.limit(limit);
+      let applicants = await cursor.toArray();
+      if (!Array.isArray(applicants)) applicants = [];
+
+      if (includeStripe) {
+        if (stripe?.identity?.verificationSessions?.retrieve) {
+          await Promise.all(applicants.map(async (applicant) => {
+            if (!applicant.verificationSessionId) {
+              applicant.verificationStatus = 'none';
+              return;
+            }
+            try {
+              const session = await stripe.identity.verificationSessions.retrieve(applicant.verificationSessionId);
+              applicant.verificationStatus = session?.status || 'unknown';
+              applicant.verificationLastError = session?.last_error || null;
+              applicant.verificationOutputs = session?.verified_outputs || null;
+            } catch (err) {
+              console.error('[hiring] applicant status lookup failed', err);
+              applicant.verificationStatus = 'lookup_error';
+              applicant.verificationLastError = { message: err?.message || 'lookup_failed' };
+            }
+          }));
+        } else {
+          applicants = applicants.map(a => ({
+            ...a,
+            verificationStatus: 'stripe_unavailable',
+          }));
+        }
+      }
+
+      return res.json({ ok: true, count: applicants.length, applicants });
+    } catch (err) {
+      console.error('[hiring] applicants list error', err);
+      return res.status(500).json({ error: 'list_failed' });
+    }
+  });
+
   return router;
 }
 

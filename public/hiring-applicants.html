@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hiring applicants – dashboard</title>
+  <style>
+    :root{
+      --bg:#050914; --panel:#0d1326; --card:#0f172e; --ink:#e9edff; --muted:#9fb0d8;
+      --brand:#6dd1ff; --brand2:#5a7cff; --ok:#2dd186; --warn:#ffb020; --danger:#ff6b6b;
+      --edge:rgba(255,255,255,.12);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Inter",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;padding:16px}
+    h1{margin:0 0 12px;font-size:24px}
+    .card{background:var(--card);border:1px solid var(--edge);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 14px 44px rgba(0,0,0,.35)}
+    .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+    .muted{color:var(--muted)}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(180deg,var(--brand),var(--brand2));color:#050914;font-weight:800;cursor:pointer}
+    .btn.ghost{background:transparent;color:var(--ink)}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;border:1px solid var(--edge);background:rgba(255,255,255,.04);font-size:13px;font-weight:700;color:#dfe6ff}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:8px;border-bottom:1px solid var(--edge);text-align:left;vertical-align:top}
+    th{color:var(--muted);font-weight:700;font-size:12px}
+    tr:hover{background:rgba(255,255,255,.03)}
+    code{font-size:12px;color:var(--muted)}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:10px;border:1px solid var(--edge);font-weight:700;font-size:12px}
+    .ok{color:var(--ok);border-color:rgba(45,209,134,.4);background:rgba(45,209,134,.08)}
+    .warn{color:var(--warn);border-color:rgba(255,176,32,.45);background:rgba(255,176,32,.08)}
+    .danger{color:var(--danger);border-color:rgba(255,107,107,.45);background:rgba(255,107,107,.08)}
+    .grid{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:960px){
+      .grid{grid-template-columns:320px 1fr}
+    }
+    input[type="checkbox"]{width:16px;height:16px}
+    .small{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Hiring applicants</h1>
+    <div class="muted">Live view of incoming cook, driver, and evening shift submissions. Toggle Stripe to pull verification status inline.</div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="row">
+        <button class="btn" id="refresh">Refresh</button>
+        <label class="pill" style="gap:6px"><input id="withStripe" type="checkbox" checked /> Include Stripe status</label>
+      </div>
+      <div class="small" id="stats">Waiting for data…</div>
+      <div class="small muted" style="margin-top:6px">Limit 200 by default. Uses Mongo if available; falls back to local JSON in dev.</div>
+    </div>
+    <div class="card" style="overflow:auto">
+      <table id="table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Phone</th><th>Email</th><th>Role</th><th>Shift</th><th>Vehicle</th><th>Location</th><th>Source</th><th>Notes</th><th>Verification</th><th>Submitted</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+<script>
+(function(){
+  const tableBody = document.querySelector('#table tbody');
+  const stats = document.getElementById('stats');
+  const refreshBtn = document.getElementById('refresh');
+  const withStripeBox = document.getElementById('withStripe');
+
+  function badge(status){
+    if (!status) return '';
+    const tone = status === 'verified' ? 'ok' : (status === 'requires_input' || status === 'processing' ? 'warn' : (status === 'lookup_error' ? 'danger' : ''));
+    return `<span class="badge ${tone}">${status}</span>`;
+  }
+
+  function fmt(value){
+    if (value === undefined || value === null) return '';
+    return String(value);
+  }
+
+  function fmtDate(value){
+    if (!value) return '';
+    try {
+      return new Date(value).toLocaleString();
+    } catch (e){
+      return value;
+    }
+  }
+
+  async function fetchApplicants(){
+    stats.textContent = 'Loading…';
+    tableBody.innerHTML = '';
+    const includeStripe = withStripeBox.checked ? 'true' : 'false';
+    try {
+      const res = await fetch(`/api/hiring/applicants?includeStripe=${includeStripe}`);
+      const data = await res.json();
+      if (!data?.ok){
+        stats.textContent = 'Could not load applicants.';
+        return;
+      }
+      stats.textContent = `${data.count || 0} applicant(s)` + (withStripeBox.checked ? ' with Stripe status' : '');
+      renderRows(data.applicants || []);
+    } catch (err){
+      console.error('fetch applicants', err);
+      stats.textContent = 'Error loading applicants.';
+    }
+  }
+
+  function renderRows(applicants){
+    tableBody.innerHTML = '';
+    applicants.forEach(app => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${fmt(app.fullName)}</td>
+        <td>${fmt(app.phone)}</td>
+        <td>${fmt(app.email)}</td>
+        <td>${fmt(app.role)}</td>
+        <td>${fmt(app.shift)}</td>
+        <td>${app.vehicleNeeds ? 'Needs car' : 'Has car'}</td>
+        <td>${fmt(app.locationFocus)}</td>
+        <td>${fmt(app.sourcingChannel)}</td>
+        <td>${fmt(app.notes)}</td>
+        <td>${badge(app.verificationStatus || (app.verificationSessionId ? 'session_saved' : ''))}<div class="small">${fmt(app.verificationSessionId)}</div></td>
+        <td>${fmtDate(app.submittedAt)}</td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
+
+  refreshBtn.addEventListener('click', fetchApplicants);
+  withStripeBox.addEventListener('change', fetchApplicants);
+
+  fetchApplicants();
+})();
+</script>
+</body>
+</html>
