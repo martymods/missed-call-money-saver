@@ -65,6 +65,7 @@ const createTeamRouter = require('./routes/teams');
 const createWarehouseRouter = require('./routes/warehouse');
 const createGivingRouter = require('./routes/giving');
 const createDannysWokPayRouter = require('./routes/dannyswok-pay');
+const createBankAuthRouter = require('./routes/bank-auth');
 const createDannysWokMenuRouter = require('./routes/dannyswok-menu');
 const createDannysWokAdminRouter = require('./routes/dannyswok-admin');
 const createDannysWokAnalyticsRouter = require('./routes/dannyswok-analytics');
@@ -1081,6 +1082,7 @@ app.use('/api/credit-repair', createCreditRepairRouter({
   stripe,
   appBaseUrl: APP_BASE_URL,
 }));
+app.use('/api/bank-auth', createBankAuthRouter());
 app.use('/api/hiring', createHiringRouter({
   stripe,
   appBaseUrl: APP_BASE_URL,
